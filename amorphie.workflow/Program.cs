@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -35,13 +37,23 @@ app.MapGet("/workflow/definition", () => { })
       .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
       .Produces(StatusCodes.Status204NoContent);
 
-app.MapGet("/workflow/definition/states", () => { })
+app.MapGet("/workflow/definition/{name}/states", () => { })
       .WithOpenApi(operation =>
       {
-          operation.Summary = "Returns queried wortflow definitions.";
+          operation.Summary = "Returns queried wortflows state and transition definitions.";
           return operation;
       })
-      .Produces<GetZeebeWorkflowDefinition>(StatusCodes.Status200OK)
+      .Produces<GetStateDefinition[]>(StatusCodes.Status200OK)
+      .Produces(StatusCodes.Status204NoContent);
+
+app.MapPut("/workflow/instance/{name}", ([FromBody] PostInstanceRequest data) => { })
+      .WithOpenApi(operation =>
+      {
+          operation.Summary = "Always creates a new instance of worklfow";
+          return operation;
+      })
+      .Produces<PostInstanceResponse>(StatusCodes.Status200OK)
       .Produces(StatusCodes.Status204NoContent);
 
 app.Run();
+
