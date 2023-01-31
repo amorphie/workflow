@@ -1,5 +1,5 @@
 
-public abstract record GetStateDefinition(string name, string title, bool isFinalState, GetTransitionDefinition[] transitions);
+public abstract record GetStateDefinition(string name, string title, bool isFinalState, BaseStatusType baseStatus, GetTransitionDefinition[] transitions);
 
 public record GetTransitionDefinition(string name, string title, string toState, string? form);
 
