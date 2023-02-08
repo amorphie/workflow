@@ -1,6 +1,7 @@
 public enum StateType
 {
-    Start,
-    Finish,
-    Status,
+    Generic = 0,
+    Start = 100, 
+    Finish = 200
+    
 }

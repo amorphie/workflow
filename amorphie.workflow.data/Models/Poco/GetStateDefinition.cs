@@ -1,12 +1,13 @@
 
 public abstract record GetStateDefinition(string name, MultilanguageText title, BaseStatusType baseStatus, PostTransitionDefinitionRequest[] transitions);
 
+public record GetStateDefinitionRequest(string name, MultilanguageText title, BaseStatusType baseStatus, PostTransitionDefinitionRequest[] transitions) :
+    GetStateDefinition(name, title, baseStatus, transitions);
 public record GetStartStateDefinitionRequest(string name, MultilanguageText title, BaseStatusType baseStatus, PostTransitionDefinitionRequest[] transitions) :
     GetStateDefinition(name, title, baseStatus, transitions);
 public record GetFinishStateDefinitionRequest(string name, MultilanguageText title, BaseStatusType baseStatus, PostTransitionDefinitionRequest[] transitions) :
     GetStateDefinition(name, title, baseStatus, transitions);
-public record GetAutoTransitStateDefinitionRequest(string name, MultilanguageText title, BaseStatusType baseStatus, PostTransitionDefinitionRequest[] transitions, long ExecuteInMinutes) :
-    GetStateDefinition(name, title, baseStatus, transitions);
+
 
 public record GetTransitionDefinition(string name, string title, string toState, string? form);
 
