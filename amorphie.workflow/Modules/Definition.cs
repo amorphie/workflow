@@ -1,4 +1,5 @@
 
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 
@@ -8,42 +9,50 @@ public static class DefinitionModule
     {
         app.MapGet("/workflow/definition", (
             [FromHeader(Name = "Accept-Language")] string? language,
-            [FromQuery] string? definition) =>
+            [FromQuery] string? definition,
+            [FromQuery] string[]? tags,
+            [FromQuery] string? entity,
+            [FromQuery][Range(0, 100)] int? page,
+            [FromQuery][Range(5, 100)] int? pageSize
+            ) =>
         { })
+              .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
+              .Produces(StatusCodes.Status204NoContent)
               .WithOpenApi(operation =>
               {
                   operation.Summary = "Returns queried workflow definitions.";
                   operation.Parameters[0].Description = "RFC 5646 compliant language code.";
                   operation.Parameters[1].Description = "Partial or full name of the definition.";
-                  operation.Responses = new OpenApiResponses
-                  {
-                      ["200"] = new OpenApiResponse { Description = "One or more defifinitions found." },
-                      ["204"] = new OpenApiResponse { Description = "Definition not found." }
-                  };
+                  operation.Parameters[2].Description = "Filters result workflows with provided Tag(s).";
+                  operation.Parameters[3].Description = "Returns submitted entity's workflows.";
+                  operation.Parameters[4].Description = "Pagination value for requested page. Default is 0, max is 100";
+                  operation.Parameters[5].Description = "Pagination value for requested page size. Default is 10, max is 100";
 
+                  operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
+
+                  operation.Responses["200"].Description = "One or more defifinitions found.";
+                  operation.Responses["204"].Description = "No definitions found.";
                   return operation;
-              })
-              .WithTags("Definition")
-              .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
-              .Produces(StatusCodes.Status204NoContent);
+              });
+
 
         app.MapPost("/workflow/definition", (
             [FromBody] PostWorkflowDefinitionRequest data)
             =>
         { })
-              .WithOpenApi(operation =>
+            .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status201Created)
+            .WithOpenApi(operation =>
               {
-                  operation.Summary = "Saves or updates  workflow definition.";
-                  operation.Responses = new OpenApiResponses
-                  {
-                      ["200"] = new OpenApiResponse { Description = "Definition updated." },
-                      ["201"] = new OpenApiResponse { Description = "New definition created." }
-                  };
+                  operation.Summary = "Saves or updates workflow definition.";
+                  operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
+
+                  operation.Responses["200"] = new OpenApiResponse { Description = "Definition updated." };
+                  operation.Responses["201"] = new OpenApiResponse { Description = "New definition created." };
+
                   return operation;
               })
-              .WithTags("Definition")
-              .Produces<PostWorkflowDefinitionReesponse>(StatusCodes.Status200OK)
-              .Produces(StatusCodes.Status201Created);
+              .WithTags("Definition");
 
 
         app.MapDelete("/workflow/definition/{definition-name}", (
