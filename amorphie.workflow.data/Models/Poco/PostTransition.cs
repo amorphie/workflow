@@ -1,11 +1,12 @@
 
-public record PatchTransitionRequest(
+public record PostTransitionRequest(
     dynamic formData,
     dynamic entityData,
+    dynamic variables,
     bool cretateHubToken
     );
 
-public record PatchTransitionResponse(
+public record PostTransitionResponse(
     Dictionary<string, dynamic> entityUpdates,
     string? signalRHub, 
     string? signalRHubToken

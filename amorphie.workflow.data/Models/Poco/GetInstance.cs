@@ -1,5 +1,5 @@
 
-public enum GetInstanceType {
+public enum GetInstanceStatusType {
     All,
     Completed,
     Running,

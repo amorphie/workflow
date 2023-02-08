@@ -3,7 +3,7 @@
 /// Abstract record for workflow definition
 /// </summary>
 
-public abstract record GetWorkflowDefinition(string name, string description, string[] entities, string[] tags);
+public abstract record GetWorkflowDefinition(string name, string description, string[] tags, GetWorkflowEntity[] entities);
 
 /// <summary>
 /// State Machine workflow definition record
@@ -12,10 +12,19 @@ public abstract record GetWorkflowDefinition(string name, string description, st
 /// <param name="description">Workflow description as expected language</param>
 /// <param name="entities">Entity list to which the workflow can be applied.</param>
 /// <param name="tags">Workflow related tag list.</param>
-public record GetFSMWorkflowDefinition(string name, string description, string[] entities, string[] tags) : GetWorkflowDefinition(name, description, entities, tags);
-
+public record GetFSMWorkflowDefinition(string name, string description, string[] tags, GetWorkflowEntity[] entities) : GetWorkflowDefinition(name, description, tags, entities);
 
 /// <summary>
 /// Zeebe based workflow definition record
 /// </summary>
-public record GetZeebeWorkflowDefinition(string name, string description, string[] entities, string[] tags, string process, string gateway) : GetWorkflowDefinition(name, description, entities, tags);
+public record GetZeebeWorkflowDefinition(string name, string description, string[] tags, GetWorkflowEntity[] entities, string process, string gateway) : GetWorkflowDefinition(name, description, tags, entities);
+
+/// <summary>
+/// Workflow entity relation
+/// </summary>
+/// <param name="name">Entity name</param>
+/// <param name="isExclusive">For every record just one exclusive workflow instance can run. Exclusive workflows are mutually exclusive. Non exclusive workflows can run parallely</param>
+/// <param name="isStateManager">When set true and if entity has status property, related workflow is source of state. </param>
+/// <param name="availableInStatus">When this workflow can initate. This is informational property for consumer</param>
+public record GetWorkflowEntity(string name, bool isExclusive, bool isStateManager, BaseStatusType[] availableInStatus);
+
