@@ -25,6 +25,8 @@ public class WorkflowDBContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
+
         modelBuilder.Entity<Workflow>()
             .HasKey(w => w.Name);
 
@@ -59,17 +61,18 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<Translation>().Property<string>("WorkflowName_Title");
 
         modelBuilder.Entity<Workflow>()
-            .HasMany<Translation>(t => t.Title)
+            .HasMany<Translation>(t => t.Titles)
             .WithOne()
             .HasForeignKey("WorkflowName_Title");
 
-         modelBuilder.Entity<Translation>().Property<string>("WorkflowName_Transition");
+        modelBuilder.Entity<Translation>().Property<string>("WorkflowName_Transition");
 
         modelBuilder.Entity<Transition>()
             .HasMany<Translation>(t => t.Title)
             .WithOne()
             .HasForeignKey("WorkflowName_Transition");
 
-        modelBuilder.SeedData();
+        modelBuilder.SeedRetailLoanWorkflow();
+        modelBuilder.SeedUserLifecycle();
     }
 }

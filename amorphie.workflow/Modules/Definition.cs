@@ -1,39 +1,34 @@
 
 using System.ComponentModel.DataAnnotations;
+using amorphie.tag.data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 public static class DefinitionModule
 {
     public static void MapDefinitionEndpoints(this WebApplication app)
     {
-        app.MapGet("/workflow/definition", (
-            [FromHeader(Name = "Accept-Language")] string? language,
-            [FromQuery] string? definition,
-            [FromQuery] string[]? tags,
-            [FromQuery] string? entity,
-            [FromQuery][Range(0, 100)] int? page,
-            [FromQuery][Range(5, 100)] int? pageSize
-            ) =>
-        { })
-              .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
-              .Produces(StatusCodes.Status204NoContent)
-              .WithOpenApi(operation =>
-              {
-                  operation.Summary = "Returns queried workflow definitions.";
-                  operation.Parameters[0].Description = "RFC 5646 compliant language code.";
-                  operation.Parameters[1].Description = "Partial or full name of the definition.";
-                  operation.Parameters[2].Description = "Filters result workflows with provided Tag(s).";
-                  operation.Parameters[3].Description = "Returns submitted entity's workflows.";
-                  operation.Parameters[4].Description = "Pagination value for requested page. Default is 0, max is 100";
-                  operation.Parameters[5].Description = "Pagination value for requested page size. Default is 10, max is 100";
+        app.MapGet("/workflow/definition", getDefinition)
+            .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Returns queried workflow definitions.";
+              
+                operation.Parameters[0].Description = "Partial or full name of the definition.";
+                operation.Parameters[1].Description = "Filters result workflows with provided Tag(s).";
+                operation.Parameters[2].Description = "Returns submitted entity's workflows.";
+                operation.Parameters[3].Description = "Pagination value for requested page. Default is 0, max is 100";
+                operation.Parameters[4].Description = "Pagination value for requested page size. Default is 10, max is 100";
+                operation.Parameters[5].Description = "RFC 5646 compliant language code.";
 
-                  operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
+                operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
 
-                  operation.Responses["200"].Description = "One or more defifinitions found.";
-                  operation.Responses["204"].Description = "No definitions found.";
-                  return operation;
-              });
+                operation.Responses["200"].Description = "One or more defifinitions found.";
+                operation.Responses["204"].Description = "No definitions found.";
+                return operation;
+            });
 
 
         app.MapPost("/workflow/definition", (
@@ -97,14 +92,20 @@ public static class DefinitionModule
                   return operation;
               });
 
-        app.MapPost("/workflow/definition/{definition-name}/state", (
-            [FromRoute(Name = "definition-name")] string definition,
+
+
+
+
+        app.MapPost("/workflow/definition/{definitionname}/state", (
+            [FromRoute(Name = "definitionname")] string definition,
+
             [FromBody] PostStateDefinitionRequest data
             ) =>
-        { }).Produces<PostStateDefinitionResponse>(StatusCodes.Status200OK)
-              .Produces(StatusCodes.Status201Created)
-              .Produces(StatusCodes.Status422UnprocessableEntity)
-              .WithOpenApi(operation =>
+        { })
+            .Produces<PostStateDefinitionResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status422UnprocessableEntity)
+            .WithOpenApi(operation =>
               {
                   operation.Summary = "Updates or creates workflow state.";
                   operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
@@ -132,5 +133,27 @@ public static class DefinitionModule
                   };
                   return operation;
               });
+
     }
+
+    static IResult getDefinition(
+            [FromServices] WorkflowDBContext context,
+            [FromQuery] string? definition,
+            [FromQuery] string[]? tags,
+            [FromQuery] string? entity,
+            [FromQuery][Range(0, 100)] int? page = 0,
+            [FromQuery][Range(5, 100)] int? pageSize = 10,
+            [FromHeader(Name = "Language")] string? language = "en-EN"
+        )
+    {
+        var query = context.Workflows!
+               .Include(w => w.Titles.Where(t => t.Language == language));
+
+        var workflows = query.ToList();
+        return Results.Ok(workflows);
+    }
+
 }
+
+
+

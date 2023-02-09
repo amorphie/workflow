@@ -1,7 +1,12 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
+using amorphie.tag.data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<WorkflowDBContext>
+    (options => options.UseNpgsql("Host=localhost:5432;Database=workflow;Username=postgres;Password=postgres"));
 
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
