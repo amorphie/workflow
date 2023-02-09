@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using amorphie.tag.data;
@@ -11,9 +12,11 @@ using amorphie.tag.data;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20230209073634_init")]
+    partial class init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,19 +62,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasIndex("WorkflowName");
 
                     b.ToTable("State");
-
-                    b.HasData(
-                        new
-                        {
-                            Name = "retail-loan-start",
-                            BaseStatus = 0,
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4720),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4720),
-                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Type = 100,
-                            WorkflowName = "retail-loan"
-                        });
                 });
 
             modelBuilder.Entity("Transition", b =>
@@ -183,44 +173,42 @@ namespace amorphie.workflow.data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("c310ee3b-4ded-48e2-9363-890a99554b70"),
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4690),
+                            Id = new Guid("14d5dcc9-4e45-48dc-b131-69b0875f6370"),
+                            CreatedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4380),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Bireysel Kredi Sureci",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4690),
-                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            WorkflowNameTitle = "retail-loan"
-                        },
-                        new
-                        {
-                            Id = new Guid("016abe94-3e39-4548-ad0f-58620d90ea33"),
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4710),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Label = "Retail Loan Process",
-                            Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4710),
-                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            WorkflowNameTitle = "retail-loan"
-                        },
-                        new
-                        {
-                            Id = new Guid("8ad2e52c-3ab3-47e8-ad98-c213753cc0ab"),
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4750),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Label = "Kullanici Statu Akisi",
-                            Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4750),
+                            ModifiedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4390),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
                         },
                         new
                         {
-                            Id = new Guid("2700a898-e61c-4f01-93e0-38cbb112b2c7"),
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4760),
+                            Id = new Guid("9aa6ae1a-487f-4a82-82bd-7ccf3bf2fed8"),
+                            CreatedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4400),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "Retail Loan Process",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4400),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
+                        },
+                        new
+                        {
+                            Id = new Guid("e6c8ef3c-cca8-4f08-9ed1-8dbca0b32d46"),
+                            CreatedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4430),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "Kullanici Statu Akisi",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4430),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
+                        },
+                        new
+                        {
+                            Id = new Guid("7cf9bc13-d33e-4d86-a164-cf6f79dac7f5"),
+                            CreatedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4440),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "User State Process",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4760),
+                            ModifiedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4440),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
                         });
                 });
@@ -271,10 +259,10 @@ namespace amorphie.workflow.data.Migrations
                         new
                         {
                             Name = "retail-loan",
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4610),
+                            CreatedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4310),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Gateway = "http://localhost:26500",
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4610),
+                            ModifiedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4310),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Process = "<bpmn:definitions>...</bpmn:definitions>",
                             ProcessName = "retail-loan-workflow",
@@ -284,9 +272,9 @@ namespace amorphie.workflow.data.Migrations
                         new
                         {
                             Name = "user-lifecyle",
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4730),
+                            CreatedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4410),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4730),
+                            ModifiedAt = new DateTime(2023, 2, 9, 7, 36, 34, 96, DateTimeKind.Utc).AddTicks(4410),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Tags = new[] { "idm", "user" },
                             Type = 100

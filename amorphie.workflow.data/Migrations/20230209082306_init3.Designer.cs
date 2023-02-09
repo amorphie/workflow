@@ -12,8 +12,8 @@ using amorphie.tag.data;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    [Migration("20230208210138_init11")]
-    partial class init11
+    [Migration("20230209082306_init3")]
+    partial class init3
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,7 +39,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CreatedByBehalfOf")
+                    b.Property<Guid?>("CreatedByBehalfOf")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("ModifiedAt")
@@ -48,7 +48,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("ModifiedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ModifiedByBehalfOf")
+                    b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Type")
@@ -62,6 +62,18 @@ namespace amorphie.workflow.data.Migrations
                     b.HasIndex("WorkflowName");
 
                     b.ToTable("State");
+
+                    b.HasData(
+                        new
+                        {
+                            Name = "retail-loan-start",
+                            BaseStatus = 0,
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1300),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1300),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Type = 100
+                        });
                 });
 
             modelBuilder.Entity("Transition", b =>
@@ -75,7 +87,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CreatedByBehalfOf")
+                    b.Property<Guid?>("CreatedByBehalfOf")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Form")
@@ -93,7 +105,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("ModifiedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ModifiedByBehalfOf")
+                    b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Process")
@@ -126,7 +138,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CreatedByBehalfOf")
+                    b.Property<Guid?>("CreatedByBehalfOf")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Label")
@@ -143,27 +155,76 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("ModifiedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ModifiedByBehalfOf")
+                    b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("StateName")
+                    b.Property<string>("StateName_Description")
                         .HasColumnType("text");
 
-                    b.Property<string>("TransitionName")
+                    b.Property<string>("StateName_Title")
                         .HasColumnType("text");
 
-                    b.Property<string>("WorkflowName")
+                    b.Property<string>("WorkflowName_Title")
+                        .HasColumnType("text");
+
+                    b.Property<string>("WorkflowName_Transition")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StateName");
+                    b.HasIndex("StateName_Description");
 
-                    b.HasIndex("TransitionName");
+                    b.HasIndex("StateName_Title");
 
-                    b.HasIndex("WorkflowName");
+                    b.HasIndex("WorkflowName_Title");
+
+                    b.HasIndex("WorkflowName_Transition");
 
                     b.ToTable("Translation");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("fcec5f93-fba5-42e7-9176-c21289f7f32a"),
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1280),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "Bireysel Kredi Sureci",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1280),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            WorkflowNameTitle = "retail-loan"
+                        },
+                        new
+                        {
+                            Id = new Guid("5eccfe93-d688-4f2b-b879-c07888f3a4e9"),
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1290),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "Retail Loan Process",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1290),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            WorkflowNameTitle = "retail-loan"
+                        },
+                        new
+                        {
+                            Id = new Guid("669a0a6b-c157-425c-9152-e20b5a4f8be8"),
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1330),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "Kullanici Statu Akisi",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1330),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
+                        },
+                        new
+                        {
+                            Id = new Guid("a848446b-9771-46cf-8acb-ac48c1cdd8ae"),
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1340),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "User State Process",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1340),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
+                        });
                 });
 
             modelBuilder.Entity("Workflow", b =>
@@ -177,7 +238,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CreatedByBehalfOf")
+                    b.Property<Guid?>("CreatedByBehalfOf")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Gateway")
@@ -189,10 +250,13 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("ModifiedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ModifiedByBehalfOf")
+                    b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Process")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProcessName")
                         .HasColumnType("text");
 
                     b.Property<string[]>("Tags")
@@ -204,6 +268,31 @@ namespace amorphie.workflow.data.Migrations
                     b.HasKey("Name");
 
                     b.ToTable("Workflows");
+
+                    b.HasData(
+                        new
+                        {
+                            Name = "retail-loan",
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1190),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Gateway = "http://localhost:26500",
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1200),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Process = "<bpmn:definitions>...</bpmn:definitions>",
+                            ProcessName = "retail-loan-workflow",
+                            Tags = new[] { "retail", "loan" },
+                            Type = 200
+                        },
+                        new
+                        {
+                            Name = "user-lifecyle",
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1310),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 23, 5, 908, DateTimeKind.Utc).AddTicks(1320),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Tags = new[] { "idm", "user" },
+                            Type = 100
+                        });
                 });
 
             modelBuilder.Entity("WorkflowEntity", b =>
@@ -221,7 +310,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CreatedByBehalfOf")
+                    b.Property<Guid?>("CreatedByBehalfOf")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsExclusive")
@@ -236,7 +325,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("ModifiedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ModifiedByBehalfOf")
+                    b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
@@ -280,16 +369,20 @@ namespace amorphie.workflow.data.Migrations
             modelBuilder.Entity("Translation", b =>
                 {
                     b.HasOne("State", null)
-                        .WithMany("Title")
-                        .HasForeignKey("StateName");
+                        .WithMany("Description")
+                        .HasForeignKey("StateName_Description");
 
-                    b.HasOne("Transition", null)
+                    b.HasOne("State", null)
                         .WithMany("Title")
-                        .HasForeignKey("TransitionName");
+                        .HasForeignKey("StateName_Title");
 
                     b.HasOne("Workflow", null)
                         .WithMany("Title")
-                        .HasForeignKey("WorkflowName");
+                        .HasForeignKey("WorkflowName_Title");
+
+                    b.HasOne("Transition", null)
+                        .WithMany("Title")
+                        .HasForeignKey("WorkflowName_Transition");
                 });
 
             modelBuilder.Entity("WorkflowEntity", b =>
@@ -303,6 +396,8 @@ namespace amorphie.workflow.data.Migrations
 
             modelBuilder.Entity("State", b =>
                 {
+                    b.Navigation("Description");
+
                     b.Navigation("Title");
 
                     b.Navigation("Transitions");

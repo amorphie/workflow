@@ -1,5 +1,5 @@
 public enum WorkflowType
 {
-    FSM = 100, 
+    StateMachine = 100, 
     Zeebe = 200
 }

@@ -37,8 +37,39 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<Transition>()
            .HasKey(s => s.Name);
 
-         modelBuilder.Entity<Transition>()
-            .HasOne(s => s.FromState)
-            .WithMany(s => s.Transitions);
+        modelBuilder.Entity<Transition>()
+           .HasOne(s => s.FromState)
+           .WithMany(s => s.Transitions);
+
+
+        // Translation Relations
+        modelBuilder.Entity<Translation>().Property<string>("StateName_Title");
+        modelBuilder.Entity<Translation>().Property<string>("StateName_Description");
+
+        modelBuilder.Entity<State>()
+            .HasMany<Translation>(t => t.Title)
+            .WithOne()
+            .HasForeignKey("StateName_Title");
+
+        modelBuilder.Entity<State>()
+            .HasMany<Translation>(t => t.Description)
+            .WithOne()
+            .HasForeignKey("StateName_Description");
+
+        modelBuilder.Entity<Translation>().Property<string>("WorkflowName_Title");
+
+        modelBuilder.Entity<Workflow>()
+            .HasMany<Translation>(t => t.Title)
+            .WithOne()
+            .HasForeignKey("WorkflowName_Title");
+
+         modelBuilder.Entity<Translation>().Property<string>("WorkflowName_Transition");
+
+        modelBuilder.Entity<Transition>()
+            .HasMany<Translation>(t => t.Title)
+            .WithOne()
+            .HasForeignKey("WorkflowName_Transition");
+
+        modelBuilder.SeedData();
     }
 }

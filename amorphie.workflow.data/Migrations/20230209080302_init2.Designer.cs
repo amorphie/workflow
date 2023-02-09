@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using amorphie.tag.data;
@@ -11,9 +12,11 @@ using amorphie.tag.data;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20230209080302_init2")]
+    partial class init2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,19 +62,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasIndex("WorkflowName");
 
                     b.ToTable("State");
-
-                    b.HasData(
-                        new
-                        {
-                            Name = "retail-loan-start",
-                            BaseStatus = 0,
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4720),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4720),
-                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Type = 100,
-                            WorkflowName = "retail-loan"
-                        });
                 });
 
             modelBuilder.Entity("Transition", b =>
@@ -183,44 +173,44 @@ namespace amorphie.workflow.data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("c310ee3b-4ded-48e2-9363-890a99554b70"),
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4690),
+                            Id = new Guid("f433a881-667d-4d40-a5fd-7cb8a92c28ce"),
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1570),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Bireysel Kredi Sureci",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4690),
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1570),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             WorkflowNameTitle = "retail-loan"
                         },
                         new
                         {
-                            Id = new Guid("016abe94-3e39-4548-ad0f-58620d90ea33"),
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4710),
+                            Id = new Guid("8612fe18-3c55-4981-badd-b57d8991fc80"),
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1590),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Retail Loan Process",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4710),
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1590),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             WorkflowNameTitle = "retail-loan"
                         },
                         new
                         {
-                            Id = new Guid("8ad2e52c-3ab3-47e8-ad98-c213753cc0ab"),
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4750),
+                            Id = new Guid("fbb3e9c6-8860-474f-a2bc-a48d111818de"),
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1610),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kullanici Statu Akisi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4750),
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1610),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
                         },
                         new
                         {
-                            Id = new Guid("2700a898-e61c-4f01-93e0-38cbb112b2c7"),
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4760),
+                            Id = new Guid("b2bdeb4a-4cb7-47a9-b7d6-6edb0bbaabe2"),
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1630),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "User State Process",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4760),
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1630),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
                         });
                 });
@@ -271,10 +261,10 @@ namespace amorphie.workflow.data.Migrations
                         new
                         {
                             Name = "retail-loan",
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4610),
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1490),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Gateway = "http://localhost:26500",
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4610),
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1490),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Process = "<bpmn:definitions>...</bpmn:definitions>",
                             ProcessName = "retail-loan-workflow",
@@ -284,9 +274,9 @@ namespace amorphie.workflow.data.Migrations
                         new
                         {
                             Name = "user-lifecyle",
-                            CreatedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4730),
+                            CreatedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1600),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 9, 8, 24, 21, 611, DateTimeKind.Utc).AddTicks(4730),
+                            ModifiedAt = new DateTime(2023, 2, 9, 8, 3, 2, 101, DateTimeKind.Utc).AddTicks(1600),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Tags = new[] { "idm", "user" },
                             Type = 100

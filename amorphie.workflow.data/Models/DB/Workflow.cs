@@ -7,6 +7,7 @@ public class Workflow : BaseDbEntity
     public Translation[]? Title { get; set; }
     public State[]? States { get; set; }
     public WorkflowType Type { get; set; }
+    public string? ProcessName { get; set; }
     public string? Process { get; set; }
     public string? Gateway { get; set; }
 

@@ -3,8 +3,11 @@
 public class State : BaseDbEntity
 {
     public Workflow? Workflow { get; set; }
+    public string? WorkflowName { get; set; }
+    
     public string Name { get; set; } = string.Empty;
     public Translation[]? Title { get; set; }
+    public Translation[]? Description { get; set; }
 
     public Transition[]? Transitions { get; set; }
 
