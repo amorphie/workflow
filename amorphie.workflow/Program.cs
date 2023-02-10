@@ -18,6 +18,7 @@ builder.Services.AddSwaggerGen(c =>
     c.UseAllOfToExtendReferenceSchemas();
     c.UseAllOfForInheritance();
     c.UseOneOfForPolymorphism();
+    c.CustomSchemaIds(s => s.FullName?.Replace("+", "."));
 
     // Add self documentation
     string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -46,8 +47,10 @@ app.UseSwaggerUI();
 
 app.Logger.LogInformation("Registering Routes");
 
+app.MapConsumerEndpoints();
 app.MapDefinitionEndpoints();
 app.MapInstanceEndpoints();
+
 
 app.Run();
 
