@@ -12,7 +12,7 @@ using amorphie.tag.data;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    [Migration("20230209130556_init")]
+    [Migration("20230212134355_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -67,10 +67,10 @@ namespace amorphie.workflow.data.Migrations
                         new
                         {
                             Name = "retail-loan-start",
-                            BaseStatus = 0,
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9580),
+                            BaseStatus = 2,
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8380),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9580),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8380),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 100,
                             WorkflowName = "retail-loan"
@@ -78,10 +78,10 @@ namespace amorphie.workflow.data.Migrations
                         new
                         {
                             Name = "retail-loan-finish",
-                            BaseStatus = 0,
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9670),
+                            BaseStatus = 2,
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8450),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9670),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8450),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 200,
                             WorkflowName = "retail-loan"
@@ -197,133 +197,133 @@ namespace amorphie.workflow.data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("887f29c3-6bf7-43bd-9bd5-5f2ec99c32e7"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9560),
+                            Id = new Guid("d08f0ddc-1e7e-403a-9aa9-95bbd575a561"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8360),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Bireysel Kredi Sureci",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9560),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8360),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             WorkflowNameTitle = "retail-loan"
                         },
                         new
                         {
-                            Id = new Guid("2a8214b5-59fa-40f6-8aad-2ec86bf76e6c"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9570),
+                            Id = new Guid("34490288-4d0e-42f2-bfd9-0e8c06038158"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8370),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Retail Loan Process",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9570),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8370),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             WorkflowNameTitle = "retail-loan"
                         },
                         new
                         {
-                            Id = new Guid("1d887c71-134b-4560-9eab-cd51b687dc02"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9620),
+                            Id = new Guid("e3b8f29d-c9d3-4400-87e2-3abe6e87d5eb"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8400),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Akis Baslangic Asamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9620),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8400),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "retail-loan-start"
                         },
                         new
                         {
-                            Id = new Guid("e1e99dff-02ac-4294-8b7c-28c264857998"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9630),
+                            Id = new Guid("dc0566fa-edc7-4309-8e30-bc8e8a37ce2a"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8410),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Start State",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9630),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8410),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "retail-loan-start"
                         },
                         new
                         {
-                            Id = new Guid("4eaafdef-f2fe-4234-b369-1b8c2d208233"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9650),
+                            Id = new Guid("7f564577-ff09-4de3-b7c5-ddb2b599605b"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8430),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kredi sureci akis Baslangic Asamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9650),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8430),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "retail-loan-start"
                         },
                         new
                         {
-                            Id = new Guid("367941d5-0526-4979-95ab-b02b5899af25"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9660),
+                            Id = new Guid("46fa303d-1e0f-4c4c-91d2-08b17e816157"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8440),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Retail Loan Start State",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9660),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8440),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "retail-loan-start"
                         },
                         new
                         {
-                            Id = new Guid("70c103ae-571d-43a7-97de-553d85f14dcd"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9680),
+                            Id = new Guid("532d3364-68ad-463c-9021-bd6bc840a5dc"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8460),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Akis bitis asamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9680),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8460),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "retail-loan-finish"
                         },
                         new
                         {
-                            Id = new Guid("c7f1f24e-8269-411d-a739-3080e87d3873"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9700),
+                            Id = new Guid("c99d71d4-5d3d-4ec1-a538-9130e5ad5f3b"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8470),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Finish state",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9700),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8480),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "retail-loan-finish"
                         },
                         new
                         {
-                            Id = new Guid("03361d4a-5f3b-4381-a498-45e027c6fef2"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9710),
+                            Id = new Guid("aa0c8a66-d7ed-453f-a5ba-d06742791244"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8490),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kredi sureci akis bitis asamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9710),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8490),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "retail-loan-finish"
                         },
                         new
                         {
-                            Id = new Guid("c160d062-0352-409f-9e16-fca1e48724e4"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9720),
+                            Id = new Guid("4aa21cb1-be6b-4ae5-a349-66c664ee6e20"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8500),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Retail loan finis state",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9720),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8500),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "retail-loan-finish"
                         },
                         new
                         {
-                            Id = new Guid("6885a406-084e-4347-b963-495dad5625b1"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9750),
+                            Id = new Guid("f1fd0afa-b3ec-47bf-825b-22e1dbb106b9"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8520),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kullanici Statu Akisi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9750),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8520),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             WorkflowNameTitle = "user-lifecyle"
                         },
                         new
                         {
-                            Id = new Guid("7d69eac6-6ec6-4d1a-b93f-bd2bd0b0e2ee"),
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9760),
+                            Id = new Guid("0aaab74e-ed62-407b-bfb5-17d5dd133b60"),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8540),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "User State Process",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9760),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8540),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             WorkflowNameTitle = "user-lifecyle"
                         });
@@ -343,9 +343,6 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid?>("CreatedByBehalfOf")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Gateway")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -355,19 +352,15 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Process")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProcessName")
-                        .HasColumnType("text");
-
                     b.Property<string[]>("Tags")
                         .HasColumnType("text[]");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<string>("ZeebeFlowName")
+                        .HasColumnType("text");
 
                     b.HasKey("Name");
+
+                    b.HasIndex("ZeebeFlowName");
 
                     b.ToTable("Workflows");
 
@@ -375,25 +368,20 @@ namespace amorphie.workflow.data.Migrations
                         new
                         {
                             Name = "retail-loan",
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9440),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8250),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Gateway = "http://localhost:26500",
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9450),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8250),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Process = "<bpmn:definitions>...</bpmn:definitions>",
-                            ProcessName = "retail-loan-workflow",
-                            Tags = new[] { "retail", "loan" },
-                            Type = 200
+                            Tags = new[] { "retail", "loan" }
                         },
                         new
                         {
                             Name = "user-lifecyle",
-                            CreatedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9730),
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8510),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 9, 13, 5, 56, 761, DateTimeKind.Utc).AddTicks(9730),
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8510),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Tags = new[] { "idm", "user" },
-                            Type = 100
+                            Tags = new[] { "idm", "user" }
                         });
                 });
 
@@ -403,8 +391,8 @@ namespace amorphie.workflow.data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int[]>("AvailableInStatus")
-                        .HasColumnType("integer[]");
+                    b.Property<int>("AvailableInStatus")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -442,6 +430,63 @@ namespace amorphie.workflow.data.Migrations
                     b.HasIndex("WorkflowName");
 
                     b.ToTable("WorkflowEntity");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("7a8bcec7-8474-4c64-87d3-962b44423f58"),
+                            AvailableInStatus = 30,
+                            CreatedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8550),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            IsExclusive = false,
+                            IsStateManager = true,
+                            ModifiedAt = new DateTime(2023, 2, 12, 13, 43, 55, 454, DateTimeKind.Utc).AddTicks(8550),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Name = "user",
+                            WorkflowName = "user-lifecyle"
+                        });
+                });
+
+            modelBuilder.Entity("ZeebeFlow", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Gateway")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsAtomic")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ModifiedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Process")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string[]>("Tags")
+                        .HasColumnType("text[]");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("ZeebeFlow");
                 });
 
             modelBuilder.Entity("State", b =>
@@ -479,12 +524,21 @@ namespace amorphie.workflow.data.Migrations
                         .HasForeignKey("StateName_Title");
 
                     b.HasOne("Workflow", null)
-                        .WithMany("Title")
+                        .WithMany("Titles")
                         .HasForeignKey("WorkflowName_Title");
 
                     b.HasOne("Transition", null)
                         .WithMany("Title")
                         .HasForeignKey("WorkflowName_Transition");
+                });
+
+            modelBuilder.Entity("Workflow", b =>
+                {
+                    b.HasOne("ZeebeFlow", "ZeebeFlow")
+                        .WithMany()
+                        .HasForeignKey("ZeebeFlowName");
+
+                    b.Navigation("ZeebeFlow");
                 });
 
             modelBuilder.Entity("WorkflowEntity", b =>
@@ -516,7 +570,7 @@ namespace amorphie.workflow.data.Migrations
 
                     b.Navigation("States");
 
-                    b.Navigation("Title");
+                    b.Navigation("Titles");
                 });
 #pragma warning restore 612, 618
         }

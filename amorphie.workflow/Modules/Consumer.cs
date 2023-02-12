@@ -39,7 +39,7 @@ public static class ConsumerModule
             .Produces<GetRecordHistoryResponse>(StatusCodes.Status200OK)
             .WithOpenApi(operation =>
             {
-                operation.Summary = "Triggers transition of instance";
+                operation.Summary = "Returns record workflow history.";
                 operation.Tags = new List<OpenApiTag> { new() { Name = "Consumer BFF" } };
 
                 return operation;
@@ -49,7 +49,7 @@ public static class ConsumerModule
             .Produces<GetRecordHistoryDetailResponse>(StatusCodes.Status200OK)
             .WithOpenApi(operation =>
             {
-                operation.Summary = "Triggers transition of instance";
+                operation.Summary = "Return the instance with full detailed history.";
                 operation.Tags = new List<OpenApiTag> { new() { Name = "Consumer BFF" } };
 
                 return operation;
@@ -237,9 +237,7 @@ public record GetRecordHistoryDetailResponse
                 Dictionary<string, string>? outputData,
                 Dictionary<string, string>? details
                 ) => (Id, Name, ExecutedAt, Duration, InputData, OutputData, Details) = (id, name, executedAt, duration, inputData, outputData, details);
-
         }
-
     }
 }
 
