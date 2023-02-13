@@ -78,8 +78,6 @@ public static class ConsumerModule
                     .ThenInclude(s => s.Transitions)
                     .ThenInclude(t => t.Forms.Where(l => l.Language == language));
 
-
-
         var workflows = query.ToList();
         var response = new GetRecordWorkflowAndTransitionsResponse();
 
