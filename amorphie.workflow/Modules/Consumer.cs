@@ -9,7 +9,7 @@ public static class ConsumerModule
 {
     public static void MapConsumerEndpoints(this WebApplication app)
     {
-        app.MapGet("/workflow/consumer/{entity-id}/record/{record-id}/transition", getTransitions)
+        app.MapGet("/workflow/consumer/{entity}/record/{record-id}/transition", getTransitions)
            .Produces<GetRecordWorkflowAndTransitionsResponse>(StatusCodes.Status200OK)
            .WithOpenApi(operation =>
            {
@@ -58,15 +58,16 @@ public static class ConsumerModule
 
     static IResult getTransitions(
            [FromServices] WorkflowDBContext dbContext,
-           [FromRoute(Name = "entity-id")] string entityId,
+           [FromRoute(Name = "entity")] string entity,
            [FromRoute(Name = "record-id")] string recordId,
            [FromHeader] string language = "tr-TR"
        )
     {
-        var query = dbContext.WorkflowEntities!
-               .Include(e => e.Workflow)
+        var workflows = dbContext.WorkflowEntities!
+                .Where(e => e.Name == entity)
+                .Include(e => e.Workflow)
                     .ThenInclude(w => w.Titles.Where(l => l.Language == language))
-               .Include(e => e.Workflow)
+                .Include(e => e.Workflow)
                     .ThenInclude(w => w.States)
                     .ThenInclude(s => s.Titles.Where(l => l.Language == language))
                 .Include(e => e.Workflow)
@@ -76,15 +77,14 @@ public static class ConsumerModule
                 .Include(e => e.Workflow)
                     .ThenInclude(w => w.States)
                     .ThenInclude(s => s.Transitions)
-                    .ThenInclude(t => t.Forms.Where(l => l.Language == language));
-
-        var workflows = query.ToList();
-        var response = new GetRecordWorkflowAndTransitionsResponse();
+                    .ThenInclude(t => t.Forms.Where(l => l.Language == language))
+                .ToList();
 
         // Aktif kayit ise kayit statusu veritabanindan alinacak
         var recordStatus = string.Empty;
+        var response = new GetRecordWorkflowAndTransitionsResponse();
 
-
+        response.IsRegisteredRecord = false;
         response.StateManeger = workflows.Where(item => item.IsStateManager == true).Select(item =>
                 new GetRecordWorkflowAndTransitionsResponse.Workflow
                 {
@@ -102,10 +102,11 @@ public static class ConsumerModule
 
 
         response.AvailableWorkflows = workflows.Where(item => item.IsStateManager == false).Select(item =>
-                new GetRecordWorkflowAndTransitionsResponse.Workflow
+                new GetRecordWorkflowAndTransitionsResponse.AvailableWorkflow
                 {
                     Name = item.Workflow.Name,
                     Title = item.Workflow.Titles.First().Label,
+                    IsExclusive = item.IsExclusive,
                     Transitions = item.Workflow.States.Where(s => s.Type == StateType.Start).First().Transitions.Select(t =>
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
@@ -153,15 +154,26 @@ public static class ConsumerModule
 
 public record GetRecordWorkflowAndTransitionsResponse
 {
+    public bool IsRegisteredRecord { get; set; }
     public Workflow? StateManeger { get; set; }
-    public ICollection<Workflow>? RunningWorkflows { get; set; }
-    public ICollection<Workflow>? AvailableWorkflows { get; set; }
+    public ICollection<RunningWorkflow>? RunningWorkflows { get; set; }
+    public ICollection<AvailableWorkflow>? AvailableWorkflows { get; set; }
 
     public record Workflow
     {
         public string? Name { get; set; }
         public string? Title { get; set; }
         public ICollection<Transition>? Transitions { get; set; }
+    }
+
+    public record RunningWorkflow : Workflow
+    {
+        public Guid InstanceId { get; set; }
+    }
+
+    public record AvailableWorkflow : Workflow
+    {
+        public Boolean IsExclusive { get; set; }
     }
 
     public record Transition
