@@ -9,7 +9,7 @@ public static class ConsumerModule
 {
     public static void MapConsumerEndpoints(this WebApplication app)
     {
-        app.MapGet("/workflow/consumer/{entity-id}/record/{record-id}/transition", getTransition)
+        app.MapGet("/workflow/consumer/{entity-id}/record/{record-id}/transition", getTransitions)
            .Produces<GetRecordWorkflowAndTransitionsResponse>(StatusCodes.Status200OK)
            .WithOpenApi(operation =>
            {
@@ -56,12 +56,70 @@ public static class ConsumerModule
             });
     }
 
-    static IResult getTransition(
-           [FromRoute(Name = "entity-id")] Guid entityId,
-           [FromRoute(Name = "record-id")] Guid recordId
+    static IResult getTransitions(
+           [FromServices] WorkflowDBContext dbContext,
+           [FromRoute(Name = "entity-id")] string entityId,
+           [FromRoute(Name = "record-id")] string recordId,
+           [FromHeader] string language = "tr-TR"
        )
     {
-        return Results.Ok();
+        var query = dbContext.WorkflowEntities!
+               .Include(e => e.Workflow)
+                    .ThenInclude(w => w.Titles.Where(l => l.Language == language))
+               .Include(e => e.Workflow)
+                    .ThenInclude(w => w.States)
+                    .ThenInclude(s => s.Titles.Where(l => l.Language == language))
+                .Include(e => e.Workflow)
+                    .ThenInclude(w => w.States)
+                    .ThenInclude(s => s.Transitions)
+                    .ThenInclude(t => t.Titles.Where(l => l.Language == language))
+                .Include(e => e.Workflow)
+                    .ThenInclude(w => w.States)
+                    .ThenInclude(s => s.Transitions)
+                    .ThenInclude(t => t.Forms.Where(l => l.Language == language));
+
+
+
+        var workflows = query.ToList();
+        var response = new GetRecordWorkflowAndTransitionsResponse();
+
+        // Aktif kayit ise kayit statusu veritabanindan alinacak
+        var recordStatus = string.Empty;
+
+
+        response.StateManeger = workflows.Where(item => item.IsStateManager == true).Select(item =>
+                new GetRecordWorkflowAndTransitionsResponse.Workflow
+                {
+                    Name = item.Workflow.Name,
+                    Title = item.Workflow.Titles.First().Label,
+                    Transitions = item.Workflow.States.Where(s => (recordStatus != string.Empty && s.Name == recordStatus) || (recordStatus == string.Empty && s.Type == StateType.Start)).First().Transitions.Select(t =>
+                        new GetRecordWorkflowAndTransitionsResponse.Transition
+                        {
+                            Name = t.Name,
+                            Title = t.Titles.First().Label,
+                            Form = t.Forms.First().Label
+                        }).ToArray()
+                }
+        ).FirstOrDefault();
+
+
+        response.AvailableWorkflows = workflows.Where(item => item.IsStateManager == false).Select(item =>
+                new GetRecordWorkflowAndTransitionsResponse.Workflow
+                {
+                    Name = item.Workflow.Name,
+                    Title = item.Workflow.Titles.First().Label,
+                    Transitions = item.Workflow.States.Where(s => s.Type == StateType.Start).First().Transitions.Select(t =>
+                        new GetRecordWorkflowAndTransitionsResponse.Transition
+                        {
+                            Name = t.Name,
+                            Title = t.Titles.First().Label,
+                            Form = t.Forms.First().Label
+                        }).ToArray()
+                }
+            ).ToArray();
+
+
+        return Results.Ok(response);
     }
 
     static IResult postTransition(
@@ -97,24 +155,22 @@ public static class ConsumerModule
 
 public record GetRecordWorkflowAndTransitionsResponse
 {
-    public Workflow? StateManeger { get; init; }
-    public Workflow? RunningWorkflows { get; init; }
-    public Workflow? AvailableWorkflows { get; init; }
+    public Workflow? StateManeger { get; set; }
+    public ICollection<Workflow>? RunningWorkflows { get; set; }
+    public ICollection<Workflow>? AvailableWorkflows { get; set; }
 
     public record Workflow
     {
-        public string Name { get; init; }
-        public ICollection<Transition> Transitions { get; init; }
-
-        public Workflow(string name, ICollection<Transition> transitions) => (Name, Transitions) = (name, transitions);
+        public string? Name { get; set; }
+        public string? Title { get; set; }
+        public ICollection<Transition>? Transitions { get; set; }
     }
 
     public record Transition
     {
-        public string Name { get; init; }
-        public string FormSchema { get; init; }
-
-        public Transition(string name, string formSchema) => (Name, FormSchema) = (name, formSchema);
+        public string? Name { get; set; }
+        public string? Title { get; set; }
+        public string? Form { get; set; }
     }
 }
 

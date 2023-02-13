@@ -7,7 +7,7 @@ public class Workflow : BaseDbEntity
     public ICollection<Translation> Titles { get; set; } = default!;
     public ICollection<State> States { get; set; } = default!;
     public ZeebeFlow? ZeebeFlow { get; set; }
-    public List<WorkflowEntity>? Entities { get; set; }
+    public List<WorkflowEntity> Entities { get; set; } = default!;
 }
 
 
