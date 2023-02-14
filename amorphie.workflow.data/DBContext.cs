@@ -22,6 +22,8 @@ public class WorkflowDBContext : DbContext
     public DbSet<Workflow>? Workflows { get; set; }
     public DbSet<WorkflowEntity>? WorkflowEntities { get; set; }
 
+    public DbSet<Instance>? Instances { get; set; }
+
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -47,11 +49,19 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<Transition>()
            .HasKey(s => s.Name);
 
+        modelBuilder.Entity<Instance>()
+           .HasKey(s => s.Id);
+
+        modelBuilder.Entity<InstanceTransition>()
+           .HasKey(s => s.Id);
+
+        modelBuilder.Entity<InstanceEvent>()
+         .HasKey(s => s.Id);
 
         modelBuilder.Entity<Transition>()
             .HasOne(s => s.FromState)
             .WithMany(s => s.Transitions);
-            
+
 
         // Translation Relations
         modelBuilder.Entity<Translation>().Property<string>("StateName_Title");

@@ -84,7 +84,7 @@ public static class ConsumerModule
         var recordStatus = string.Empty;
         var response = new GetRecordWorkflowAndTransitionsResponse();
 
-        response.IsRegisteredRecord = false;
+        response.IsRecordRegistered = false;
         response.StateManeger = workflows.Where(item => item.IsStateManager == true).Select(item =>
                 new GetRecordWorkflowAndTransitionsResponse.Workflow
                 {
@@ -154,7 +154,7 @@ public static class ConsumerModule
 
 public record GetRecordWorkflowAndTransitionsResponse
 {
-    public bool IsRegisteredRecord { get; set; }
+    public bool IsRecordRegistered { get; set; }
     public Workflow? StateManeger { get; set; }
     public ICollection<RunningWorkflow>? RunningWorkflows { get; set; }
     public ICollection<AvailableWorkflow>? AvailableWorkflows { get; set; }
