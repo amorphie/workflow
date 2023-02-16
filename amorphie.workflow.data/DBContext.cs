@@ -19,10 +19,11 @@ class WorkflowDbContextFactory : IDesignTimeDbContextFactory<WorkflowDBContext>
 
 public class WorkflowDBContext : DbContext
 {
-    public DbSet<Workflow>? Workflows { get; set; }
-    public DbSet<WorkflowEntity>? WorkflowEntities { get; set; }
+    public DbSet<Workflow> Workflows { get; set; } = default!;
+    public DbSet<WorkflowEntity> WorkflowEntities { get; set; } = default!;
 
-    public DbSet<Instance>? Instances { get; set; }
+    public DbSet<Transition> Transitions { get; set; } = default!;
+    public DbSet<Instance> Instances { get; set; } = default!;
 
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
@@ -51,6 +52,11 @@ public class WorkflowDBContext : DbContext
 
         modelBuilder.Entity<Instance>()
            .HasKey(s => s.Id);
+
+        modelBuilder.Entity<Instance>()
+          .HasIndex("EntityName", "RecordId", "StateName");
+
+
 
         modelBuilder.Entity<InstanceTransition>()
            .HasKey(s => s.Id);

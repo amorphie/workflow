@@ -9,7 +9,8 @@ public static class ConsumerModule
 {
     public static void MapConsumerEndpoints(this WebApplication app)
     {
-        app.MapGet("/workflow/consumer/{entity}/record/{record-id}/transition", getTransitions)
+
+        app.MapGet("/workflow/consumer/{entity}/record/{recordid}/transition", getTransitions)
            .Produces<GetRecordWorkflowAndTransitionsResponse>(StatusCodes.Status200OK)
            .WithOpenApi(operation =>
            {
@@ -19,7 +20,7 @@ public static class ConsumerModule
                return operation;
            });
 
-        app.MapPost("/workflow/consumer/{entity-id}/record/{record-id}/transition/{transition}", postTransition)
+        app.MapPost("/workflow/consumer/{entity}/record/{recordid}/transition/{transition}", postTransition)
             .Produces<ConsumerPostTransitionResponse>(StatusCodes.Status200OK)
             .Produces<ConsumerPostTransitionResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status404NotFound)
@@ -59,7 +60,7 @@ public static class ConsumerModule
     static IResult getTransitions(
            [FromServices] WorkflowDBContext dbContext,
            [FromRoute(Name = "entity")] string entity,
-           [FromRoute(Name = "record-id")] string recordId,
+           [FromRoute(Name = "recordId")] string recordId,
            [FromHeader] string language = "tr-TR"
        )
     {
@@ -106,7 +107,7 @@ public static class ConsumerModule
                 {
                     Name = item.Workflow.Name,
                     Title = item.Workflow.Titles.First().Label,
-                    IsExclusive = item.IsExclusive,
+                    AllowOnlyOneActiveInstance = item.AllowOnlyOneActiveInstance,
                     Transitions = item.Workflow.States.Where(s => s.Type == StateType.Start).First().Transitions.Select(t =>
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
@@ -122,12 +123,68 @@ public static class ConsumerModule
     }
 
     static IResult postTransition(
-            [FromRoute(Name = "entity-id")] Guid entityId,
-            [FromRoute(Name = "record-id")] Guid recordId,
+            [FromServices] WorkflowDBContext dbContext,
+            [FromRoute(Name = "entity")] string entity,
+            [FromRoute(Name = "recordId")] Guid recordId,
             [FromRoute(Name = "transition")] string transition,
             [FromBody] ConsumerPostTransitionRequest data
         )
     {
+        var transitionRecord = dbContext.Transitions.Find(transition);
+
+        if (transitionRecord == null)
+            return Results.NotFound($"{transition} is not found.");
+
+        var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId).ToList();
+
+        if (instanceRecords.Where(i => (i.StateName != transitionRecord.FromStateName) && (i.BaseStatus != BaseStatusType.Completed)).Count() > 0)
+        {
+            return Results.BadRequest($"There is an active workflow exists for {recordId} at different state.");
+        }
+
+        var instanceRecord = instanceRecords.Where(i => i.StateName == transitionRecord.FromStateName).FirstOrDefault();
+
+        if (instanceRecord == null)
+        {
+
+            // There is no active instance. Check, if the transtion is from start state? 
+            dbContext.Entry(transitionRecord).Reference(t => t.FromState).Load();
+
+            if (transitionRecord.FromState.Type == StateType.Start)
+            {
+
+                dbContext.Entry(transitionRecord).Reference(t => t.ToState).Load();
+                //Create an instace for request.
+                var newInstance = new Instance
+                {
+                    WorkflowName = transitionRecord.FromState.WorkflowName!,
+                    EntityName = entity,
+                    RecordId = recordId,
+                    StateName = transitionRecord.ToStateName!,
+                    BaseStatus = transitionRecord.ToState!.BaseStatus
+                };
+
+                dbContext.Add(newInstance);
+                dbContext.SaveChanges();
+            }
+            else
+            {
+                Results.BadRequest($"There is no active workflow for {recordId} and also {transition} is not transition of any start state.");
+            }
+
+        }
+
+        //transitionRecord.FromStateName;
+
+
+
+
+
+
+
+        //dbContext.Instances.Select();
+
+
         return Results.Ok();
     }
 
@@ -173,7 +230,7 @@ public record GetRecordWorkflowAndTransitionsResponse
 
     public record AvailableWorkflow : Workflow
     {
-        public Boolean IsExclusive { get; set; }
+        public Boolean AllowOnlyOneActiveInstance { get; set; }
     }
 
     public record Transition
@@ -185,12 +242,15 @@ public record GetRecordWorkflowAndTransitionsResponse
 }
 
 
-public record ConsumerPostTransitionRequest(
-    dynamic formData,
-    dynamic entityData,
-    dynamic additionalData,
-    bool getSignalRHub
-    );
+public record ConsumerPostTransitionRequest
+{
+    /*
+    public dynamic EntityData { get; set; } = default!;
+    public dynamic? DormData { get; set; }
+    public dynamic? AdditionalData { get; set; }
+    public bool GetSignalRHub { get; set; }
+    */
+}
 
 public record ConsumerPostTransitionResponse(
     string? newStatus,

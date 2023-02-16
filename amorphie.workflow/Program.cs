@@ -7,7 +7,11 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<WorkflowDBContext>
-    (options => options.UseNpgsql("Host=localhost:5432;Database=workflow;Username=postgres;Password=postgres"));
+    ((options) =>
+    {
+        //options.UseLazyLoadingProxies();
+        options.UseNpgsql("Host=localhost:5432;Database=workflow;Username=postgres;Password=postgres");
+    });
 
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
@@ -32,10 +36,11 @@ builder.Services.AddSwaggerGen(c =>
     c.IncludeXmlComments(xmlPath);
 });
 
-builder.Services.AddControllers().AddJsonOptions(options => {
-            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-            });
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+});
 
 var app = builder.Build();
 

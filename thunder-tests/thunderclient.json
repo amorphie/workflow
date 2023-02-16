@@ -1,0 +1,32 @@
+[
+  {
+    "_id": "4d5bbe10-dec4-4da4-b7a1-8124aaaa3827",
+    "colId": "6cbcc834-1771-49f8-b0d4-a73b921f537d",
+    "containerId": "",
+    "name": "http://localhost:4201/workflow/consumer/{entity}/record/{recordId}/transition/user-register",
+    "url": "http://localhost:4201/workflow/consumer/{entity}/record/{recordid}/transition/user-register",
+    "method": "POST",
+    "sortNum": 40000,
+    "created": "2023-02-16T16:28:36.026Z",
+    "modified": "2023-02-16T17:08:40.324Z",
+    "headers": [],
+    "params": [
+      {
+        "name": "entity",
+        "value": "user",
+        "isPath": true
+      },
+      {
+        "name": "recordid",
+        "value": "3abdd8a3-2671-4648-9f7b-db395d97b7fe",
+        "isPath": true
+      }
+    ],
+    "body": {
+      "type": "json",
+      "raw": "{}",
+      "form": []
+    },
+    "tests": []
+  }
+]
