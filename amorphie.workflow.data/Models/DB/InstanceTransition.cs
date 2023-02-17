@@ -19,14 +19,12 @@ public class InstanceTransition : BaseDbEntityWithId
     public State ToState { get; set; } = default!;
     public string ToStateName { get; set; } = default!;
 
-    public string Form { get; set; } = default!;
-
     public string EntityData { get; set; } = default!;
     public string FormData { get; set; } = default!;
     public string AdditionalData { get; set; } = default!;
 
     public string FieldUpdates { get; set; } = default!;
-    public string Status { get; set; } = default!;
+    
 
     public DateTime CompletedAt { get; set; } = default!;
 }

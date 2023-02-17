@@ -60,10 +60,11 @@ public static class ConsumerModule
     static IResult getTransitions(
            [FromServices] WorkflowDBContext dbContext,
            [FromRoute(Name = "entity")] string entity,
-           [FromRoute(Name = "recordId")] string recordId,
+           [FromRoute(Name = "recordId")] Guid recordId,
            [FromHeader] string language = "tr-TR"
        )
     {
+        // load all workflows available to entity
         var workflows = dbContext.WorkflowEntities!
                 .Where(e => e.Name == entity)
                 .Include(e => e.Workflow)
@@ -81,33 +82,63 @@ public static class ConsumerModule
                     .ThenInclude(t => t.Forms.Where(l => l.Language == language))
                 .ToList();
 
-        // Aktif kayit ise kayit statusu veritabanindan alinacak
-        var recordStatus = string.Empty;
-        var response = new GetRecordWorkflowAndTransitionsResponse();
+        var stateManagerWorkflow = workflows.Where(item => item.IsStateManager == true).FirstOrDefault();
 
-        response.IsRecordRegistered = false;
-        response.StateManeger = workflows.Where(item => item.IsStateManager == true).Select(item =>
+        // load all active workflows of record.
+        var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != BaseStatusType.Completed).ToList();
+
+        var response = new GetRecordWorkflowAndTransitionsResponse();
+        //response.IsStateRecordRegistered = instanceRecords.Count > 0;
+
+        if (stateManagerWorkflow != null)
+        {
+            var stateManagerInstace = instanceRecords.Where(i => i.WorkflowName == stateManagerWorkflow.Name).FirstOrDefault();
+
+            if (stateManagerInstace != null)
+            {
+
+                response.StateManeger = workflows.Where(item => item.IsStateManager == true).Select(item =>
+                  new GetRecordWorkflowAndTransitionsResponse.StateManagerWorkflow
+                  {
+                      Name = item.Workflow.Name,
+                      Title = item.Workflow.Titles.First().Label,
+                      IsRegistered = true,
+                      Transitions = item.Workflow.States.First(s => s.Name == stateManagerInstace.StateName).Transitions.Select(t =>
+                          new GetRecordWorkflowAndTransitionsResponse.Transition
+                          {
+                              Name = t.Name,
+                              Title = t.Titles.First().Label,
+                              Form = t.Forms.First().Label
+                          }).ToArray()
+                  }
+                      ).FirstOrDefault();
+            }
+            else
+            {
+                // Return start state transitions
+                response.StateManeger = workflows.Where(item => item.IsStateManager == true).Select(item =>
+                   new GetRecordWorkflowAndTransitionsResponse.StateManagerWorkflow
+                   {
+                       Name = item.Workflow.Name,
+                       Title = item.Workflow.Titles.First().Label,
+                       IsRegistered = false,
+                       Transitions = item.Workflow.States.First(s => s.Type == StateType.Start).Transitions.Select(t =>
+                           new GetRecordWorkflowAndTransitionsResponse.Transition
+                           {
+                               Name = t.Name,
+                               Title = t.Titles.First().Label,
+                               Form = t.Forms.First().Label
+                           }).ToArray()
+                   }
+                       ).FirstOrDefault();
+            }
+        }
+
+        response.AvailableWorkflows = workflows.Where(item => item.IsStateManager == false).Select(item =>
                 new GetRecordWorkflowAndTransitionsResponse.Workflow
                 {
                     Name = item.Workflow.Name,
                     Title = item.Workflow.Titles.First().Label,
-                    Transitions = item.Workflow.States.Where(s => (recordStatus != string.Empty && s.Name == recordStatus) || (recordStatus == string.Empty && s.Type == StateType.Start)).First().Transitions.Select(t =>
-                        new GetRecordWorkflowAndTransitionsResponse.Transition
-                        {
-                            Name = t.Name,
-                            Title = t.Titles.First().Label,
-                            Form = t.Forms.First().Label
-                        }).ToArray()
-                }
-        ).FirstOrDefault();
-
-
-        response.AvailableWorkflows = workflows.Where(item => item.IsStateManager == false).Select(item =>
-                new GetRecordWorkflowAndTransitionsResponse.AvailableWorkflow
-                {
-                    Name = item.Workflow.Name,
-                    Title = item.Workflow.Titles.First().Label,
-                    AllowOnlyOneActiveInstance = item.AllowOnlyOneActiveInstance,
                     Transitions = item.Workflow.States.Where(s => s.Type == StateType.Start).First().Transitions.Select(t =>
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
@@ -173,16 +204,33 @@ public static class ConsumerModule
             }
 
         }
+        else
+        {
+            dbContext.Entry(transitionRecord).Reference(t => t.ToState).Load();
 
-        //transitionRecord.FromStateName;
+            instanceRecord.StateName = transitionRecord.ToStateName!;
+            instanceRecord.BaseStatus = transitionRecord.ToState!.BaseStatus;
 
 
+            var newInstanceTransition = new InstanceTransition
+            {
+                InstanceId = instanceRecord.Id,
+                FromStateName = transitionRecord.FromStateName,
+                ToStateName = transitionRecord.ToStateName!,
+                CompletedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
+                EntityData = "",
+                FormData = "",
+                AdditionalData = "",
+                FieldUpdates = ""
+            };
+
+            dbContext.Add(newInstanceTransition);
 
 
+            dbContext.SaveChanges();
+        }
 
 
-
-        //dbContext.Instances.Select();
 
 
         return Results.Ok();
@@ -211,10 +259,9 @@ public static class ConsumerModule
 
 public record GetRecordWorkflowAndTransitionsResponse
 {
-    public bool IsRecordRegistered { get; set; }
-    public Workflow? StateManeger { get; set; }
+    public StateManagerWorkflow? StateManeger { get; set; }
     public ICollection<RunningWorkflow>? RunningWorkflows { get; set; }
-    public ICollection<AvailableWorkflow>? AvailableWorkflows { get; set; }
+    public ICollection<Workflow>? AvailableWorkflows { get; set; }
 
     public record Workflow
     {
@@ -223,14 +270,14 @@ public record GetRecordWorkflowAndTransitionsResponse
         public ICollection<Transition>? Transitions { get; set; }
     }
 
+    public record StateManagerWorkflow : Workflow
+    {
+        public bool IsRegistered { get; set; } = false;
+    }
+
     public record RunningWorkflow : Workflow
     {
         public Guid InstanceId { get; set; }
-    }
-
-    public record AvailableWorkflow : Workflow
-    {
-        public Boolean AllowOnlyOneActiveInstance { get; set; }
     }
 
     public record Transition
