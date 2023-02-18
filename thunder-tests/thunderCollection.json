@@ -8,11 +8,6 @@
     "settings": {
       "headers": [],
       "tests": [],
-      "preReq": {
-        "runFilters": [
-          "generateNewRecordId"
-        ]
-      },
       "scripts": [
         "custom-filter.js"
       ],

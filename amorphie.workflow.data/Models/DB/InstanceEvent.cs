@@ -1,6 +1,6 @@
 
 
-public class InstanceEvent : BaseDbEntityWithId
+public class InstanceEvent : BaseDbLogEntity
 {
     public InstanceTransition InstanceTransition { get; set; } = default!;
     public Guid InstanceTransitionId { get; set; } = default!;

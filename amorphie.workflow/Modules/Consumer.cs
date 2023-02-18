@@ -61,7 +61,7 @@ public static class ConsumerModule
            [FromServices] WorkflowDBContext dbContext,
            [FromRoute(Name = "entity")] string entity,
            [FromRoute(Name = "recordId")] Guid recordId,
-           [FromHeader] string language = "tr-TR"
+           [FromHeader(Name = "Accept-Language")] string language = "tr-TR"
        )
     {
         // load all workflows available to entity
@@ -155,6 +155,8 @@ public static class ConsumerModule
 
     static IResult postTransition(
             [FromServices] WorkflowDBContext dbContext,
+            [FromHeader(Name = "User")] Guid user,
+            [FromHeader(Name = "Behalf-Of-User")] Guid behalOfUser,
             [FromRoute(Name = "entity")] string entity,
             [FromRoute(Name = "recordId")] Guid recordId,
             [FromRoute(Name = "transition")] string transition,
@@ -192,10 +194,30 @@ public static class ConsumerModule
                     EntityName = entity,
                     RecordId = recordId,
                     StateName = transitionRecord.ToStateName!,
-                    BaseStatus = transitionRecord.ToState!.BaseStatus
+                    BaseStatus = transitionRecord.ToState!.BaseStatus,
+                    CreatedBy = user,
+                    CreatedByBehalfOf = behalOfUser,
                 };
 
                 dbContext.Add(newInstance);
+
+                var newInstanceTransition = new InstanceTransition
+                {
+                    InstanceId = newInstance.Id,
+                    FromStateName = transitionRecord.FromStateName,
+                    ToStateName = transitionRecord.ToStateName!,
+                    CompletedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
+                    EntityData = Convert.ToString(data.EntityData),
+                    FormData = Convert.ToString(data.FormData),
+                    AdditionalData = Convert.ToString(data.AdditionalData),
+                    CreatedBy = user,
+                    CreatedByBehalfOf = behalOfUser,
+                    FieldUpdates = ""
+                };
+
+                dbContext.Add(newInstanceTransition);
+
+
                 dbContext.SaveChanges();
             }
             else
@@ -209,6 +231,10 @@ public static class ConsumerModule
             dbContext.Entry(transitionRecord).Reference(t => t.ToState).Load();
 
             instanceRecord.StateName = transitionRecord.ToStateName!;
+            instanceRecord.ModifiedBy = user;
+            instanceRecord.ModifiedByBehalfOf = behalOfUser;
+            instanceRecord.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+
             instanceRecord.BaseStatus = transitionRecord.ToState!.BaseStatus;
 
 
@@ -218,21 +244,17 @@ public static class ConsumerModule
                 FromStateName = transitionRecord.FromStateName,
                 ToStateName = transitionRecord.ToStateName!,
                 CompletedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-                EntityData = "",
-                FormData = "",
-                AdditionalData = "",
+                EntityData = Convert.ToString(data.EntityData),
+                FormData = Convert.ToString(data.FormData),
+                AdditionalData = Convert.ToString(data.AdditionalData),
+                CreatedBy = user,
+                CreatedByBehalfOf = behalOfUser,
                 FieldUpdates = ""
             };
 
             dbContext.Add(newInstanceTransition);
-
-
             dbContext.SaveChanges();
         }
-
-
-
-
         return Results.Ok();
     }
 
@@ -291,12 +313,12 @@ public record GetRecordWorkflowAndTransitionsResponse
 
 public record ConsumerPostTransitionRequest
 {
-    /*
+
     public dynamic EntityData { get; set; } = default!;
-    public dynamic? DormData { get; set; }
+    public dynamic? FormData { get; set; }
     public dynamic? AdditionalData { get; set; }
     public bool GetSignalRHub { get; set; }
-    */
+
 }
 
 public record ConsumerPostTransitionResponse(

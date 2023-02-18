@@ -8,8 +8,17 @@
     "method": "POST",
     "sortNum": 40000,
     "created": "2023-02-16T16:28:36.026Z",
-    "modified": "2023-02-17T06:35:02.135Z",
-    "headers": [],
+    "modified": "2023-02-18T18:58:08.960Z",
+    "headers": [
+      {
+        "name": "User",
+        "value": "{{user}}"
+      },
+      {
+        "name": "Behalf-Of-User",
+        "value": "{{behalfOfUser}}"
+      }
+    ],
     "params": [
       {
         "name": "entity",
@@ -24,7 +33,7 @@
     ],
     "body": {
       "type": "json",
-      "raw": "{}",
+      "raw": "{\n  \"entityData\": {\n    \"reference\": 38538734554,\n    \"gsmNumber\": {\n      \"countryCode\": 90,\n      \"prefix\": 530,\n      \"number\": 2342342\n    }\n  },\n  \"formData\": \"\",\n  \"additionalData\": {\n    \"application\": \"amorphie-backoffice\"\n  },\n  \"getSignalRHub\": true\n}",
       "form": []
     },
     "tests": []
@@ -38,8 +47,13 @@
     "method": "GET",
     "sortNum": 20000,
     "created": "2023-02-17T06:23:58.168Z",
-    "modified": "2023-02-17T13:20:55.793Z",
-    "headers": [],
+    "modified": "2023-02-18T19:21:00.214Z",
+    "headers": [
+      {
+        "name": "Accept-Language",
+        "value": "{{language}}"
+      }
+    ],
     "params": [
       {
         "name": "recordId",
@@ -47,7 +61,12 @@
         "isPath": true
       }
     ],
-    "tests": []
+    "tests": [],
+    "preReq": {
+      "runFilters": [
+        "generateNewRecordId"
+      ]
+    }
   },
   {
     "_id": "9aa0e329-770e-4f2e-ba6c-2e4eb437e998",
@@ -58,8 +77,17 @@
     "method": "POST",
     "sortNum": 50000,
     "created": "2023-02-17T07:12:16.146Z",
-    "modified": "2023-02-17T07:13:22.589Z",
-    "headers": [],
+    "modified": "2023-02-18T18:59:07.478Z",
+    "headers": [
+      {
+        "name": "User",
+        "value": "{{user}}"
+      },
+      {
+        "name": "Behalf-Of-User",
+        "value": "{{behalfOfUser}}"
+      }
+    ],
     "params": [
       {
         "name": "entity",
@@ -74,7 +102,7 @@
     ],
     "body": {
       "type": "json",
-      "raw": "{}",
+      "raw": "{\n  \"entityData\": {\n    \"reference\": 38538734554,\n    \"gsmNumber\": {\n      \"countryCode\": 90,\n      \"prefix\": 530,\n      \"number\": 2342342\n    }\n  },\n  \"formData\": \"\",\n  \"additionalData\": {\n    \"application\": \"amorphie-backoffice\"\n  },\n  \"getSignalRHub\": true\n}",
       "form": []
     },
     "tests": []
@@ -88,8 +116,13 @@
     "method": "GET",
     "sortNum": 45000,
     "created": "2023-02-17T07:38:34.898Z",
-    "modified": "2023-02-17T11:46:31.154Z",
-    "headers": [],
+    "modified": "2023-02-18T19:21:20.883Z",
+    "headers": [
+      {
+        "name": "Accept-Language",
+        "value": "{{language}}"
+      }
+    ],
     "params": [
       {
         "name": "recordId",

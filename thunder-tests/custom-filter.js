@@ -1,8 +1,9 @@
 
 const { v4: uuid4 } = require("uuid");
 
-function generateNewRecordId() {
+function generateNewRecordId(input) {
 
+    console.log(input);
     
     let uuid = uuid4();
 

@@ -9,7 +9,19 @@
     "data": [
       {
         "name": "newRecordId",
-        "value": "514ce564-d4e3-453c-ab7c-15cf1abfde34"
+        "value": "bc1510b5-6dfe-47ee-9e31-07e6aa57133f"
+      },
+      {
+        "name": "user",
+        "value": "5fb6d120-aa85-45a4-bf92-f65b90198fe3"
+      },
+      {
+        "name": "behalfOfUser",
+        "value": "5fb6d120-aa85-45a4-bf92-f65b90198fe3"
+      },
+      {
+        "name": "language",
+        "value": "en-EN"
       }
     ]
   }
