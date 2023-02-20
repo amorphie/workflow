@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "workflow-build",
             "command": "dotnet",
             "type": "process",
             "args": [
@@ -14,8 +14,20 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "workflow-zeebe-build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/amorphie.workflow.zeebe/amorphie.workflow.zeebe.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "appId": "amorphie-workflow",
-            "dependsOn": "build",
+            "dependsOn": "workflow-build",
             "appPort": 4201,
             "httpPort": 42010,
             "grpcPort": 42011,
@@ -24,11 +36,27 @@
             "componentsPath": "dapr/components",
             "config": "dapr/config.yaml",
             "metricsPort": 42012
-            
+        },
+        {
+            "appId": "amorphie-workflow-zeebe",
+            "dependsOn": "workflow-zeebe-build",
+            "appPort": 4202,
+            "httpPort": 42020,
+            "grpcPort": 42021,
+            "label": "dapr-debug-amorphie-workflow-zeebe",
+            "type": "daprd",
+            "componentsPath": "dapr/components",
+            "config": "dapr/config.yaml",
+            "metricsPort": 42022
         },
         {
             "appId": "amorphie-workflow",
             "label": "daprd-down-amorphie-workflow",
+            "type": "daprd-down"
+        },
+        {
+            "appId": "amorphie-workflow-zeebe",
+            "label": "daprd-down-amorphie-workflow-zeebe",
             "type": "daprd-down"
         }
     ]

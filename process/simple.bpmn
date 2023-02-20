@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1q9lzc8" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.5.1" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.1.0">
+  <bpmn:process id="Process_Simple" name="Simple Process" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_034szy9</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_END">
+      <bpmn:extensionElements>
+        <zeebe:ioMapping>
+          <zeebe:output source="=&#34;NEWSTATE&#34;" target="OutputVariable_STATE" />
+        </zeebe:ioMapping>
+        <zeebe:properties>
+          <zeebe:property name="EXT_STATE" value="NEW_NEW_STATE" />
+        </zeebe:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0bnak6z</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_034szy9" sourceRef="StartEvent_1" targetRef="Activity_SimpleTask" />
+    <bpmn:manualTask id="Activity_SimpleTask" name="Manuel Simple Task">
+      <bpmn:incoming>Flow_034szy9</bpmn:incoming>
+      <bpmn:outgoing>Flow_0pdh8m6</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_0pdh8m6" sourceRef="Activity_SimpleTask" targetRef="Activity_SET_STATE" />
+    <bpmn:manualTask id="Activity_SET_STATE" name="SET STATE">
+      <bpmn:extensionElements>
+        <zeebe:properties>
+          <zeebe:property name="SET_STATE_EX" value="SET_STATE_EX_VAL" />
+        </zeebe:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0pdh8m6</bpmn:incoming>
+      <bpmn:outgoing>Flow_0bnak6z</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_0bnak6z" sourceRef="Activity_SET_STATE" targetRef="Event_END" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_Simple">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="82" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1gonc3o_di" bpmnElement="Activity_SimpleTask">
+        <dc:Bounds x="290" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0pxh52q_di" bpmnElement="Event_END">
+        <dc:Bounds x="822" y="82" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ruewdd_di" bpmnElement="Activity_SET_STATE">
+        <dc:Bounds x="570" y="60" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_034szy9_di" bpmnElement="Flow_034szy9">
+        <di:waypoint x="188" y="100" />
+        <di:waypoint x="290" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0pdh8m6_di" bpmnElement="Flow_0pdh8m6">
+        <di:waypoint x="390" y="100" />
+        <di:waypoint x="570" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0bnak6z_di" bpmnElement="Flow_0bnak6z">
+        <di:waypoint x="670" y="100" />
+        <di:waypoint x="822" y="100" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
