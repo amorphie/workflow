@@ -1,9 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace amorphie.tag.data;
 
 class WorkflowDbContextFactory : IDesignTimeDbContextFactory<WorkflowDBContext>
 {

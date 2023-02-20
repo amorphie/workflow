@@ -6,5 +6,6 @@ public enum BaseStatusType
     InProgress = 8,
     Passive = 16,
     Completed = 32,
+    LockedInFlow = 256,
     All = New | Active | InProgress | Passive
 }

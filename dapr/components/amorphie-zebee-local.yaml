@@ -1,7 +1,7 @@
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
-  name: local-zeebe
+  name: zeebe-local
 spec:
   type: bindings.zeebe.command
   version: v1
