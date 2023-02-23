@@ -5,7 +5,7 @@ public class Instance : BaseDbEntityWithId
     public Workflow Workflow { get; set; } = default!;
     public string WorkflowName { get; set; } = default!;
 
-    public ZeebeFlow? ZeebeFlow { get; set; }
+    public ZeebeMessage? ZeebeFlow { get; set; }
     public string? ZeebeFlowName { get; set; }
 
     public string EntityName { get; set; } = default!;

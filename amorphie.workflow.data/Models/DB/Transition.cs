@@ -14,6 +14,8 @@ public class Transition : BaseDbEntity
 
     public ICollection<Translation> Titles { get; set; } = default!;
 
-    public ZeebeFlow? Flow { get; set; }
+    public ZeebeMessage? Flow { get; set; }
+    public string? FlowName { get; set; }
+
     public ICollection<Translation> Forms { get; set; } = default!;
 }

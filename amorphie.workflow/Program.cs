@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<IPostTransactionService, PostTransactionService>();
 builder.Services.AddDbContext<WorkflowDBContext>
     ((options) =>
     {

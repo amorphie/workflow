@@ -11,8 +11,8 @@ public class State : BaseDbEntity
 
     public ICollection<Transition> Transitions { get; set; } = default!;
 
-    public ZeebeFlow? OnEntryFlow { get; set; }
-    public ZeebeFlow? OnExitFlow { get; set; }
+    public ZeebeMessage? OnEntryFlow { get; set; }
+    public ZeebeMessage? OnExitFlow { get; set; }
 
     public BaseStatusType BaseStatus { get; set; }
     public StateType Type { get; set; }

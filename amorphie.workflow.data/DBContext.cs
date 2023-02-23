@@ -31,7 +31,7 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<Workflow>()
             .HasKey(w => w.Name);
 
-        modelBuilder.Entity<ZeebeFlow>()
+        modelBuilder.Entity<ZeebeMessage>()
            .HasKey(w => w.Name);
 
         modelBuilder.Entity<WorkflowEntity>()

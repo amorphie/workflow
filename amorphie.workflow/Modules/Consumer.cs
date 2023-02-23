@@ -159,102 +159,18 @@ public static class ConsumerModule
             [FromRoute(Name = "entity")] string entity,
             [FromRoute(Name = "recordId")] Guid recordId,
             [FromRoute(Name = "transition")] string transition,
-            [FromBody] ConsumerPostTransitionRequest data
+            [FromBody] ConsumerPostTransitionRequest data,
+            [FromServices] IPostTransactionService service
         )
     {
-        var transitionRecord = dbContext.Transitions.Find(transition);
+        var result = service.Init(entity, recordId, transition, user, behalOfUser, data);
 
-        if (transitionRecord == null)
-            return Results.NotFound($"{transition} is not found.");
-
-        var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId).ToList();
-
-        if (instanceRecords.Where(i => (i.StateName != transitionRecord.FromStateName) && (i.BaseStatus != BaseStatusType.Completed)).Count() > 0)
+        if (result == Results.Empty)
         {
-            return Results.BadRequest($"There is an active workflow exists for {recordId} at different state.");
+            result = service.Execute();
         }
 
-        var instanceRecord = instanceRecords.Where(i => i.StateName == transitionRecord.FromStateName).FirstOrDefault();
-
-        if (instanceRecord == null)
-        {
-
-            // There is no active instance. Check, if the transtion is from start state? 
-            dbContext.Entry(transitionRecord).Reference(t => t.FromState).Load();
-
-            if (transitionRecord.FromState.Type == StateType.Start)
-            {
-
-                dbContext.Entry(transitionRecord).Reference(t => t.ToState).Load();
-                //Create an instace for request.
-                var newInstance = new Instance
-                {
-                    WorkflowName = transitionRecord.FromState.WorkflowName!,
-                    EntityName = entity,
-                    RecordId = recordId,
-                    StateName = transitionRecord.ToStateName!,
-                    BaseStatus = transitionRecord.ToState!.BaseStatus,
-                    CreatedBy = user,
-                    CreatedByBehalfOf = behalOfUser,
-                };
-
-                dbContext.Add(newInstance);
-
-                var newInstanceTransition = new InstanceTransition
-                {
-                    InstanceId = newInstance.Id,
-                    FromStateName = transitionRecord.FromStateName,
-                    ToStateName = transitionRecord.ToStateName!,
-                    CompletedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-                    EntityData = Convert.ToString(data.EntityData),
-                    FormData = Convert.ToString(data.FormData),
-                    AdditionalData = Convert.ToString(data.AdditionalData),
-                    CreatedBy = user,
-                    CreatedByBehalfOf = behalOfUser,
-                    FieldUpdates = ""
-                };
-
-                dbContext.Add(newInstanceTransition);
-
-
-                dbContext.SaveChanges();
-            }
-            else
-            {
-                Results.BadRequest($"There is no active workflow for {recordId} and also {transition} is not transition of any start state.");
-            }
-
-        }
-        else
-        {
-            dbContext.Entry(transitionRecord).Reference(t => t.ToState).Load();
-
-            instanceRecord.StateName = transitionRecord.ToStateName!;
-            instanceRecord.ModifiedBy = user;
-            instanceRecord.ModifiedByBehalfOf = behalOfUser;
-            instanceRecord.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
-
-            instanceRecord.BaseStatus = transitionRecord.ToState!.BaseStatus;
-
-
-            var newInstanceTransition = new InstanceTransition
-            {
-                InstanceId = instanceRecord.Id,
-                FromStateName = transitionRecord.FromStateName,
-                ToStateName = transitionRecord.ToStateName!,
-                CompletedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-                EntityData = Convert.ToString(data.EntityData),
-                FormData = Convert.ToString(data.FormData),
-                AdditionalData = Convert.ToString(data.AdditionalData),
-                CreatedBy = user,
-                CreatedByBehalfOf = behalOfUser,
-                FieldUpdates = ""
-            };
-
-            dbContext.Add(newInstanceTransition);
-            dbContext.SaveChanges();
-        }
-        return Results.Ok();
+        return result;
     }
 
 
@@ -275,7 +191,16 @@ public static class ConsumerModule
     {
         return Results.Ok();
     }
+
+
+    private static void postTransitionNoFlowNotInstance(Transition transition) { }
+    private static void postTransitionNoFlowHasInstance(Transition transition) { }
+    private static void postTransitionHasFlowHasInstance(Transition transition) { }
+    private static void postTransitionHasFlowNoInstance(Transition transition) { }
 }
+
+
+
 
 
 public record GetRecordWorkflowAndTransitionsResponse

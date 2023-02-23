@@ -4,7 +4,7 @@ public static class SeedExtension
 {
     public static void SeedUserLifecycle(this ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<ZeebeFlow>().HasData(new { Name = "user-register", Tags = new[] { "idm", "user" }, Process = "Process_Simple", Message = "simple-flow-starter", Gateway = "zeebe-local", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
+        modelBuilder.Entity<ZeebeMessage>().HasData(new { Name = "user-register", Tags = new[] { "idm", "user" }, Process = "Process_Simple", Message = "simple-flow-starter", Gateway = "zeebe-local", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
 
         modelBuilder.Entity<Workflow>().HasData(new { Name = "user", Tags = new[] { "idm", "user" }, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), WorkflowName_Title = "user", Label = "Kullanici Statu Akisi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
