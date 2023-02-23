@@ -96,13 +96,13 @@ public static class ConsumerModule
             if (stateManagerInstace != null)
             {
 
-                response.StateManeger = workflows.Where(item => item.IsStateManager == true).Select(item =>
+                response.StateManager = workflows.Where(item => item.IsStateManager == true).Select(item =>
                   new GetRecordWorkflowAndTransitionsResponse.StateManagerWorkflow
                   {
                       Name = item.Workflow.Name,
                       Title = item.Workflow.Titles.First().Label,
-                      IsRegistered = true,
-                      Transitions = item.Workflow.States.First(s => s.Name == stateManagerInstace.StateName).Transitions.Select(t =>
+                      Status = stateManagerInstace.StateName,
+                      Transitions = item.Workflow.States.FirstOrDefault(s => s.Name == stateManagerInstace.StateName)?.Transitions.Select(t =>
                           new GetRecordWorkflowAndTransitionsResponse.Transition
                           {
                               Name = t.Name,
@@ -115,12 +115,11 @@ public static class ConsumerModule
             else
             {
                 // Return start state transitions
-                response.StateManeger = workflows.Where(item => item.IsStateManager == true).Select(item =>
+                response.StateManager = workflows.Where(item => item.IsStateManager == true).Select(item =>
                    new GetRecordWorkflowAndTransitionsResponse.StateManagerWorkflow
                    {
                        Name = item.Workflow.Name,
                        Title = item.Workflow.Titles.First().Label,
-                       IsRegistered = false,
                        Transitions = item.Workflow.States.First(s => s.Type == StateType.Start).Transitions.Select(t =>
                            new GetRecordWorkflowAndTransitionsResponse.Transition
                            {
@@ -200,12 +199,9 @@ public static class ConsumerModule
 }
 
 
-
-
-
 public record GetRecordWorkflowAndTransitionsResponse
 {
-    public StateManagerWorkflow? StateManeger { get; set; }
+    public StateManagerWorkflow? StateManager { get; set; }
     public ICollection<RunningWorkflow>? RunningWorkflows { get; set; }
     public ICollection<Workflow>? AvailableWorkflows { get; set; }
 
@@ -218,7 +214,7 @@ public record GetRecordWorkflowAndTransitionsResponse
 
     public record StateManagerWorkflow : Workflow
     {
-        public bool IsRegistered { get; set; } = false;
+        public string? Status { get; set; }
     }
 
     public record RunningWorkflow : Workflow
@@ -256,7 +252,7 @@ public record ConsumerPostTransitionResponse(
 
 public record GetRecordHistoryResponse
 {
-    public Workflow? StateManeger { get; init; }
+    public Workflow? StateManager { get; init; }
     public Workflow? RunningWorkflows { get; init; }
     public Workflow? CompletedWorkflows { get; init; }
 

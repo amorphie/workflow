@@ -1,5 +1,6 @@
 
 using System.ComponentModel.DataAnnotations;
+using System.Dynamic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -18,6 +19,7 @@ public class PostTransactionService : IPostTransactionService
 
     private Transition _transition { get; set; }
     private WorkflowDBContext _dbContext { get; set; }
+    private IZeebeCommandService _zeebeService { get; set; }
 
     private Guid _user { get; set; }
     private Guid _behalfOfUser { get; set; }
@@ -29,9 +31,10 @@ public class PostTransactionService : IPostTransactionService
 
     private List<Instance>? _activeInstances { get; set; }
 
-    public PostTransactionService(WorkflowDBContext dbContext)
+    public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService)
     {
         _dbContext = dbContext;
+        _zeebeService = zeebeService;
 
         _transitionName = default!;
         _user = default!;
@@ -85,8 +88,16 @@ public class PostTransactionService : IPostTransactionService
 
             if (_transition.FromState.Type == StateType.Start)
             {
-                // Has / No Flow seperation
-                return noFlowNoInstance();
+
+                if (_transition.FlowName == string.Empty)
+                {
+                    // Has / No Flow seperation
+                    return noFlowNoInstance();
+                }
+                else
+                {
+                    return hasFlowNoInstance();
+                }
             }
             else
             {
@@ -142,8 +153,44 @@ public class PostTransactionService : IPostTransactionService
 
     }
 
-    private void HasFlowHasInstance( ) { }
-    private void HasFlowNoInstance( ) { }
+    private IResult hasFlowNoInstance()
+    {
+        _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
+
+        dynamic variables = new ExpandoObject();
+        variables.EntityName = _entity;
+        variables.RecordId = _recordId;
+        variables.Param1 = "param1Val";
+        variables.Param2 = "param2Val";
+        variables.CreatedBy = _user;
+        variables.CreatedByBehalfOf = _behalfOfUser;
+
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null);
+
+        var newInstance = new Instance
+        {
+            WorkflowName = _transition.FromState.WorkflowName!,
+            EntityName = _entity,
+            RecordId = _recordId,
+            StateName = "locked-for-flow",
+            BaseStatus = BaseStatusType.LockedForFlow,
+            CreatedBy = _user,
+            CreatedByBehalfOf = _behalfOfUser,
+        };
+
+        _dbContext.Add(newInstance);
+        addInstanceTansition(newInstance);
+        _dbContext.SaveChanges();
+
+        return Results.Ok();
+
+
+    }
+
+
+
+    private void HasFlowHasInstance() { }
+
 
     private void addInstanceTansition(Instance instance)
     {

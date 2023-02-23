@@ -6,6 +6,9 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IPostTransactionService, PostTransactionService>();
+builder.Services.AddScoped<IZeebeCommandService, ZeebeCommandService>();
+
+
 builder.Services.AddDbContext<WorkflowDBContext>
     ((options) =>
     {

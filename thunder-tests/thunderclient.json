@@ -116,7 +116,7 @@
     "method": "GET",
     "sortNum": 45000,
     "created": "2023-02-17T07:38:34.898Z",
-    "modified": "2023-02-18T19:21:20.883Z",
+    "modified": "2023-02-23T11:23:01.593Z",
     "headers": [
       {
         "name": "Accept-Language",
@@ -130,6 +130,13 @@
         "isPath": true
       }
     ],
-    "tests": []
+    "tests": [
+      {
+        "type": "json-query",
+        "custom": "json.stateManager.status",
+        "action": "notequal",
+        "value": "locked-for-flow"
+      }
+    ]
   }
 ]

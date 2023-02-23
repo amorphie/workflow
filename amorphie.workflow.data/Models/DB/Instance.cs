@@ -12,8 +12,8 @@ public class Instance : BaseDbEntityWithId
 
     public Guid RecordId { get; set; } = default!;
 
-    public State State { get; set; } = default!;
-    public string StateName { get; set; } = default!;
+    public State? State { get; set; } = default!;
+    public string? StateName { get; set; } = default!;
 
     public BaseStatusType BaseStatus { get; set; } = default!;
 }
