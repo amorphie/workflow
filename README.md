@@ -3,8 +3,8 @@ State Machine and flow chart orchestration workflow service based on Zeebe
 
 
 ```mermaid
-    classDef zeebe fill:#f00,color:white
 
+stateDiagram-v2
     start: user-start
     active: user-active
     amlap: user-aml-approval
@@ -12,9 +12,6 @@ State Machine and flow chart orchestration workflow service based on Zeebe
     de: "user-deactivated"
     sus: "user-suspended"
 
-    class start zeebe
-    class amlap zeebe
-    class ap zeebe
 
     start --> ap : user-register
     ap --> amlap : user-registration-approve
@@ -24,4 +21,5 @@ State Machine and flow chart orchestration workflow service based on Zeebe
     active --> de : "user-deactive
     de --> active : user-activate-fd
     sus --> active : user-activate-fs
+
 ```
