@@ -23,3 +23,6 @@ stateDiagram-v2
     sus --> active : user-activate-fs
 
 ```
+
+![https://github.com/amorphie/workflow/blob/main/docs/images/user-register.png]
+
