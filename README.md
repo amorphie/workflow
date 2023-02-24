@@ -24,5 +24,7 @@ stateDiagram-v2
 
 ```
 
-![https://github.com/amorphie/workflow/blob/main/docs/images/user-register.png]
+![user-register-flow](https://github.com/amorphie/workflow/blob/8eab7ed11bd88712937d4c1d053696d0936f6914/docs/images/user-register.png)
+
+       
 
