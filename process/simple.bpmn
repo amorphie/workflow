@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1q9lzc8" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.5.1" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.1.0">
-  <bpmn:process id="Process_Simple" name="Simple Process" isExecutable="true">
+  <bpmn:process id="User_Register" name="User Register" isExecutable="true">
     <bpmn:endEvent id="Event_END">
       <bpmn:extensionElements>
         <zeebe:ioMapping>
@@ -17,18 +17,14 @@
       <bpmn:incoming>Flow_034szy9</bpmn:incoming>
       <bpmn:outgoing>Flow_0pdh8m6</bpmn:outgoing>
     </bpmn:manualTask>
-    <bpmn:sequenceFlow id="Flow_0pdh8m6" sourceRef="Activity_SimpleTask" targetRef="amorphie-workflow-completed" />
-    <bpmn:sequenceFlow id="Flow_0bnak6z" sourceRef="amorphie-workflow-completed" targetRef="Event_END" />
-    <bpmn:serviceTask id="amorphie-workflow-completed" name="amorphie-workflow-completed">
+    <bpmn:sequenceFlow id="Flow_0pdh8m6" sourceRef="Activity_SimpleTask" targetRef="amorphie-workflow-set-state" />
+    <bpmn:sequenceFlow id="Flow_0bnak6z" sourceRef="amorphie-workflow-set-state" targetRef="Event_END" />
+    <bpmn:serviceTask id="amorphie-workflow-set-state" name="amorphie-workflow-set-state">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="amorphie-workflow-completed" />
+        <zeebe:taskDefinition type="amorphie-workflow-set-state" />
         <zeebe:taskHeaders>
-          <zeebe:header key="TARGET_STATE" value="DEFAULT" />
+          <zeebe:header key="TARGET_STATE" value="default" />
         </zeebe:taskHeaders>
-        <zeebe:ioMapping>
-          <zeebe:input source="=&#34;IN_STATE&#34;" target="TARGET_STATE_IN" />
-          <zeebe:output source="=&#34;NEW_TARGET_OUTPUT&#34;" target="TARGET_STATE_OUT" />
-        </zeebe:ioMapping>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0pdh8m6</bpmn:incoming>
       <bpmn:outgoing>Flow_0bnak6z</bpmn:outgoing>
@@ -40,14 +36,14 @@
   </bpmn:process>
   <bpmn:message id="Message_0cu52jf" name="simple-flow-starter" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_Simple">
-      <bpmndi:BPMNShape id="Activity_1gonc3o_di" bpmnElement="Activity_SimpleTask">
-        <dc:Bounds x="290" y="60" width="100" height="80" />
-      </bpmndi:BPMNShape>
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="User_Register">
       <bpmndi:BPMNShape id="Event_0pxh52q_di" bpmnElement="Event_END">
         <dc:Bounds x="822" y="82" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1ac3txi_di" bpmnElement="amorphie-workflow-completed">
+      <bpmndi:BPMNShape id="Activity_1gonc3o_di" bpmnElement="Activity_SimpleTask">
+        <dc:Bounds x="290" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ac3txi_di" bpmnElement="amorphie-workflow-set-state">
         <dc:Bounds x="570" y="60" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>

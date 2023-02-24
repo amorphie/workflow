@@ -27,16 +27,16 @@ public class ZeebeCommandService : IZeebeCommandService
     {
 
         dynamic messageData = new ExpandoObject();
-        
+
         messageData.messageName = message;
-        //messageData.correlationKey = transactionId;
-        
+        if (correlationKey is not null)
+        {
+            messageData.correlationKey = correlationKey;
+        }
+
         messageData.variables = variables;
         var messageResult = await _daprClinet.InvokeBindingAsync<dynamic, dynamic>("zeebe-local", "publish-message", messageData);
 
-        //var data = new publishMessageRequest(message, correlationKey, string.Empty, string.Empty, variables);
-
-        //var messageResult = await _daprClinet.InvokeBindingAsync<dynamic, dynamic>("zeebe-local", "publish-message", data);
         return messageResult;
     }
 

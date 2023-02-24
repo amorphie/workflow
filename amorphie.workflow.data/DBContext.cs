@@ -102,14 +102,9 @@ public class WorkflowDBContext : DbContext
 
 
 
-        // Config Seeds
-
-        modelBuilder.Entity<State>().HasData(new { Name = "locked-for-flow", Type = StateType.Standart, BaseStatus = BaseStatusType.LockedForFlow, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
-        // 
-        
+      
         modelBuilder.SeedUserResetPassword();
         modelBuilder.SeedUserLifecycle();
-
 
         //modelBuilder.SeedRetailLoanWorkflow();
     }

@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    [Migration("20230220162745_init")]
-    partial class init
+    [Migration("20230224144450_init2")]
+    partial class init2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -110,10 +110,6 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<DateTime>("ExecutedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FieldUpdates")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("InputData")
                         .IsRequired()
                         .HasColumnType("text");
@@ -145,9 +141,6 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<string>("AdditionalData")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -161,9 +154,6 @@ namespace amorphie.workflow.data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("FieldUpdates")
-                        .HasColumnType("text");
-
                     b.Property<string>("FormData")
                         .HasColumnType("text");
 
@@ -174,17 +164,8 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("InstanceId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("OnEnterZeebeFlowName")
-                        .HasColumnType("text");
-
-                    b.Property<string>("OnExitZeebeFlowName")
-                        .HasColumnType("text");
-
                     b.Property<string>("ToStateName")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ZeebeFlowName")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -193,13 +174,7 @@ namespace amorphie.workflow.data.Migrations
 
                     b.HasIndex("InstanceId");
 
-                    b.HasIndex("OnEnterZeebeFlowName");
-
-                    b.HasIndex("OnExitZeebeFlowName");
-
                     b.HasIndex("ToStateName");
-
-                    b.HasIndex("ZeebeFlowName");
 
                     b.ToTable("InstanceTransition");
                 });
@@ -257,9 +232,9 @@ namespace amorphie.workflow.data.Migrations
                         {
                             Name = "user-reset-password-start",
                             BaseStatus = 8,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3350),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2860),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3350),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2860),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 100,
                             WorkflowName = "user-reset-password"
@@ -268,9 +243,9 @@ namespace amorphie.workflow.data.Migrations
                         {
                             Name = "user-reset-password-card-password-valid",
                             BaseStatus = 8,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3420),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2930),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3420),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2930),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 0,
                             WorkflowName = "user-reset-password"
@@ -279,9 +254,9 @@ namespace amorphie.workflow.data.Migrations
                         {
                             Name = "user-reset-password-security-question-valid",
                             BaseStatus = 8,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3480),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2990),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3480),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2990),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 0,
                             WorkflowName = "user-reset-password"
@@ -290,9 +265,9 @@ namespace amorphie.workflow.data.Migrations
                         {
                             Name = "user-reset-password-set",
                             BaseStatus = 32,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3540),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3050),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3540),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3050),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 200,
                             WorkflowName = "user-reset-password"
@@ -301,9 +276,9 @@ namespace amorphie.workflow.data.Migrations
                         {
                             Name = "user-reset-password-fail",
                             BaseStatus = 32,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3600),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3110),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3600),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3110),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 200,
                             WorkflowName = "user-reset-password"
@@ -312,9 +287,31 @@ namespace amorphie.workflow.data.Migrations
                         {
                             Name = "user-start",
                             BaseStatus = 2,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3950),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3480),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3950),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3480),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Type = 100,
+                            WorkflowName = "user"
+                        },
+                        new
+                        {
+                            Name = "user-approval",
+                            BaseStatus = 2,
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3540),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3540),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Type = 0,
+                            WorkflowName = "user"
+                        },
+                        new
+                        {
+                            Name = "user-aml-approval",
+                            BaseStatus = 2,
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3600),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3600),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 100,
                             WorkflowName = "user"
@@ -323,9 +320,9 @@ namespace amorphie.workflow.data.Migrations
                         {
                             Name = "user-active",
                             BaseStatus = 4,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4010),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3650),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4010),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3650),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 0,
                             WorkflowName = "user"
@@ -334,9 +331,9 @@ namespace amorphie.workflow.data.Migrations
                         {
                             Name = "user-suspended",
                             BaseStatus = 16,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4070),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3710),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4070),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3710),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 0,
                             WorkflowName = "user"
@@ -345,9 +342,9 @@ namespace amorphie.workflow.data.Migrations
                         {
                             Name = "user-deactivated",
                             BaseStatus = 16,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4130),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3770),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4130),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3770),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Type = 0,
                             WorkflowName = "user"
@@ -401,87 +398,120 @@ namespace amorphie.workflow.data.Migrations
                         new
                         {
                             Name = "user-reset-password-validate-with-card",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3660),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3170),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             FromStateName = "user-reset-password-start",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3660),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3170),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
                         },
                         new
                         {
                             Name = "user-reset-password-validate-with-security-question",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3720),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3230),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             FromStateName = "user-reset-password-start",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3720),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3230),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
                         },
                         new
                         {
                             Name = "user-reset-password-set-password-acp",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3780),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3290),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             FromStateName = "user-reset-password-card-password-valid",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3780),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3290),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
                         },
                         new
                         {
                             Name = "user-reset-password-set-password-asq",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3840),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3340),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             FromStateName = "user-reset-password-security-question-valid",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3840),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3340),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000")
                         },
                         new
                         {
                             Name = "user-register",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4190),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3820),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             FlowName = "user-register",
                             FromStateName = "user-start",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4190),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3820),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            ToStateName = "user-approval"
+                        },
+                        new
+                        {
+                            Name = "user-registration-approve",
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3880),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            FlowName = "user-registration-approve",
+                            FromStateName = "user-approval",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3880),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            ToStateName = "user-aml-approval"
+                        },
+                        new
+                        {
+                            Name = "user-registration-aml-approve",
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3940),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            FlowName = "user-registration-aml-approve",
+                            FromStateName = "user-aml-approval",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3940),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             ToStateName = "user-active"
                         },
                         new
                         {
+                            Name = "user-registration-aml-reject",
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4000),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            FlowName = "user-registration-aml-reject",
+                            FromStateName = "user-aml-approval",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4000),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            ToStateName = "user-deactivated"
+                        },
+                        new
+                        {
                             Name = "user-suspend",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4250),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4050),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             FromStateName = "user-active",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4250),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4050),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             ToStateName = "user-suspended"
                         },
                         new
                         {
                             Name = "user-deactive",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4300),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4110),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             FromStateName = "user-active",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4300),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4110),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             ToStateName = "user-deactivated"
                         },
                         new
                         {
                             Name = "user-activate-fs",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4360),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4170),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             FromStateName = "user-suspended",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4360),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4170),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             ToStateName = "user-active"
                         },
                         new
                         {
                             Name = "user-activate-fd",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4420),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4220),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             FromStateName = "user-deactivated",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4420),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4220),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             ToStateName = "user-active"
                         });
@@ -551,837 +581,1057 @@ namespace amorphie.workflow.data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("d76faa70-0b86-4ccf-9c30-aa2360fe8b68"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3320),
+                            Id = new Guid("49b83e3a-9c3b-4a88-bd4f-bb00d83196cb"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2840),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kullanici sifre yenileme",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3320),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2840),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             WorkflowNameTitle = "user-reset-password"
                         },
                         new
                         {
-                            Id = new Guid("39d47d2c-4ab8-4e71-b85a-3bb3d8c0b0b6"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3340),
+                            Id = new Guid("f735cdd0-0f4f-4f82-bfe2-750dd4da05a8"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2850),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "User Password Reset",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3340),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2850),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             WorkflowNameTitle = "user-reset-password"
                         },
                         new
                         {
-                            Id = new Guid("5a9932f2-4ec9-452c-b375-d4fa95fbf759"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3370),
+                            Id = new Guid("4a06301b-0d2b-47e8-b07d-f54cb6afd64c"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2880),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Akis Baslangic Asamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3370),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2880),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-reset-password-start"
                         },
                         new
                         {
-                            Id = new Guid("88052587-466d-4b90-9709-a20543fa844a"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3380),
+                            Id = new Guid("df2adc80-ae21-4903-88b2-475b5a737c50"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2890),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Start State",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3380),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2890),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-reset-password-start"
                         },
                         new
                         {
-                            Id = new Guid("293567cf-9d23-45e9-85b7-921779068744"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3400),
+                            Id = new Guid("29eb47ea-e07c-4400-a9ea-d66ac80259cc"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2910),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Akis baslangic asama aciklamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3400),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2910),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-reset-password-start"
                         },
                         new
                         {
-                            Id = new Guid("9bc826eb-b105-4c8c-b986-31b03774e5e3"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3410),
+                            Id = new Guid("48bb1eb7-f50b-4974-b521-ae5afe01c3e4"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2920),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Start state description",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3410),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2920),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-reset-password-start"
                         },
                         new
                         {
-                            Id = new Guid("f9aa0645-50b4-47d3-9c55-c02ea66973fa"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3430),
+                            Id = new Guid("e3c4622c-fd0c-44f8-a92a-0cd52d01ac9d"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2940),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kart Sifresi Dogru",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3430),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2940),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-reset-password-card-password-valid"
                         },
                         new
                         {
-                            Id = new Guid("0c262298-1da8-4670-8e1f-147a2d480558"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3450),
+                            Id = new Guid("e90bffb3-ee1a-4fae-9c3e-a2b4c9ad9814"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2960),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Card Pass Valid",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3450),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2960),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-reset-password-card-password-valid"
                         },
                         new
                         {
-                            Id = new Guid("a7490a88-5232-4571-b59d-a5e6388a0b84"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3460),
+                            Id = new Guid("eed6a0a5-57a3-4f0b-863d-a9889332cc33"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2970),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kart Sifresi dogru, sifre belirleme bekleniyor",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3460),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2970),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-reset-password-card-password-valid"
                         },
                         new
                         {
-                            Id = new Guid("e4884a5f-5ef9-4105-be97-eb7d7d0269d6"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3470),
+                            Id = new Guid("257335fd-ce76-4dba-8407-a3e83c73a24e"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2980),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Card password valid, set password.",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3470),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2980),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-reset-password-card-password-valid"
                         },
                         new
                         {
-                            Id = new Guid("f85e3f9d-975d-45ac-b60d-ee079772a68a"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3490),
+                            Id = new Guid("bc299931-9074-4ac6-961a-87f3c78efa0e"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3000),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Guvenlik Sorusu Dogru",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3490),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3000),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-reset-password-security-question-valid"
                         },
                         new
                         {
-                            Id = new Guid("3a5a0861-4e80-4e5a-83aa-c1cc443ff6c9"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3500),
+                            Id = new Guid("b46334da-eb08-43e5-b8a4-34910e782a78"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3010),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Security Question Valid",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3500),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3010),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-reset-password-security-question-valid"
                         },
                         new
                         {
-                            Id = new Guid("b6f3c3f4-a930-48b0-9818-73725246aa5e"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3520),
+                            Id = new Guid("5adcbcc3-2325-46e3-a7ae-a9c4ae3eebed"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3030),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Guvenlik Sorusu dogru, sifre belirleme bekleniyor",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3520),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3030),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-reset-password-security-question-valid"
                         },
                         new
                         {
-                            Id = new Guid("f94e91c3-daf0-4890-8b0a-5a534194f137"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3530),
+                            Id = new Guid("f4091a56-d9f6-47e8-bdc9-4d09e8eb1b5d"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3040),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Security question valid, set password.",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3530),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3040),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-reset-password-security-question-valid"
                         },
                         new
                         {
-                            Id = new Guid("e9ee5bad-b184-4116-b887-f910b6caf80f"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3550),
+                            Id = new Guid("483e6ed8-9229-4a89-84dd-6247f95b7c6f"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3060),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Sifre Degisti",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3550),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3060),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-reset-password-set"
                         },
                         new
                         {
-                            Id = new Guid("a658e5b5-1a39-4db8-bd7f-51f645d20938"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3560),
+                            Id = new Guid("e4e08284-490d-4a3f-bde2-b373b4555f88"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3070),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Password Was Reset",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3560),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3070),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-reset-password-set"
                         },
                         new
                         {
-                            Id = new Guid("997585ad-0fab-423f-a2c7-070b2784179f"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3570),
+                            Id = new Guid("8d260aff-69ce-43fd-9b59-86707e0c8d34"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3090),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Sifre guncellendi ve akis tamamlandi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3570),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3090),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-reset-password-set"
                         },
                         new
                         {
-                            Id = new Guid("66f15fe6-d7aa-4400-9c06-3cc53999b26a"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3590),
+                            Id = new Guid("d80cfa52-c764-493f-9a5e-a7390ba11fdf"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3100),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Password was reset and flow completed.",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3590),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3100),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-reset-password-set"
                         },
                         new
                         {
-                            Id = new Guid("8890e3ca-3de5-4c4e-89b2-553120063337"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3610),
+                            Id = new Guid("0fcbd8ec-5484-4cc0-834d-d9852342b730"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3120),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kart veya Guvenlik Sorusu Dogrulanamadi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3610),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3120),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-reset-password-fail"
                         },
                         new
                         {
-                            Id = new Guid("2f593f4b-b5a1-4d83-8af2-7a8efcdc9a13"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3630),
+                            Id = new Guid("bb001bd0-a496-4a36-98b4-3f259a0487ef"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3140),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Card Pass Or Security Question Not Valid",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3630),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3140),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-reset-password-fail"
                         },
                         new
                         {
-                            Id = new Guid("f51f5535-ad6c-4edb-be20-d9dcc623a7f7"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3640),
+                            Id = new Guid("27e25982-3847-4378-937c-dbacdd5f1314"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3150),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Sifre guncellenemedi ve akis tamamlandi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3640),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3150),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-reset-password-fail"
                         },
                         new
                         {
-                            Id = new Guid("20707b95-0ae7-4e38-800b-de1774f8dc6e"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3650),
+                            Id = new Guid("e05a01ab-8c08-4003-96d4-31e417174a7c"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3160),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Password was NOT reset and flow completed.",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3650),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3160),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-reset-password-fail"
                         },
                         new
                         {
-                            Id = new Guid("8ef018a0-b4e4-4197-8e08-ce7d93cac41d"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3670),
+                            Id = new Guid("c4a84f5d-8998-4ce2-8d76-b2dd2ddb2ab4"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3180),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kart Sifresi Ile Yenile",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3670),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3180),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-reset-password-validate-with-card"
                         },
                         new
                         {
-                            Id = new Guid("3f4db356-729d-4103-b997-6efaf2ed1ca3"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3690),
+                            Id = new Guid("da7507f1-97d4-4f4a-a7b7-23484e70a027"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3200),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Reset By Card Pin",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3690),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3200),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-reset-password-validate-with-card"
                         },
                         new
                         {
-                            Id = new Guid("2f746824-87e7-4eef-871a-b683bf26a4a4"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3700),
+                            Id = new Guid("49e7ddb7-d9e4-4845-944d-4b1c765d414f"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3210),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...tr components... }",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3700),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3210),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-reset-password-validate-with-card"
                         },
                         new
                         {
-                            Id = new Guid("0aa2ffa5-e90a-4641-81a2-456a1807b89f"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3720),
+                            Id = new Guid("bddfd190-ecc8-440d-b3f7-fee336f71b63"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3220),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...en components... }",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3720),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3220),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-reset-password-validate-with-card"
                         },
                         new
                         {
-                            Id = new Guid("2a7bcb4c-992e-4681-b17c-30e0c1c9c54a"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3730),
+                            Id = new Guid("0dce3201-1eea-4618-a57c-2eae288cf794"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3240),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Guvenlik Sorusu Ile Yenile",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3730),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3240),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-reset-password-validate-with-security-question"
                         },
                         new
                         {
-                            Id = new Guid("cadb5376-7208-495d-bdf8-a13ece7a7bbe"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3750),
+                            Id = new Guid("987e0407-f30d-4af9-9e6c-b171b3c2bdf5"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3250),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Reset By Security Question",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3750),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3250),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-reset-password-validate-with-security-question"
                         },
                         new
                         {
-                            Id = new Guid("f672f642-4543-4667-88a8-36cf0960d2be"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3760),
+                            Id = new Guid("2eaaf10b-58f5-4294-9029-6ba183ac625d"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3270),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...tr components... }",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3760),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3270),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-reset-password-validate-with-security-question"
                         },
                         new
                         {
-                            Id = new Guid("3d311d51-331a-4feb-9434-29b81d9ebdf0"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3770),
+                            Id = new Guid("2a42f553-323c-4a4c-a726-9d120242def5"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3280),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...en components... }",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3770),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3280),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-reset-password-validate-with-security-question"
                         },
                         new
                         {
-                            Id = new Guid("46346198-00e6-45f8-b116-3845df6eadac"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3790),
+                            Id = new Guid("6fc4509a-fb4e-4cd8-9e3d-5e204f7e18c5"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3300),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Sifre Belirle",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3790),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3300),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-reset-password-set-password-acp"
                         },
                         new
                         {
-                            Id = new Guid("fcc643ea-847c-4207-8cd0-1bb0007fb1e2"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3800),
+                            Id = new Guid("25976ac3-9e9e-414e-bbd9-f40245d80805"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3310),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Set New Password",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3800),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3310),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-reset-password-set-password-acp"
                         },
                         new
                         {
-                            Id = new Guid("8ccecce1-475e-4abb-b516-0aec978a5f30"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3820),
+                            Id = new Guid("0a4e8d39-b9d8-4df6-91d2-4ada5e54d2f0"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3320),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...tr components... }",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3820),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3320),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-reset-password-set-password-acp"
                         },
                         new
                         {
-                            Id = new Guid("5ef7a902-317f-449e-bfdd-141811aeb5c1"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3830),
+                            Id = new Guid("274edf0c-9079-460b-b1e2-758f22e41320"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3340),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...en components... }",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3830),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3340),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-reset-password-set-password-acp"
                         },
                         new
                         {
-                            Id = new Guid("8c7e0907-b587-4b2e-af0e-84a59bd85752"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3850),
+                            Id = new Guid("24d440c1-40aa-4ea9-a3e1-5bb850ca5788"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3360),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Sifre Belirle",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3850),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3360),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-reset-password-set-password-asq"
                         },
                         new
                         {
-                            Id = new Guid("fca32c65-d1de-4340-9a5c-1a0087772e44"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3860),
+                            Id = new Guid("2e28e383-e1c9-4d61-ac3b-fe8a451c4a13"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3370),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Set New Password",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3860),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3370),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-reset-password-set-password-asq"
                         },
                         new
                         {
-                            Id = new Guid("0ac6c4b0-6065-4789-8fc3-3376c4d72bcc"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3880),
+                            Id = new Guid("44ec8d7a-16c2-42a8-9267-8a5b6ecbe3aa"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3380),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...tr components... }",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3880),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3380),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-reset-password-set-password-asq"
                         },
                         new
                         {
-                            Id = new Guid("18f7e2b6-ac53-4896-aa5e-133630d2b3d0"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3890),
+                            Id = new Guid("692432d6-d99b-48f3-b6d0-44c889571df0"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3400),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...en components... }",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3890),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3400),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-reset-password-set-password-asq"
                         },
                         new
                         {
-                            Id = new Guid("a0576544-bf2a-4f4c-b898-b9d010ccfb4e"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3920),
+                            Id = new Guid("09f8829b-6e2f-4b9a-b80d-c16494d69c77"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3450),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kullanici Statu Akisi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3920),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3450),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             WorkflowNameTitle = "user"
                         },
                         new
                         {
-                            Id = new Guid("315661ba-e293-428b-a8db-13b82e02489c"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3930),
+                            Id = new Guid("76d1f48c-65a2-4207-882c-e445b10499ce"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3460),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "User State Process",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3930),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3460),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             WorkflowNameTitle = "user"
                         },
                         new
                         {
-                            Id = new Guid("d6aeb04a-c5df-49cf-bfba-6d77df92041b"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3970),
+                            Id = new Guid("e8ea3cbd-ace1-49ae-966f-a790399dd5c6"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3490),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Akis Baslangic Asamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3970),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3500),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-start"
                         },
                         new
                         {
-                            Id = new Guid("af1950da-a183-4a20-bd0d-84ca817e2cec"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3980),
+                            Id = new Guid("928c24b5-4ef5-435e-93f3-5ca944c34792"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3510),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Start State",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3980),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3510),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-start"
                         },
                         new
                         {
-                            Id = new Guid("60be02a5-6745-4683-8a6f-c171048cc051"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3990),
+                            Id = new Guid("20e11003-cf9e-4fe8-8ea6-4f52958d08e8"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3520),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Akis baslangic asama aciklamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3990),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3520),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-start"
                         },
                         new
                         {
-                            Id = new Guid("a055be4f-6b87-46df-89bf-8ffa8c44f1cc"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4000),
+                            Id = new Guid("9c94f1fa-6413-4921-a6cb-6ead153f564d"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3530),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Start state description",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4000),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3530),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-start"
                         },
                         new
                         {
-                            Id = new Guid("acfa9e90-f1ba-4e7b-a968-80812edd3938"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4020),
+                            Id = new Guid("bd0a70ee-0bf0-441a-a986-7334efaeb484"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3550),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "Kullanici Onay Asamasi",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3550),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            StateNameTitle = "user-approval"
+                        },
+                        new
+                        {
+                            Id = new Guid("3f88b718-da81-460d-8a9b-4ecfb7d742a8"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3560),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "User Approval State",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3560),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            StateNameTitle = "user-approval"
+                        },
+                        new
+                        {
+                            Id = new Guid("6b4b3fee-62ef-4d0f-ab63-d2efe7b47c2f"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3580),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "Kullanici onay aciklamasi",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3580),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            StateNameDescription = "user-approval"
+                        },
+                        new
+                        {
+                            Id = new Guid("dde60a30-8d7e-4d11-858e-dfbbd0d0f67e"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3590),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "User approval description",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3590),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            StateNameDescription = "user-approval"
+                        },
+                        new
+                        {
+                            Id = new Guid("8dea9ed4-83cc-4dba-8538-fac69305a8d5"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3610),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "AML Onay Asamasi",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3610),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            StateNameTitle = "user-aml-approval"
+                        },
+                        new
+                        {
+                            Id = new Guid("c572ac7d-55c0-44eb-b69b-cd8a38a9fb80"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3620),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "AML Approval State",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3620),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            StateNameTitle = "user-aml-approval"
+                        },
+                        new
+                        {
+                            Id = new Guid("4f05d0c4-5673-4b90-92fe-fdce87a9aa90"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3630),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "AML onay asama aciklamasi",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3630),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            StateNameDescription = "user-aml-approval"
+                        },
+                        new
+                        {
+                            Id = new Guid("e072b215-809d-46c2-b90a-4ae171b16fae"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3650),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "AML approval description",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3650),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            StateNameDescription = "user-aml-approval"
+                        },
+                        new
+                        {
+                            Id = new Guid("52e251cf-4b35-48c6-a964-92f433647dc6"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3670),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Akis Baslangic Asamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4020),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3670),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-active"
                         },
                         new
                         {
-                            Id = new Guid("44684680-e32d-4b29-b603-24e5a2ba5981"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4040),
+                            Id = new Guid("18b26813-836a-4ed7-acc6-aa813d68a6e2"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3680),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Start State",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4040),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3680),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-active"
                         },
                         new
                         {
-                            Id = new Guid("6be7f6c3-66f8-4c31-b384-1ce6100b233f"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4050),
+                            Id = new Guid("b37e9c6c-db19-49f1-baf9-b7ae22d4ded1"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3690),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Akis baslangic asama aciklamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4050),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3690),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-active"
                         },
                         new
                         {
-                            Id = new Guid("ec481e9f-2e15-454f-b6e0-23e09ea9c27f"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4060),
+                            Id = new Guid("158173c3-2648-4f88-8137-5f60f7d1bb3b"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3710),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Start state description",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4060),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3710),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-active"
                         },
                         new
                         {
-                            Id = new Guid("255a6216-344a-4e8a-a6b5-108664983cb0"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4080),
+                            Id = new Guid("b4322f96-82a8-4be7-bc9b-f2077c7f7723"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3730),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Akis Baslangic Asamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4080),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3730),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-suspended"
                         },
                         new
                         {
-                            Id = new Guid("673f518c-f522-4244-8bd0-3352f35cb896"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4090),
+                            Id = new Guid("aaa735a6-6fc2-468a-a4a5-3a23b40071de"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3740),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Start State",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4100),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3740),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-suspended"
                         },
                         new
                         {
-                            Id = new Guid("3d002f06-226e-4e35-a6b3-7dad277cde65"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4110),
+                            Id = new Guid("0145d074-8f3d-4ec3-9028-bff6d0b8ca0e"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3750),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Akis baslangic asama aciklamasi",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4110),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3750),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-suspended"
                         },
                         new
                         {
-                            Id = new Guid("97a8eed6-59d2-46e3-9b9e-c0626e10fc84"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4120),
+                            Id = new Guid("2a20f986-0600-4613-9410-4a1c6c855f19"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3760),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Start state description",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4120),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3760),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-suspended"
                         },
                         new
                         {
-                            Id = new Guid("27f487f6-123b-44be-8408-198129cc032c"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4140),
+                            Id = new Guid("b209bdb1-7bee-4cd7-aa99-b799b7db3f64"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3780),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kayit deaktif",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4140),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3780),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-deactivated"
                         },
                         new
                         {
-                            Id = new Guid("105e31cf-e8d5-49d9-958e-b6f8ef736d74"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4160),
+                            Id = new Guid("49d5c3bd-b872-44a5-856b-c2fb2d4386b7"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3790),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Deactivated",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4160),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3790),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameTitle = "user-deactivated"
                         },
                         new
                         {
-                            Id = new Guid("d4ec2378-e1b6-4a54-9254-1cdb083f06de"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4170),
+                            Id = new Guid("efcc46ef-7a8b-4a37-a48d-64585bd4f30d"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3810),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kayit deaktive edilmis",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4170),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3810),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-deactivated"
                         },
                         new
                         {
-                            Id = new Guid("1d5baf17-b259-4752-9800-2b4d350d6717"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4180),
+                            Id = new Guid("fb23acdc-6d3f-40f4-99e9-8bd240a47b1e"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3820),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Record has been deactivated",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4180),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3820),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             StateNameDescription = "user-deactivated"
                         },
                         new
                         {
-                            Id = new Guid("bbe6c678-42da-4c08-834a-f71a85fd663b"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4200),
+                            Id = new Guid("5c46e34a-19eb-466c-afa2-3715bfb9a8e7"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3840),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "Kullanici Kaydi Onayla",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3840),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameTitle = "user-register"
+                        },
+                        new
+                        {
+                            Id = new Guid("110355e0-50c9-4b32-9ba7-03e08ebdb1d1"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3850),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "User Registration Approve",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3850),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameTitle = "user-register"
+                        },
+                        new
+                        {
+                            Id = new Guid("b85f9a92-f7d8-4869-9ab8-17a86c4ca058"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3860),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "{ \"display\": \"form\" ...tr components... }",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3860),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameForm = "user-register"
+                        },
+                        new
+                        {
+                            Id = new Guid("b1d3db93-e6e5-4a30-adc6-0f125d49eeab"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3880),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "{ \"display\": \"form\" ...en components... }",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3880),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameForm = "user-register"
+                        },
+                        new
+                        {
+                            Id = new Guid("111171dd-ab99-4406-bda6-9b012667e491"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3900),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kullanici Kaydi Tamamla",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4200),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3900),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            TransitionNameTitle = "user-register"
+                            TransitionNameTitle = "user-registration-approve"
                         },
                         new
                         {
-                            Id = new Guid("1c8ceb70-82c9-4e55-a6cd-c66caaaef5e1"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4210),
+                            Id = new Guid("03016fd4-6bdc-474f-bd78-705586648a06"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3910),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Register User",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4210),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3910),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            TransitionNameTitle = "user-register"
+                            TransitionNameTitle = "user-registration-approve"
                         },
                         new
                         {
-                            Id = new Guid("98550588-7483-4983-907b-e0358f2b7c23"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4230),
+                            Id = new Guid("7a008ca5-5add-48e1-b97c-d21135b01ff9"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3920),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...tr components... }",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4230),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3920),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            TransitionNameForm = "user-register"
+                            TransitionNameForm = "user-registration-approve"
                         },
                         new
                         {
-                            Id = new Guid("d8958ea4-fd4b-4629-9ff9-9334363b3768"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4240),
+                            Id = new Guid("43092c1f-8e54-4bfe-8436-b85dd6ec6c5d"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3930),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...en components... }",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4240),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3930),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            TransitionNameForm = "user-register"
+                            TransitionNameForm = "user-registration-approve"
                         },
                         new
                         {
-                            Id = new Guid("6954a6e4-4ef3-4198-8520-8ca4a52e788e"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4260),
+                            Id = new Guid("9de2b11c-fa4a-460a-9ec8-1aea0fb1d113"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3950),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "Kullanici AML Onay",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3950),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameTitle = "user-registration-aml-approve"
+                        },
+                        new
+                        {
+                            Id = new Guid("e10a1394-c8d7-47a1-be0b-e2e406653250"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3960),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "User AML Approve",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3970),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameTitle = "user-registration-aml-approve"
+                        },
+                        new
+                        {
+                            Id = new Guid("6173385f-839b-4f21-aa70-8f0aa22d0693"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3980),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "{ \"display\": \"form\" ...tr components... }",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3980),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameForm = "user-registration-aml-approve"
+                        },
+                        new
+                        {
+                            Id = new Guid("729d6c9b-a224-49d8-bb62-ad7e21da6423"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3990),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "{ \"display\": \"form\" ...en components... }",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3990),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameForm = "user-registration-aml-approve"
+                        },
+                        new
+                        {
+                            Id = new Guid("0f7571df-d6d5-4999-8961-7df605892f02"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4010),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "Kullanici AML Ret",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4010),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameTitle = "user-registration-aml-reject"
+                        },
+                        new
+                        {
+                            Id = new Guid("074bdc5a-7d52-48ca-a5fb-03736665758c"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4020),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "User AML Reject",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4020),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameTitle = "user-registration-aml-reject"
+                        },
+                        new
+                        {
+                            Id = new Guid("87766f67-6571-4765-9277-142f5b4bca6f"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4030),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "{ \"display\": \"form\" ...tr components... }",
+                            Language = "tr-TR",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4030),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameForm = "user-registration-aml-reject"
+                        },
+                        new
+                        {
+                            Id = new Guid("433728eb-2a01-464d-a7d8-5d3578488eda"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4050),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Label = "{ \"display\": \"form\" ...en components... }",
+                            Language = "en-EN",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4050),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            TransitionNameForm = "user-registration-aml-reject"
+                        },
+                        new
+                        {
+                            Id = new Guid("36dd754f-f1ad-4f76-aed2-474bb45b57a1"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4070),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kullanici Gecici Kitle",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4260),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4070),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-suspend"
                         },
                         new
                         {
-                            Id = new Guid("aaec9470-889a-4d5e-b84a-af3036a67f52"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4270),
+                            Id = new Guid("988d4211-4693-49f7-9038-e0a6cf6f2203"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4080),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Suspend User",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4270),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4080),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-suspend"
                         },
                         new
                         {
-                            Id = new Guid("21bd0d58-16c8-461c-8069-bc082161919c"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4280),
+                            Id = new Guid("aaa004ef-66d7-4d50-b1a0-761d7ca352a6"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4090),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...tr components... }",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4280),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4090),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-suspend"
                         },
                         new
                         {
-                            Id = new Guid("7a8d37f4-f05a-4739-9853-72ceb6fc32ed"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4300),
+                            Id = new Guid("e9957917-582d-49bf-a534-f0b58c12d61a"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4100),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...en components... }",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4300),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4100),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-suspend"
                         },
                         new
                         {
-                            Id = new Guid("39ef18b3-d1f5-4dc5-a28b-320d73ba1a59"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4320),
+                            Id = new Guid("c32b8ac6-f9c6-4642-8fa9-ee6ef9d4b01e"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4120),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kullanici Pasif Yap",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4320),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4120),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-deactive"
                         },
                         new
                         {
-                            Id = new Guid("7449a1b9-ad2e-445c-b934-33daabba1e0e"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4330),
+                            Id = new Guid("ac3712ec-09ed-4468-9ffd-f5b1838a4309"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4130),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Deactive User",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4330),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4130),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-deactive"
                         },
                         new
                         {
-                            Id = new Guid("9b44c173-da67-47c2-9a64-6a625fc80712"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4340),
+                            Id = new Guid("f0c13177-a2c4-4805-931c-7990cf5e8fe8"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4150),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...tr components... }",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4340),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4150),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-deactive"
                         },
                         new
                         {
-                            Id = new Guid("7e2b3f4e-bcd7-4457-b399-fee45aa82128"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4350),
+                            Id = new Guid("c46ee7ab-0293-4f65-91e0-f41cf0cbd5e8"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4160),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...en components... }",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4350),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4160),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-deactive"
                         },
                         new
                         {
-                            Id = new Guid("7a2bc2d4-05b5-412a-a67e-558655349987"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4370),
+                            Id = new Guid("cf895a22-a126-426d-b130-1d2a74eca20d"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4180),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kullanici Pasif Yap",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4370),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4180),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-activate-fs"
                         },
                         new
                         {
-                            Id = new Guid("b19dd88f-54f2-44e8-b182-3c72c4fdfd7b"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4390),
+                            Id = new Guid("2afa829f-8666-4d5c-947a-b9fbf3514dce"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4190),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Deactive User",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4390),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4190),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-activate-fs"
                         },
                         new
                         {
-                            Id = new Guid("29bb3e46-8bac-44ea-b8a9-17d43f32d868"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4400),
+                            Id = new Guid("184f2d09-cc78-4464-9f4b-8e742a089020"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4200),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...tr components... }",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4400),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4200),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-activate-fs"
                         },
                         new
                         {
-                            Id = new Guid("a3ccb58d-0031-4ab0-8fd5-21ee01409d1c"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4410),
+                            Id = new Guid("6f827f82-8850-4623-9a82-9f9a3e9eeade"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4220),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...en components... }",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4410),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4220),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-activate-fs"
                         },
                         new
                         {
-                            Id = new Guid("996216ec-7aa0-494e-ae3e-99745b951fc6"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4430),
+                            Id = new Guid("73d918a7-e118-4c6b-873f-f751ae2c6071"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4230),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Kullanici Aktif Yap",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4430),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4230),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-activate-fd"
                         },
                         new
                         {
-                            Id = new Guid("649e6cb6-e22b-4ec3-9085-f3c850f24a30"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4440),
+                            Id = new Guid("eb338229-967a-4494-b146-31a8abb7b994"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4250),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "Activate User",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4440),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4250),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameTitle = "user-activate-fd"
                         },
                         new
                         {
-                            Id = new Guid("ebff85d3-21a2-45eb-bf4d-37f05c40d7f4"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4460),
+                            Id = new Guid("edd8855c-56f0-4475-b9e5-b497310978c8"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4260),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...tr components... }",
                             Language = "tr-TR",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4460),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4260),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-activate-fd"
                         },
                         new
                         {
-                            Id = new Guid("f13630a4-4139-4559-8706-ba09c969646a"),
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4470),
+                            Id = new Guid("a7222971-3f55-4c6b-98de-a1bfea8620a2"),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4270),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Label = "{ \"display\": \"form\" ...en components... }",
                             Language = "en-EN",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(4470),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(4270),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             TransitionNameForm = "user-activate-fd"
                         });
@@ -1431,18 +1681,18 @@ namespace amorphie.workflow.data.Migrations
                         new
                         {
                             Name = "user-reset-password",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3230),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2720),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3230),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2720),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Tags = new[] { "idm", "user", "security" }
                         },
                         new
                         {
                             Name = "user",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3910),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3440),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3910),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3440),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Tags = new[] { "idm", "user" }
                         });
@@ -1498,33 +1748,33 @@ namespace amorphie.workflow.data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("8cca3027-f96e-467b-a226-d98aa6c5741e"),
+                            Id = new Guid("57ba1d17-dba3-4102-8baa-444bcbd3b9c2"),
                             AllowOnlyOneActiveInstance = false,
                             AvailableInStatus = 30,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3310),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2820),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             IsStateManager = false,
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3310),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(2820),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Name = "user",
                             WorkflowName = "user-reset-password"
                         },
                         new
                         {
-                            Id = new Guid("e2e0ecf6-1e41-4a2a-86d6-78f3c829f368"),
+                            Id = new Guid("d1407721-1a69-4653-8b0b-bfb8dd7f7f46"),
                             AllowOnlyOneActiveInstance = false,
                             AvailableInStatus = 30,
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3950),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3480),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             IsStateManager = true,
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3950),
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3480),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Name = "user",
                             WorkflowName = "user"
                         });
                 });
 
-            modelBuilder.Entity("ZeebeFlow", b =>
+            modelBuilder.Entity("ZeebeMessage", b =>
                 {
                     b.Property<string>("Name")
                         .HasColumnType("text");
@@ -1564,19 +1814,55 @@ namespace amorphie.workflow.data.Migrations
 
                     b.HasKey("Name");
 
-                    b.ToTable("ZeebeFlow");
+                    b.ToTable("ZeebeMessage");
 
                     b.HasData(
                         new
                         {
                             Name = "user-register",
-                            CreatedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3900),
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3400),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
                             Gateway = "zeebe-local",
-                            Message = "simple-flow-starter",
-                            ModifiedAt = new DateTime(2023, 2, 20, 16, 27, 44, 813, DateTimeKind.Utc).AddTicks(3900),
+                            Message = "user-register",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3410),
                             ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Process = "Process_Simple",
+                            Process = "User_Register",
+                            Tags = new[] { "idm", "user" }
+                        },
+                        new
+                        {
+                            Name = "user-registration-approve",
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3420),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Gateway = "zeebe-local",
+                            Message = "user-registration-approve",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3420),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Process = "User_Register",
+                            Tags = new[] { "idm", "user" }
+                        },
+                        new
+                        {
+                            Name = "user-registration-aml-approve",
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3420),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Gateway = "zeebe-local",
+                            Message = "user-registration-aml-approve",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3420),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Process = "User_Register",
+                            Tags = new[] { "idm", "user" }
+                        },
+                        new
+                        {
+                            Name = "user-registration-aml-reject",
+                            CreatedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3430),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Gateway = "zeebe-local",
+                            Message = "user-registration-aml-reject",
+                            ModifiedAt = new DateTime(2023, 2, 24, 14, 44, 50, 618, DateTimeKind.Utc).AddTicks(3430),
+                            ModifiedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Process = "User_Register",
                             Tags = new[] { "idm", "user" }
                         });
                 });
@@ -1595,7 +1881,7 @@ namespace amorphie.workflow.data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ZeebeFlow", "ZeebeFlow")
+                    b.HasOne("ZeebeMessage", "ZeebeFlow")
                         .WithMany()
                         .HasForeignKey("ZeebeFlowName");
 
@@ -1631,44 +1917,26 @@ namespace amorphie.workflow.data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ZeebeFlow", "OnEnterZeebeFlow")
-                        .WithMany()
-                        .HasForeignKey("OnEnterZeebeFlowName");
-
-                    b.HasOne("ZeebeFlow", "OnExitZeebeFlow")
-                        .WithMany()
-                        .HasForeignKey("OnExitZeebeFlowName");
-
                     b.HasOne("State", "ToState")
                         .WithMany()
                         .HasForeignKey("ToStateName")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ZeebeFlow", "ZeebeFlow")
-                        .WithMany()
-                        .HasForeignKey("ZeebeFlowName");
-
                     b.Navigation("FromState");
 
                     b.Navigation("Instance");
 
-                    b.Navigation("OnEnterZeebeFlow");
-
-                    b.Navigation("OnExitZeebeFlow");
-
                     b.Navigation("ToState");
-
-                    b.Navigation("ZeebeFlow");
                 });
 
             modelBuilder.Entity("State", b =>
                 {
-                    b.HasOne("ZeebeFlow", "OnEntryFlow")
+                    b.HasOne("ZeebeMessage", "OnEntryFlow")
                         .WithMany()
                         .HasForeignKey("OnEntryFlowName");
 
-                    b.HasOne("ZeebeFlow", "OnExitFlow")
+                    b.HasOne("ZeebeMessage", "OnExitFlow")
                         .WithMany()
                         .HasForeignKey("OnExitFlowName");
 
@@ -1685,7 +1953,7 @@ namespace amorphie.workflow.data.Migrations
 
             modelBuilder.Entity("Transition", b =>
                 {
-                    b.HasOne("ZeebeFlow", "Flow")
+                    b.HasOne("ZeebeMessage", "Flow")
                         .WithMany()
                         .HasForeignKey("FlowName");
 
@@ -1735,7 +2003,7 @@ namespace amorphie.workflow.data.Migrations
                         .WithMany("InclusiveWorkflows")
                         .HasForeignKey("WorkflowEntityId");
 
-                    b.HasOne("ZeebeFlow", "ZeebeFlow")
+                    b.HasOne("ZeebeMessage", "ZeebeFlow")
                         .WithMany()
                         .HasForeignKey("ZeebeFlowName");
 

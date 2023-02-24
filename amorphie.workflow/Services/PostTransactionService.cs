@@ -89,9 +89,8 @@ public class PostTransactionService : IPostTransactionService
             if (_transition.FromState.Type == StateType.Start)
             {
 
-                if (_transition.FlowName == string.Empty)
+                if (string.IsNullOrEmpty(_transition.FlowName))
                 {
-                    // Has / No Flow seperation
                     return noFlowNoInstance();
                 }
                 else
@@ -106,8 +105,15 @@ public class PostTransactionService : IPostTransactionService
         }
         else
         {
+            if (string.IsNullOrEmpty(_transition.FlowName))
+            {
 
-            return noFlowHasInstance(instanceAtState);
+                return noFlowHasInstance(instanceAtState);
+            }
+            else
+            {
+                return hasFlowHasInstance(instanceAtState);
+            }
         }
     }
 
@@ -157,40 +163,66 @@ public class PostTransactionService : IPostTransactionService
     {
         _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
 
-        dynamic variables = new ExpandoObject();
-        variables.EntityName = _entity;
-        variables.RecordId = _recordId;
-        variables.Param1 = "param1Val";
-        variables.Param2 = "param2Val";
-        variables.CreatedBy = _user;
-        variables.CreatedByBehalfOf = _behalfOfUser;
-
-        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null);
-
         var newInstance = new Instance
         {
             WorkflowName = _transition.FromState.WorkflowName!,
             EntityName = _entity,
             RecordId = _recordId,
-            StateName = "locked-for-flow",
+            StateName = _transition.FromStateName,
             BaseStatus = BaseStatusType.LockedForFlow,
             CreatedBy = _user,
             CreatedByBehalfOf = _behalfOfUser,
         };
+
+        dynamic variables = createMessageVariables(newInstance);
+
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null);
 
         _dbContext.Add(newInstance);
         addInstanceTansition(newInstance);
         _dbContext.SaveChanges();
 
         return Results.Ok();
-
-
     }
 
+    private IResult hasFlowHasInstance(Instance instanceAtState)
+    {
+        _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
+        _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
 
+        instanceAtState.StateName = _transition.FromStateName!;
+        instanceAtState.ModifiedBy = _user;
+        instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
+        instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+        instanceAtState.BaseStatus = BaseStatusType.LockedForFlow;
 
-    private void HasFlowHasInstance() { }
+        dynamic variables = createMessageVariables(instanceAtState);
 
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString());
+
+        addInstanceTansition(instanceAtState);
+        _dbContext.SaveChanges();
+
+        return Results.Ok();
+    }
+
+    private dynamic createMessageVariables(Instance instanceAtState)
+    {
+        dynamic variables = new Dictionary<string, dynamic>();
+
+        variables.Add("EntityName", _entity);
+        variables.Add("RecordId", _recordId);
+        variables.Add("InstanceId", instanceAtState.Id);
+        variables.Add("LastTransition", _transitionName);
+
+        dynamic targetObject = new ExpandoObject();
+        targetObject.Data = _data;
+        targetObject.TriggeredBy = _user;
+        targetObject.TriggeredByBehalfOf = _behalfOfUser;
+
+        variables.Add($"TRX-{_transitionName}", targetObject);
+        return variables;
+    }
 
     private void addInstanceTansition(Instance instance)
     {
@@ -199,13 +231,11 @@ public class PostTransactionService : IPostTransactionService
             InstanceId = instance.Id,
             FromStateName = _transition.FromStateName,
             ToStateName = _transition.ToStateName!,
-            CompletedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
             EntityData = Convert.ToString(_data.EntityData),
             FormData = Convert.ToString(_data.FormData),
             AdditionalData = Convert.ToString(_data.AdditionalData),
             CreatedBy = _user,
             CreatedByBehalfOf = _behalfOfUser,
-            FieldUpdates = ""
         };
 
         _dbContext.Add(newInstanceTransition);

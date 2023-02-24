@@ -114,9 +114,9 @@
     "name": "Get Transitions After Register",
     "url": "http://localhost:4201/workflow/consumer/user/record/{recordId}/transition",
     "method": "GET",
-    "sortNum": 45000,
+    "sortNum": 41250,
     "created": "2023-02-17T07:38:34.898Z",
-    "modified": "2023-02-23T11:23:01.593Z",
+    "modified": "2023-02-24T14:49:05.995Z",
     "headers": [
       {
         "name": "Accept-Language",
@@ -130,13 +130,84 @@
         "isPath": true
       }
     ],
-    "tests": [
+    "tests": []
+  },
+  {
+    "_id": "5cebf655-c8e5-417d-915b-73a38d17fd7f",
+    "colId": "6cbcc834-1771-49f8-b0d4-a73b921f537d",
+    "containerId": "",
+    "name": "Transition User-Approve",
+    "url": "http://localhost:4201/workflow/consumer/{entity}/record/{recordid}/transition/user-registration-approve",
+    "method": "POST",
+    "sortNum": 42500,
+    "created": "2023-02-24T14:47:42.800Z",
+    "modified": "2023-02-24T14:51:11.452Z",
+    "headers": [
       {
-        "type": "json-query",
-        "custom": "json.stateManager.status",
-        "action": "notequal",
-        "value": "locked-for-flow"
+        "name": "User",
+        "value": "{{user}}"
+      },
+      {
+        "name": "Behalf-Of-User",
+        "value": "{{behalfOfUser}}"
       }
-    ]
+    ],
+    "params": [
+      {
+        "name": "entity",
+        "value": "user",
+        "isPath": true
+      },
+      {
+        "name": "recordid",
+        "value": "{{newRecordId}}",
+        "isPath": true
+      }
+    ],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"entityData\": {\n    \"reference\": 38538734554,\n    \"gsmNumber\": {\n      \"countryCode\": 90,\n      \"prefix\": 530,\n      \"number\": 2342342\n    }\n  },\n  \"formData\": \"\",\n  \"additionalData\": {\n    \"application\": \"amorphie-backoffice\"\n  },\n  \"getSignalRHub\": true\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "27989536-abb3-499f-8ddf-f34ea835c523",
+    "colId": "6cbcc834-1771-49f8-b0d4-a73b921f537d",
+    "containerId": "",
+    "name": "Transition User-AML-Approve",
+    "url": "http://localhost:4201/workflow/consumer/{entity}/record/{recordid}/transition/user-registration-aml-approve",
+    "method": "POST",
+    "sortNum": 43750,
+    "created": "2023-02-24T14:48:20.534Z",
+    "modified": "2023-02-24T14:51:45.287Z",
+    "headers": [
+      {
+        "name": "User",
+        "value": "{{user}}"
+      },
+      {
+        "name": "Behalf-Of-User",
+        "value": "{{behalfOfUser}}"
+      }
+    ],
+    "params": [
+      {
+        "name": "entity",
+        "value": "user",
+        "isPath": true
+      },
+      {
+        "name": "recordid",
+        "value": "{{newRecordId}}",
+        "isPath": true
+      }
+    ],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"entityData\": {\n    \"reference\": 38538734554,\n    \"gsmNumber\": {\n      \"countryCode\": 90,\n      \"prefix\": 530,\n      \"number\": 2342342\n    }\n  },\n  \"formData\": \"\",\n  \"additionalData\": {\n    \"application\": \"amorphie-backoffice\"\n  },\n  \"getSignalRHub\": true\n}",
+      "form": []
+    },
+    "tests": []
   }
 ]

@@ -13,8 +13,4 @@ public class InstanceTransition : BaseDbLogEntity
     public string EntityData { get; set; } = default!;
     public string? FormData { get; set; } = default!;
     public string? AdditionalData { get; set; } = default!;
-
-    public string? FieldUpdates { get; set; } = default!;
-
-    public DateTime CompletedAt { get; set; } = default!;
 }
