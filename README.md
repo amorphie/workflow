@@ -1,5 +1,11 @@
-# workflow
+# Amoprhie Workflow Engine
 State Machine and flow chart orchestration workflow service based on Zeebe
+
+
+## Sample Flows 
+### User Lifecyle
+
+User life cyle includes states and transitions. Same of transitions are handled by Zeebe.
 
 
 ```mermaid
@@ -23,6 +29,8 @@ stateDiagram-v2
     sus --> active : user-activate-fs
 
 ```
+#### Zeebe Flow
+This flow handlig **user-register,user-reegistration-approve, user-registration-aml-approve** and **user-registration-aml-reject** transitions.
 
 ![user-register-flow](https://github.com/amorphie/workflow/blob/8eab7ed11bd88712937d4c1d053696d0936f6914/docs/images/user-register.png)
 
