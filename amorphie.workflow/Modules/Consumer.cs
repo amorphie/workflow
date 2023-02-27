@@ -185,7 +185,7 @@ public static class ConsumerModule
     static IResult getHistoryDetail(
          [FromRoute(Name = "entity-id")] Guid entityId,
          [FromRoute(Name = "record-id")] Guid recordId,
-         [FromRoute(Name = "record-id")] Guid instanceId
+         [FromRoute(Name = "instance-id")] Guid instanceId
      )
     {
         return Results.Ok();
