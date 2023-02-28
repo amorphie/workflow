@@ -47,9 +47,9 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-using var scope = app.Services.CreateScope();
-var db = scope.ServiceProvider.GetRequiredService<UserDBContext>();
-db.Database.Migrate();
+// using var scope = app.Services.CreateScope();
+// var db = scope.ServiceProvider.GetRequiredService<UserDBContext>();
+// db.Database.Migrate();
 
 app.UseCloudEvents();
 app.UseRouting();
