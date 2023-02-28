@@ -1,5 +1,5 @@
 
-public abstract record GetStateDefinition(string name, MultilanguageText title, BaseStatusType baseStatus, PostTransitionDefinitionRequest[] transitions);
+public  record GetStateDefinition(string name, MultilanguageText title, BaseStatusType baseStatus, PostTransitionDefinitionRequest[] transitions);
 
 public record GetStateDefinitionRequest(string name, MultilanguageText title, BaseStatusType baseStatus, PostTransitionDefinitionRequest[] transitions) :
     GetStateDefinition(name, title, baseStatus, transitions);

@@ -18,9 +18,11 @@ public class WorkflowDBContext : DbContext
 {
     public DbSet<Workflow> Workflows { get; set; } = default!;
     public DbSet<WorkflowEntity> WorkflowEntities { get; set; } = default!;
-
+    public DbSet<State> States { get; set; } = default!;
     public DbSet<Transition> Transitions { get; set; } = default!;
     public DbSet<Instance> Instances { get; set; } = default!;
+    public DbSet<InstanceTransition> InstanceTransitions { get; set; } = default!;
+    public DbSet<InstanceEvent> InstanceEvents { get; set; } = default!;
 
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
