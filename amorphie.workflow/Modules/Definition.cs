@@ -30,10 +30,7 @@ public static class DefinitionModule
             });
 
 
-        app.MapPost("/workflow/definition", (
-            [FromBody] PostWorkflowDefinitionRequest data)
-            =>
-        { })
+        app.MapPost("/workflow/definition", saveDefinition)
             .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status201Created)
             .WithOpenApi(operation =>
@@ -47,10 +44,7 @@ public static class DefinitionModule
                   return operation;
               });
 
-        app.MapDelete("/workflow/definition/{definition-name}", (
-            [FromRoute(Name = "definition-name")] string definition)
-            =>
-        { })
+        app.MapDelete("/workflow/definition/{definition-name}", deleteDefinition)
               .WithOpenApi(operation =>
               {
                   operation.Summary = "Deletes workflow definition.";
@@ -67,12 +61,7 @@ public static class DefinitionModule
                   return operation;
               });
 
-        app.MapGet("/workflow/definition/{definition-name}/state", (
-            [FromHeader(Name = "Accept-Language")] string? language,
-            [FromRoute(Name = "definition-name")] string definition,
-            [FromQuery(Name = "state-name")] string? state
-            ) =>
-        { })
+        app.MapGet("/workflow/definition/{definition-name}/state",getState)
               .Produces<GetStateDefinition[]>(StatusCodes.Status200OK)
               .Produces(StatusCodes.Status204NoContent)
               .WithOpenApi(operation =>
@@ -95,12 +84,7 @@ public static class DefinitionModule
 
 
 
-        app.MapPost("/workflow/definition/{definitionname}/state", (
-            [FromRoute(Name = "definitionname")] string definition,
-
-            [FromBody] PostStateDefinitionRequest data
-            ) =>
-        { })
+        app.MapPost("/workflow/definition/{definitionname}/state", saveState)
             .Produces<PostStateDefinitionResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status422UnprocessableEntity)
@@ -118,7 +102,7 @@ public static class DefinitionModule
               });
 
 
-        app.MapDelete("/workflow/definition/{name}/state/{state-name}", () => { })
+        app.MapDelete("/workflow/definition/{name}/state/{state-name}", deleteState)
               .WithOpenApi(operation =>
               {
                   operation.Summary = "Deletes existing state.";
@@ -286,7 +270,7 @@ public static class DefinitionModule
     static IResult deleteState(
             [FromServices] WorkflowDBContext context,
             [FromRoute(Name = "name")] string definition,
-              [FromRoute(Name = "{state-name}")] string state,
+              [FromRoute(Name = "state-name")] string state,
                [FromHeader(Name = "Language")] string? language = "en-EN"
         )
     {
@@ -308,7 +292,7 @@ public static class DefinitionModule
     }
     static IResult saveState(
         [FromServices] WorkflowDBContext context,
-        [FromRoute(Name = "definiton")] string definition,
+        [FromRoute(Name = "definitionname")] string definition,
         [FromBody] PostStateDefinitionRequest data,
         [FromHeader(Name = "Language")] string? language = "en-EN"
         )

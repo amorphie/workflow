@@ -168,7 +168,7 @@ public class PostTransactionService : IPostTransactionService
             WorkflowName = _transition.FromState.WorkflowName!,
             EntityName = _entity,
             RecordId = _recordId,
-            StateName = _transition.FromStateName,
+            StateName = _transition.ToStateName!,
             BaseStatus = BaseStatusType.LockedForFlow,
             CreatedBy = _user,
             CreatedByBehalfOf = _behalfOfUser,
@@ -190,7 +190,7 @@ public class PostTransactionService : IPostTransactionService
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
         _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
 
-        instanceAtState.StateName = _transition.FromStateName!;
+        instanceAtState.StateName = _transition.ToStateName!;
         instanceAtState.ModifiedBy = _user;
         instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
         instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
