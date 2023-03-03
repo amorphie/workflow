@@ -11,7 +11,7 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0-focal AS build
 WORKDIR /src
 
 COPY ["amorphie.workflow.csproj", "amorphie.workflow/"]
-RUN dotnet restore "amorphie.workflow.csproj"
+RUN dotnet restore "amorphie.workflow/amorphie.workflow.csproj"
 COPY . .
 WORKDIR "amorphie.workflow"
 RUN dotnet build "amorphie.workflow.csproj" -c Release -o /app/build
