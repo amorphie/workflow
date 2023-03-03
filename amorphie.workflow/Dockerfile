@@ -10,7 +10,7 @@ USER workflowuser
 FROM mcr.microsoft.com/dotnet/sdk:6.0-focal AS build
 WORKDIR /src
 
-COPY ["amorphie-workflow/amorphie.workflow.csproj", "amorphie.workflow/"]
+COPY ["amorphie.workflow.csproj", "amorphie.workflow/"]
 RUN dotnet restore "amorphie-workflow/amorphie.workflow.csproj"
 COPY . .
 WORKDIR "amorphie.workflow"
