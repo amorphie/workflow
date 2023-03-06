@@ -348,6 +348,8 @@ public static class DefinitionModule
                         Name = req.name,
                         ToStateName=req.toState,
                         ToState=context!.States!.FirstOrDefault(f => f.Name == req.toState),
+                        FromStateName=req.toState,
+                        FromState=req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!,
                         //IsExclusive = req.IsExclusive,
                         Titles=new List<Translation>(){
                             new Translation(){
@@ -360,11 +362,13 @@ public static class DefinitionModule
                     });
                     hasChanges = true;
                 }
-                else if (existingTransition.ToStateName != req.toState)
+                else if (existingTransition.ToStateName != req.toState||existingTransition.FromStateName != req.fromState)
                 {
                     //Kayıdı olup update edilmesi gereken transitionlar 
+                    existingTransition.FromStateName = req.fromState!;
                     existingTransition.ToStateName = req.toState;
                     existingTransition.ToState = context!.States!.FirstOrDefault(f => f.Name == req.toState);
+                    existingTransition.FromState = req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!;
                     hasChanges = true;
                 }
 

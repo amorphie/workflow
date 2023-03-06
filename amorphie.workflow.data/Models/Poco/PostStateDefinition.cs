@@ -10,10 +10,10 @@ public record PostAutoTransitStateDefinitionRequest(string name, MultilanguageTe
     PostStateDefinitionRequest(name, title, baseStatus, transitions);
 
 
-public record PostTransitionDefinitionRequest(string name, MultilanguageText title, string toState, string? form);
+public record PostTransitionDefinitionRequest(string name, MultilanguageText title, string toState, string? form, string fromState);
 
-public record PostFSMTransitionDefinition(string name, MultilanguageText title, string toState, string? form) : PostTransitionDefinitionRequest(name, title, toState, form);
-public record PostZeebeTransitionDefinition(string name, MultilanguageText title, string toState, string? form, string message, string gateway) : PostTransitionDefinitionRequest(name, title, toState, form);
+public record PostFSMTransitionDefinition(string name, MultilanguageText title, string toState, string? form, string fromState) : PostTransitionDefinitionRequest(name, title, toState, form,fromState);
+public record PostZeebeTransitionDefinition(string name, MultilanguageText title, string toState, string? form, string fromState, string message, string gateway) : PostTransitionDefinitionRequest(name, title, toState, form,fromState);
 
 public record PostStateDefinitionResponse(string name);
 

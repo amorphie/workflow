@@ -115,7 +115,8 @@ public static class InstanceModule
                         new MultilanguageText(
                             language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                         t.ToStateName!,
-                        t.Forms.FirstOrDefault(f => f.Language == language)!.Label
+                        t.Forms.FirstOrDefault(f => f.Language == language)!.Label,
+                        t.FromStateName
                     )).ToArray()
                     ),
                    s.CreatedAt,
@@ -154,7 +155,8 @@ public static class InstanceModule
                                   new MultilanguageText(
                                       language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                                   t.ToStateName!,
-                                  t.Forms.FirstOrDefault(f => f.Language == language)!.Label
+                                  t.Forms.FirstOrDefault(f => f.Language == language)!.Label,
+                                  t.FromStateName
                               )).ToArray()
                               ),
                              instance.CreatedAt,
