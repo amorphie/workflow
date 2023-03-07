@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
+//using amorphie.core.security.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using SecretExtensions;
@@ -8,7 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IPostTransactionService, PostTransactionService>();
 builder.Services.AddScoped<IZeebeCommandService, ZeebeCommandService>();
-await builder.Configuration.AddVaultSecrets("amorphie-secretstore", "amorphie-workflow");
+await builder.Configuration.AddVaultSecrets("workflow-secretstore", "amorphie-workflow");
+//await builder.Configuration.AddVaultSecrets("amorphie-secretstore", new string[] { "amorphie-workflow" });
 var postgreSql = builder.Configuration["workflowdb"];
 // builder.Services.AddDbContext<WorkflowDBContext>
 //     ((options) =>
