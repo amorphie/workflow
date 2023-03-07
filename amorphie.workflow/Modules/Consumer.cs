@@ -120,12 +120,12 @@ public static class ConsumerModule
                    {
                        Name = item.Workflow.Name,
                        Title = item.Workflow.Titles.First().Label,
-                       Transitions = item.Workflow.States.First(s => s.Type == StateType.Start).Transitions.Select(t =>
+                       Transitions = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)!.Transitions!.Select(t =>
                            new GetRecordWorkflowAndTransitionsResponse.Transition
                            {
                                Name = t.Name,
-                               Title = t.Titles.First().Label,
-                               Form = t.Forms.First().Label
+                               Title = t.Titles.FirstOrDefault()==null?string.Empty: t.Titles.FirstOrDefault()!.Label,
+                               Form = t.Forms.FirstOrDefault()==null?string.Empty:t.Forms.FirstOrDefault()!.Label
                            }).ToArray()
                    }
                        ).FirstOrDefault();

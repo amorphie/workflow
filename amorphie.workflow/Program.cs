@@ -2,19 +2,20 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using SecretExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IPostTransactionService, PostTransactionService>();
 builder.Services.AddScoped<IZeebeCommandService, ZeebeCommandService>();
-
-
-builder.Services.AddDbContext<WorkflowDBContext>
-    ((options) =>
-    {
-        //options.UseLazyLoadingProxies();
-        options.UseNpgsql("Host=localhost:5432;Database=workflow;Username=postgres;Password=postgres");
-    });
+await builder.Configuration.AddVaultSecrets("amorphie-secretstore", "DatabaseConnections");
+var postgreSql = builder.Configuration["workflowdb"];
+// builder.Services.AddDbContext<WorkflowDBContext>
+//     ((options) =>
+//     {
+//         //options.UseLazyLoadingProxies();
+//         options.UseNpgsql("Host=localhost:5432;Database=workflow;Username=postgres;Password=postgres");
+//     });
 
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
@@ -44,12 +45,15 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
+builder.Services.AddDbContext<WorkflowDBContext>
+    (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
 
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-// using var scope = app.Services.CreateScope();
-// var db = scope.ServiceProvider.GetRequiredService<UserDBContext>();
-// db.Database.Migrate();
+using var scope = app.Services.CreateScope();
+var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
+db.Database.Migrate();
+
 
 app.UseCloudEvents();
 app.UseRouting();
