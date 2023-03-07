@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IPostTransactionService, PostTransactionService>();
 builder.Services.AddScoped<IZeebeCommandService, ZeebeCommandService>();
-await builder.Configuration.AddVaultSecrets("amorphie-secretstore", "DatabaseConnections");
+await builder.Configuration.AddVaultSecrets("amorphie-secretstore", "amorphie-workflow");
 var postgreSql = builder.Configuration["workflowdb"];
 // builder.Services.AddDbContext<WorkflowDBContext>
 //     ((options) =>
