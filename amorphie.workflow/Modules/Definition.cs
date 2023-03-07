@@ -14,7 +14,7 @@ public static class DefinitionModule
             .WithOpenApi(operation =>
             {
                 operation.Summary = "Returns queried workflow definitions.";
-              
+
                 operation.Parameters[0].Description = "Partial or full name of the definition.";
                 operation.Parameters[1].Description = "Filters result workflows with provided Tag(s).";
                 operation.Parameters[2].Description = "Returns submitted entity's workflows.";
@@ -61,7 +61,7 @@ public static class DefinitionModule
                   return operation;
               });
 
-        app.MapGet("/workflow/definition/{definition-name}/state",getState)
+        app.MapGet("/workflow/definition/{definition-name}/state", getState)
               .Produces<GetStateDefinition[]>(StatusCodes.Status200OK)
               .Produces(StatusCodes.Status204NoContent)
               .WithOpenApi(operation =>
@@ -119,15 +119,15 @@ public static class DefinitionModule
 
     }
 
-   static IResult getDefinition(
-            [FromServices] WorkflowDBContext context,
-            [FromQuery] string? definition,
-            [FromQuery] string[]? tags,
-            [FromQuery] string? entity,
-            [FromQuery][Range(0, 100)] int? page = 0,
-            [FromQuery][Range(5, 100)] int? pageSize = 10,
-            [FromHeader(Name = "Language")] string? language = "en-EN"
-        )
+    static IResult getDefinition(
+             [FromServices] WorkflowDBContext context,
+             [FromQuery] string? definition,
+             [FromQuery] string[]? tags,
+             [FromQuery] string? entity,
+             [FromQuery][Range(0, 100)] int? page = 0,
+             [FromQuery][Range(5, 100)] int? pageSize = 10,
+             [FromHeader(Name = "Language")] string? language = "en-EN"
+         )
     {
         var query = context.Workflows!.Where(w => w.Name == definition)
                .Include(w => w.Titles.Where(t => t.Language == language))
@@ -168,12 +168,12 @@ public static class DefinitionModule
         var existingRecord = context.Workflows!.FirstOrDefault(w => w.Name == data.name);
         List<WorkflowEntity> entityList = new List<WorkflowEntity>();
         // All available status have to add 
-        foreach (var item in data.entities)
+        foreach (var item in data.entities!)
         {
             List<WorkflowEntity> entity = item.availableInStatus.Select(s => new WorkflowEntity()
             {
                 AvailableInStatus = s,
-              //  IsExclusive = item.isExclusive,
+                //  IsExclusive = item.isExclusive,
                 IsStateManager = item.isStateManager,
                 Name = item.name
             }).ToList();
@@ -216,7 +216,7 @@ public static class DefinitionModule
                     context!.WorkflowEntities!.Add(new WorkflowEntity
                     {
                         Name = req.Name,
-                      //  IsExclusive = req.IsExclusive,
+                        //  IsExclusive = req.IsExclusive,
                         IsStateManager = req.IsStateManager,
                         AvailableInStatus = req.AvailableInStatus,
                         CreatedAt = DateTime.Now,
@@ -225,11 +225,11 @@ public static class DefinitionModule
                     hasChanges = true;
                 }
                 else if (existingEntity.IsStateManager != req.IsStateManager
-              //  || existingEntity.IsExclusive != req.IsExclusive
+                //  || existingEntity.IsExclusive != req.IsExclusive
                 || existingEntity.AvailableInStatus != req.AvailableInStatus)
                 {
                     //Kayıdı olup update edilmesi gereken entityler 
-                   // existingEntity.IsExclusive = req.IsExclusive;
+                    // existingEntity.IsExclusive = req.IsExclusive;
                     existingEntity.IsStateManager = req.IsStateManager;
                     existingEntity.AvailableInStatus = req.AvailableInStatus;
                     hasChanges = true;
@@ -297,47 +297,58 @@ public static class DefinitionModule
         [FromHeader(Name = "Language")] string? language = "en-EN"
         )
     {
-            var existingRecord = context.States!
-                   .FirstOrDefault(w => w.WorkflowName == definition && w.Name == data.name)
-                   ;
-            if (existingRecord == null)
+            // data.transitions[0].
+        var existingRecord = context.States!.Include(s => s.Transitions)
+               .FirstOrDefault(w => w.WorkflowName == definition && w.Name == data.name)
+               ;
+        if (existingRecord == null)
+        {
+            context!.States!.Add(new State
             {
-                context!.States!.Add(new State
+                WorkflowName = definition,
+                Name = data.name,
+                BaseStatus = data.baseStatus,
+                CreatedAt = DateTime.Now,
+                CreatedByBehalfOf = Guid.NewGuid(),
+                Type = data.type,
+                Transitions = data!.transitions!.Select(x => new Transition
                 {
-                    WorkflowName = definition,
-                    Name = data.name,
-                    BaseStatus = data.baseStatus,
-                    CreatedAt = DateTime.Now,
-                    CreatedByBehalfOf = Guid.NewGuid(),
-                    Type=StateType.Standart,
-                    Transitions = data!.transitions!.Select(x => new Transition
+                    Name = x.name,
+                    FlowName = x.message,
+                    Flow = x.message == null ? null : new ZeebeMessage()
                     {
-                        Name = x.name,
-                        ToState = context!.States!.FirstOrDefault(f => f.Name == x.toState),
+                        Name = x.message,
+                        Message = x.message,
+                        Gateway = x.gateway!,
                         CreatedAt = DateTime.Now,
-                      //  Type = TransitionType.AutoTransition,
-                        CreatedByBehalfOf = Guid.NewGuid(),
-                    }).ToList(),
-                    Titles = new List<Translation>(){
+                    },
+                    ToState = context!.States!.FirstOrDefault(f => f.Name == x.toState),
+                    ToStateName = context!.States!.FirstOrDefault(f => f.Name == x.toState) != null ? x.toState : null,
+                    CreatedAt = DateTime.Now,
+                    //  Type = TransitionType.AutoTransition,
+                    CreatedByBehalfOf = Guid.NewGuid(),
+                }).ToList(),
+                Titles = new List<Translation>(){
                             new Translation{
                              Language=data.title.language,
                              Label=data.title.label
                             }
                         }
-                });
-                context!.SaveChanges();
+            });
+            context!.SaveChanges();
 
-                return Results.Created($"workflow/definition/{definition}/state?state-name:"+data.name,definition);
-            }
-            else
+            return Results.Created($"workflow/definition/{definition}/state?state-name:" + data.name, definition);
+        }
+        else
+        {
+            var hasChanges = false;
+            if (existingRecord.BaseStatus != data.baseStatus || existingRecord.Type != data.type)
             {
-                var hasChanges = false;
-                if (existingRecord.BaseStatus != data.baseStatus)
-                {
-                    hasChanges = true;
-                    existingRecord.BaseStatus = data.baseStatus;
-                }
-                foreach (var req in data.transitions)
+                hasChanges = true;
+                existingRecord.BaseStatus = data.baseStatus;
+                existingRecord.Type = data.type;
+            }
+            foreach (var req in data.transitions)
             {
                 Transition? existingTransition = existingRecord.Transitions.FirstOrDefault(db => db.Name == req.name);
                 //Kayıdı olmayan Transition ların eklenmesi
@@ -346,12 +357,12 @@ public static class DefinitionModule
                     context!.Transitions!.Add(new Transition
                     {
                         Name = req.name,
-                        ToStateName=req.toState,
-                        ToState=context!.States!.FirstOrDefault(f => f.Name == req.toState),
-                        FromStateName=req.toState,
-                        FromState=req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!,
+                        ToStateName = context!.States!.FirstOrDefault(f => f.Name == req.toState) != null ? req.toState : string.Empty,
+                        ToState = context!.States!.FirstOrDefault(f => f.Name == req.toState),
+                        // FromStateName=req.toState,
+                        // FromState=req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!,
                         //IsExclusive = req.IsExclusive,
-                        Titles=new List<Translation>(){
+                        Titles = new List<Translation>(){
                             new Translation(){
                                 Label=req.title.label,
                                 Language=req.title.language
@@ -362,28 +373,53 @@ public static class DefinitionModule
                     });
                     hasChanges = true;
                 }
-                else if (existingTransition.ToStateName != req.toState||existingTransition.FromStateName != req.fromState)
+                else if (existingTransition.ToStateName != req.toState
+                )
                 {
+                    existingTransition.FlowName = req.message;
                     //Kayıdı olup update edilmesi gereken transitionlar 
-                    existingTransition.FromStateName = req.fromState!;
-                    existingTransition.ToStateName = req.toState;
+                    // existingTransition.FromStateName = req.fromState!;
                     existingTransition.ToState = context!.States!.FirstOrDefault(f => f.Name == req.toState);
-                    existingTransition.FromState = req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!;
+                    if (existingTransition.ToState != null)
+                        existingTransition.ToStateName = req.toState;
+                    // existingTransition.FromState = req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!;
                     hasChanges = true;
                 }
-
-            }
-                if (hasChanges)
+                if (existingTransition != null && req!.message != existingTransition.FlowName)
                 {
-                    context!.SaveChanges();
+                    ZeebeMessage? zeebeMessage = context!.ZeebeMessage!.FirstOrDefault(f => f.Name == req.message);
+                    if (zeebeMessage == null)
+                    {
+                        existingTransition.Flow = new ZeebeMessage()
+                        {
+                            Name = req.message!,
+                            Gateway = req.gateway!,
+                            CreatedAt = DateTime.Now,
+                            Message=req.message!,
+                            Process="",
+                        };
 
-                    return Results.Ok(new PostStateDefinitionResponse(data.name));
-                }
-                else
-                {
-                    return Results.Problem("Not Modified", null, 304);
+                    }
+                    else
+                    {
+                        existingTransition.Flow = zeebeMessage;
+                        existingTransition.FlowName = req.message;
+                    }
+
+                    hasChanges = true;
                 }
             }
+            if (hasChanges)
+            {
+                context!.SaveChanges();
+
+                return Results.Ok(new PostStateDefinitionResponse(data.name));
+            }
+            else
+            {
+                return Results.Problem("Not Modified", null, 304);
+            }
+        }
 
 
     }

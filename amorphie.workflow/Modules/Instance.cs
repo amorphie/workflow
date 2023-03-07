@@ -116,7 +116,9 @@ public static class InstanceModule
                             language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                         t.ToStateName!,
                         t.Forms.FirstOrDefault(f => f.Language == language)!.Label,
-                        t.FromStateName
+                        t.FromStateName,
+                        t.FlowName,
+                        null
                     )).ToArray()
                     ),
                    s.CreatedAt,
@@ -156,7 +158,9 @@ public static class InstanceModule
                                       language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                                   t.ToStateName!,
                                   t.Forms.FirstOrDefault(f => f.Language == language)!.Label,
-                                  t.FromStateName
+                                  t.FromStateName,
+                                  t.FlowName,
+                                  null
                               )).ToArray()
                               ),
                              instance.CreatedAt,
