@@ -1,21 +1,25 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
 using amorphie.core.security.Extensions;
+ //using amorphie.workflow;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 //using SecretExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
+await builder.Configuration.AddVaultSecrets("workflow-secretstore",new string[]{"DatabaseConnections"});
+var postgreSql = builder.Configuration["workflowdb"];
+
 
 builder.Services.AddScoped<IPostTransactionService, PostTransactionService>();
 builder.Services.AddScoped<IZeebeCommandService, ZeebeCommandService>();
-//await builder.Configuration.AddVaultSecrets("workflow-secretstore", "amorphie-workflow");
-//await builder.Configuration.AddVaultSecrets("workflow-secretstore", new string[] { "amorphie-workflow" });
-//var postgreSql = builder.Configuration["workflowdb"];
+//await builder.Configuration.AddVaultSecrets("user-secretstore", "user-secretstore");
+//await builder.Configuration.AddVaultSecrets("user-secretstore", new string[] { "user-secretstore" });
 
-await builder.Configuration.AddVaultSecrets("workflow-secretstore", new string[] { "DatabaseConnections" });  
 
-var postgreSql = builder.Configuration["PostgreSql"];
+//await builder.Configuration.AddVaultSecrets("workflow-secretstore", new string[] { "DatabaseConnections" });  
+
+//var postgreSql = builder.Configuration["PostgreSql"];
 
 
 // builder.Services.AddDbContext<WorkflowDBContext>
