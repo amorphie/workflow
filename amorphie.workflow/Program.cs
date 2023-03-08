@@ -7,7 +7,7 @@ using Microsoft.OpenApi.Models;
 //using SecretExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
-await builder.Configuration.AddVaultSecrets("workflow-secretstore",new string[]{"DatabaseConnections"});
+await builder.Configuration.AddVaultSecrets("workflow-secretstore",new string[]{"workflow-secretstore"});
 var postgreSql = builder.Configuration["workflowdb"];
 
 
