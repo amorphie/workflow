@@ -91,7 +91,7 @@ public static class ConsumerModule
 
         if (stateManagerWorkflow != null)
         {
-            var stateManagerInstace = instanceRecords.Where(i => i.WorkflowName == stateManagerWorkflow.Name).FirstOrDefault();
+            var stateManagerInstace = instanceRecords.Where(i => i.EntityName == stateManagerWorkflow.Name).FirstOrDefault();
 
             if (stateManagerInstace != null)
             {

@@ -171,6 +171,8 @@ public class PostTransactionService : IPostTransactionService
             StateName = _transition.FromStateName!,
             BaseStatus = BaseStatusType.LockedForFlow,
             CreatedBy = _user,
+            ZeebeFlow=_transition.Flow,
+            ZeebeFlowName=_transition.FlowName,
             CreatedByBehalfOf = _behalfOfUser,
         };
 

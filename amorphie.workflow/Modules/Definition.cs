@@ -165,7 +165,7 @@ public static class DefinitionModule
       [FromHeader(Name = "Language")] string? language = "en-EN"
       )
     {
-        var existingRecord = context.Workflows!.FirstOrDefault(w => w.Name == data.name);
+        var existingRecord = context.Workflows!.Include(s=>s.Entities).FirstOrDefault(w => w.Name == data.name);
         List<WorkflowEntity> entityList = new List<WorkflowEntity>();
         // All available status have to add 
         foreach (var item in data.entities!)
@@ -175,7 +175,9 @@ public static class DefinitionModule
                 AvailableInStatus = s,
                 //  IsExclusive = item.isExclusive,
                 IsStateManager = item.isStateManager,
-                Name = item.name
+                Name = item.name,
+                WorkflowName=data.name
+                
             }).ToList();
             entityList.AddRange(entity);
         }
@@ -209,7 +211,7 @@ public static class DefinitionModule
             }
             foreach (var req in entityList)
             {
-                WorkflowEntity? existingEntity = existingRecord.Entities.FirstOrDefault(db => db.Name == req.Name);
+                WorkflowEntity? existingEntity = existingRecord.Entities!.FirstOrDefault(db => db.Name == req.Name);
                 //Kayıdı olmayan entitylerin eklenmesi
                 if (existingEntity == null)
                 {
@@ -321,7 +323,20 @@ public static class DefinitionModule
                         Message = x.message,
                         Gateway = x.gateway!,
                         CreatedAt = DateTime.Now,
+                         Process=definition,
                     },
+                    Titles = new List<Translation>(){
+                            new Translation{
+                             Language=x.title.language,
+                             Label=x.title.label
+                            }
+                        },
+                        Forms = new List<Translation>(){
+                            new Translation{
+                             Language=x.form!.language,
+                             Label=x.form!.label
+                            }
+                        },
                     ToState = context!.States!.FirstOrDefault(f => f.Name == x.toState),
                     ToStateName = context!.States!.FirstOrDefault(f => f.Name == x.toState) != null ? x.toState : null,
                     CreatedAt = DateTime.Now,
@@ -368,6 +383,12 @@ public static class DefinitionModule
                                 Language=req.title.language
                             }
                         },
+                        Forms=new List<Translation>(){
+                            new Translation(){
+                                Label=req.form!.label,
+                                Language=req.form!.language
+                            }
+                        },
                         CreatedAt = DateTime.Now,
                         CreatedByBehalfOf = Guid.NewGuid(),
                     });
@@ -396,7 +417,7 @@ public static class DefinitionModule
                             Gateway = req.gateway!,
                             CreatedAt = DateTime.Now,
                             Message=req.message!,
-                            Process="",
+                            Process=definition,
                         };
 
                     }
