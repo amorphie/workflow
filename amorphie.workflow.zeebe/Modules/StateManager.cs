@@ -84,17 +84,38 @@ public static class StateManagerModule
 
             dbContext.Add(newInstanceTransition);
 
-            instance.BaseStatus = transition.ToState!.BaseStatus;
-            instance.StateName = transition.ToStateName;
+
+            if (!string.IsNullOrEmpty(transition.ServiceName))
+            {
+                var clientHttp = new HttpClient();
+                var response = clientHttp.PostAsync(transition.ServiceName, new StringContent(newInstanceTransition.EntityData, System.Text.Encoding.UTF8, "application/json")).Result;
+                //var content=new FormUrlEncodedContent(newInstanceTransition!.EntityData!);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK || response.StatusCode == System.Net.HttpStatusCode.Created)
+                {
+                    instance.BaseStatus = transition.ToState!.BaseStatus;
+                    instance.StateName = transition.ToStateName;
+                }
+                else
+                {
+
+                }
+                //client.InvokeMethodAsync<GetTokenRequest, string>(HttpMethod.Post, "amorphie-workflow-hub", "security/create-token", tokenRequestData).Result;
+            }
+            else
+            {
+                instance.BaseStatus = transition.ToState!.BaseStatus;
+                instance.StateName = transition.ToStateName;
+
+            }
 
             dbContext.SaveChanges();
 
             return Results.Ok();
         }
-       else
+        else
         {
 
-        } 
+        }
 
         return Results.NotFound();
     }

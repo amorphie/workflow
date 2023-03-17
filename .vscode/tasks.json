@@ -26,6 +26,18 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "workflow-hub-build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/amorphie.workflow.hub/amorphie.workflow.hub.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "appId": "amorphie-workflow",
             "dependsOn": "workflow-build",
             "appPort": 4201,
@@ -50,6 +62,18 @@
             "metricsPort": 42022
         },
         {
+            "appId": "amorphie-workflow-hub",
+            "dependsOn": "workflow-hub-build",
+            "appPort": 4203,
+            "httpPort": 42030,
+            "grpcPort": 42031,
+            "label": "dapr-debug-amorphie-workflow-hub",
+            "type": "daprd",
+            "componentsPath": "dapr/components",
+            "config": "dapr/config.yaml",
+            "metricsPort": 42032
+        },
+        {
             "appId": "amorphie-workflow",
             "label": "daprd-down-amorphie-workflow",
             "type": "daprd-down"
@@ -57,6 +81,11 @@
         {
             "appId": "amorphie-workflow-zeebe",
             "label": "daprd-down-amorphie-workflow-zeebe",
+            "type": "daprd-down"
+        },
+        {
+            "appId": "amorphie-workflow-hub",
+            "label": "daprd-down-amorphie-workflow-hub",
             "type": "daprd-down"
         }
     ]

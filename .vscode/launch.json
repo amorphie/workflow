@@ -14,7 +14,8 @@
                 "ASPNETCORE_ENVIRONMENT": "Development",
                 "ASPNETCORE_URLS": "http://localhost:4201",
                 "DAPR_HTTP_PORT": "42010",
-                "DAPR_GRPC_PORT": "42011"
+                "DAPR_GRPC_PORT": "42011",
+                "DAPR_STATE_STORE_NAME" : "amorphie-cache"
             },
             "postDebugTask": "daprd-down-amorphie-workflow"
         },
@@ -34,14 +35,34 @@
                 "DAPR_GRPC_PORT": "42021"
             },
             "postDebugTask": "daprd-down-amorphie-workflow-zeebe"
+        },
+        {
+            "name": "amorphie-workflow-hub",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dapr-debug-amorphie-workflow-hub",
+            "program": "${workspaceFolder}/amorphie.workflow.hub/bin/Debug/net7.0/amorphie.workflow.hub.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/amorphie.workflow.hub",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:4203",
+                "DAPR_HTTP_PORT": "42030",
+                "DAPR_GRPC_PORT": "42031",
+                "DAPR_STATE_STORE_NAME" : "amorphie-cache"
+            },
+            "postDebugTask": "daprd-down-amorphie-workflow-hub"
         }
+
     ],
     "compounds": [
         {
             "name": "Halay Mode",
             "configurations": [
                 "amorphie-workflow",
-                "amorphie-workflow-zeebe"
+                "amorphie-workflow-zeebe",
+                "amorphie-workflow-hub"
             ],
             "stopAll": true
         }

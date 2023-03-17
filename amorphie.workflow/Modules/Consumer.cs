@@ -1,9 +1,9 @@
 
 using System.ComponentModel.DataAnnotations;
+using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-
 public static class ConsumerModule
 {
     public static void MapConsumerEndpoints(this WebApplication app)
@@ -82,9 +82,16 @@ public static class ConsumerModule
                 .ToList();
 
         var stateManagerWorkflow = workflows.Where(item => item.IsStateManager == true).FirstOrDefault();
-
+      
         // load all active workflows of record.
         var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != BaseStatusType.Completed).ToList();
+//   using var client = new DaprClientBuilder().Build();
+//         var tokenRequestData=new GetTokenRequest(){
+//             Scope=string.Empty,
+//             InstanceId=instanceRecords.FirstOrDefault()!.Id,
+//         };
+//  var token =  client.InvokeMethodAsync<GetTokenRequest, string>(HttpMethod.Post, "amorphie-workflow-hub", "security/create-token", tokenRequestData).Result;
+
 
         var response = new GetRecordWorkflowAndTransitionsResponse();
         //response.IsStateRecordRegistered = instanceRecords.Count > 0;
@@ -159,7 +166,8 @@ public static class ConsumerModule
             [FromRoute(Name = "recordId")] Guid recordId,
             [FromRoute(Name = "transition")] string transition,
             [FromBody] ConsumerPostTransitionRequest data,
-            [FromServices] IPostTransactionService service
+            [FromServices] IPostTransactionService service,
+            [FromServices] DaprClient client
         )
     {
         var result = service.Init(entity, recordId, transition, user, behalOfUser, data);
@@ -169,6 +177,16 @@ public static class ConsumerModule
             result = service.Execute();
         }
 
+        var response = client.InvokeMethodAsync<PostPublishStatusRequest, string>(
+            HttpMethod.Post,
+            "amorphie-workflow-hub.test-amorphie-workflow-hub",
+            "workflow/publish-status",
+            new PostPublishStatusRequest(
+                recordId,
+                "SendOtp",
+                "SendOtp",
+                "SendOtp"
+            ));
         return result;
     }
 

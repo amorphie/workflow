@@ -18,4 +18,6 @@ public class Transition : BaseDbEntity
     public string? FlowName { get; set; }
 
     public ICollection<Translation> Forms { get; set; } = default!;
+    
+    public string? ServiceName { get; set; } 
 }

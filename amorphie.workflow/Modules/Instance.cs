@@ -118,6 +118,7 @@ public static class InstanceModule
                          new MultilanguageText(
                             language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label),
                         t.FromStateName,
+                        t.ServiceName,
                         t.FlowName,
                         null
                     )).ToArray()
@@ -161,6 +162,7 @@ public static class InstanceModule
                                    new MultilanguageText(
                                       language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label),
                                   t.FromStateName,
+                                  t.ServiceName,
                                   t.FlowName,
                                   null
                               )).ToArray()

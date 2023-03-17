@@ -317,6 +317,7 @@ public static class DefinitionModule
                 {
                     Name = x.name,
                     FlowName = x.message,
+                    ServiceName=x.serviceName,
                     Flow = x.message == null ? null : new ZeebeMessage()
                     {
                         Name = x.message,
@@ -374,9 +375,7 @@ public static class DefinitionModule
                         Name = req.name,
                         ToStateName = context!.States!.FirstOrDefault(f => f.Name == req.toState) != null ? req.toState : string.Empty,
                         ToState = context!.States!.FirstOrDefault(f => f.Name == req.toState),
-                        // FromStateName=req.toState,
-                        // FromState=req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!,
-                        //IsExclusive = req.IsExclusive,
+                        ServiceName=req.serviceName,
                         Titles = new List<Translation>(){
                             new Translation(){
                                 Label=req.title.label,
@@ -426,6 +425,12 @@ public static class DefinitionModule
                         existingTransition.Flow = zeebeMessage;
                         existingTransition.FlowName = req.message;
                     }
+
+                    hasChanges = true;
+                }
+                 if (existingTransition != null && req!.serviceName != existingTransition.ServiceName)
+                {
+                    existingTransition.ServiceName=req.serviceName;
 
                     hasChanges = true;
                 }
