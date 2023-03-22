@@ -177,16 +177,16 @@ public static class ConsumerModule
             result = service.Execute();
         }
 
-        var response = client.InvokeMethodAsync<PostPublishStatusRequest, string>(
-            HttpMethod.Post,
-            "amorphie-workflow-hub.test-amorphie-workflow-hub",
-            "workflow/publish-status",
-            new PostPublishStatusRequest(
-                recordId,
-                "SendOtp",
-                "SendOtp",
-                "SendOtp"
-            ));
+        // var response = client.InvokeMethodAsync<PostPublishStatusRequest, string>(
+        //     HttpMethod.Post,
+        //     "amorphie-workflow-hub.test-amorphie-workflow-hub",
+        //     "workflow/publish-status",
+        //     new PostPublishStatusRequest(
+        //         recordId,
+        //         "SendOtp",
+        //         "SendOtp",
+        //         "SendOtp"
+        //     ));
         return result;
     }
 
@@ -256,7 +256,8 @@ public record ConsumerPostTransitionRequest
     public dynamic? FormData { get; set; }
     public dynamic? AdditionalData { get; set; }
     public bool GetSignalRHub { get; set; }
-
+    public dynamic? RouteData { get; set; } 
+    public dynamic? QueryData { get; set; }
 }
 
 public record ConsumerPostTransitionResponse(

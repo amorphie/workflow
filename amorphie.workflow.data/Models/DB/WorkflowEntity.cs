@@ -1,7 +1,10 @@
 
 
+using Newtonsoft.Json;
+
 public class WorkflowEntity : BaseDbEntityWithId
 {
+     [JsonIgnore]
     public Workflow Workflow { get; set; } = default!;
     public string WorkflowName { get; set; } = default!;
 

@@ -133,13 +133,13 @@ public class PostTransactionService : IPostTransactionService
             CreatedByBehalfOf = _behalfOfUser,
         };
 
-        _dbContext.Add(newInstance);
+        // _dbContext.Add(newInstance);
 
-        addInstanceTansition(newInstance);
-        _dbContext.SaveChanges();
+        // addInstanceTansition(newInstance);
+        // _dbContext.SaveChanges();
 
-
-        return Results.Ok();
+        return ServiceKontrol(newInstance, false);
+        //return Results.Ok();
     }
 
     private IResult noFlowHasInstance(Instance instanceAtState)
@@ -147,15 +147,8 @@ public class PostTransactionService : IPostTransactionService
 
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
 
-        instanceAtState.StateName = _transition.ToStateName!;
-        instanceAtState.ModifiedBy = _user;
-        instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
-        instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+        return ServiceKontrol(instanceAtState, true);
 
-        instanceAtState.BaseStatus = _transition.ToState!.BaseStatus;
-        addInstanceTansition(instanceAtState);
-        _dbContext.SaveChanges();
-        return Results.Ok();
 
     }
 
@@ -171,8 +164,8 @@ public class PostTransactionService : IPostTransactionService
             StateName = _transition.FromStateName!,
             BaseStatus = BaseStatusType.LockedForFlow,
             CreatedBy = _user,
-            ZeebeFlow=_transition.Flow,
-            ZeebeFlowName=_transition.FlowName,
+            ZeebeFlow = _transition.Flow,
+            ZeebeFlowName = _transition.FlowName,
             CreatedByBehalfOf = _behalfOfUser,
         };
 
@@ -236,11 +229,108 @@ public class PostTransactionService : IPostTransactionService
             EntityData = Convert.ToString(_data.EntityData),
             FormData = Convert.ToString(_data.FormData),
             AdditionalData = Convert.ToString(_data.AdditionalData),
+            QueryData = Convert.ToString(_data.QueryData),
+            RouteData = Convert.ToString(_data.RouteData),
             CreatedBy = _user,
             CreatedByBehalfOf = _behalfOfUser,
         };
 
         _dbContext.Add(newInstanceTransition);
+    }
+    private IResult ServiceKontrol(Instance instance, bool hasInstance)
+    {
+        if (!string.IsNullOrEmpty(_transition.ServiceName))
+        {
+            var clientHttp = new HttpClient();
+            var response = new HttpResponseMessage();
+            if (_transition.ServiceName.Contains("{") && _transition.ServiceName.Contains("}"))
+            {
+                //     //dynamic JsonRoutedata = Newtonsoft.Json.Linq.JObject.Parse(_data.RouteData.ToString());
+                //     System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex(@"/\{([^}]+)\}/");
+
+                System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex("{(.*?)}");
+                var v = regex.Match(_transition.ServiceName);
+                // string? test3=v.Groups[1].ToString();
+                foreach (var item in v.Groups)
+                {
+                    if (!item.ToString()!.Contains("{"))
+                    {
+                        string? RouteDataString = _data.RouteData!.ToString();
+                        dynamic JsonRoutedata = Newtonsoft.Json.Linq.JObject.Parse(RouteDataString);
+                        string replaceVaule = JsonRoutedata[item.ToString()!];
+                        _transition.ServiceName = _transition.ServiceName.Replace("{"+item.ToString()!+"}", replaceVaule);
+                    }
+
+                }
+            }
+            else
+            {
+
+            }
+            try
+            {
+                response = clientHttp.PostAsync(_transition.ServiceName, new StringContent(_data.EntityData.ToString(), System.Text.Encoding.UTF8, "application/json")).Result;
+              try
+              {
+                var contentString= response!.Content!.ReadAsStringAsync().Result;
+                dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
+                var status=JsonResultdata.result.status;
+                if(status!="Success")
+                {
+                    var message=JsonResultdata.result.message;
+                    return Results.BadRequest(status+" "+message);
+                }
+              } 
+              catch(Exception ex)
+              {
+                
+              }
+              
+             
+            }
+            catch(Exception ex)
+            {
+                return Results.BadRequest(ex.ToString());
+            }
+           
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK
+            || response.StatusCode == System.Net.HttpStatusCode.Created
+            || response.StatusCode == System.Net.HttpStatusCode.NotModified
+
+            )
+            {
+              return UpdateInstance(instance,hasInstance);
+            }
+            else
+            {
+                return Results.BadRequest(_transition.ServiceName + " message:" + response.ReasonPhrase);
+            }
+        }
+        else
+        {
+             return UpdateInstance(instance,hasInstance);
+        }
+    }
+
+    private IResult UpdateInstance(Instance instance, bool hasInstance)
+    {
+         if (hasInstance)
+                {
+                    instance.StateName = _transition.ToStateName!;
+                    instance.ModifiedBy = _user;
+                    instance.ModifiedByBehalfOf = _behalfOfUser;
+                    instance.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+                    instance.BaseStatus = _transition.ToState!.BaseStatus;
+                }
+                else
+                {
+                    _dbContext.Add(instance);
+                }
+
+                addInstanceTansition(instance);
+                _dbContext.SaveChanges();
+                return Results.Ok();
     }
 
 }

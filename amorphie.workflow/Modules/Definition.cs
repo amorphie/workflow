@@ -1,5 +1,6 @@
 
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -130,14 +131,34 @@ public static class DefinitionModule
          )
     {
         var query = context.Workflows!.Where(w => w.Name == definition)
-               .Include(w => w.Titles.Where(t => t.Language == language))
-               .Include(w => w.Entities.Where(w => w.Name == entity && w.WorkflowName == definition));
-
+       // .Include(w => w.Workflow)
+              .Include(w => w.Titles.Where(t => t.Language == language))
+               .Include(w => w.Entities.Where(w => w.Name == entity && w.WorkflowName == definition))
+            ;
+        System.Text.Json.JsonSerializerOptions options = new()
+            {
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault,
+                 
+            };
         var workflows = query
         .Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
-        .Take(pageSize.GetValueOrDefault(10))
-        .ToList();
-        return Results.Ok(workflows);
+        .Take(pageSize.GetValueOrDefault(10)).Select(s=>new GetWorkflowDefinition(
+            s.Name,
+            s.Titles.FirstOrDefault()!.Label,
+            s.Tags!,
+            s.Entities.Select(e=>new GetWorkflowEntity(
+     e.Name,e.InclusiveWorkflows==null?false:true,e.IsStateManager,
+     new BaseStatusType[]{
+        e.AvailableInStatus
+     }
+)).ToArray()
+            ))
+            .ToArray();
+       
+        return Results.Ok(
+            workflows
+            
+            );
     }
     static IResult deleteDefinition(
         [FromServices] WorkflowDBContext context,

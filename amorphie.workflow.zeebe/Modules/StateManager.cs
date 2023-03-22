@@ -76,6 +76,8 @@ public static class StateManagerModule
                 FromStateName = instance.StateName,
                 ToStateName = transition.ToStateName,
                 EntityData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData").ToString(),
+                RouteData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("routeData").ToString(),
+                QueryData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("queryData").ToString(),
                 FormData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("formData").ToString(),
                 AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString(),
                 CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString()),
@@ -88,9 +90,20 @@ public static class StateManagerModule
             if (!string.IsNullOrEmpty(transition.ServiceName))
             {
                 var clientHttp = new HttpClient();
+                if (transition.ServiceName.Contains("{") && transition.ServiceName.Contains("}"))
+                {
+                    dynamic  JsonRoutedata= Newtonsoft.Json.Linq.JObject.Parse(newInstanceTransition.RouteData);
+                    System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex("{(.*)}");
+                    var v = regex.Match(transition.ServiceName);
+                    foreach(var item in v.Groups)
+                    {
+                       transition.ServiceName= transition.ServiceName.Replace("{"+item.ToString()+"}",JsonRoutedata[item]);
+                    }
+                }
                 var response = clientHttp.PostAsync(transition.ServiceName, new StringContent(newInstanceTransition.EntityData, System.Text.Encoding.UTF8, "application/json")).Result;
                 //var content=new FormUrlEncodedContent(newInstanceTransition!.EntityData!);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK || response.StatusCode == System.Net.HttpStatusCode.Created)
+                if (response.StatusCode == System.Net.HttpStatusCode.OK || response.StatusCode == System.Net.HttpStatusCode.Created
+                || response.StatusCode == System.Net.HttpStatusCode.NotModified)
                 {
                     instance.BaseStatus = transition.ToState!.BaseStatus;
                     instance.StateName = transition.ToStateName;
