@@ -21,7 +21,7 @@ public class WorkflowDBContext : DbContext
     public DbSet<State> States { get; set; } = default!;
     public DbSet<Transition> Transitions { get; set; } = default!;
     public DbSet<Instance> Instances { get; set; } = default!;
-    public DbSet<ZeebeMessage> ZeebeMessage { get; set; } = default!;
+    public DbSet<ZeebeMessage> ZeebeMessages { get; set; } = default!;
     public DbSet<InstanceTransition> InstanceTransitions { get; set; } = default!;
     public DbSet<InstanceEvent> InstanceEvents { get; set; } = default!;
 
