@@ -171,7 +171,7 @@ public class PostTransactionService : IPostTransactionService
 
         dynamic variables = createMessageVariables(newInstance);
 
-        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null);
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null,_transition.Flow!.Gateway);
 
         _dbContext.Add(newInstance);
         addInstanceTansition(newInstance);
@@ -193,7 +193,7 @@ public class PostTransactionService : IPostTransactionService
 
         dynamic variables = createMessageVariables(instanceAtState);
 
-        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString());
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(),_transition.Flow!.Gateway);
 
         addInstanceTansition(instanceAtState);
         _dbContext.SaveChanges();

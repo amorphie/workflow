@@ -22,6 +22,10 @@ builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
 
 var app = builder.Build();
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+using var scope = app.Services.CreateScope();
+var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
+db.Database.Migrate();
 
 app.UseCloudEvents();
 app.UseRouting();
