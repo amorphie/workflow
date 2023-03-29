@@ -1,6 +1,8 @@
 
 
-public class Workflow : BaseDbEntity
+using amorphie.core.Base;
+
+public class Workflow : EntityBaseWithOutId
 {
     public string Name { get; set; } = string.Empty;
     public string[]? Tags { get; set; }

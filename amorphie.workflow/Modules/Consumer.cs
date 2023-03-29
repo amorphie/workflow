@@ -1,5 +1,8 @@
 
 using System.ComponentModel.DataAnnotations;
+using amorphie.core.Base;
+using amorphie.core.Enums;
+using amorphie.core.IBase;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -56,7 +59,7 @@ public static class ConsumerModule
             });
     }
 
-    static IResult getTransitions(
+    static IResponse<GetRecordWorkflowAndTransitionsResponse> getTransitions(
            [FromServices] WorkflowDBContext dbContext,
            [FromRoute(Name = "entity")] string entity,
            [FromRoute(Name = "recordId")] Guid recordId,
@@ -84,7 +87,7 @@ public static class ConsumerModule
         var stateManagerWorkflow = workflows.Where(item => item.IsStateManager == true).FirstOrDefault();
       
         // load all active workflows of record.
-        var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != BaseStatusType.Completed).ToList();
+        var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != StatusType.Completed).ToList();
 //   using var client = new DaprClientBuilder().Build();
 //         var tokenRequestData=new GetTokenRequest(){
 //             Scope=string.Empty,
@@ -154,11 +157,15 @@ public static class ConsumerModule
                 }
             ).ToArray();
 
-
-        return Results.Ok(response);
+        return new Response<GetRecordWorkflowAndTransitionsResponse>
+        {
+            Data=response,
+            Result=new Result(Status.Success,"Success")
+        };
+       // return Results.Ok(response);
     }
 
-    static IResult postTransition(
+    static IResponse postTransition(
             [FromServices] WorkflowDBContext dbContext,
             [FromHeader(Name = "User")] Guid user,
             [FromHeader(Name = "Behalf-Of-User")] Guid behalOfUser,
@@ -172,7 +179,7 @@ public static class ConsumerModule
     {
         var result = service.Init(entity, recordId, transition, user, behalOfUser, data);
 
-        if (result == Results.Empty)
+        if (result.Result.Status==Status.Success.ToString())
         {
             result = service.Execute();
         }

@@ -1,6 +1,8 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using amorphie.core.Base;
+using amorphie.core.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -148,7 +150,7 @@ public static class DefinitionModule
             s.Tags!,
             s.Entities.Select(e=>new GetWorkflowEntity(
      e.Name,e.InclusiveWorkflows==null?false:true,e.IsStateManager,
-     new BaseStatusType[]{
+     new StatusType[]{
         e.AvailableInStatus
      }
 )).ToArray()

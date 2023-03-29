@@ -1,5 +1,5 @@
-
-public class InstanceTransition : BaseDbLogEntity
+using amorphie.core.Base;
+public class InstanceTransition : EntityBaseLog
 {
     public Instance Instance { get; set; } = default!;
     public Guid InstanceId { get; set; } = default!;

@@ -1,6 +1,9 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
+using amorphie.core.Base;
+using amorphie.core.Enums;
+using amorphie.core.IBase;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -8,8 +11,8 @@ using Microsoft.OpenApi.Models;
 
 public interface IPostTransactionService
 {
-    IResult Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data);
-    IResult Execute();
+    IResponse Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data);
+    IResponse Execute();
 }
 
 
@@ -46,7 +49,7 @@ public class PostTransactionService : IPostTransactionService
         _data = default!;
     }
 
-    public IResult Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data)
+    public IResponse Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data)
     {
         _entity = entity;
         _recordId = recordId;
@@ -59,7 +62,10 @@ public class PostTransactionService : IPostTransactionService
 
         if (transition == null)
         {
-            return Results.NotFound($"{_transitionName} is not found.");
+
+             return new Response{
+            Result=new Result(Status.Error,$"{_transitionName} is not found."),
+            };
         }
         else
         {
@@ -67,17 +73,21 @@ public class PostTransactionService : IPostTransactionService
         }
 
         // Load all running instances of record
-        _activeInstances = _dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != BaseStatusType.Completed).ToList();
+        _activeInstances = _dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != StatusType.Completed).ToList();
 
         if (_activeInstances.Where(i => i.StateName != _transition.FromStateName).Count() > 0)
         {
-            return Results.BadRequest($"There is an active workflow exists for {recordId} at different state.");
+            return new Response{
+            Result=new Result(Status.Error,$"There is an active workflow exists for {recordId} at different state."),
+            };
         }
 
-        return Results.Empty;
+        return new Response{
+            Result=new Result(Status.Success,"Success"),
+            };
     }
 
-    public IResult Execute()
+    public IResponse Execute()
     {
         var instanceAtState = _activeInstances?.Where(i => i.StateName == _transition.FromStateName).FirstOrDefault();
 
@@ -100,7 +110,9 @@ public class PostTransactionService : IPostTransactionService
             }
             else
             {
-                return Results.BadRequest($"There is no active workflow for {_recordId} and also {_transition.Name} is not transition of any start state.");
+                return new Response{
+            Result=new Result(Status.Error,_transition.ServiceName +$"There is no active workflow for {_recordId} and also {_transition.Name} is not transition of any start state."),
+            };
             }
         }
         else
@@ -117,7 +129,7 @@ public class PostTransactionService : IPostTransactionService
         }
     }
 
-    private IResult noFlowNoInstance()
+    private IResponse noFlowNoInstance()
     {
 
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
@@ -142,7 +154,7 @@ public class PostTransactionService : IPostTransactionService
         //return Results.Ok();
     }
 
-    private IResult noFlowHasInstance(Instance instanceAtState)
+    private IResponse noFlowHasInstance(Instance instanceAtState)
     {
 
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
@@ -152,7 +164,7 @@ public class PostTransactionService : IPostTransactionService
 
     }
 
-    private IResult hasFlowNoInstance()
+    private IResponse hasFlowNoInstance()
     {
         _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
 
@@ -162,7 +174,7 @@ public class PostTransactionService : IPostTransactionService
             EntityName = _entity,
             RecordId = _recordId,
             StateName = _transition.FromStateName!,
-            BaseStatus = BaseStatusType.LockedForFlow,
+            BaseStatus = StatusType.LockedInFlow ,
             CreatedBy = _user,
             ZeebeFlow = _transition.Flow,
             ZeebeFlowName = _transition.FlowName,
@@ -177,10 +189,12 @@ public class PostTransactionService : IPostTransactionService
         addInstanceTansition(newInstance);
         _dbContext.SaveChanges();
 
-        return Results.Ok();
+        return new Response{
+            Result=new Result(Status.Success,"Instance Has been Created"),
+        };
     }
 
-    private IResult hasFlowHasInstance(Instance instanceAtState)
+    private IResponse hasFlowHasInstance(Instance instanceAtState)
     {
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
         _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
@@ -189,7 +203,7 @@ public class PostTransactionService : IPostTransactionService
         instanceAtState.ModifiedBy = _user;
         instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
         instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
-        instanceAtState.BaseStatus = BaseStatusType.LockedForFlow;
+        instanceAtState.BaseStatus = StatusType.LockedInFlow ;
 
         dynamic variables = createMessageVariables(instanceAtState);
 
@@ -198,7 +212,10 @@ public class PostTransactionService : IPostTransactionService
         addInstanceTansition(instanceAtState);
         _dbContext.SaveChanges();
 
-        return Results.Ok();
+        //return Results.Ok();
+        return new Response{
+            Result=new Result(Status.Success,"Instance Has been Updated"),
+        };
     }
 
     private dynamic createMessageVariables(Instance instanceAtState)
@@ -237,7 +254,7 @@ public class PostTransactionService : IPostTransactionService
 
         _dbContext.Add(newInstanceTransition);
     }
-    private IResult ServiceKontrol(Instance instance, bool hasInstance)
+    private IResponse ServiceKontrol(Instance instance, bool hasInstance)
     {
         if (!string.IsNullOrEmpty(_transition.ServiceName))
         {
@@ -290,7 +307,9 @@ public class PostTransactionService : IPostTransactionService
             }
             catch(Exception ex)
             {
-                return Results.BadRequest(ex.ToString());
+                return new Response{
+            Result=new Result(Status.Error,"unexpected error:"+ex.ToString()),
+            };
             }
            
 
@@ -304,7 +323,10 @@ public class PostTransactionService : IPostTransactionService
             }
             else
             {
-                return Results.BadRequest(_transition.ServiceName + " message:" + response.ReasonPhrase);
+                return new Response{
+            Result=new Result(Status.Error,_transition.ServiceName + " message:" + response.ReasonPhrase),
+        };
+                //return Results.BadRequest(_transition.ServiceName + " message:" + response.ReasonPhrase);
             }
         }
         else
@@ -313,7 +335,7 @@ public class PostTransactionService : IPostTransactionService
         }
     }
 
-    private IResult UpdateInstance(Instance instance, bool hasInstance)
+    private IResponse UpdateInstance(Instance instance, bool hasInstance)
     {
          if (hasInstance)
                 {
@@ -330,7 +352,9 @@ public class PostTransactionService : IPostTransactionService
 
                 addInstanceTansition(instance);
                 _dbContext.SaveChanges();
-                return Results.Ok();
+                 return new Response{
+            Result=new Result(Status.Success,"Instance has been updated"),
+            };
     }
 
 }

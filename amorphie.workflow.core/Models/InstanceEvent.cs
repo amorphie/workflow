@@ -1,6 +1,6 @@
+using amorphie.core.Base;
 
-
-public class InstanceEvent : BaseDbLogEntity
+public class InstanceEvent : EntityBaseLog
 {
     public InstanceTransition InstanceTransition { get; set; } = default!;
     public Guid InstanceTransitionId { get; set; } = default!;

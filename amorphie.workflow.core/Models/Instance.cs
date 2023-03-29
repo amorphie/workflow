@@ -1,6 +1,8 @@
 
 
-public class Instance : BaseDbEntityWithId
+using amorphie.core.Base;
+
+public class Instance : EntityBase
 {
     public Workflow Workflow { get; set; } = default!;
     public string WorkflowName { get; set; } = default!;
@@ -15,7 +17,7 @@ public class Instance : BaseDbEntityWithId
     public State State { get; set; } = default!;
     public string StateName { get; set; } = default!;
 
-    public BaseStatusType BaseStatus { get; set; } = default!;
+    public amorphie.core.Enums.StatusType BaseStatus { get; set; } = default!;
 }
 
 

@@ -1,5 +1,6 @@
 
 using System.ComponentModel.DataAnnotations;
+using amorphie.core.Base;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;

@@ -1,6 +1,8 @@
 
+using amorphie.core.Base;
+using amorphie.core.Enums;
 
-public class State : BaseDbEntity
+public class State : EntityBaseWithOutId
 {
     public Workflow? Workflow { get; set; }
     public string? WorkflowName { get; set; }
@@ -14,7 +16,7 @@ public class State : BaseDbEntity
     public ZeebeMessage? OnEntryFlow { get; set; }
     public ZeebeMessage? OnExitFlow { get; set; }
 
-    public BaseStatusType BaseStatus { get; set; }
+    public StatusType BaseStatus { get; set; }
     public StateType Type { get; set; }
 }
 

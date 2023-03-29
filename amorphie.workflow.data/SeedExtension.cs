@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using amorphie.core.Base;
+using amorphie.core.Enums;
+using Microsoft.EntityFrameworkCore;
 
 public static class SeedExtension
 {
@@ -13,39 +15,39 @@ public static class SeedExtension
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), WorkflowName_Title = "user", Label = "Kullanici Statu Akisi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), WorkflowName_Title = "user", Label = "User State Process", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
 
-        modelBuilder.Entity<WorkflowEntity>().HasData(new { Id = Guid.NewGuid(), WorkflowName = "user", Name = "user", AllowOnlyOneActiveInstance = false, IsStateManager = true, AvailableInStatus = BaseStatusType.All, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
+        modelBuilder.Entity<WorkflowEntity>().HasData(new { Id = Guid.NewGuid(), WorkflowName = "user", Name = "user", AllowOnlyOneActiveInstance = false, IsStateManager = true, AvailableInStatus = StatusType.All, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
 
-        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-start", Tags = new[] { "user", "security", "idm" }, Type = StateType.Start, BaseStatus = BaseStatusType.New, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
+        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-start", Tags = new[] { "user", "security", "idm" }, Type = StateType.Start, BaseStatus = StatusType.New, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-start", Label = "Akis Baslangic Asamasi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-start", Label = "Start State", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-start", Label = "Akis baslangic asama aciklamasi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-start", Label = "Start state description", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
 
-        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-approval", Tags = new[] { "user", "security", "idm" }, Type = StateType.Standart, BaseStatus = BaseStatusType.New, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
+        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-approval", Tags = new[] { "user", "security", "idm" }, Type = StateType.Standart, BaseStatus = StatusType.New, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-approval", Label = "Kullanici Onay Asamasi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-approval", Label = "User Approval State", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-approval", Label = "Kullanici onay aciklamasi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-approval", Label = "User approval description", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
 
-        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-aml-approval", Tags = new[] { "user", "security", "idm" }, Type = StateType.Standart, BaseStatus = BaseStatusType.New, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
+        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-aml-approval", Tags = new[] { "user", "security", "idm" }, Type = StateType.Standart, BaseStatus = StatusType.New, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-aml-approval", Label = "AML Onay Asamasi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-aml-approval", Label = "AML Approval State", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-aml-approval", Label = "AML onay asama aciklamasi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-aml-approval", Label = "AML approval description", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
 
-        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-active", Tags = new[] { "user", "security", "idm" }, Type = StateType.Standart, BaseStatus = BaseStatusType.Active, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
+        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-active", Tags = new[] { "user", "security", "idm" }, Type = StateType.Standart, BaseStatus = StatusType.Active, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-active", Label = "Akis Baslangic Asamasi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-active", Label = "Start State", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-active", Label = "Akis baslangic asama aciklamasi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-active", Label = "Start state description", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
 
-        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-suspended", Tags = new[] { "user", "security", "idm" }, Type = StateType.Standart, BaseStatus = BaseStatusType.Passive, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
+        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-suspended", Tags = new[] { "user", "security", "idm" }, Type = StateType.Standart, BaseStatus = StatusType.Passive, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-suspended", Label = "Akis Baslangic Asamasi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-suspended", Label = "Start State", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-suspended", Label = "Akis baslangic asama aciklamasi", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-suspended", Label = "Start state description", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
 
-        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-deactivated", Tags = new[] { "user", "security", "idm" }, Type = StateType.Standart, BaseStatus = BaseStatusType.Passive, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
+        modelBuilder.Entity<State>().HasData(new { WorkflowName = "user", Name = "user-deactivated", Tags = new[] { "user", "security", "idm" }, Type = StateType.Standart, BaseStatus = StatusType.Passive, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-deactivated", Label = "Kayit deaktif", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Title = "user-deactivated", Label = "Deactivated", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), StateName_Description = "user-deactivated", Label = "Kayit deaktive edilmis", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
@@ -117,7 +119,7 @@ public static class SeedExtension
             ModifiedBy = Guid.Empty
         });
 
-        modelBuilder.Entity<WorkflowEntity>().HasData(new { Id = Guid.NewGuid(), WorkflowName = "user-reset-password", Name = "user", AllowOnlyOneActiveInstance = false, IsStateManager = false, AvailableInStatus = BaseStatusType.All, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
+        modelBuilder.Entity<WorkflowEntity>().HasData(new { Id = Guid.NewGuid(), WorkflowName = "user-reset-password", Name = "user", AllowOnlyOneActiveInstance = false, IsStateManager = false, AvailableInStatus = StatusType.All, CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), WorkflowName_Title = "user-reset-password", Label = "Kullanici sifre yenileme", Language = "tr-TR", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
         modelBuilder.Entity<Translation>().HasData(new { Id = Guid.NewGuid(), WorkflowName_Title = "user-reset-password", Label = "User Password Reset", Language = "en-EN", CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), CreatedBy = Guid.Empty, ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), ModifiedBy = Guid.Empty });
 
@@ -127,7 +129,7 @@ public static class SeedExtension
             Name = "user-reset-password-start",
             Tags = new[] { "user", "idm", "security" },
             Type = StateType.Start,
-            BaseStatus = BaseStatusType.InProgress,
+            BaseStatus = StatusType.InProgress,
             CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
             CreatedBy = Guid.Empty,
             ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
@@ -144,7 +146,7 @@ public static class SeedExtension
             Name = "user-reset-password-card-password-valid",
             Tags = new[] { "user", "loan", "security" },
             Type = StateType.Standart,
-            BaseStatus = BaseStatusType.InProgress,
+            BaseStatus = StatusType.InProgress,
             CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
             CreatedBy = Guid.Empty,
             ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
@@ -161,7 +163,7 @@ public static class SeedExtension
             Name = "user-reset-password-security-question-valid",
             Tags = new[] { "user", "loan", "security" },
             Type = StateType.Standart,
-            BaseStatus = BaseStatusType.InProgress,
+            BaseStatus = StatusType.InProgress,
             CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
             CreatedBy = Guid.Empty,
             ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
@@ -180,7 +182,7 @@ public static class SeedExtension
             Name = "user-reset-password-set",
             Tags = new[] { "user", "loan", "security" },
             Type = StateType.Finish,
-            BaseStatus = BaseStatusType.Completed,
+            BaseStatus = StatusType.Completed,
             CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
             CreatedBy = Guid.Empty,
             ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
@@ -197,7 +199,7 @@ public static class SeedExtension
             Name = "user-reset-password-fail",
             Tags = new[] { "user", "loan", "security" },
             Type = StateType.Finish,
-            BaseStatus = BaseStatusType.Completed,
+            BaseStatus = StatusType.Completed,
             CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
             CreatedBy = Guid.Empty,
             ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
@@ -257,7 +259,7 @@ public static class SeedExtension
             Name = "retail-loan-start",
             Tags = new[] { "retail", "loan", "retail-loan" },
             Type = StateType.Start,
-            BaseStatus = BaseStatusType.New,
+            BaseStatus = StatusType.New,
 
             CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
             CreatedBy = Guid.Empty,
@@ -276,7 +278,7 @@ public static class SeedExtension
             Name = "retail-loan-finish",
             Tags = new[] { "retail", "loan", "retail-loan" },
             Type = StateType.Finish,
-            BaseStatus = BaseStatusType.New,
+            BaseStatus = StatusType.New,
 
             CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
             CreatedBy = Guid.Empty,

@@ -21,7 +21,9 @@
     <PackageReference Include="Dapr.Client" Version="1.10.0" />
     <PackageReference Include="Dapr.AspNetCore" Version="1.10.0" />
   </ItemGroup>
-
+<ItemGroup>
+    <ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj" />
+  </ItemGroup>
 </Project>
 
 

@@ -1,8 +1,10 @@
 
 
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
+using amorphie.core.Base;
+using amorphie.core.Enums;
 
-public class WorkflowEntity : BaseDbEntityWithId
+public class WorkflowEntity : EntityBase
 {
      [JsonIgnore]
     public Workflow Workflow { get; set; } = default!;
@@ -15,7 +17,7 @@ public class WorkflowEntity : BaseDbEntityWithId
     public bool AllowOnlyOneActiveInstance { get; set; } = false;
     public ICollection<Workflow> InclusiveWorkflows { get; set; } = default!;
 
-    public BaseStatusType AvailableInStatus { get; set; }
+    public StatusType AvailableInStatus { get; set; }
 }
 
 

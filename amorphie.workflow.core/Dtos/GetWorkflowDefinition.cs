@@ -1,8 +1,9 @@
 
+
+using amorphie.core.Enums;
 /// <summary>
 /// Abstract record for workflow definition
 /// </summary>
-
 public  record GetWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities);
 
 /// <summary>
@@ -26,5 +27,5 @@ public record GetZeebeWorkflowDefinition(string name, string title, string[] tag
 /// <param name="isExclusive">For every record just one exclusive workflow instance can run. Exclusive workflows are mutually exclusive. Non exclusive workflows can run parallely</param>
 /// <param name="isStateManager">When set true and if entity has status property, related workflow is source of state. </param>
 /// <param name="availableInStatus">When this workflow can initate. This is informational property for consumer</param>
-public record GetWorkflowEntity(string name, bool isExclusive, bool isStateManager, BaseStatusType[]? availableInStatus);
+public record GetWorkflowEntity(string name, bool isExclusive, bool isStateManager, StatusType[]? availableInStatus);
 
