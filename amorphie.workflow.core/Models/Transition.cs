@@ -19,6 +19,7 @@ public class Transition : EntityBaseWithOutId
     public string? FlowName { get; set; }
 
     public ICollection<Translation> Forms { get; set; } = default!;
+    public ICollection<Translation> Pages { get; set; } = default!;
     
     public string? ServiceName { get; set; } 
 }

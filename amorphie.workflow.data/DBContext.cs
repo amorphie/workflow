@@ -93,6 +93,7 @@ public class WorkflowDBContext : DbContext
 
         modelBuilder.Entity<Translation>().Property<string>("TransitionName_Title");
         modelBuilder.Entity<Translation>().Property<string>("TransitionName_Form");
+        modelBuilder.Entity<Translation>().Property<string>("TransitionName_Page");
 
         modelBuilder.Entity<Transition>()
             .HasMany<Translation>(t => t.Titles)
@@ -104,7 +105,10 @@ public class WorkflowDBContext : DbContext
            .WithOne()
            .HasForeignKey("TransitionName_Form");
 
-
+        modelBuilder.Entity<Transition>()
+           .HasMany<Translation>(t => t.Pages)
+           .WithOne()
+           .HasForeignKey("TransitionName_Page");
 
       
         modelBuilder.SeedUserResetPassword();
