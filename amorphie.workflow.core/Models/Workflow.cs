@@ -10,6 +10,8 @@ public class Workflow : EntityBaseWithOutId
     public ICollection<State> States { get; set; } = default!;
     public ZeebeMessage? ZeebeFlow { get; set; }
     public List<WorkflowEntity> Entities { get; set; } = default!;
+    public WorkflowStatus? WorkflowStatus { get; set; }
+
 }
 
 
