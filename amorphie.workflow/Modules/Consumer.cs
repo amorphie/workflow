@@ -7,6 +7,8 @@ using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
+
 public static class ConsumerModule
 {
     public static void MapConsumerEndpoints(this WebApplication app)
@@ -58,14 +60,39 @@ public static class ConsumerModule
                 return operation;
             });
     }
+    private static string ReplaceDropdown(string form)
+    {
+        //
+        if(form.Contains("\"type\": \"select\"")&&(form.Contains("\"dataSrc\": \"url\"")))
+        {
+            form=form.Replace("\"dataSrc\": \"url\",","\"dataSrc\": \"json\",");
+            string data="\"data\": {";
+            int indexofUrlStart=form.IndexOf("\"url\": \"http");
+            
+            string AfterUrl=form.Substring(indexofUrlStart+8);
+            int indexofUrlEndSub=AfterUrl.IndexOf("\"");
+            int indexofUrlEnd=AfterUrl.IndexOf("\"")+indexofUrlStart+10;
+            string OnlyUrl=AfterUrl.Substring(0,indexofUrlEndSub);
+            var clientHttp = new HttpClient();
+            var  response = clientHttp.GetAsync(OnlyUrl).Result;
+            response.EnsureSuccessStatusCode();
+            string responseBody =  response.Content.ReadAsStringAsync().Result;
+             form=form.Replace(data,data+" \"json\":"+ responseBody+" ,");
+             var test=Newtonsoft.Json.JsonConvert.DeserializeObject<object>(form);
+        }
+        
+        return form;
+    }
 
     static IResponse<GetRecordWorkflowAndTransitionsResponse> getTransitions(
            [FromServices] WorkflowDBContext dbContext,
            [FromRoute(Name = "entity")] string entity,
            [FromRoute(Name = "recordId")] Guid recordId,
+           [FromServices] DaprClient client,
            [FromHeader(Name = "Accept-Language")] string language = "tr-TR"
        )
     {
+        //**************************//
         // load all workflows available to entity
         var workflows = dbContext.WorkflowEntities!
                 .Where(e => e.Name == entity)
@@ -117,7 +144,7 @@ public static class ConsumerModule
                           {
                               Name = t.Name,
                               Title = t.Titles.First().Label,
-                              Form = t.Forms.First().Label
+                              Form = ReplaceDropdown(t.Forms.First().Label)
                           }).ToArray()
                   }
                       ).FirstOrDefault();
@@ -135,7 +162,7 @@ public static class ConsumerModule
                            {
                                Name = t.Name,
                                Title = t.Titles.FirstOrDefault()==null?string.Empty: t.Titles.FirstOrDefault()!.Label,
-                               Form = t.Forms.FirstOrDefault()==null?string.Empty:t.Forms.FirstOrDefault()!.Label
+                               Form = t.Forms.FirstOrDefault()==null?string.Empty:ReplaceDropdown( t.Forms.FirstOrDefault()!.Label)
                            }).ToArray()
                    }
                        ).FirstOrDefault();
@@ -152,7 +179,7 @@ public static class ConsumerModule
                         {
                             Name = t.Name,
                             Title = t.Titles.First().Label,
-                            Form = t.Forms.First().Label
+                            Form = ReplaceDropdown(t.Forms.First().Label)
                         }).ToArray()
                 }
             ).ToArray();

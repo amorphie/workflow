@@ -295,7 +295,10 @@ public class PostTransactionService : IPostTransactionService
                 if(status!="Success")
                 {
                     var message=JsonResultdata.result.message;
-                    return Results.BadRequest(status+" "+message);
+                     return new Response{
+            Result=new Result(Status.Error,message),
+            };
+                  //  return Results.BadRequest(status+" "+message);
                 }
               } 
               catch(Exception ex)

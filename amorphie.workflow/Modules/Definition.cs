@@ -393,20 +393,20 @@ public static class DefinitionModule
                 existingRecord.BaseStatus = data.baseStatus;
                 existingRecord.Type = data.type;
 
-            }  
-             if(data.title!=null)
-                    {
-                       Translation? translation= existingRecord.Titles.FirstOrDefault(f=>f.Language==language);
-                       if(translation!=null&&translation.Label!=data.title.label)
-                       {
-                           translation.Label=data.title.label;
-                           hasChanges = true;
-                       }
-                    }
+            }
+            if (data.title != null)
+            {
+                Translation? translation = existingRecord.Titles.FirstOrDefault(f => f.Language == language);
+                if (translation != null && translation.Label != data.title.label)
+                {
+                    translation.Label = data.title.label;
+                    hasChanges = true;
+                }
+            }
             foreach (var req in data.transitions)
             {
-                Transition? existingTransition = context.Transitions.Include(s=>s.Titles).Include(s=>s.Forms)
-                .FirstOrDefault(db => db.Name == req.name&&db.FromStateName==existingRecord.Name);
+                Transition? existingTransition = context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
+                .FirstOrDefault(db => db.Name == req.name && db.FromStateName == existingRecord.Name);
                 //Kayıdı olmayan Transition ların eklenmesi
                 if (existingTransition == null)
                 {
@@ -448,25 +448,34 @@ public static class DefinitionModule
                     }
                     if (req!.message != existingTransition.FlowName)
                     {
-                        ZeebeMessage? zeebeMessage = context!.ZeebeMessages!.FirstOrDefault(f => f.Name == req.message);
-                        if (zeebeMessage == null)
+                        if (string.IsNullOrEmpty(req!.message))
                         {
-                            existingTransition.Flow = new ZeebeMessage()
-                            {
-                                Name = req.message!,
-                                Gateway = req.gateway!,
-                                CreatedAt = DateTime.Now,
-                                Message = req.message!,
-                                Process = definition,
-                            };
-
+                            existingTransition.FlowName=null;
+                            existingTransition.Flow=null;
                         }
                         else
                         {
-                            existingTransition.Flow = zeebeMessage;
-                            existingTransition.FlowName = req.message;
-                        }
+                            ZeebeMessage? zeebeMessage = context!.ZeebeMessages!.FirstOrDefault(f => f.Name == req.message);
+                            if (zeebeMessage == null)
+                            {
+                                existingTransition.Flow = new ZeebeMessage()
+                                {
+                                    Name = req.message!,
+                                    Gateway = req.gateway!,
+                                    CreatedAt = DateTime.Now,
+                                    Message = req.message!,
+                                    Process = definition,
+                                };
 
+                            }
+                            else
+                            {
+                                existingTransition.Flow = zeebeMessage;
+                                existingTransition.FlowName = req.message;
+                            }
+
+
+                        }
                         hasChanges = true;
                     }
                     if (req!.serviceName != existingTransition.ServiceName)
@@ -475,23 +484,23 @@ public static class DefinitionModule
 
                         hasChanges = true;
                     }
-                    if(req.title!=null)
+                    if (req.title != null)
                     {
-                       Translation? translation= existingTransition.Titles.FirstOrDefault(f=>f.Language==language);
-                       if(translation!=null&&translation.Label!=req.title.label)
-                       {
-                           translation.Label=req.title.label;
-                           hasChanges = true;
-                       }
+                        Translation? translation = existingTransition.Titles.FirstOrDefault(f => f.Language == language);
+                        if (translation != null && translation.Label != req.title.label)
+                        {
+                            translation.Label = req.title.label;
+                            hasChanges = true;
+                        }
                     }
-                     if(req.form!=null)
+                    if (req.form != null)
                     {
-                       Translation? translation= existingTransition.Forms.FirstOrDefault(f=>f.Language==language);
-                       if(translation!=null&&translation.Label!=req.form.label)
-                       {
-                           translation.Label=req.form.label;
-                           hasChanges = true;
-                       }
+                        Translation? translation = existingTransition.Forms.FirstOrDefault(f => f.Language == language);
+                        if (translation != null && translation.Label != req.form.label)
+                        {
+                            translation.Label = req.form.label;
+                            hasChanges = true;
+                        }
                     }
                 }
 
