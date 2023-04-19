@@ -1,5 +1,6 @@
 
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.IBase;
@@ -60,27 +61,61 @@ public static class ConsumerModule
                 return operation;
             });
     }
+    private static string TemplateEngineForm(string templateName, string entityData)
+    {
+        string form = string.Empty;
+        var clientHttp = new HttpClient();
+        var response = new HttpResponseMessage();
+
+        amorphie.workflow.core.Dtos.TemplateEngineRequest request = new amorphie.workflow.core.Dtos.TemplateEngineRequest()
+        {
+            RenderId = Guid.NewGuid(),
+            Name = templateName,
+            RenderData = entityData,
+            RenderDataForLog = entityData,
+            SemVer = "1.0.0",
+            ProcessName = "Workflow Get Transition",
+            ItemId = string.Empty,
+            Action = "TemplateEngineForm",
+            Identity = string.Empty,
+            Customer = ""
+        };
+        var serializeRequest = JsonSerializer.Serialize(request);
+        try
+        {
+            response = clientHttp.PostAsync("https://test-template-engine.burgan.com.tr/Template/Render", new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json")).Result;
+        var twiceSerialize = response!.Content!.ReadAsStringAsync().Result;
+        form = Newtonsoft.Json.JsonConvert.DeserializeObject<string>(twiceSerialize)!;
+        form = ReplaceDropdown(form);
+        }
+        catch(Exception ex)
+        {
+            form=string.Empty;
+        }
+        
+        return form;
+    }
     private static string ReplaceDropdown(string form)
     {
         //
-        if(form.Contains("\"type\": \"select\"")&&(form.Contains("\"dataSrc\": \"url\"")))
+        if (form.Contains("\"type\": \"select\"") && (form.Contains("\"dataSrc\": \"url\"")))
         {
-            form=form.Replace("\"dataSrc\": \"url\",","\"dataSrc\": \"json\",");
-            string data="\"data\": {";
-            int indexofUrlStart=form.IndexOf("\"url\": \"http");
-            
-            string AfterUrl=form.Substring(indexofUrlStart+8);
-            int indexofUrlEndSub=AfterUrl.IndexOf("\"");
-            int indexofUrlEnd=AfterUrl.IndexOf("\"")+indexofUrlStart+10;
-            string OnlyUrl=AfterUrl.Substring(0,indexofUrlEndSub);
+            form = form.Replace("\"dataSrc\": \"url\",", "\"dataSrc\": \"json\",");
+            string data = "\"data\": {";
+            int indexofUrlStart = form.IndexOf("\"url\": \"http");
+
+            string AfterUrl = form.Substring(indexofUrlStart + 8);
+            int indexofUrlEndSub = AfterUrl.IndexOf("\"");
+            int indexofUrlEnd = AfterUrl.IndexOf("\"") + indexofUrlStart + 10;
+            string OnlyUrl = AfterUrl.Substring(0, indexofUrlEndSub);
             var clientHttp = new HttpClient();
-            var  response = clientHttp.GetAsync(OnlyUrl).Result;
+            var response = clientHttp.GetAsync(OnlyUrl).Result;
             response.EnsureSuccessStatusCode();
-            string responseBody =  response.Content.ReadAsStringAsync().Result;
-             form=form.Replace(data,data+" \"json\":"+ responseBody+" ,");
-             var test=Newtonsoft.Json.JsonConvert.DeserializeObject<object>(form);
+            string responseBody = response.Content.ReadAsStringAsync().Result;
+            form = form.Replace(data, data + " \"json\":" + responseBody + " ,");
+            var test = Newtonsoft.Json.JsonConvert.DeserializeObject<object>(form);
         }
-        
+
         return form;
     }
 
@@ -92,6 +127,7 @@ public static class ConsumerModule
            [FromHeader(Name = "Accept-Language")] string language = "tr-TR"
        )
     {
+
         //**************************//
         // load all workflows available to entity
         var workflows = dbContext.WorkflowEntities!
@@ -112,15 +148,15 @@ public static class ConsumerModule
                 .ToList();
 
         var stateManagerWorkflow = workflows.Where(item => item.IsStateManager == true).FirstOrDefault();
-      
+
         // load all active workflows of record.
         var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != StatusType.Completed).ToList();
-//   using var client = new DaprClientBuilder().Build();
-//         var tokenRequestData=new GetTokenRequest(){
-//             Scope=string.Empty,
-//             InstanceId=instanceRecords.FirstOrDefault()!.Id,
-//         };
-//  var token =  client.InvokeMethodAsync<GetTokenRequest, string>(HttpMethod.Post, "amorphie-workflow-hub", "security/create-token", tokenRequestData).Result;
+        //   using var client = new DaprClientBuilder().Build();
+        //         var tokenRequestData=new GetTokenRequest(){
+        //             Scope=string.Empty,
+        //             InstanceId=instanceRecords.FirstOrDefault()!.Id,
+        //         };
+        //  var token =  client.InvokeMethodAsync<GetTokenRequest, string>(HttpMethod.Post, "amorphie-workflow-hub", "security/create-token", tokenRequestData).Result;
 
 
         var response = new GetRecordWorkflowAndTransitionsResponse();
@@ -132,7 +168,8 @@ public static class ConsumerModule
 
             if (stateManagerInstace != null)
             {
-
+                InstanceTransition lastTransition = dbContext.InstanceTransitions.Where(f => f.InstanceId == stateManagerInstace.Id)
+                .OrderByDescending(o => o.CreatedAt).First();
                 response.StateManager = workflows.Where(item => item.IsStateManager == true).Select(item =>
                   new GetRecordWorkflowAndTransitionsResponse.StateManagerWorkflow
                   {
@@ -144,7 +181,7 @@ public static class ConsumerModule
                           {
                               Name = t.Name,
                               Title = t.Titles.First().Label,
-                              Form = ReplaceDropdown(t.Forms.First().Label)
+                              Form = TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData)
                           }).ToArray()
                   }
                       ).FirstOrDefault();
@@ -161,8 +198,8 @@ public static class ConsumerModule
                            new GetRecordWorkflowAndTransitionsResponse.Transition
                            {
                                Name = t.Name,
-                               Title = t.Titles.FirstOrDefault()==null?string.Empty: t.Titles.FirstOrDefault()!.Label,
-                               Form = t.Forms.FirstOrDefault()==null?string.Empty:ReplaceDropdown( t.Forms.FirstOrDefault()!.Label)
+                               Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.FirstOrDefault()!.Label,
+                               Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty)
                            }).ToArray()
                    }
                        ).FirstOrDefault();
@@ -179,17 +216,17 @@ public static class ConsumerModule
                         {
                             Name = t.Name,
                             Title = t.Titles.First().Label,
-                            Form = ReplaceDropdown(t.Forms.First().Label)
+                            Form = TemplateEngineForm(t.Forms.First().Label, string.Empty)
                         }).ToArray()
                 }
             ).ToArray();
 
         return new Response<GetRecordWorkflowAndTransitionsResponse>
         {
-            Data=response,
-            Result=new Result(Status.Success,"Success")
+            Data = response,
+            Result = new Result(Status.Success, "Success")
         };
-       // return Results.Ok(response);
+        // return Results.Ok(response);
     }
 
     static IResponse postTransition(
@@ -206,7 +243,7 @@ public static class ConsumerModule
     {
         var result = service.Init(entity, recordId, transition, user, behalOfUser, data);
 
-        if (result.Result.Status==Status.Success.ToString())
+        if (result.Result.Status == Status.Success.ToString())
         {
             result = service.Execute();
         }
@@ -290,7 +327,7 @@ public record ConsumerPostTransitionRequest
     public dynamic? FormData { get; set; }
     public dynamic? AdditionalData { get; set; }
     public bool GetSignalRHub { get; set; }
-    public dynamic? RouteData { get; set; } 
+    public dynamic? RouteData { get; set; }
     public dynamic? QueryData { get; set; }
 }
 
