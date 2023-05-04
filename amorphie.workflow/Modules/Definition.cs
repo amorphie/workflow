@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using amorphie.core.Base;
 using amorphie.core.Enums;
+using amorphie.core.IBase;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -122,7 +123,7 @@ public static class DefinitionModule
 
     }
 
-    static IResult getDefinition(
+    static amorphie.core.IBase.IResponse<IQueryable<GetWorkflowDefinition>> getDefinition(
              [FromServices] WorkflowDBContext context,
              [FromQuery] string? definition,
              [FromQuery] string[]? tags,
@@ -133,60 +134,93 @@ public static class DefinitionModule
          )
     {
 
-        var query = context.Workflows!.Where(w => string.IsNullOrEmpty(definition)
-        || (!string.IsNullOrEmpty(definition) && w.Name.Contains(definition!)))
-              // .Include(w => w.Workflow)
-              .Include(w => w.Titles.Where(t => t.Language == language))
-               .Include(w => w.Entities.Where(w => (
-                string.IsNullOrEmpty(entity) || (!string.IsNullOrEmpty(entity) && w.Name.Contains(entity!)))
-                && (string.IsNullOrEmpty(definition) || (!string.IsNullOrEmpty(definition) && w.WorkflowName.Contains(definition!)))))
-            ;
-        System.Text.Json.JsonSerializerOptions options = new()
+        try
         {
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault,
+            var query = context.Workflows!.Where(w => string.IsNullOrEmpty(definition)
+                    || (!string.IsNullOrEmpty(definition) && w.Name.Contains(definition!)))
+                          // .Include(w => w.Workflow)
+                          .Include(w => w.Titles.Where(t => t.Language == language))
+                           .Include(w => w.Entities.Where(w => (
+                            string.IsNullOrEmpty(entity) || (!string.IsNullOrEmpty(entity) && w.Name.Contains(entity!)))
+                            && (string.IsNullOrEmpty(definition) || (!string.IsNullOrEmpty(definition) && w.WorkflowName.Contains(definition!)))))
+                        ;
+            System.Text.Json.JsonSerializerOptions options = new()
+            {
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault,
 
-        };
-        var workflows = query
-        .Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
-        .Take(pageSize.GetValueOrDefault(10)).Select(s => new GetWorkflowDefinition(
-            s.Name,
-            s.Titles.FirstOrDefault()!.Label,
-            s.Tags!,
-            s.Entities.Select(e => new GetWorkflowEntity(
-     e.Name, e.InclusiveWorkflows == null ? false : true, e.IsStateManager,
-     new StatusType[]{
+            };
+            var workflows = query
+            .Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
+            .Take(pageSize.GetValueOrDefault(10)).Select(s => new GetWorkflowDefinition(
+                s.Name,
+                s.Titles.FirstOrDefault()!.Label,
+                s.Tags!,
+                s.Entities.Select(e => new GetWorkflowEntity(
+         e.Name, e.InclusiveWorkflows == null ? false : true, e.IsStateManager,
+         new StatusType[]{
         e.AvailableInStatus
-     }
-)).ToArray()
-            ))
-            .ToArray();
+         }
+    )).ToArray()
+                ))
+    ;
+            return new Response<IQueryable<GetWorkflowDefinition>>
+            {
+                Data = workflows,
+                Result = new Result(Status.Success, "Success")
+            };
+        }
+        catch (Exception ex)
+        {
+            return new Response<IQueryable<GetWorkflowDefinition>>
+            {
+                Result = new Result(Status.Error, ex.ToString())
+            };
+        }
 
-        return Results.Ok(
-            workflows
-
-            );
     }
-    static IResult deleteDefinition(
+    static IResponse deleteDefinition(
         [FromServices] WorkflowDBContext context,
         [FromRoute(Name = "definition-name")] string definition
     )
     {
-        var existingRecord = context.Workflows!
-       .FirstOrDefault(w => w.Name == definition);
 
-        if (existingRecord != null)
+        try
         {
-            context!.Remove(existingRecord);
-            context.SaveChanges();
-            return Results.Ok();
+            var existingRecord = context.Workflows!.Include(s => s.Titles)
+                  .Include(s => s.States).ThenInclude(s => s.Titles)
+                  .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Titles)
+                  .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Forms)
+                 .FirstOrDefault(w => w.Name == definition);
+
+            if (existingRecord != null)
+            {
+                context!.Remove(existingRecord);
+                context.SaveChanges();
+                return new Response
+                {
+                    Result = new Result(Status.Success, "Successfully Delete " + definition + " workflow"),
+                };
+                // return Results.Ok();
+            }
+            else
+            {
+                return new Response
+                {
+                    Result = new Result(Status.Error, "No Content"),
+                };
+            }
         }
-        else
+        catch (Exception ex)
         {
-            return Results.NotFound();
+            return new Response
+            {
+                Result = new Result(Status.Error, ex.ToString()),
+            };
         }
+
 
     }
-    static IResult saveDefinition(
+    static IResponse<PostWorkflowDefinitionResponse> saveDefinition(
       [FromServices] WorkflowDBContext context,
       [FromBody] PostWorkflowDefinitionRequest data,
       [FromHeader(Name = "Language")] string? language = "en-EN"
@@ -210,8 +244,9 @@ public static class DefinitionModule
         }
         if (existingRecord == null)
         {
-
-            context!.Workflows!.Add(new Workflow
+//   var newRecord = ObjectMapper.Mapper.Map<Workflow>(data);
+//   newRecord.Entities=entityList;
+            Workflow newWorkflow = new Workflow
             {
                 WorkflowStatus = data.status,
                 Name = data.name,
@@ -224,9 +259,14 @@ public static class DefinitionModule
                 Entities = entityList,
                 CreatedAt = DateTime.Now,
                 CreatedByBehalfOf = Guid.NewGuid(),
-            });
+            };
+            context!.Workflows!.Add(newWorkflow);
             context.SaveChanges();
-            return Results.Created($"/workflow/definition/{data.name}", data);
+            return new Response<PostWorkflowDefinitionResponse>
+            {
+                Result = new Result(Status.Success, "Success Create"),
+                Data = new PostWorkflowDefinitionResponse(newWorkflow.Name),
+            };
         }
         else
         {
@@ -271,15 +311,23 @@ public static class DefinitionModule
             if (hasChanges)
             {
                 context!.SaveChanges();
-                return Results.Ok(new PostWorkflowDefinitionResponse(data.name));
+                return new Response<PostWorkflowDefinitionResponse>
+                {
+                    Result = new Result(Status.Success, "Success Update"),
+                    Data = new PostWorkflowDefinitionResponse(existingRecord.Name),
+                };
+                // return Results.Ok(new PostWorkflowDefinitionResponse(data.name));
             }
             else
             {
-                return Results.Problem("Not Modified", null, 304);
+                return new Response<PostWorkflowDefinitionResponse>
+                {
+                    Result = new Result(Status.Error, "Not Modiefied"),
+                };
             }
         }
     }
-    static IResult getState(
+    static IResponse<IQueryable<GetStateDefinition>> getState(
            [FromServices] WorkflowDBContext context,
            [FromRoute(Name = "definition-name")] string definition,
            [FromQuery(Name = "state-name")] string? state,
@@ -294,11 +342,27 @@ public static class DefinitionModule
 
         var states = query
         .Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
-        .Take(pageSize.GetValueOrDefault(10))
-        .ToList();
-        return Results.Ok(states);
+        .Take(pageSize.GetValueOrDefault(10)).Select(s => new GetStateDefinition(
+            s.Name,
+            s.Titles.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).First(),
+            s.BaseStatus!,
+            s.Transitions.Select(e => new PostTransitionDefinitionRequest(
+     e.Name, e.Titles.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).First(),
+     e.ToStateName!, e.Forms.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).FirstOrDefault(),
+     e.FromStateName!, e.ServiceName, e.FlowName, e.Flow != null ? e.Flow.Gateway : null
+
+)).ToArray()
+            ))
+//    .ToList();
+;
+        return new Response<IQueryable<GetStateDefinition>>
+        {
+            Data = states,
+            Result = new Result(Status.Success, "Success")
+        };
+        //return Results.Ok(states);
     }
-    static IResult deleteState(
+    static IResponse deleteState(
             [FromServices] WorkflowDBContext context,
             [FromRoute(Name = "name")] string definition,
               [FromRoute(Name = "state-name")] string state,
@@ -313,11 +377,17 @@ public static class DefinitionModule
         {
             context!.Remove(existingRecord);
             context.SaveChanges();
-            return Results.Ok();
+            return new Response
+            {
+                Result = new Result(Status.Success, "Success"),
+            };
         }
         else
         {
-            return Results.NotFound();
+            return new Response
+            {
+                Result = new Result(Status.Error, "No Content"),
+            };
         }
 
     }
@@ -334,7 +404,7 @@ public static class DefinitionModule
                ;
         if (existingRecord == null)
         {
-            context!.States!.Add(new State
+            State newRecord = new State
             {
                 WorkflowName = definition,
                 Name = data.name,
@@ -379,10 +449,16 @@ public static class DefinitionModule
                              Label=data.title.label
                             }
                         }
-            });
+            };
+            context!.States!.Add(newRecord);
             context!.SaveChanges();
-
-            return Results.Created($"workflow/definition/{definition}/state?state-name:" + data.name, definition);
+            //AutoMapper a alıncak 
+            // return new Response<GetStateDefinition>
+            // {
+            //     Data=null,
+            //     Result=new Result(Status.Success,"Success Create")
+            // };
+            return Results.Created($"workflow/definition/>{definition}/state?state-name:" + data.name, definition);
         }
         else
         {
@@ -428,6 +504,7 @@ public static class DefinitionModule
                                 Language=req.form!.language
                             }
                         },
+                        FromStateName=req.fromState,
                         CreatedAt = DateTime.Now,
                         CreatedByBehalfOf = Guid.NewGuid(),
                     });
@@ -450,8 +527,8 @@ public static class DefinitionModule
                     {
                         if (string.IsNullOrEmpty(req!.message))
                         {
-                            existingTransition.FlowName=null;
-                            existingTransition.Flow=null;
+                            existingTransition.FlowName = null;
+                            existingTransition.Flow = null;
                         }
                         else
                         {
