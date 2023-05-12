@@ -61,7 +61,7 @@ public static class ConsumerModule
                 return operation;
             });
     }
-    private static string TemplateEngineForm(string templateName, string entityData)
+    private static string TemplateEngineForm(string templateName, string entityData,string templateURL)
     {
         string form = string.Empty;
         var clientHttp = new HttpClient();
@@ -83,10 +83,12 @@ public static class ConsumerModule
         var serializeRequest = JsonSerializer.Serialize(request);
         try
         {
-            response = clientHttp.PostAsync("https://test-template-engine.burgan.com.tr/Template/Render", new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json")).Result;
+               
+            response = clientHttp.PostAsync(templateURL, new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json")).Result;
         var twiceSerialize = response!.Content!.ReadAsStringAsync().Result;
         form = Newtonsoft.Json.JsonConvert.DeserializeObject<string>(twiceSerialize)!;
         form = ReplaceDropdown(form);
+        //builder.Configuration["DAPR_SECRET_STORE_NAME"]
         }
         catch(Exception ex)
         {
@@ -124,7 +126,9 @@ public static class ConsumerModule
            [FromRoute(Name = "entity")] string entity,
            [FromRoute(Name = "recordId")] Guid recordId,
            [FromServices] DaprClient client,
+            IConfiguration configuration,
            [FromHeader(Name = "Accept-Language")] string language = "tr-TR"
+           
        )
     {
 
@@ -147,6 +151,9 @@ public static class ConsumerModule
                     .ThenInclude(t => t.Forms.Where(l => l.Language == language))
                 .ToList();
 
+ 
+
+
         var stateManagerWorkflow = workflows.Where(item => item.IsStateManager == true).FirstOrDefault();
 
         // load all active workflows of record.
@@ -161,7 +168,7 @@ public static class ConsumerModule
 
         var response = new GetRecordWorkflowAndTransitionsResponse();
         //response.IsStateRecordRegistered = instanceRecords.Count > 0;
-
+        var templateURL = configuration["DAPR_TEMPLATE_URL_NAME"]!;
         if (stateManagerWorkflow != null)
         {
             var stateManagerInstace = instanceRecords.Where(i => i.EntityName == stateManagerWorkflow.Name).FirstOrDefault();
@@ -181,7 +188,7 @@ public static class ConsumerModule
                           {
                               Name = t.Name,
                               Title = t.Titles.First().Label,
-                              Form = TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData)
+                              Form = TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData,templateURL!)
                           }).ToArray()
                   }
                       ).FirstOrDefault();
@@ -199,7 +206,7 @@ public static class ConsumerModule
                            {
                                Name = t.Name,
                                Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.FirstOrDefault()!.Label,
-                               Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty)
+                               Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty,templateURL)
                            }).ToArray()
                    }
                        ).FirstOrDefault();
@@ -216,7 +223,7 @@ public static class ConsumerModule
                         {
                             Name = t.Name,
                             Title = t.Titles.First().Label,
-                            Form = TemplateEngineForm(t.Forms.First().Label, string.Empty)
+                            Form = TemplateEngineForm(t.Forms.First().Label, string.Empty,templateURL)
                         }).ToArray()
                 }
             ).ToArray();
@@ -258,6 +265,8 @@ public static class ConsumerModule
         //         "SendOtp",
         //         "SendOtp"
         //     ));
+          
+
         return result;
     }
 

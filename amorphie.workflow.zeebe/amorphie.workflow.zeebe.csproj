@@ -24,6 +24,8 @@
  <ItemGroup>
     <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj" />
   </ItemGroup>
-
+<ItemGroup>
+    <ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj" />
+  </ItemGroup>
 
 </Project>

@@ -10,7 +10,22 @@ namespace amorphie.workflow.core.Mapper
             CreateMap<Workflow, PostWorkflowDefinitionResponse>()
              .ConstructUsing(x=> new PostWorkflowDefinitionResponse(x.Name))
          .ReverseMap();
-          CreateMap<GetWorkflowDefinition, Workflow>();
+               CreateMap<PostWorkflowDefinitionRequest, Workflow>()
+          .ConstructUsing(x=> new Workflow
+          {
+               WorkflowStatus = x.status,
+                Name = x.name,
+                Tags = x.tags,
+                Titles = x.title.Select(s => new amorphie.core.Base.Translation
+                {
+                    Label = s.label,
+                    Language = s.language
+                }).ToList(),
+                CreatedAt = DateTime.Now,
+                CreatedByBehalfOf = Guid.NewGuid(),
+                Entities=new List<WorkflowEntity>()
+                
+          }); 
         }
     }
 }

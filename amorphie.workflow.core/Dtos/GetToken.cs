@@ -14,4 +14,4 @@ public record GetTokenRequest
     public DateTime? LastValidatedAt { get; set; }
 
 };
-public record PostPublishStatusRequest(Guid id, string status, string reason, string details);
+public record PostPublishStatusRequest(string id,  string details,string transition,string state);

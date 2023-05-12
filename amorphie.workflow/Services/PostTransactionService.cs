@@ -4,6 +4,7 @@ using System.Dynamic;
 using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.IBase;
+using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -29,16 +30,17 @@ public class PostTransactionService : IPostTransactionService
 
     private string _entity { get; set; }
     private Guid _recordId { get; set; }
+    private DaprClient _client { get; set; }
 
     private ConsumerPostTransitionRequest _data { get; set; }
 
     private List<Instance>? _activeInstances { get; set; }
 
-    public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService)
+    public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService,DaprClient client)
     {
         _dbContext = dbContext;
         _zeebeService = zeebeService;
-
+        _client=client;
         _transitionName = default!;
         _user = default!;
         _behalfOfUser = default!;
@@ -182,10 +184,11 @@ public class PostTransactionService : IPostTransactionService
         };
 
         dynamic variables = createMessageVariables(newInstance);
-
+        
         _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null,_transition.Flow!.Gateway);
 
         _dbContext.Add(newInstance);
+        SendSignalRData(newInstance,"worker-started");
         addInstanceTansition(newInstance);
         _dbContext.SaveChanges();
 
@@ -206,7 +209,7 @@ public class PostTransactionService : IPostTransactionService
         instanceAtState.BaseStatus = StatusType.LockedInFlow ;
 
         dynamic variables = createMessageVariables(instanceAtState);
-
+        SendSignalRData(instanceAtState,"worker-started");
         _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(),_transition.Flow!.Gateway);
 
         addInstanceTansition(instanceAtState);
@@ -352,12 +355,25 @@ public class PostTransactionService : IPostTransactionService
                 {
                     _dbContext.Add(instance);
                 }
-
+                SendSignalRData(instance,"transition-completed");
                 addInstanceTansition(instance);
                 _dbContext.SaveChanges();
                  return new Response{
             Result=new Result(Status.Success,"Instance has been updated"),
             };
+    }
+    private void SendSignalRData(Instance instance,string eventInfo)
+    {
+            var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
+            HttpMethod.Post,
+            "amorphie-workflow-hub.test-amorphie-workflow-hub",
+            "sendMessage",
+            new PostSignalRData(
+                _user,
+               eventInfo,
+                instance.Id,
+              _data.EntityData,DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),instance.StateName,_transitionName,instance.BaseStatus
+            ));
     }
 
 }

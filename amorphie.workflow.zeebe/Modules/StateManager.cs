@@ -83,7 +83,7 @@ public static class StateManagerModule
                 CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString()),
                 CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredByBehalfOf").ToString()),
             };
-
+            string eventInfo="worker-completed";
             dbContext.Add(newInstanceTransition);
 
 
@@ -110,7 +110,7 @@ public static class StateManagerModule
                 }
                 else
                 {
-
+                    eventInfo="worker-error-with-service-"+transition.ServiceName;
                 }
                 //client.InvokeMethodAsync<GetTokenRequest, string>(HttpMethod.Post, "amorphie-workflow-hub", "security/create-token", tokenRequestData).Result;
             }
@@ -122,7 +122,16 @@ public static class StateManagerModule
             }
 
             dbContext.SaveChanges();
-
+ var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
+            HttpMethod.Post,
+            "amorphie-workflow-hub.test-amorphie-workflow-hub",
+            "sendMessage",
+            new PostSignalRData(
+                newInstanceTransition.CreatedBy,
+               eventInfo,
+                instance.Id,
+              newInstanceTransition.EntityData,DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),newInstanceTransition.ToStateName,transition.Name,instance.BaseStatus
+            ));
             return Results.Ok();
         }
         else
@@ -132,4 +141,9 @@ public static class StateManagerModule
 
         return Results.NotFound();
     }
+     private static void SendSignalRData(InstanceTransition instanceTransition,string eventInfo,DaprClient _client,Instance instance)
+    {
+           
+    }
+
 }
