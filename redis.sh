@@ -3,3 +3,6 @@ redis-cli MSET config-amorphie-transaction-db 'User ID=postgres;Password=postgre
 redis-cli save 
 redis-cli shutdown 
 redis-server
+
+
+
