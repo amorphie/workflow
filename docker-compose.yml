@@ -100,23 +100,34 @@ services:
     ports:
       - 5601:5601
   vault:
-    image: vault:latest
-    container_name: vault
-    restart: on-failure:10
-    ports:
-      - "8200:8200"
-    environment:
-      VAULT_ADDR: 'https://0.0.0.0:8200'
-      VAULT_API_ADDR: 'https://0.0.0.0:8200'
-      VAULT_DEV_ROOT_TOKEN_ID: 'admin'
-      VAULT_TOKEN: 'admin'
-    cap_add:
-      - IPC_LOCK
-    healthcheck:
-      retries: 5
-    command: server -dev -dev-root-token-id="admin"
-    networks:
-      - bbt-development
+   image: vault:latest 
+   container_name: vault 
+   restart: on-failure:10 
+   ports: 
+     - "8200:8200" 
+   environment: 
+     VAULT_ADDR: 'https://0.0.0.0:8200' 
+     VAULT_API_ADDR: 'https://0.0.0.0:8200' 
+     VAULT_DEV_ROOT_TOKEN_ID: 'admin'
+     VAULT_TOKEN: 'admin' 
+   volumes:
+     - ./file:/vault/file 
+   cap_add: 
+     - IPC_LOCK 
+   healthcheck: 
+      retries: 5 
+   command: server -dev -dev-root-token-id="admin" 
+   networks: 
+      - bbt-development 
+  vault-prepopulate: 
+    image: alpine/curl 
+    depends_on: 
+    - vault 
+    volumes: 
+    - ./vault.sh:/usr/local/bin/prepopulate_vault.sh 
+    command: ["sh", "-c", "/usr/local/bin/prepopulate_vault.sh"] 
+    networks: 
+    - bbt-development
 
 networks:
   bbt-development:
