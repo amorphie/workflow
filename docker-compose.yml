@@ -43,7 +43,6 @@ services:
     networks:
       - bbt-development
 
-
   operate: 
     container_name: bbt_zeebe_operate
     image: camunda/operate:8.1.8
@@ -99,6 +98,7 @@ services:
       - elastic
     ports:
       - 5601:5601
+  
   vault:
    image: vault:latest 
    container_name: vault 
@@ -119,13 +119,22 @@ services:
    command: server -dev -dev-root-token-id="admin" 
    networks: 
       - bbt-development 
+ 
   vault-prepopulate: 
     image: alpine/curl 
     depends_on: 
-    - vault 
+    - vault
+    - mock-service 
     volumes: 
     - ./vault.sh:/usr/local/bin/prepopulate_vault.sh 
     command: ["sh", "-c", "/usr/local/bin/prepopulate_vault.sh"] 
+    networks: 
+    - bbt-development
+
+  mock-service: 
+    image: thiht/smocker
+    ports:
+      - '8080:8080'
     networks: 
     - bbt-development
 
