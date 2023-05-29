@@ -125,9 +125,9 @@ services:
     depends_on: 
     - vault
     - mock-service 
-    volumes: 
-    - ./vault.sh:/usr/local/bin/prepopulate_vault.sh 
-    command: ["sh", "-c", "/usr/local/bin/prepopulate_vault.sh"] 
+    volumes:
+    - ./curl:/usr/local/bin/
+    command: ["sh", "-c", "/usr/local/bin/run-curl.sh"] 
     networks: 
     - bbt-development
 
@@ -135,6 +135,7 @@ services:
     image: thiht/smocker
     ports:
       - '8080:8080'
+      - '8082:8081'
     networks: 
     - bbt-development
 

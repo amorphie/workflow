@@ -9,5 +9,8 @@
             "database": "workflow",
             "username": "postgres"
         }
-    ]
+    ],
+        "yaml.schemas": {
+          "https://smocker.dev/smocker.schema.json": "/**/*mock*.yml"
+        }
 }
