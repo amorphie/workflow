@@ -168,7 +168,8 @@ public static class ConsumerModule
 
         var response = new GetRecordWorkflowAndTransitionsResponse();
         //response.IsStateRecordRegistered = instanceRecords.Count > 0;
-        var templateURL = configuration["DAPR_TEMPLATE_URL_NAME"]!;
+       // var templateURL = configuration["DAPR_TEMPLATE_URL_NAME"]!;
+       var templateURL = "https://test-template-engine.burgan.com.tr/Template/Render";
         if (stateManagerWorkflow != null)
         {
             var stateManagerInstace = instanceRecords.Where(i => i.EntityName == stateManagerWorkflow.Name).FirstOrDefault();
