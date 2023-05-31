@@ -263,33 +263,19 @@ public class PostTransactionService : IPostTransactionService
         {
             var clientHttp = new HttpClient();
             var response = new HttpResponseMessage();
-            if (_transition.ServiceName.Contains("{") && _transition.ServiceName.Contains("}"))
-            {
-                //     //dynamic JsonRoutedata = Newtonsoft.Json.Linq.JObject.Parse(_data.RouteData.ToString());
-                //     System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex(@"/\{([^}]+)\}/");
-
-                System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex("{(.*?)}");
-                var v = regex.Match(_transition.ServiceName);
-                // string? test3=v.Groups[1].ToString();
-                foreach (var item in v.Groups)
-                {
-                    if (!item.ToString()!.Contains("{"))
-                    {
-                        string? RouteDataString = _data.RouteData!.ToString();
-                        dynamic JsonRoutedata = Newtonsoft.Json.Linq.JObject.Parse(RouteDataString);
-                        string replaceVaule = JsonRoutedata[item.ToString()!];
-                        _transition.ServiceName = _transition.ServiceName.Replace("{"+item.ToString()!+"}", replaceVaule);
-                    }
-
-                }
-            }
-            else
-            {
-
-            }
             try
             {
-                response = clientHttp.PostAsync(_transition.ServiceName, new StringContent(_data.EntityData.ToString(), System.Text.Encoding.UTF8, "application/json")).Result;
+                
+            amorphie.workflow.core.Dtos.SendTransitionInfoRequest request =new amorphie.workflow.core.Dtos.SendTransitionInfoRequest()
+            {
+                recordId=instance.RecordId,
+                newStatus= _transition.ToStateName!,
+                entityData=_data.EntityData,
+                user=_user,
+                behalfOfUser=_behalfOfUser
+            };
+            string jsonRequest= System.Text.Json.JsonSerializer.Serialize(request);
+                response = clientHttp.PostAsync(_transition.ServiceName, new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json")).Result;
               try
               {
                 var contentString= response!.Content!.ReadAsStringAsync().Result;
@@ -366,7 +352,7 @@ public class PostTransactionService : IPostTransactionService
     {
             var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
             HttpMethod.Post,
-            "amorphie-workflow-hub.test-amorphie-workflow-hub",
+            "amorphie-workflow-hub",
             "sendMessage",
             new PostSignalRData(
                 _user,
@@ -376,4 +362,52 @@ public class PostTransactionService : IPostTransactionService
             ));
     }
 
+    private async Task<IResponse> SendTransitionInfo(DaprClient client,Instance instance)
+    {
+         var clientHttp = new HttpClient();
+            var response = new HttpResponseMessage();
+            try
+            {
+
+            amorphie.workflow.core.Dtos.SendTransitionInfoRequest request =new amorphie.workflow.core.Dtos.SendTransitionInfoRequest()
+            {
+                recordId=instance.RecordId,
+                newStatus= _transition.ToStateName!,
+                entityData=_data.EntityData,
+                user=_user,
+                behalfOfUser=_behalfOfUser
+            };
+            string jsonRequest= System.Text.Json.JsonSerializer.Serialize(request);
+            response = clientHttp.PostAsync(_transition.ServiceName, new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json")).Result;
+              try
+              {
+                var contentString= response!.Content!.ReadAsStringAsync().Result;
+                dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
+                var status=JsonResultdata.result.status;
+                if(status!="Success")
+                {
+                    var message=JsonResultdata.result.message;
+                     return new Response{
+            Result=new Result(Status.Error,message),
+            };
+                  //  return Results.BadRequest(status+" "+message);
+                }
+              } 
+              catch(Exception ex)
+              {
+                
+              }
+              
+             
+            }
+            catch(Exception ex)
+            {
+                return new Response{
+            Result=new Result(Status.Error,"unexpected error:"+ex.ToString()),
+            };
+            }
+           
+
+        return null;
+    }
 }

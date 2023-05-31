@@ -1,4 +1,3 @@
-
 using System.Text.Json;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
@@ -83,36 +82,46 @@ public static class StateManagerModule
                 CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString()),
                 CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredByBehalfOf").ToString()),
             };
-            string eventInfo="worker-completed";
+            string eventInfo = "worker-completed";
             dbContext.Add(newInstanceTransition);
 
 
             if (!string.IsNullOrEmpty(transition.ServiceName))
             {
                 var clientHttp = new HttpClient();
-                if (transition.ServiceName.Contains("{") && transition.ServiceName.Contains("}"))
+                amorphie.workflow.core.Dtos.SendTransitionInfoRequest sendTransitionInfoRequest = new amorphie.workflow.core.Dtos.SendTransitionInfoRequest()
                 {
-                    dynamic  JsonRoutedata= Newtonsoft.Json.Linq.JObject.Parse(newInstanceTransition.RouteData);
-                    System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex("{(.*)}");
-                    var v = regex.Match(transition.ServiceName);
-                    foreach(var item in v.Groups)
+                    recordId = instance.RecordId,
+                    newStatus = transition.ToStateName!,
+                    entityData = JsonSerializer.Deserialize<object>(newInstanceTransition.EntityData),
+                    user = newInstanceTransition.CreatedBy,
+                    behalfOfUser = newInstanceTransition.CreatedByBehalfOf
+                };
+                string jsonRequest = System.Text.Json.JsonSerializer.Serialize(sendTransitionInfoRequest);
+                var response = clientHttp.PostAsync(transition.ServiceName, new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json")).Result;
+                //var content=new FormUrlEncodedContent(newInstanceTransition!.EntityData!);
+
+                try
+                {
+                    var contentString = response!.Content!.ReadAsStringAsync().Result;
+                    dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
+                    var status = JsonResultdata.result.status;
+                    if (status != "Success")
                     {
-                       transition.ServiceName= transition.ServiceName.Replace("{"+item.ToString()+"}",JsonRoutedata[item]);
+                        var message = JsonResultdata.result.message;
+                        instance.BaseStatus = transition.FromState!.BaseStatus;
+                        eventInfo = "worker-error-with-service-" + transition.ServiceName;
+                    }
+                    else
+                    {
+                        instance.BaseStatus = transition.ToState!.BaseStatus;
+                        instance.StateName = transition.ToStateName;
                     }
                 }
-                var response = clientHttp.PostAsync(transition.ServiceName, new StringContent(newInstanceTransition.EntityData, System.Text.Encoding.UTF8, "application/json")).Result;
-                //var content=new FormUrlEncodedContent(newInstanceTransition!.EntityData!);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK || response.StatusCode == System.Net.HttpStatusCode.Created
-                || response.StatusCode == System.Net.HttpStatusCode.NotModified)
+                catch (Exception ex)
                 {
-                    instance.BaseStatus = transition.ToState!.BaseStatus;
-                    instance.StateName = transition.ToStateName;
+
                 }
-                else
-                {
-                    eventInfo="worker-error-with-service-"+transition.ServiceName;
-                }
-                //client.InvokeMethodAsync<GetTokenRequest, string>(HttpMethod.Post, "amorphie-workflow-hub", "security/create-token", tokenRequestData).Result;
             }
             else
             {
@@ -122,16 +131,16 @@ public static class StateManagerModule
             }
 
             dbContext.SaveChanges();
- var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
-            HttpMethod.Post,
-            "amorphie-workflow-hub.test-amorphie-workflow-hub",
-            "sendMessage",
-            new PostSignalRData(
-                newInstanceTransition.CreatedBy,
-               eventInfo,
-                instance.Id,
-              newInstanceTransition.EntityData,DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),newInstanceTransition.ToStateName,transition.Name,instance.BaseStatus
-            ));
+            var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
+                       HttpMethod.Post,
+                       "amorphie-workflow-hub.test-amorphie-workflow-hub",
+                       "sendMessage",
+                       new PostSignalRData(
+                           newInstanceTransition.CreatedBy,
+                          eventInfo,
+                           instance.Id,
+                         newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus
+                       ));
             return Results.Ok();
         }
         else
@@ -141,9 +150,9 @@ public static class StateManagerModule
 
         return Results.NotFound();
     }
-     private static void SendSignalRData(InstanceTransition instanceTransition,string eventInfo,DaprClient _client,Instance instance)
+    private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
     {
-           
+
     }
 
 }

@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Principal;
 using System.Text;
+using System.Text.Json;
 using amorphie.workflow.hub;
 using Dapr.Client;
 using IdentityModel.AspNetCore.OAuth2Introspection;
@@ -8,7 +9,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
-
 
 var builder = WebApplication.CreateBuilder(args);
 var daprClient = new DaprClientBuilder().Build();
@@ -87,7 +87,8 @@ app.MapPost("/sendMessage",
 
 async Task<IResult> (IHubContext <WorkflowHub> hubContext,PostSignalRData data) =>
 {
-     await hubContext.Clients.User(data.UserId.ToString()).SendAsync("SendMessage", data);
+      string jsonString = JsonSerializer.Serialize(data);
+     await hubContext.Clients.User(data.UserId.ToString()).SendAsync("SendMessage", jsonString);
     return Results.Ok("");
 });
 
