@@ -283,7 +283,7 @@ public static class ConsumerModule
         var response = new GetRecordHistoryResponse();
         try
         {
- var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId).ToList();
+ var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId).Include(s=>s.Workflow).ThenInclude(t=>t.Entities).ToList();
 
         response.StateManager = instanceRecords.Where(item => item.Workflow.Entities.Any(a => a.IsStateManager == true)).Select(item =>
            new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
