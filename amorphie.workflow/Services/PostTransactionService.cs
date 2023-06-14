@@ -272,23 +272,36 @@ public class PostTransactionService : IPostTransactionService
                 newStatus= _transition.ToStateName!,
                 entityData=_data.EntityData,
                 user=_user,
-                behalfOfUser=_behalfOfUser
+                behalfOfUser=_behalfOfUser,
+                workflowName=instance.WorkflowName
             };
             string jsonRequest= System.Text.Json.JsonSerializer.Serialize(request);
                 response = clientHttp.PostAsync(_transition.ServiceName, new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json")).Result;
               try
               {
-                var contentString= response!.Content!.ReadAsStringAsync().Result;
-                dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
-                var status=JsonResultdata.result.status;
-                if(status!="Success")
-                {
-                    var message=JsonResultdata.result.message;
-                     return new Response{
-            Result=new Result(Status.Error,message),
-            };
-                  //  return Results.BadRequest(status+" "+message);
-                }
+            //     var contentString= response!.Content!.ReadAsStringAsync().Result;
+            //     dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
+            //     var status=JsonResultdata.result.status;
+            //     if(status!="Success")
+            //     {
+            //         var message=JsonResultdata.result.message;
+            //          return new Response{
+            // Result=new Result(Status.Error,message),
+            // };
+            //       //  return Results.BadRequest(status+" "+message);
+            //     }
+
+             if(response.StatusCode==System.Net.HttpStatusCode.OK||
+                   response.StatusCode==System.Net.HttpStatusCode.Created) 
+                   {
+                       
+                   }
+                   else
+                   {
+                                                  return new Response{
+            Result=new Result(Status.Error,""),};
+                   }
+
               } 
               catch(Exception ex)
               {
@@ -375,23 +388,34 @@ public class PostTransactionService : IPostTransactionService
                 newStatus= _transition.ToStateName!,
                 entityData=_data.EntityData,
                 user=_user,
-                behalfOfUser=_behalfOfUser
+                behalfOfUser=_behalfOfUser,
+                workflowName=instance.WorkflowName
             };
             string jsonRequest= System.Text.Json.JsonSerializer.Serialize(request);
             response = clientHttp.PostAsync(_transition.ServiceName, new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json")).Result;
               try
               {
-                var contentString= response!.Content!.ReadAsStringAsync().Result;
-                dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
-                var status=JsonResultdata.result.status;
-                if(status!="Success")
-                {
-                    var message=JsonResultdata.result.message;
-                     return new Response{
-            Result=new Result(Status.Error,message),
-            };
-                  //  return Results.BadRequest(status+" "+message);
-                }
+                //var contentString= response!.Content!.ReadAsStringAsync().Result;
+            //     dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
+            //     var status=JsonResultdata.result.status;
+            //     if(status!="Success")
+            //     {
+            //         var message=JsonResultdata.result.message;
+            //          return new Response{
+            // Result=new Result(Status.Error,message),
+            // };
+            //       //  return Results.BadRequest(status+" "+message);
+            //     }
+             if(response.StatusCode==System.Net.HttpStatusCode.OK||
+                   response.StatusCode==System.Net.HttpStatusCode.Created) 
+                   {
+                       
+                   }
+                   else
+                   {
+                                                  return new Response{
+            Result=new Result(Status.Error,""),};
+                   }
               } 
               catch(Exception ex)
               {

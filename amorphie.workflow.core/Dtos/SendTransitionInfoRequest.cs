@@ -12,6 +12,7 @@ namespace amorphie.workflow.core.Dtos
         public string newStatus {get;set;}=default!;
         public Guid? user {get;set;}
         public Guid? behalfOfUser {get;set;}
+        public string  workflowName {get;set;}=default!;
 
     }
 }

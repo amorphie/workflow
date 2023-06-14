@@ -95,7 +95,8 @@ public static class StateManagerModule
                     newStatus = transition.ToStateName!,
                     entityData = JsonSerializer.Deserialize<object>(newInstanceTransition.EntityData),
                     user = newInstanceTransition.CreatedBy,
-                    behalfOfUser = newInstanceTransition.CreatedByBehalfOf
+                    behalfOfUser = newInstanceTransition.CreatedByBehalfOf,
+                    workflowName=instance.WorkflowName
                 };
                 string jsonRequest = System.Text.Json.JsonSerializer.Serialize(sendTransitionInfoRequest);
                 var response = clientHttp.PostAsync(transition.ServiceName, new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json")).Result;
@@ -103,20 +104,31 @@ public static class StateManagerModule
 
                 try
                 {
-                    var contentString = response!.Content!.ReadAsStringAsync().Result;
-                    dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
-                    var status = JsonResultdata.result.status;
-                    if (status != "Success")
-                    {
-                        var message = JsonResultdata.result.message;
-                        instance.BaseStatus = transition.FromState!.BaseStatus;
-                        eventInfo = "worker-error-with-service-" + transition.ServiceName;
-                    }
-                    else
-                    {
+                    // var contentString = response!.Content!.ReadAsStringAsync().Result;
+                    // dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
+                    // var status = JsonResultdata.result.status;
+                    // if (status != "Success")
+                    // {
+                    //     var message = JsonResultdata.result.message;
+                    //     instance.BaseStatus = transition.FromState!.BaseStatus;
+                    //     eventInfo = "worker-error-with-service-" + transition.ServiceName;
+                    // }
+                    // else
+                    // {
+                    //     instance.BaseStatus = transition.ToState!.BaseStatus;
+                    //     instance.StateName = transition.ToStateName;
+                    // }
+                   if(response.StatusCode==System.Net.HttpStatusCode.OK||
+                   response.StatusCode==System.Net.HttpStatusCode.Created) 
+                   {
                         instance.BaseStatus = transition.ToState!.BaseStatus;
                         instance.StateName = transition.ToStateName;
-                    }
+                   }
+                   else
+                   {
+                        instance.BaseStatus = transition.FromState!.BaseStatus;
+                        eventInfo = "worker-error-with-service-" + transition.ServiceName;
+                   }
                 }
                 catch (Exception ex)
                 {

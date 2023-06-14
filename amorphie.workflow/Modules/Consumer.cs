@@ -41,7 +41,7 @@ public static class ConsumerModule
                 return operation;
             });
 
-        app.MapGet("/workflow/consumer/{entity-id}/record/{record-id}/history/", getHistory)
+        app.MapGet("/workflow/consumer/{entitY}/record/{recordid}/history/", getHistory)
             .Produces<GetRecordHistoryResponse>(StatusCodes.Status200OK)
             .WithOpenApi(operation =>
             {
@@ -51,7 +51,7 @@ public static class ConsumerModule
                 return operation;
             });
 
-        app.MapGet("/workflow/consumer/{entity-id}/record/{record-id}/history/{instance-id}", getHistoryDetail)
+        app.MapGet("/workflow/consumer/{entitY}/record/{recordid}/history/{instanceId}", getHistoryDetail)
             .Produces<GetRecordHistoryDetailResponse>(StatusCodes.Status200OK)
             .WithOpenApi(operation =>
             {
@@ -61,7 +61,7 @@ public static class ConsumerModule
                 return operation;
             });
     }
-    private static string TemplateEngineForm(string templateName, string entityData,string templateURL)
+    private static string TemplateEngineForm(string templateName, string entityData, string templateURL)
     {
         string form = string.Empty;
         var clientHttp = new HttpClient();
@@ -73,7 +73,6 @@ public static class ConsumerModule
             Name = templateName,
             RenderData = entityData,
             RenderDataForLog = entityData,
-            SemVer = "1.0.0",
             ProcessName = "Workflow Get Transition",
             ItemId = string.Empty,
             Action = "TemplateEngineForm",
@@ -83,18 +82,18 @@ public static class ConsumerModule
         var serializeRequest = JsonSerializer.Serialize(request);
         try
         {
-               
+
             response = clientHttp.PostAsync(templateURL, new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json")).Result;
-        var twiceSerialize = response!.Content!.ReadAsStringAsync().Result;
-        form = Newtonsoft.Json.JsonConvert.DeserializeObject<string>(twiceSerialize)!;
-        form = ReplaceDropdown(form);
-        //builder.Configuration["DAPR_SECRET_STORE_NAME"]
+            var twiceSerialize = response!.Content!.ReadAsStringAsync().Result;
+            form = Newtonsoft.Json.JsonConvert.DeserializeObject<string>(twiceSerialize)!;
+            form = ReplaceDropdown(form);
+            //builder.Configuration["DAPR_SECRET_STORE_NAME"]
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            form=string.Empty;
+            form = string.Empty;
         }
-        
+
         return form;
     }
     private static string ReplaceDropdown(string form)
@@ -128,7 +127,7 @@ public static class ConsumerModule
            [FromServices] DaprClient client,
             IConfiguration configuration,
            [FromHeader(Name = "Accept-Language")] string language = "tr-TR"
-           
+
        )
     {
 
@@ -151,7 +150,7 @@ public static class ConsumerModule
                     .ThenInclude(t => t.Forms.Where(l => l.Language == language))
                 .ToList();
 
- 
+
 
 
         var stateManagerWorkflow = workflows.Where(item => item.IsStateManager == true).FirstOrDefault();
@@ -168,8 +167,8 @@ public static class ConsumerModule
 
         var response = new GetRecordWorkflowAndTransitionsResponse();
         //response.IsStateRecordRegistered = instanceRecords.Count > 0;
-       // var templateURL = configuration["DAPR_TEMPLATE_URL_NAME"]!;
-       var templateURL = "https://test-template-engine.burgan.com.tr/Template/Render";
+        // var templateURL = configuration["DAPR_TEMPLATE_URL_NAME"]!;
+        var templateURL = "https://test-template-engine.burgan.com.tr/Template/Render";
         if (stateManagerWorkflow != null)
         {
             var stateManagerInstace = instanceRecords.Where(i => i.EntityName == stateManagerWorkflow.Name).FirstOrDefault();
@@ -189,7 +188,7 @@ public static class ConsumerModule
                           {
                               Name = t.Name,
                               Title = t.Titles.First().Label,
-                              Form = TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData,templateURL!)
+                              Form = TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData, templateURL!)
                           }).ToArray()
                   }
                       ).FirstOrDefault();
@@ -207,7 +206,7 @@ public static class ConsumerModule
                            {
                                Name = t.Name,
                                Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.FirstOrDefault()!.Label,
-                               Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty,templateURL)
+                               Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty, templateURL)
                            }).ToArray()
                    }
                        ).FirstOrDefault();
@@ -224,7 +223,7 @@ public static class ConsumerModule
                         {
                             Name = t.Name,
                             Title = t.Titles.First().Label,
-                            Form = TemplateEngineForm(t.Forms.First().Label, string.Empty,templateURL)
+                            Form = TemplateEngineForm(t.Forms.First().Label, string.Empty, templateURL)
                         }).ToArray()
                 }
             ).ToArray();
@@ -266,27 +265,95 @@ public static class ConsumerModule
         //         "SendOtp",
         //         "SendOtp"
         //     ));
-          
+
 
         return result;
     }
 
 
-    static IResult getHistory(
-         [FromRoute(Name = "entity-id")] Guid entityId,
-         [FromRoute(Name = "record-id")] Guid recordId
+    static IResponse<GetRecordHistoryResponse> getHistory(
+         [FromRoute(Name = "entity")] string entity,
+         [FromRoute(Name = "recordId")] Guid recordId,
+          [FromServices] WorkflowDBContext dbContext,
+           [FromHeader(Name = "Accept-Language")] string language = "en-EN"
      )
     {
-        return Results.Ok();
+
+
+        var response = new GetRecordHistoryResponse();
+        try
+        {
+ var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId).ToList();
+
+        response.StateManager = instanceRecords.Where(item => item.Workflow.Entities.Any(a => a.IsStateManager == true)).Select(item =>
+           new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
+           new GetRecordHistoryResponse.Transition("", ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy)
+           {
+
+           }).ToList())
+           {
+               InstanceId = item.Id
+           }
+               ).FirstOrDefault();
+
+        response.RunningWorkflows = instanceRecords.Where(item => item.BaseStatus != StatusType.Completed).Select(item =>
+  new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
+  new GetRecordHistoryResponse.Transition("", ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy)
+  {
+
+  }).ToList())
+  {
+      InstanceId = item.Id
+  }
+      ).ToList();
+        response.CompletedWorkflows = instanceRecords.Where(item => item.BaseStatus == StatusType.Completed).Select(item =>
+   new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
+   new GetRecordHistoryResponse.Transition("", ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy)
+   {
+
+   }).ToList())
+   {
+       InstanceId = item.Id
+   }
+       ).ToList();
+
+
+    
+        }
+        catch(Exception ex)
+        {
+            return   new Response<GetRecordHistoryResponse>
+        {
+            Result = new Result(Status.Error, "Unexpected Error:"+ex.ToString())
+        };
+        }
+            return   new Response<GetRecordHistoryResponse>
+        {
+            Data = response,
+            Result = new Result(Status.Success, "Success")
+        };
+       
     }
 
 
     static IResult getHistoryDetail(
-         [FromRoute(Name = "entity-id")] Guid entityId,
-         [FromRoute(Name = "record-id")] Guid recordId,
-         [FromRoute(Name = "instance-id")] Guid instanceId
+         [FromRoute(Name = "entity")] string entity,
+         [FromRoute(Name = "recordId")] Guid recordId,
+         [FromRoute(Name = "instanceId")] Guid instanceId,
+           [FromServices] WorkflowDBContext dbContext
      )
     {
+
+        //  var instanceTransRecords = dbContext.InstanceTransitions.Include(e => e.Instance)
+        //  .Where(i =>i.InstanceId==instanceId&&i.Instance.EntityName==entity&&i.Instance.RecordId==recordId).ToList();
+        // GetRecordHistoryDetailResponse response= new GetRecordHistoryDetailResponse(instanceTransRecords.Select(s=>new GetRecordHistoryDetailResponse.Transition(
+        //     s.Id,
+        //     "",
+        //     s.FromStateName,
+        //     s.ToStateName,
+        //     "",
+
+        // )).ToList());
         return Results.Ok();
     }
 
@@ -352,9 +419,9 @@ public record ConsumerPostTransitionResponse(
 
 public record GetRecordHistoryResponse
 {
-    public Workflow? StateManager { get; init; }
-    public Workflow? RunningWorkflows { get; init; }
-    public Workflow? CompletedWorkflows { get; init; }
+    public Workflow? StateManager { get; set; }
+    public ICollection<Workflow>? RunningWorkflows { get; set; }
+    public ICollection<Workflow>? CompletedWorkflows { get; set; }
 
     public record Workflow
     {
@@ -380,10 +447,9 @@ public record GetRecordHistoryResponse
 
 public record GetRecordHistoryDetailResponse
 {
-    public string Name { get; init; }
-    public ICollection<Transition> Transitions { get; init; }
+    public ICollection<Transition> Transitions { get; set; }
 
-    public GetRecordHistoryDetailResponse(string name, ICollection<Transition> transitions) => (Name, Transitions) = (name, transitions);
+    public GetRecordHistoryDetailResponse( ICollection<Transition> transitions) => ( Transitions) = ( transitions);
 
 
     public record Transition
