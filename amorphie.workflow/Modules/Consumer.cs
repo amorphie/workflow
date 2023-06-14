@@ -287,7 +287,9 @@ public static class ConsumerModule
 
         response.StateManager = instanceRecords.Where(item => item.BaseStatus == StatusType.Completed&& item.Workflow.Entities.Any(a => a.IsStateManager == true)).Select(item =>
            new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
-           new GetRecordHistoryResponse.Transition("", ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy)
+           new GetRecordHistoryResponse.Transition(dbContext.Transitions.FirstOrDefault(f=>f.FromStateName== ITransaction.FromStateName
+           &&f.ToStateName==ITransaction.ToStateName)!.Name,
+            ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy)
            {
 
            }).ToList())
@@ -298,7 +300,8 @@ public static class ConsumerModule
 
         response.RunningWorkflows = instanceRecords.Where(item => item.BaseStatus != StatusType.Completed).Select(item =>
   new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
-  new GetRecordHistoryResponse.Transition("", ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy)
+  new GetRecordHistoryResponse.Transition(dbContext.Transitions.FirstOrDefault(f=>f.FromStateName== ITransaction.FromStateName
+           &&f.ToStateName==ITransaction.ToStateName)!.Name, ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy)
   {
 
   }).ToList())
@@ -308,7 +311,8 @@ public static class ConsumerModule
       ).ToList();
         response.CompletedWorkflows = instanceRecords.Where(item => item.BaseStatus == StatusType.Completed).Select(item =>
    new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
-   new GetRecordHistoryResponse.Transition("", ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy)
+   new GetRecordHistoryResponse.Transition(dbContext.Transitions.FirstOrDefault(f=>f.FromStateName== ITransaction.FromStateName
+           &&f.ToStateName==ITransaction.ToStateName)!.Name, ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy)
    {
 
    }).ToList())
