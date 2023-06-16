@@ -169,14 +169,17 @@ public static class ConsumerModule
         //response.IsStateRecordRegistered = instanceRecords.Count > 0;
         // var templateURL = configuration["DAPR_TEMPLATE_URL_NAME"]!;
         var templateURL = "https://test-template-engine.burgan.com.tr/Template/Render";
+        string lastTransitionEntitydata=string.Empty;
         if (stateManagerWorkflow != null)
         {
-            var stateManagerInstace = instanceRecords.Where(i => i.EntityName == stateManagerWorkflow.Name).FirstOrDefault();
+            var stateManagerInstace = instanceRecords.Where(i => i.WorkflowName == stateManagerWorkflow.WorkflowName).FirstOrDefault();
 
             if (stateManagerInstace != null)
             {
-                InstanceTransition lastTransition = dbContext.InstanceTransitions.Where(f => f.InstanceId == stateManagerInstace.Id)
+                InstanceTransition lastTransition = dbContext.InstanceTransitions
+                .Where(f => f.InstanceId == stateManagerInstace.Id)
                 .OrderByDescending(o => o.CreatedAt).First();
+                lastTransitionEntitydata=lastTransition.EntityData;
                 response.StateManager = workflows.Where(item => item.IsStateManager == true).Select(item =>
                   new GetRecordWorkflowAndTransitionsResponse.StateManagerWorkflow
                   {
@@ -223,7 +226,23 @@ public static class ConsumerModule
                         {
                             Name = t.Name,
                             Title = t.Titles.First().Label,
-                            Form = TemplateEngineForm(t.Forms.First().Label, string.Empty, templateURL)
+                            Form = TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata, templateURL)
+                        }).ToArray()
+                }
+            ).ToArray();
+              response.RunningWorkflows = instanceRecords.Where(w=>w.Workflow.Entities.Any(a=>a.IsStateManager==false)).Select(item =>
+                new GetRecordWorkflowAndTransitionsResponse.RunningWorkflow
+                {
+                    InstanceId=item.Id,
+                    Name = item.Workflow.Name,
+                    Title = item.Workflow.Titles.First().Label,
+                    Transitions = item.State.Transitions.Select(t =>
+                        new GetRecordWorkflowAndTransitionsResponse.Transition
+                        {
+                            Name = t.Name,
+                            Title = t.Titles.First(f=>f.Language==language).Label,
+                            Form = TemplateEngineForm(t.Forms.First(f=>f.Language==language).Label, dbContext.InstanceTransitions.OrderBy(o=>o.CreatedAt)
+                            .FirstOrDefault(f=>f.InstanceId==item.Id)!.EntityData, templateURL)
                         }).ToArray()
                 }
             ).ToArray();

@@ -369,7 +369,9 @@ public static class DefinitionModule
                [FromHeader(Name = "Language")] string? language = "en-EN"
         )
     {
-        var existingRecord = context.States!.Include(w => w.Titles.Where(t => t.Language == language))
+        var existingRecord = context.States!.Include(w => w.Titles)
+        .Include(w => w.Transitions).ThenInclude(s=>s.Titles)
+        .Include(w => w.Transitions).ThenInclude(s=>s.Forms)
        .FirstOrDefault(w => w.WorkflowName == definition && w.Name == state)
        ;
 

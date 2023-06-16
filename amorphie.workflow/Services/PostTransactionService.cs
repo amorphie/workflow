@@ -60,8 +60,10 @@ public class PostTransactionService : IPostTransactionService
         _behalfOfUser = behalfOfUser;
         _data = data;
 
-        var transition = _dbContext.Transitions.Find(_transitionName);
-
+        // var transition = _dbContext.Transitions.Find(_transitionName);
+        var transition = _dbContext.Transitions.Where(w=>w.Name==_transitionName)
+        .Include(s=>s.FromState).ThenInclude(s=>s.Workflow).ThenInclude(s=>s!.Entities)
+        .FirstOrDefault();
         if (transition == null)
         {
 
@@ -77,11 +79,19 @@ public class PostTransactionService : IPostTransactionService
         // Load all running instances of record
         _activeInstances = _dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != StatusType.Completed).ToList();
 
-        if (_activeInstances.Where(i => i.StateName != _transition.FromStateName).Count() > 0)
+        if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName)&&!(_activeInstances.Count==0&&_transition.FromState.Type==StateType.Start))
         {
-            return new Response{
+            if(_transition.FromState.Type==StateType.Start&&_transition.FromState.Workflow!.Entities.Any(a=>a.IsStateManager==false))
+            {
+                
+            }
+            else
+            {
+                return new Response{
             Result=new Result(Status.Error,$"There is an active workflow exists for {recordId} at different state."),
             };
+            }
+            
         }
 
         return new Response{
