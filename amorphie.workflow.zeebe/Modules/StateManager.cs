@@ -32,13 +32,12 @@ public static class StateManagerModule
         var targetState = request.Headers["TARGET_STATE"].ToString();
         var transitionName = body.GetProperty("LastTransition").ToString();
         var instanceIdAsString = body.GetProperty("InstanceId").ToString();
-
         Guid instanceId;
         if (!Guid.TryParse(instanceIdAsString, out instanceId))
         {
             return Results.BadRequest("InstanceId not provided or not as a GUID");
         }
-
+        
         Instance? instance = dbContext.Instances
             .Where(i => i.Id == instanceId)
             .Include(i => i.State)
@@ -50,7 +49,7 @@ public static class StateManagerModule
         {
             return Results.NotFound($"Instance not found with instance id : {instanceId} ");
         }
-
+        Console.WriteLine(DateTime.Now+"=>=>=>"+instanceIdAsString+"=>=>=>"+transitionName);
         var transition = instance.State.Transitions.Where(t => t.Name == transitionName).FirstOrDefault();
 
         if (transition is null)
