@@ -60,7 +60,8 @@ public static class StateManagerModule
                 .Include(i => i.ToState).FirstOrDefault();
                 if(OldTransitionControl!=null&&OldTransitionControl.ToStateName==instance.StateName)
                 {
-                         return Results.Ok("It is already updated");
+                    //It is already updated so return true: It is used for multiple trigger bug
+                         return Results.Ok();
                 }
             }
             return Results.NotFound($"Transition not found with transition name : {transitionName} ");
