@@ -37,7 +37,7 @@ public static class StateManagerModule
         {
             return Results.BadRequest("InstanceId not provided or not as a GUID");
         }
-        
+
         Instance? instance = dbContext.Instances
             .Where(i => i.Id == instanceId)
             .Include(i => i.State)
@@ -49,11 +49,20 @@ public static class StateManagerModule
         {
             return Results.NotFound($"Instance not found with instance id : {instanceId} ");
         }
-        Console.WriteLine(DateTime.Now+"=>=>=>"+instanceIdAsString+"=>=>=>"+transitionName);
         var transition = instance.State.Transitions.Where(t => t.Name == transitionName).FirstOrDefault();
 
         if (transition is null)
         {
+            if (instance.BaseStatus != amorphie.core.Enums.StatusType.LockedInFlow)
+            {
+                string transitionNameAsString=transitionName;
+                Transition? OldTransitionControl = dbContext.Transitions.Where(t => t.Name == transitionNameAsString)
+                .Include(i => i.ToState).FirstOrDefault();
+                if(OldTransitionControl!=null&&OldTransitionControl.ToStateName==instance.StateName)
+                {
+                         return Results.Ok("It is already updated");
+                }
+            }
             return Results.NotFound($"Transition not found with transition name : {transitionName} ");
         }
 
@@ -83,7 +92,7 @@ public static class StateManagerModule
             };
             string eventInfo = "worker-completed";
             dbContext.Add(newInstanceTransition);
-            
+
 
             if (!string.IsNullOrEmpty(transition.ServiceName))
             {
@@ -95,7 +104,7 @@ public static class StateManagerModule
                     entityData = JsonSerializer.Deserialize<object>(newInstanceTransition.EntityData),
                     user = newInstanceTransition.CreatedBy,
                     behalfOfUser = newInstanceTransition.CreatedByBehalfOf,
-                    workflowName=instance.WorkflowName
+                    workflowName = instance.WorkflowName
                 };
                 string jsonRequest = System.Text.Json.JsonSerializer.Serialize(sendTransitionInfoRequest);
                 var response = clientHttp.PostAsync(transition.ServiceName, new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json")).Result;
@@ -117,17 +126,17 @@ public static class StateManagerModule
                     //     instance.BaseStatus = transition.ToState!.BaseStatus;
                     //     instance.StateName = transition.ToStateName;
                     // }
-                   if(response.StatusCode==System.Net.HttpStatusCode.OK||
-                   response.StatusCode==System.Net.HttpStatusCode.Created) 
-                   {
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK ||
+                    response.StatusCode == System.Net.HttpStatusCode.Created)
+                    {
                         instance.BaseStatus = transition.ToState!.BaseStatus;
                         instance.StateName = transition.ToStateName;
-                   }
-                   else
-                   {
+                    }
+                    else
+                    {
                         instance.BaseStatus = transition.FromState!.BaseStatus;
                         eventInfo = "worker-error-with-service-" + transition.ServiceName;
-                   }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -152,14 +161,12 @@ public static class StateManagerModule
                            instance.Id,
                          newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus
                        ));
-                       Console.WriteLine(DateTime.Now+"=>=>=>"+eventInfo);
             return Results.Ok();
         }
         else
         {
-            Console.WriteLine(DateTime.Now+"=>=>=>"+"target state is not null or default for instanceId:"+instanceIdAsString );
         }
-        
+
         return Results.NotFound();
     }
     private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
