@@ -83,7 +83,7 @@ public static class StateManagerModule
             };
             string eventInfo = "worker-completed";
             dbContext.Add(newInstanceTransition);
-
+            
 
             if (!string.IsNullOrEmpty(transition.ServiceName))
             {
@@ -152,13 +152,14 @@ public static class StateManagerModule
                            instance.Id,
                          newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus
                        ));
+                       Console.WriteLine(DateTime.Now+"=>=>=>"+eventInfo);
             return Results.Ok();
         }
         else
         {
-
+            Console.WriteLine(DateTime.Now+"=>=>=>"+"target state is not null or default for instanceId:"+instanceIdAsString );
         }
-
+        
         return Results.NotFound();
     }
     private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
