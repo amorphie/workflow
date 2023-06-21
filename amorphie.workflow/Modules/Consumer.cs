@@ -99,27 +99,31 @@ public static class ConsumerModule
     private static string ReplaceDropdown(string form)
     {
         //
-        if (form.Contains("\"type\": \"select\"") && (form.Contains("\"dataSrc\": \"url\"")))
+        int startindex=0;
+        int selectCount=0;
+        while(form.Contains("\"type\": \"select\"") && (form.Contains("\"dataSrc\": \"url\"")))
         {
-            form = form.Replace("\"dataSrc\": \"url\",", "\"dataSrc\": \"json\",");
+            selectCount++;
+            var regexDataSrc = new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape("\"dataSrc\": \"url\","));
+            form = regexDataSrc.Replace(form, "\"dataSrc\": \"json\",", 1);
             string data = "\"data\": {";
-            int indexofUrlStart = form.IndexOf("\"url\": \"http");
-
-            string AfterUrl = form.Substring(indexofUrlStart + 8);
+            string formIndexStart=form.Substring(startindex);
+            int indexofUrlStart =formIndexStart.IndexOf("\"url\": \"http");
+            startindex=indexofUrlStart+startindex;
+            string AfterUrl = form.Substring(startindex + 8);
             int indexofUrlEndSub = AfterUrl.IndexOf("\"");
-            int indexofUrlEnd = AfterUrl.IndexOf("\"") + indexofUrlStart + 10;
             string OnlyUrl = AfterUrl.Substring(0, indexofUrlEndSub);
             var clientHttp = new HttpClient();
             var response = clientHttp.GetAsync(OnlyUrl).Result;
             response.EnsureSuccessStatusCode();
             string responseBody = response.Content.ReadAsStringAsync().Result;
-            form = form.Replace(data, data + " \"json\":" + responseBody + " ,");
+            form=form.Insert(startindex," \"json\":" + responseBody + " ,");
+            startindex+=responseBody.Length+23+indexofUrlEndSub;
             var test = Newtonsoft.Json.JsonConvert.DeserializeObject<object>(form);
         }
 
         return form;
     }
-
     static IResponse<GetRecordWorkflowAndTransitionsResponse> getTransitions(
            [FromServices] WorkflowDBContext dbContext,
            [FromRoute(Name = "entity")] string entity,
