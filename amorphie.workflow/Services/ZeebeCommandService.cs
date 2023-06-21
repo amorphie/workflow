@@ -37,7 +37,10 @@ public class ZeebeCommandService : IZeebeCommandService
         messageData.variables = variables;
         try{
  var messageResult = await _daprClinet.InvokeBindingAsync<dynamic, dynamic>(gateway, "publish-message", messageData);
-
+        if(messageResult!=null)
+        {
+             Console.WriteLine("ZeebeMessage:"+messageResult.ToString());
+        }
         return messageResult;
         }
         catch(Exception ex)
