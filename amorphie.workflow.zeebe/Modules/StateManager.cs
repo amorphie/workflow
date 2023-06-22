@@ -32,6 +32,7 @@ public static class StateManagerModule
         var targetState = request.Headers["TARGET_STATE"].ToString();
         var transitionName = body.GetProperty("LastTransition").ToString();
         var instanceIdAsString = body.GetProperty("InstanceId").ToString();
+        var data= body.GetProperty($"TRX-{transitionName}").GetProperty("Data");
         Guid instanceId;
         if (!Guid.TryParse(instanceIdAsString, out instanceId))
         {
@@ -61,7 +62,7 @@ public static class StateManagerModule
                 if(OldTransitionControl!=null&&OldTransitionControl.ToStateName==instance.StateName)
                 {
                     //It is already updated so return true: It is used for multiple trigger bug
-                         return Results.Ok();
+                         return Results.Ok("{}");
                 }
             }
             return Results.NotFound($"Transition not found with transition name : {transitionName} ");
@@ -162,7 +163,7 @@ public static class StateManagerModule
                            instance.Id,
                          newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus
                        ));
-            return Results.Ok();
+           return Results.Ok(createMessageVariables(newInstanceTransition,transitionName.ToString(),data));
         }
         else
         {
@@ -173,6 +174,23 @@ public static class StateManagerModule
     private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
     {
 
+    }
+      private static dynamic createMessageVariables( InstanceTransition instanceTransition,string _transitionName,dynamic _data)
+    {
+        dynamic variables = new Dictionary<string, dynamic>();
+
+        variables.Add("EntityName", instanceTransition.Instance.EntityName);
+        variables.Add("RecordId", instanceTransition.Instance.RecordId);
+        variables.Add("InstanceId", instanceTransition.InstanceId);
+        variables.Add("LastTransition", _transitionName);
+
+        dynamic targetObject = new System.Dynamic.ExpandoObject();
+        targetObject.Data = _data;
+        targetObject.TriggeredBy = instanceTransition.CreatedBy;
+        targetObject.TriggeredByBehalfOf = instanceTransition.CreatedByBehalfOf;
+
+        variables.Add($"TRX-{_transitionName}", targetObject);
+        return variables;
     }
 
 }
