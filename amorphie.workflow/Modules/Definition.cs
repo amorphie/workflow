@@ -123,7 +123,7 @@ public static class DefinitionModule
 
     }
 
-    static amorphie.core.IBase.IResponse<IQueryable<GetWorkflowDefinition>> getDefinition(
+    static IResult getDefinition(
              [FromServices] WorkflowDBContext context,
              [FromQuery] string? definition,
              [FromQuery] string[]? tags,
@@ -163,18 +163,12 @@ public static class DefinitionModule
     )).ToArray()
                 ))
     ;
-            return new Response<IQueryable<GetWorkflowDefinition>>
-            {
-                Data = workflows,
-                Result = new Result(Status.Success, "Success")
-            };
+            return Results.Ok(workflows)
+            ;
         }
         catch (Exception ex)
         {
-            return new Response<IQueryable<GetWorkflowDefinition>>
-            {
-                Result = new Result(Status.Error, ex.ToString())
-            };
+            return Results.Problem(ex.ToString());
         }
 
     }

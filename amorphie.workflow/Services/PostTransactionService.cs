@@ -77,7 +77,9 @@ public class PostTransactionService : IPostTransactionService
         }
 
         // Load all running instances of record
-        _activeInstances = _dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != StatusType.Completed).ToList();
+        _activeInstances = _dbContext.Instances.Where(i => i.EntityName == entity 
+        && i.RecordId == recordId 
+        && i.BaseStatus != StatusType.Completed).ToList();
 
         if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName)&&!(_activeInstances.Count==0&&_transition.FromState.Type==StateType.Start))
         {

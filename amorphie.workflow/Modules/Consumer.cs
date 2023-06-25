@@ -148,6 +148,10 @@ public static class ConsumerModule
                     .ThenInclude(w => w.States)
                     .ThenInclude(s => s.Transitions)
                     .ThenInclude(t => t.Titles.Where(l => l.Language == language))
+                     .Include(e => e.Workflow)
+                    .ThenInclude(w => w.States)
+                    .ThenInclude(s => s.Transitions)
+                    .ThenInclude(t => t.ToState)
                 .Include(e => e.Workflow)
                     .ThenInclude(w => w.States)
                     .ThenInclude(s => s.Transitions)
@@ -190,7 +194,7 @@ public static class ConsumerModule
                       Name = item.Workflow.Name,
                       Title = item.Workflow.Titles.First().Label,
                       Status = stateManagerInstace.StateName,
-                      Transitions = item.Workflow.States.FirstOrDefault(s => s.Name == stateManagerInstace.StateName)?.Transitions.Select(t =>
+                      Transitions = item.Workflow.States.FirstOrDefault(s => s.Name == stateManagerInstace.StateName)?.Transitions.Where(w=>w.ToState==null||w.ToState.Type!=StateType.Fail).Select(t =>
                           new GetRecordWorkflowAndTransitionsResponse.Transition
                           {
                               Name = t.Name,
@@ -208,7 +212,7 @@ public static class ConsumerModule
                    {
                        Name = item.Workflow.Name,
                        Title = item.Workflow.Titles.First().Label,
-                       Transitions = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)!.Transitions!.Select(t =>
+                       Transitions = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)!.Transitions!.Where(w=>w.ToState==null||w.ToState.Type!=StateType.Fail).Select(t =>
                            new GetRecordWorkflowAndTransitionsResponse.Transition
                            {
                                Name = t.Name,
@@ -225,7 +229,7 @@ public static class ConsumerModule
                 {
                     Name = item.Workflow.Name,
                     Title = item.Workflow.Titles.First().Label,
-                    Transitions = item.Workflow.States.Where(s => s.Type == StateType.Start).First().Transitions.Select(t =>
+                    Transitions = item.Workflow.States.Where(s => s.Type == StateType.Start).First().Transitions.Where(w=>w.ToState==null||w.ToState.Type!=StateType.Fail).Select(t =>
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
                             Name = t.Name,
@@ -240,7 +244,7 @@ public static class ConsumerModule
                     InstanceId=item.Id,
                     Name = item.Workflow.Name,
                     Title = item.Workflow.Titles.First().Label,
-                    Transitions = item.State.Transitions.Select(t =>
+                    Transitions = item.State.Transitions.Where(w=>w.ToState==null||w.ToState.Type!=StateType.Fail).Select(t =>
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
                             Name = t.Name,
