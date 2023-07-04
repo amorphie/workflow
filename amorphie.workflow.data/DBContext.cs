@@ -111,8 +111,8 @@ public class WorkflowDBContext : DbContext
            .HasForeignKey("TransitionName_Page");
 
       
-        modelBuilder.SeedUserResetPassword();
-        modelBuilder.SeedUserLifecycle();
+        // modelBuilder.SeedUserResetPassword();
+        // modelBuilder.SeedUserLifecycle();
 
         //modelBuilder.SeedRetailLoanWorkflow();
     }
