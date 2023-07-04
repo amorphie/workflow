@@ -92,6 +92,7 @@ public static class StateManagerModule
             AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString(),
             CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString()),
             CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredByBehalfOf").ToString()),
+            TransitionName=transition.Name
         };
         string eventInfo = "worker-completed";
         dbContext.Add(newInstanceTransition);

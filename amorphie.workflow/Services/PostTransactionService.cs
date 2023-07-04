@@ -265,6 +265,7 @@ public class PostTransactionService : IPostTransactionService
             RouteData = Convert.ToString(_data.RouteData),
             CreatedBy = _user,
             CreatedByBehalfOf = _behalfOfUser,
+             TransitionName=_transition.Name
         };
 
         _dbContext.Add(newInstanceTransition);
