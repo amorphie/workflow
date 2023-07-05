@@ -411,7 +411,6 @@ public static class DefinitionModule
                 Transitions = data!.transitions!.Select(x => new Transition
                 {
                     Name = x.name,
-                    FlowName = x.message,
                     ServiceName = x.serviceName,
                     Flow = x.message == null ? null : new ZeebeMessage()
                     {
