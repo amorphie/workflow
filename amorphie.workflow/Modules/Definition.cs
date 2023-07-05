@@ -530,7 +530,8 @@ public static class DefinitionModule
                             ZeebeMessage? zeebeMessage = context!.ZeebeMessages!.FirstOrDefault(f => f.Name == req.message);
                             if (zeebeMessage == null)
                             {
-                                existingTransition.Flow = new ZeebeMessage()
+                                
+                                ZeebeMessage flow = new ZeebeMessage()
                                 {
                                     Name = req.message!,
                                     Gateway = req.gateway!,
@@ -538,7 +539,9 @@ public static class DefinitionModule
                                     Message = req.message!,
                                     Process = definition,
                                 };
-
+                                context!.ZeebeMessages.Add(flow);
+                                existingTransition.FlowName=flow.Name;
+                                existingTransition.Flow=flow;
                             }
                             else
                             {
