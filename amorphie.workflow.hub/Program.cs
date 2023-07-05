@@ -31,34 +31,34 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
-    .AddOAuth2Introspection(options =>
-    {
-        options.IntrospectionEndpoint = "http://localhost:3000/introspect";
+// builder.Services.AddAuthentication(OAuth2IntrospectionDefaults.AuthenticationScheme)
+//     .AddOAuth2Introspection(options =>
+//     {
+//         options.IntrospectionEndpoint = "http://localhost:3000/introspect";
 
-        options.ClientId = "ClientId";
-        options.ClientSecret = "ClientSecret";
+//         options.ClientId = "ClientId";
+//         options.ClientSecret = "ClientSecret";
 
-        options.SkipTokensWithDots = false;
+//         options.SkipTokensWithDots = false;
 
-        options.Events = new OAuth2IntrospectionEvents
-        {
-            OnTokenValidated = async context =>
-            {
-                var path = context.HttpContext.Request.Path;
+//         options.Events = new OAuth2IntrospectionEvents
+//         {
+//             OnTokenValidated = async context =>
+//             {
+//                 var path = context.HttpContext.Request.Path;
 
-                var accessToken = context.Request.Query["access_token"];
+//                 var accessToken = context.Request.Query["access_token"];
 
-                if (!string.IsNullOrEmpty(accessToken) &&
-                    (path.StartsWithSegments("/hubs/")))
-                {
-                    // Read the token out of the query string
-                    context.SecurityToken = accessToken;
-                }
-                await Task.CompletedTask;
-            }
-        };
-    });
+//                 if (!string.IsNullOrEmpty(accessToken) &&
+//                     (path.StartsWithSegments("/hubs/")))
+//                 {
+//                     // Read the token out of the query string
+//                     context.SecurityToken = accessToken;
+//                 }
+//                 await Task.CompletedTask;
+//             }
+//         };
+//     });
 
 builder.Services.AddAuthorization();
 // builder.Services.AddSignalR();
@@ -88,7 +88,8 @@ app.MapPost("/sendMessage",
 async Task<IResult> (IHubContext <WorkflowHub> hubContext,PostSignalRData data) =>
 {
       string jsonString = JsonSerializer.Serialize(data);
-     await hubContext.Clients.User(data.UserId.ToString()).SendAsync("SendMessage", jsonString);
+    //  await hubContext.Clients.User(data.UserId.ToString()).SendAsync("SendMessage", jsonString);
+    await hubContext.Clients.All.SendAsync("SendMessage", jsonString);
     return Results.Ok("");
 });
 
