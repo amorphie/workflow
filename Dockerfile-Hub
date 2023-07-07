@@ -6,8 +6,9 @@ USER amorphie-workflowhubuser
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY . .
+COPY ["./amorphie.workflow.hub/amorphie.workflow.hub.csproj", "."]
 RUN dotnet restore "./amorphie.workflow.hub/amorphie.workflow.hub.csproj"
+COPY . 
 WORKDIR "/src/."
 RUN dotnet build ".amorphie.workflow.hub/amorphie.workflow.hub.csproj" -c Release -o /app/build
 
