@@ -63,9 +63,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddAuthorization();
 // builder.Services.AddSignalR();
 
-builder.Services.AddSignalR().AddMessagePackProtocol().AddStackExchangeRedis("localhost:6379", options => {
-    options.Configuration.ChannelPrefix = "signalr";
-});
+builder.Services.AddSignalR().AddMessagePackProtocol();
 builder.Services.AddMvc();
 var app = builder.Build();
 // Configure the HTTP request pipeline.
