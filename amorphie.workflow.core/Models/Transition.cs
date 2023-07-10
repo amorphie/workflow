@@ -18,6 +18,9 @@ public class Transition : EntityBaseWithOutId
     public ZeebeMessage? Flow { get; set; }
     public string? FlowName { get; set; }
 
+    public Page? Page { get; set; } 
+    public Guid? PageId { get; set; } 
+
     public ICollection<Translation> Forms { get; set; } = default!;
     public ICollection<Translation> Pages { get; set; } = default!;
     

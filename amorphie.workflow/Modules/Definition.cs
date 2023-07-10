@@ -343,7 +343,7 @@ public static class DefinitionModule
             s.Transitions.Select(e => new PostTransitionDefinitionRequest(
      e.Name, e.Titles.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).First(),
      e.ToStateName!, e.Forms.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).FirstOrDefault(),
-     e.FromStateName!, e.ServiceName, e.FlowName, e.Flow != null ? e.Flow.Gateway : null
+     e.FromStateName!, e.ServiceName, e.FlowName, e.Flow != null ? e.Flow.Gateway : null,e.Page==null?null:new PostPageDefinitionRequest(e.Page.Operation,e.Page.Type,new MultilanguageText(language!,e.Page.Pages!.FirstOrDefault(f=>f.Language==language)!.Label),e.Page.Timeout)
 
 )).ToArray()
             ))
@@ -420,13 +420,25 @@ public static class DefinitionModule
                         CreatedAt = DateTime.Now,
                         Process = definition,
                     },
+                    Page=x.page==null?null:new Page(){
+                        Operation=x.page!.operation,
+                        Type=x.page!.type,
+                        Pages=new List<Translation>(){
+                            new Translation{
+                             Language=x.page.pages.language,
+                             Label=x.page.pages.label
+                            }
+                        },
+                        Timeout=x.page!.timeout
+
+                    },
                     Titles = new List<Translation>(){
                             new Translation{
                              Language=x.title.language,
                              Label=x.title.label
                             }
                         },
-                    Forms = new List<Translation>(){
+                    Forms = x.form==null?new List<Translation>(){}:new List<Translation>(){
                             new Translation{
                              Language=x.form!.language,
                              Label=x.form!.label
@@ -493,12 +505,24 @@ public static class DefinitionModule
                                 Language=req.title.language
                             }
                         },
-                        Forms = new List<Translation>(){
+                        Forms =req.form==null?new List<Translation>(){}: new List<Translation>(){
                             new Translation(){
                                 Label=req.form!.label,
                                 Language=req.form!.language
                             }
                         },
+                        Page=req.page==null?null:new Page(){
+                        Operation=req.page!.operation,
+                        Type=req.page!.type,
+                        Pages=new List<Translation>(){
+                            new Translation{
+                             Language=req.page.pages.language,
+                             Label=req.page.pages.label
+                            }
+                        },
+                        Timeout=req.page!.timeout
+
+                    },
                         FromStateName=req.fromState,
                         CreatedAt = DateTime.Now,
                         CreatedByBehalfOf = Guid.NewGuid(),
@@ -575,6 +599,49 @@ public static class DefinitionModule
                         {
                             translation.Label = req.form.label;
                             hasChanges = true;
+                        }
+                    }
+
+                       if (req!.page!=null)
+                    {
+                        Page? page = existingTransition.Page;
+                        if (page != null )
+                        {
+                          if(page.Operation!=req.page.operation)
+                          {
+                            existingTransition.Page!.Operation=req.page.operation;
+                             hasChanges = true;
+                          }
+                          if(page.Type!=req.page.type)
+                          {
+                            existingTransition.Page!.Type=req.page.type;
+                             hasChanges = true;
+                          }
+                           if(page.Timeout!=req.page.timeout)
+                          {
+                            existingTransition.Page!.Timeout=req.page.timeout;
+                             hasChanges = true;
+                          }
+                          Translation? translation = existingTransition.Page!.Pages!.FirstOrDefault(f => f.Language == language);
+                          if (translation != null && translation.Label != req.page.pages.label)
+                        {
+                            translation.Label = req.page.pages.label;
+                            hasChanges = true;
+                        }
+
+                        }
+                        else{
+                            existingTransition.Page=new Page(){
+                                Operation=req.page!.operation,
+                        Type=req.page!.type,
+                        Pages=new List<Translation>(){
+                            new Translation{
+                             Language=req.page.pages.language,
+                             Label=req.page.pages.label
+                            }
+                        },
+                        Timeout=req.page!.timeout
+                            };
                         }
                     }
                 }

@@ -25,6 +25,7 @@ public class WorkflowDBContext : DbContext
     public DbSet<ZeebeMessage> ZeebeMessages { get; set; } = default!;
     public DbSet<InstanceTransition> InstanceTransitions { get; set; } = default!;
     public DbSet<InstanceEvent> InstanceEvents { get; set; } = default!;
+     public DbSet<Page> Pages { get; set; } = default!;
 
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
@@ -50,9 +51,14 @@ public class WorkflowDBContext : DbContext
 
         modelBuilder.Entity<Transition>()
            .HasKey(s => s.Name);
+        
+         modelBuilder.Entity<Page>()
+           .HasKey(s => s.Id);
 
         modelBuilder.Entity<Instance>()
            .HasKey(s => s.Id);
+
+       
 
         modelBuilder.Entity<Instance>()
           .HasIndex("EntityName", "RecordId", "StateName");
@@ -94,6 +100,7 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<Translation>().Property<string>("TransitionName_Title");
         modelBuilder.Entity<Translation>().Property<string>("TransitionName_Form");
         modelBuilder.Entity<Translation>().Property<string>("TransitionName_Page");
+         
 
         modelBuilder.Entity<Transition>()
             .HasMany<Translation>(t => t.Titles)
@@ -109,7 +116,12 @@ public class WorkflowDBContext : DbContext
            .HasMany<Translation>(t => t.Pages)
            .WithOne()
            .HasForeignKey("TransitionName_Page");
-
+         
+        modelBuilder.Entity<Translation>().Property<Guid?>("PageId_Page");
+        modelBuilder.Entity<Page>()
+           .HasMany<Translation>(t => t.Pages)
+           .WithOne()
+           .HasForeignKey("PageId_Page");
       
         // modelBuilder.SeedUserResetPassword();
         // modelBuilder.SeedUserLifecycle();

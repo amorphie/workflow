@@ -121,7 +121,9 @@ public static class InstanceModule
                         t.FromStateName,
                         t.ServiceName,
                         t.FlowName,
-                        null
+                        null,
+                        t.Page==null?null:
+                       new PostPageDefinitionRequest(t.Page.Operation,t.Page.Type,new MultilanguageText(language!,t.Page.Pages!.FirstOrDefault(f=>f.Language==language)!.Label),t.Page.Timeout)
                     )).ToArray()
                     ),
                    s.CreatedAt,
@@ -165,7 +167,9 @@ public static class InstanceModule
                                   t.FromStateName,
                                   t.ServiceName,
                                   t.FlowName,
-                                  null
+                                  null,
+                                 t.Page==null?null:
+                       new PostPageDefinitionRequest(t.Page.Operation,t.Page.Type,new MultilanguageText(language!,t.Page.Pages!.FirstOrDefault(f=>f.Language==language)!.Label),t.Page.Timeout)
                               )).ToArray()
                               ),
                              instance.CreatedAt,

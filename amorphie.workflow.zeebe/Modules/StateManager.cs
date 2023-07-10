@@ -155,7 +155,7 @@ public static class StateManagerModule
         }
 
         dbContext.SaveChanges();
-        var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
+        var  responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
                    "amorphie-workflow-hub.test-amorphie-workflow-hub",
                    "sendMessage",
