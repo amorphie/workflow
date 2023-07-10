@@ -163,7 +163,10 @@ public static class StateManagerModule
                        newInstanceTransition.CreatedBy,
                       eventInfo,
                        instance.Id,
-                     newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus
+                     newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
+              transition.Page==null?null:
+              new PostPageDefinitionRequest(transition.Page.Operation,transition.Page.Type,new amorphie.core.Base.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language,transition.Page.Pages!.FirstOrDefault()!.Label),
+              transition.Page.Timeout)
                    ));
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
 

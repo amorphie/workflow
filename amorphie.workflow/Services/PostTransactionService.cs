@@ -384,7 +384,11 @@ public class PostTransactionService : IPostTransactionService
                 _user,
                eventInfo,
                 instance.Id,
-              _data.EntityData,DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),instance.StateName,_transitionName,instance.BaseStatus
+              _data.EntityData,DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),instance.StateName,_transitionName,instance.BaseStatus,
+              _transition.Page==null?null:
+              new PostPageDefinitionRequest(_transition.Page.Operation,_transition.Page.Type,new MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language,_transition.Page.Pages!.FirstOrDefault()!.Label),
+              _transition.Page.Timeout)
+
             ));
     }
 
