@@ -378,7 +378,7 @@ public class PostTransactionService : IPostTransactionService
     {
             var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
             HttpMethod.Post,
-            "amorphie-workflow-hub",
+            "amorphie-workflow-hub.test-amorphie-workflow-hub",
             "sendMessage",
             new PostSignalRData(
                 _user,
