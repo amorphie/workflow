@@ -17,6 +17,7 @@ namespace amorphie.workflow.hub
     public override Task OnConnectedAsync()
     {
         _logger.LogInformation($"Client Connected: {Context.ConnectionId}, user id : {Context?.User?.Identity?.Name}, user ident: {this.Context?.UserIdentifier}");
+        Clients.All.SendAsync("ClientConnected", "Client Connected");
         return base.OnConnectedAsync();
     }
 
