@@ -161,6 +161,7 @@ public static class StateManagerModule
                    "sendMessage",
                    new PostSignalRData(
                        newInstanceTransition.CreatedBy,
+                       instance.RecordId,
                       eventInfo,
                        instance.Id,
                      newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,

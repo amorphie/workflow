@@ -382,6 +382,7 @@ public class PostTransactionService : IPostTransactionService
             "sendMessage",
             new PostSignalRData(
                 _user,
+                instance.RecordId,
                eventInfo,
                 instance.Id,
               _data.EntityData,DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),instance.StateName,_transitionName,instance.BaseStatus,
