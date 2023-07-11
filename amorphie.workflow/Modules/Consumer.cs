@@ -208,8 +208,8 @@ public static class ConsumerModule
                           new GetRecordWorkflowAndTransitionsResponse.Transition
                           {
                               Name = t.Name,
-                              Title = t.Titles.First().Label,
-                              Form = TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData)
+                              Title =t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
+                              Form = t.Forms.FirstOrDefault() == null ? string.Empty :TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData)
                           }).ToArray()
                   }
                       ).FirstOrDefault();
@@ -243,8 +243,8 @@ public static class ConsumerModule
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
                             Name = t.Name,
-                            Title = t.Titles.First().Label,
-                            Form = TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata)
+                            Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
+                            Form = t.Forms.FirstOrDefault() == null ? string.Empty:TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata)
                         }).ToArray()
                 }
             ).ToArray();
@@ -258,8 +258,8 @@ public static class ConsumerModule
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
                             Name = t.Name,
-                            Title = t.Titles.First(f=>f.Language==language).Label,
-                            Form = TemplateEngineForm(t.Forms.First(f=>f.Language==language).Label, dbContext.InstanceTransitions.OrderBy(o=>o.CreatedAt)
+                            Title =  t.Titles.FirstOrDefault() == null ? string.Empty :t.Titles.First(f=>f.Language==language).Label,
+                            Form =t.Forms.FirstOrDefault() == null ? string.Empty: TemplateEngineForm(t.Forms.First(f=>f.Language==language).Label, dbContext.InstanceTransitions.OrderBy(o=>o.CreatedAt)
                             .FirstOrDefault(f=>f.InstanceId==item.Id)!.EntityData)
                         }).ToArray()
                 }

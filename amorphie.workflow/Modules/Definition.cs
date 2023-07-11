@@ -489,6 +489,7 @@ public static class DefinitionModule
             foreach (var req in data.transitions)
             {
                 Transition? existingTransition = context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
+                .Include(s => s.Page).ThenInclude(t=>t.Pages)
                 .FirstOrDefault(db => db.Name == req.name && db.FromStateName == existingRecord.Name);
                 //Kayıdı olmayan Transition ların eklenmesi
                 if (existingTransition == null)
