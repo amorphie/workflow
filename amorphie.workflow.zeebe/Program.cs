@@ -17,6 +17,17 @@ builder.Services.AddDaprClient();
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        builder =>
+        {
+            builder.WithOrigins("*")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
@@ -30,6 +41,7 @@ db.Database.Migrate();
 app.UseCloudEvents();
 app.UseRouting();
 app.MapSubscribeHandler();
+app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
 
