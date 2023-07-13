@@ -94,6 +94,7 @@ public static class InstanceModule
            [FromHeader(Name = "Language")] string? language = "en-EN"
     )
     {
+        // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
         var query = context.Instances!
    .Where(w => w.EntityName == entity && w.RecordId == recordId)
    ;
@@ -138,6 +139,7 @@ public static class InstanceModule
              [FromHeader(Name = "Language")] string? language = "en-EN"
       )
     {
+        // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
         var instance = context.Instances!
    .FirstOrDefault(w => w.Id == instanceId)
    ;
@@ -188,7 +190,8 @@ public static class InstanceModule
           [FromHeader(Name = "Language")] string? language = "en-EN"
    )
     {
-       var query = context.InstanceTransitions!.Include(i=>i.Instance)
+        // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
+        var query = context.InstanceTransitions!.Include(i=>i.Instance)
    .Where(w => w.InstanceId== instanceId);
    var instances = query.Skip(page * pageSize)
          .Take(pageSize)

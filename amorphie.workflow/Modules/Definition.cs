@@ -133,7 +133,7 @@ public static class DefinitionModule
              [FromHeader(Name = "Language")] string? language = "en-EN"
          )
     {
-
+        // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
         try
         {
             var query = context.Workflows!.Where(w => string.IsNullOrEmpty(definition)
@@ -189,6 +189,7 @@ public static class DefinitionModule
             if (existingRecord != null)
             {
                 context!.Remove(existingRecord);
+                // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
                 context.SaveChanges();
                 return new Response
                 {
@@ -255,6 +256,7 @@ public static class DefinitionModule
                 CreatedByBehalfOf = Guid.NewGuid(),
             };
             context!.Workflows!.Add(newWorkflow);
+            // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
             context.SaveChanges();
             return new Response<PostWorkflowDefinitionResponse>
             {
@@ -330,6 +332,7 @@ public static class DefinitionModule
            [FromHeader(Name = "Language")] string? language = "en-EN"
        )
     {
+        // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
         var query = context!.States!.Where(w => w.Name == state && w.WorkflowName == definition)
                .Include(w => w.Titles.Where(t => t.Language == language));
 
@@ -372,6 +375,7 @@ public static class DefinitionModule
         if (existingRecord != null)
         {
             context!.Remove(existingRecord);
+            // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
             context.SaveChanges();
             return new Response
             {
@@ -458,6 +462,7 @@ public static class DefinitionModule
                         }
             };
             context!.States!.Add(newRecord);
+            // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
             context!.SaveChanges();
             //AutoMapper a alıncak 
             // return new Response<GetStateDefinition>
@@ -650,6 +655,7 @@ public static class DefinitionModule
             }
             if (hasChanges)
             {
+                // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
                 context!.SaveChanges();
 
                 return Results.Ok(new PostStateDefinitionResponse(data.name));
