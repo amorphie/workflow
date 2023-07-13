@@ -51,7 +51,16 @@ builder.Services.AddSwaggerGen(c =>
     xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
 });
-
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        builder =>
+        {
+            builder.WithOrigins("*")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -73,7 +82,7 @@ db.Database.Migrate();
 app.UseCloudEvents();
 app.UseRouting();
 app.MapSubscribeHandler();
-
+app.UseCors();
 
 app.UseSwagger();
 app.UseSwaggerUI();
