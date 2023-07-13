@@ -28,6 +28,7 @@ public static class StateManagerModule
             [FromServices] DaprClient client
         )
     {
+        // TODO : Include a parameter for the cancelation token and add cancelation token to FirstOrDefault
 
         var targetState = request.Headers["TARGET_STATE"].ToString();
         var transitionName = body.GetProperty("LastTransition").ToString();
@@ -100,6 +101,7 @@ public static class StateManagerModule
 
         if (!string.IsNullOrEmpty(transition.ServiceName))
         {
+            // TODO : Use refit rather than httpclient and consider resiliency.
             var clientHttp = new HttpClient();
             amorphie.workflow.core.Dtos.SendTransitionInfoRequest sendTransitionInfoRequest = new amorphie.workflow.core.Dtos.SendTransitionInfoRequest()
             {
@@ -153,8 +155,10 @@ public static class StateManagerModule
             instance.StateName = transition.ToStateName;
 
         }
-
+        // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
         dbContext.SaveChanges();
+
+        
         var  responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
                    "amorphie-workflow-hub.test-amorphie-workflow-hub",
