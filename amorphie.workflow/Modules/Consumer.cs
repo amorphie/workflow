@@ -148,7 +148,6 @@ public static class ConsumerModule
        )
     {
         // TODO: Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
-        t
         //**************************//
         // load all workflows available to entity
         var workflows = dbContext.WorkflowEntities!

@@ -9,5 +9,6 @@
             "database": "workflow",
             "username": "postgres"
         }
-    ]
+    ],
+    "dotnet.defaultSolution": "workflow.sln"
 }
