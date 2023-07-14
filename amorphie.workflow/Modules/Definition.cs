@@ -429,8 +429,8 @@ public static class DefinitionModule
                         Type=x.page!.type,
                         Pages=new List<Translation>(){
                             new Translation{
-                             Language=x.page.pages.language,
-                             Label=x.page.pages.label
+                             Language=x.page.pageRoute.language,
+                             Label=x.page.pageRoute.label
                             }
                         },
                         Timeout=x.page!.timeout
@@ -522,8 +522,8 @@ public static class DefinitionModule
                         Type=req.page!.type,
                         Pages=new List<Translation>(){
                             new Translation{
-                             Language=req.page.pages.language,
-                             Label=req.page.pages.label
+                             Language=req.page.pageRoute.language,
+                             Label=req.page.pageRoute.label
                             }
                         },
                         Timeout=req.page!.timeout
@@ -629,9 +629,9 @@ public static class DefinitionModule
                              hasChanges = true;
                           }
                           Translation? translation = existingTransition.Page!.Pages!.FirstOrDefault(f => f.Language == language);
-                          if (translation != null && translation.Label != req.page.pages.label)
+                          if (translation != null && translation.Label != req.page.pageRoute.label)
                         {
-                            translation.Label = req.page.pages.label;
+                            translation.Label = req.page.pageRoute.label;
                             hasChanges = true;
                         }
 
@@ -642,8 +642,8 @@ public static class DefinitionModule
                         Type=req.page!.type,
                         Pages=new List<Translation>(){
                             new Translation{
-                             Language=req.page.pages.language,
-                             Label=req.page.pages.label
+                             Language=req.page.pageRoute.language,
+                             Label=req.page.pageRoute.label
                             }
                         },
                         Timeout=req.page!.timeout
