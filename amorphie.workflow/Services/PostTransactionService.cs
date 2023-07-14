@@ -61,7 +61,7 @@ public class PostTransactionService : IPostTransactionService
         _data = data;
 
         // var transition = _dbContext.Transitions.Find(_transitionName);
-        var transition = _dbContext.Transitions.Where(w=>w.Name==_transitionName)
+        var transition = _dbContext.Transitions.Where(w=>w.Name==_transitionName).Include(t=>t.Page).ThenInclude(t=>t!.Pages)
         .Include(s=>s.FromState).ThenInclude(s=>s.Workflow).ThenInclude(s=>s!.Entities)
         .FirstOrDefault();
         if (transition == null)
@@ -385,6 +385,7 @@ public class PostTransactionService : IPostTransactionService
                 instance.RecordId,
                eventInfo,
                 instance.Id,
+                instance.EntityName,
               _data.EntityData,DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),instance.StateName,_transitionName,instance.BaseStatus,
               _transition.Page==null?null:
               new PostPageDefinitionRequest(_transition.Page.Operation,_transition.Page.Type,new MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language,_transition.Page.Pages!.FirstOrDefault()!.Label),

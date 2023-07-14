@@ -45,6 +45,10 @@ public static class StateManagerModule
             .Include(i => i.State)
                 .ThenInclude(s => s.Transitions)
                 .ThenInclude(t => t.ToState)
+                 .Include(i => i.State)
+                .ThenInclude(s => s.Transitions)
+                .ThenInclude(s=>s=>s.Page)
+                .ThenInclude(s=>s.Pages)
             .FirstOrDefault();
 
         if (instance is null)
@@ -168,6 +172,7 @@ public static class StateManagerModule
                        instance.RecordId,
                       eventInfo,
                        instance.Id,
+                       instance.EntityName,
                      newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
               transition.Page==null?null:
               new PostPageDefinitionRequest(transition.Page.Operation,transition.Page.Type,new amorphie.core.Base.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language,transition.Page.Pages!.FirstOrDefault()!.Label),
