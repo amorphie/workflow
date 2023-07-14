@@ -45,10 +45,10 @@ public static class StateManagerModule
             .Include(i => i.State)
                 .ThenInclude(s => s.Transitions)
                 .ThenInclude(t => t.ToState)
-                 .Include(i => i.State)
+            .Include(i => i.State)
                 .ThenInclude(s => s.Transitions)
-                .ThenInclude(s=>s=>s.Page)
-                .ThenInclude(s=>s.Pages)
+                .ThenInclude(s=>s.Page)
+                .ThenInclude(s=>s!.Pages)
             .FirstOrDefault();
 
         if (instance is null)
