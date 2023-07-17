@@ -318,6 +318,7 @@ public class PostTransactionService : IPostTransactionService
                     }
                     else
                     {
+                        SendSignalRData(instance, "transition-completed-with-error");
                         return new Response
                         {
                             Result = new Result(Status.Error, ""),
@@ -334,6 +335,7 @@ public class PostTransactionService : IPostTransactionService
             }
             catch (Exception ex)
             {
+                SendSignalRData(instance, "transition-completed-with-error");
                 return new Response
                 {
                     Result = new Result(Status.Error, "unexpected error:" + ex.ToString()),
@@ -351,6 +353,7 @@ public class PostTransactionService : IPostTransactionService
             }
             else
             {
+                SendSignalRData(instance, "transition-completed-with-error");
                 return new Response
                 {
                     Result = new Result(Status.Error, _transition.ServiceName + " message:" + response.ReasonPhrase),

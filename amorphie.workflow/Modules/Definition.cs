@@ -367,7 +367,9 @@ public static class DefinitionModule
         )
     {
         var existingRecord = context.States!.Include(w => w.Titles)
+        .Include(w => w.Descriptions)
         .Include(w => w.Transitions).ThenInclude(s=>s.Titles)
+        .Include(w => w.Transitions).ThenInclude(s=>s.Page).ThenInclude(s=>s!.Pages)
         .Include(w => w.Transitions).ThenInclude(s=>s.Forms)
        .FirstOrDefault(w => w.WorkflowName == definition && w.Name == state)
        ;

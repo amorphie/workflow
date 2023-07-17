@@ -13,7 +13,6 @@ using StackExchange.Redis;
 public static class ConsumerModule
 {
     // TODO :  Move this configuration to the vault.
-    private static string templateURL = "https://test-template-engine.burgan.com.tr/Template/Render";
     public static void MapConsumerEndpoints(this WebApplication app)
     {
 
@@ -72,7 +71,7 @@ public static class ConsumerModule
            return operation;
        });
     }
-    private static string TemplateEngineForm(string templateName, string entityData)
+    private static string TemplateEngineForm(string templateName, string entityData,string templateUrlFromVault)
     {
         string form = string.Empty;
 
@@ -96,7 +95,7 @@ public static class ConsumerModule
         try
         {
 
-            response = clientHttp.PostAsync(templateURL, new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json")).Result;
+            response = clientHttp.PostAsync(templateUrlFromVault, new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json")).Result;
             var twiceSerialize = response!.Content!.ReadAsStringAsync().Result;
             form = Newtonsoft.Json.JsonConvert.DeserializeObject<string>(twiceSerialize)!;
             form = ReplaceDropdown(form);
@@ -188,10 +187,9 @@ public static class ConsumerModule
 
         var response = new GetRecordWorkflowAndTransitionsResponse();
         //response.IsStateRecordRegistered = instanceRecords.Count > 0;
-        // var templateURL = configuration["DAPR_TEMPLATE_URL_NAME"]!;
 
         // TODO :  Move this configuration to the vault.
-        var templateURL = "https://test-template-engine.burgan.com.tr/Template/Render";
+        var templateURL = configuration["templateEngineUrl"]!.ToString();
         string lastTransitionEntitydata = string.Empty;
         if (stateManagerWorkflow != null)
         {
@@ -214,7 +212,7 @@ public static class ConsumerModule
                           {
                               Name = t.Name,
                               Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
-                              Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData)
+                              Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData,templateURL)
                           }).ToArray()
                   }
                       ).FirstOrDefault();
@@ -232,7 +230,7 @@ public static class ConsumerModule
                            {
                                Name = t.Name,
                                Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.FirstOrDefault()!.Label,
-                               Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty)
+                               Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty,templateURL)
                            }).ToArray()
                    }
                        ).FirstOrDefault();
@@ -249,7 +247,7 @@ public static class ConsumerModule
                         {
                             Name = t.Name,
                             Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
-                            Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata)
+                            Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata,templateURL)
                         }).ToArray()
                 }
             ).ToArray();
@@ -265,7 +263,7 @@ public static class ConsumerModule
                       Name = t.Name,
                       Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First(f => f.Language == language).Label,
                       Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First(f => f.Language == language).Label, dbContext.InstanceTransitions.OrderBy(o => o.CreatedAt)
-                      .FirstOrDefault(f => f.InstanceId == item.Id)!.EntityData)
+                      .FirstOrDefault(f => f.InstanceId == item.Id)!.EntityData,templateURL)
                   }).ToArray()
           }
       ).ToArray();
@@ -287,11 +285,12 @@ public static class ConsumerModule
             [FromRoute(Name = "transition")] string transition,
             [FromBody] ConsumerPostTransitionRequest data,
             [FromServices] IPostTransactionService service,
+            IConfiguration configuration,
             [FromServices] DaprClient client
         )
     {
         var result = service.Init(entity, recordId, transition, user, behalOfUser, data);
-
+        var templateURL = configuration["templateEngineUrl"];
         if (result.Result.Status == Status.Success.ToString())
         {
             result = service.Execute();
@@ -317,10 +316,12 @@ public static class ConsumerModule
          [FromRoute(Name = "entity")] string entity,
          [FromRoute(Name = "recordId")] Guid recordId,
           [FromServices] WorkflowDBContext dbContext,
+          IConfiguration configuration,
            [FromHeader(Name = "Accept-Language")] string language = "en-EN"
      )
     {
 
+ var templateURL = configuration["templateEngineUrl"]!.ToString();
         // TODO: Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
         var response = new GetRecordHistoryResponse();
         try
@@ -331,7 +332,7 @@ public static class ConsumerModule
                new GetRecordHistoryResponse.Transition(ITransaction.TransitionName!,
                 ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy,
                 TemplateEngineForm((dbContext.Transitions.Include(s => s.Forms).FirstOrDefault(f => f.Name == ITransaction.TransitionName))!.Forms.FirstOrDefault(f => f.Language == language)!.Label,
-                 ITransaction.EntityData)
+                 ITransaction.EntityData,templateURL)
                )
                {
 
@@ -345,7 +346,7 @@ public static class ConsumerModule
       new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
       new GetRecordHistoryResponse.Transition(ITransaction.TransitionName!, ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt,
        ITransaction.CreatedBy, TemplateEngineForm((dbContext.Transitions.Include(s => s.Forms).FirstOrDefault(f => f.Name == ITransaction.TransitionName))!.Forms.FirstOrDefault(f => f.Language == language)!.Label,
-                 ITransaction.EntityData))
+                 ITransaction.EntityData,templateURL))
       {
 
       }).ToList())
@@ -357,7 +358,7 @@ public static class ConsumerModule
        new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
        new GetRecordHistoryResponse.Transition(ITransaction.TransitionName!, ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy,
          TemplateEngineForm((dbContext.Transitions.Include(s => s.Forms).FirstOrDefault(f => f.Name == ITransaction.TransitionName))!.Forms.FirstOrDefault(f => f.Language == language)!.Label,
-                 ITransaction.EntityData))
+                 ITransaction.EntityData,templateURL))
        {
 
        }).ToList())
