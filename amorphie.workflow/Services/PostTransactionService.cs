@@ -36,11 +36,11 @@ public class PostTransactionService : IPostTransactionService
 
     private List<Instance>? _activeInstances { get; set; }
 
-    public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService,DaprClient client)
+    public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService, DaprClient client)
     {
         _dbContext = dbContext;
         _zeebeService = zeebeService;
-        _client=client;
+        _client = client;
         _transitionName = default!;
         _user = default!;
         _behalfOfUser = default!;
@@ -61,14 +61,16 @@ public class PostTransactionService : IPostTransactionService
         _data = data;
 
         // var transition = _dbContext.Transitions.Find(_transitionName);
-        var transition = _dbContext.Transitions.Where(w=>w.Name==_transitionName).Include(t=>t.Page).ThenInclude(t=>t!.Pages)
-        .Include(s=>s.FromState).ThenInclude(s=>s.Workflow).ThenInclude(s=>s!.Entities)
+        var transition = _dbContext.Transitions.Where(w => w.Name == _transitionName).Include(t => t.Page).ThenInclude(t => t!.Pages)
+        .Include(s => s.FromState).ThenInclude(s => s.Workflow).ThenInclude(s => s!.Entities)
+         .Include(s => s.ToState).ThenInclude(s => s!.Workflow).ThenInclude(s => s!.Entities)
         .FirstOrDefault();
         if (transition == null)
         {
 
-             return new Response{
-            Result=new Result(Status.Error,$"{_transitionName} is not found."),
+            return new Response
+            {
+                Result = new Result(Status.Error, $"{_transitionName} is not found."),
             };
         }
         else
@@ -77,28 +79,30 @@ public class PostTransactionService : IPostTransactionService
         }
 
         // Load all running instances of record
-        _activeInstances = _dbContext.Instances.Where(i => i.EntityName == entity 
-        && i.RecordId == recordId 
+        _activeInstances = _dbContext.Instances.Where(i => i.EntityName == entity
+        && i.RecordId == recordId
         && i.BaseStatus != StatusType.Completed).ToList();
 
-        if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName)&&!(_activeInstances.Count==0&&_transition.FromState.Type==StateType.Start))
+        if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName) && !(_activeInstances.Count == 0 && _transition.FromState.Type == StateType.Start))
         {
-            if(_transition.FromState.Type==StateType.Start&&_transition.FromState.Workflow!.Entities.Any(a=>a.IsStateManager==false))
+            if (_transition.FromState.Type == StateType.Start && _transition.FromState.Workflow!.Entities.Any(a => a.IsStateManager == false))
             {
-                
+
             }
             else
             {
-                return new Response{
-            Result=new Result(Status.Error,$"There is an active workflow exists for {recordId} at different state."),
-            };
+                return new Response
+                {
+                    Result = new Result(Status.Error, $"There is an active workflow exists for {recordId} at different state."),
+                };
             }
-            
+
         }
 
-        return new Response{
-            Result=new Result(Status.Success,"Success"),
-            };
+        return new Response
+        {
+            Result = new Result(Status.Success, "Success"),
+        };
     }
 
     public IResponse Execute()
@@ -124,9 +128,10 @@ public class PostTransactionService : IPostTransactionService
             }
             else
             {
-                return new Response{
-            Result=new Result(Status.Error,_transition.ServiceName +$"There is no active workflow for {_recordId} and also {_transition.Name} is not transition of any start state."),
-            };
+                return new Response
+                {
+                    Result = new Result(Status.Error, _transition.ServiceName + $"There is no active workflow for {_recordId} and also {_transition.Name} is not transition of any start state."),
+                };
             }
         }
         else
@@ -188,7 +193,7 @@ public class PostTransactionService : IPostTransactionService
             EntityName = _entity,
             RecordId = _recordId,
             StateName = _transition.FromStateName!,
-            BaseStatus = StatusType.LockedInFlow ,
+            BaseStatus = StatusType.LockedInFlow,
             CreatedBy = _user,
             ZeebeFlow = _transition.Flow,
             ZeebeFlowName = _transition.FlowName,
@@ -196,16 +201,17 @@ public class PostTransactionService : IPostTransactionService
         };
 
         dynamic variables = createMessageVariables(newInstance);
-        
-        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null,_transition.Flow!.Gateway);
+
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
 
         _dbContext.Add(newInstance);
-        SendSignalRData(newInstance,"worker-started");
+        SendSignalRData(newInstance, "worker-started");
         addInstanceTansition(newInstance);
         _dbContext.SaveChanges();
 
-        return new Response{
-            Result=new Result(Status.Success,"Instance Has been Created"),
+        return new Response
+        {
+            Result = new Result(Status.Success, "Instance Has been Created"),
         };
     }
 
@@ -218,18 +224,19 @@ public class PostTransactionService : IPostTransactionService
         instanceAtState.ModifiedBy = _user;
         instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
         instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
-        instanceAtState.BaseStatus = StatusType.LockedInFlow ;
+        instanceAtState.BaseStatus = StatusType.LockedInFlow;
 
         dynamic variables = createMessageVariables(instanceAtState);
-        SendSignalRData(instanceAtState,"worker-started");
-        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(),_transition.Flow!.Gateway);
+        SendSignalRData(instanceAtState, "worker-started");
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
 
         addInstanceTansition(instanceAtState);
         _dbContext.SaveChanges();
 
         //return Results.Ok();
-        return new Response{
-            Result=new Result(Status.Success,"Instance Has been Updated"),
+        return new Response
+        {
+            Result = new Result(Status.Success, "Instance Has been Updated"),
         };
     }
 
@@ -265,7 +272,7 @@ public class PostTransactionService : IPostTransactionService
             RouteData = Convert.ToString(_data.RouteData),
             CreatedBy = _user,
             CreatedByBehalfOf = _behalfOfUser,
-             TransitionName=_transition.Name
+            TransitionName = _transition.Name
         };
 
         _dbContext.Add(newInstanceTransition);
@@ -278,58 +285,61 @@ public class PostTransactionService : IPostTransactionService
             var response = new HttpResponseMessage();
             try
             {
-                
-            amorphie.workflow.core.Dtos.SendTransitionInfoRequest request =new amorphie.workflow.core.Dtos.SendTransitionInfoRequest()
-            {
-                recordId=instance.RecordId,
-                newStatus= _transition.ToStateName!,
-                entityData=_data.EntityData,
-                user=_user,
-                behalfOfUser=_behalfOfUser,
-                workflowName=instance.WorkflowName
-            };
-            string jsonRequest= System.Text.Json.JsonSerializer.Serialize(request);
+
+                amorphie.workflow.core.Dtos.SendTransitionInfoRequest request = new amorphie.workflow.core.Dtos.SendTransitionInfoRequest()
+                {
+                    recordId = instance.RecordId,
+                    newStatus = _transition.ToStateName!,
+                    entityData = _data.EntityData,
+                    user = _user,
+                    behalfOfUser = _behalfOfUser,
+                    workflowName = instance.WorkflowName
+                };
+                string jsonRequest = System.Text.Json.JsonSerializer.Serialize(request);
                 response = clientHttp.PostAsync(_transition.ServiceName, new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json")).Result;
-              try
-              {
-            //     var contentString= response!.Content!.ReadAsStringAsync().Result;
-            //     dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
-            //     var status=JsonResultdata.result.status;
-            //     if(status!="Success")
-            //     {
-            //         var message=JsonResultdata.result.message;
-            //          return new Response{
-            // Result=new Result(Status.Error,message),
-            // };
-            //       //  return Results.BadRequest(status+" "+message);
-            //     }
+                try
+                {
+                    //     var contentString= response!.Content!.ReadAsStringAsync().Result;
+                    //     dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
+                    //     var status=JsonResultdata.result.status;
+                    //     if(status!="Success")
+                    //     {
+                    //         var message=JsonResultdata.result.message;
+                    //          return new Response{
+                    // Result=new Result(Status.Error,message),
+                    // };
+                    //       //  return Results.BadRequest(status+" "+message);
+                    //     }
 
-             if(response.StatusCode==System.Net.HttpStatusCode.OK||
-                   response.StatusCode==System.Net.HttpStatusCode.Created) 
-                   {
-                       
-                   }
-                   else
-                   {
-                                                  return new Response{
-            Result=new Result(Status.Error,""),};
-                   }
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK ||
+                          response.StatusCode == System.Net.HttpStatusCode.Created)
+                    {
 
-              } 
-              catch(Exception ex)
-              {
-                
-              }
-              
-             
+                    }
+                    else
+                    {
+                        return new Response
+                        {
+                            Result = new Result(Status.Error, ""),
+                        };
+                    }
+
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return new Response{
-            Result=new Result(Status.Error,"unexpected error:"+ex.ToString()),
-            };
+                return new Response
+                {
+                    Result = new Result(Status.Error, "unexpected error:" + ex.ToString()),
+                };
             }
-           
+
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK
             || response.StatusCode == System.Net.HttpStatusCode.Created
@@ -337,119 +347,140 @@ public class PostTransactionService : IPostTransactionService
 
             )
             {
-              return UpdateInstance(instance,hasInstance);
+                return UpdateInstance(instance, hasInstance);
             }
             else
             {
-                return new Response{
-            Result=new Result(Status.Error,_transition.ServiceName + " message:" + response.ReasonPhrase),
-        };
+                return new Response
+                {
+                    Result = new Result(Status.Error, _transition.ServiceName + " message:" + response.ReasonPhrase),
+                };
                 //return Results.BadRequest(_transition.ServiceName + " message:" + response.ReasonPhrase);
             }
         }
         else
         {
-             return UpdateInstance(instance,hasInstance);
+            return UpdateInstance(instance, hasInstance);
         }
     }
 
     private IResponse UpdateInstance(Instance instance, bool hasInstance)
     {
-         if (hasInstance)
+        if (hasInstance)
+        {
+            instance.StateName = _transition.ToStateName!;
+            instance.ModifiedBy = _user;
+            instance.ModifiedByBehalfOf = _behalfOfUser;
+            instance.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+            instance.BaseStatus = _transition.ToState!.BaseStatus;
+            if(instance.WorkflowName!=_transition.ToState.WorkflowName)
+            {
+                instance.WorkflowName=_transition.ToState!.WorkflowName!;
+                if(!_transition.ToState.Workflow!.Entities.Any(a=>a.Name==instance.EntityName))
                 {
-                    instance.StateName = _transition.ToStateName!;
-                    instance.ModifiedBy = _user;
-                    instance.ModifiedByBehalfOf = _behalfOfUser;
-                    instance.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
-                    instance.BaseStatus = _transition.ToState!.BaseStatus;
+                    instance.EntityName=_transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
+                }
+            }
+        }
+        else
+        {
+            _dbContext.Add(instance);
+        }
+        SendSignalRData(instance, "transition-completed");
+        addInstanceTansition(instance);
+        _dbContext.SaveChanges();
+        return new Response
+        {
+            Result = new Result(Status.Success, "Instance has been updated"),
+        };
+    }
+    private void SendSignalRData(Instance instance, string eventInfo)
+    {
+        try
+        {
+            var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
+                      HttpMethod.Post,
+                      "amorphie-workflow-hub.test-amorphie-workflow-hub",
+                      "sendMessage",
+                      new PostSignalRData(
+                          _user,
+                          instance.RecordId,
+                         eventInfo,
+                          instance.Id,
+                          instance.EntityName,
+                        _data.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), instance.StateName, _transitionName, instance.BaseStatus,
+                        _transition.Page == null ? null :
+                        new PostPageSignalRData(_transition.Page.Operation.ToString(), _transition.Page.Type.ToString(), new MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language, _transition.Page.Pages!.FirstOrDefault()!.Label),
+                        _transition.Page.Timeout)
+
+                      )).Result;
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+    }
+
+    private async Task<IResponse> SendTransitionInfo(DaprClient client, Instance instance)
+    {
+        var clientHttp = new HttpClient();
+        var response = new HttpResponseMessage();
+        try
+        {
+
+            amorphie.workflow.core.Dtos.SendTransitionInfoRequest request = new amorphie.workflow.core.Dtos.SendTransitionInfoRequest()
+            {
+                recordId = instance.RecordId,
+                newStatus = _transition.ToStateName!,
+                entityData = _data.EntityData,
+                user = _user,
+                behalfOfUser = _behalfOfUser,
+                workflowName = instance.WorkflowName
+            };
+            string jsonRequest = System.Text.Json.JsonSerializer.Serialize(request);
+            response = clientHttp.PostAsync(_transition.ServiceName, new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json")).Result;
+            try
+            {
+                //var contentString= response!.Content!.ReadAsStringAsync().Result;
+                //     dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
+                //     var status=JsonResultdata.result.status;
+                //     if(status!="Success")
+                //     {
+                //         var message=JsonResultdata.result.message;
+                //          return new Response{
+                // Result=new Result(Status.Error,message),
+                // };
+                //       //  return Results.BadRequest(status+" "+message);
+                //     }
+                if (response.StatusCode == System.Net.HttpStatusCode.OK ||
+                      response.StatusCode == System.Net.HttpStatusCode.Created)
+                {
+
                 }
                 else
                 {
-                    _dbContext.Add(instance);
+                    return new Response
+                    {
+                        Result = new Result(Status.Error, ""),
+                    };
                 }
-                SendSignalRData(instance,"transition-completed");
-                addInstanceTansition(instance);
-                _dbContext.SaveChanges();
-                 return new Response{
-            Result=new Result(Status.Success,"Instance has been updated"),
-            };
-    }
-    private void SendSignalRData(Instance instance,string eventInfo)
-    {
-            var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
-            HttpMethod.Post,
-            "amorphie-workflow-hub.test-amorphie-workflow-hub",
-            "sendMessage",
-            new PostSignalRData(
-                _user,
-                instance.RecordId,
-               eventInfo,
-                instance.Id,
-                instance.EntityName,
-              _data.EntityData,DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),instance.StateName,_transitionName,instance.BaseStatus,
-              _transition.Page==null?null:
-              new PostPageSignalRData(_transition.Page.Operation.ToString(),_transition.Page.Type.ToString(),new MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language,_transition.Page.Pages!.FirstOrDefault()!.Label),
-              _transition.Page.Timeout)
-
-            ));
-    }
-
-    private async Task<IResponse> SendTransitionInfo(DaprClient client,Instance instance)
-    {
-         var clientHttp = new HttpClient();
-            var response = new HttpResponseMessage();
-            try
-            {
-
-            amorphie.workflow.core.Dtos.SendTransitionInfoRequest request =new amorphie.workflow.core.Dtos.SendTransitionInfoRequest()
-            {
-                recordId=instance.RecordId,
-                newStatus= _transition.ToStateName!,
-                entityData=_data.EntityData,
-                user=_user,
-                behalfOfUser=_behalfOfUser,
-                workflowName=instance.WorkflowName
-            };
-            string jsonRequest= System.Text.Json.JsonSerializer.Serialize(request);
-            response = clientHttp.PostAsync(_transition.ServiceName, new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json")).Result;
-              try
-              {
-                //var contentString= response!.Content!.ReadAsStringAsync().Result;
-            //     dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
-            //     var status=JsonResultdata.result.status;
-            //     if(status!="Success")
-            //     {
-            //         var message=JsonResultdata.result.message;
-            //          return new Response{
-            // Result=new Result(Status.Error,message),
-            // };
-            //       //  return Results.BadRequest(status+" "+message);
-            //     }
-             if(response.StatusCode==System.Net.HttpStatusCode.OK||
-                   response.StatusCode==System.Net.HttpStatusCode.Created) 
-                   {
-                       
-                   }
-                   else
-                   {
-                                                  return new Response{
-            Result=new Result(Status.Error,""),};
-                   }
-              } 
-              catch(Exception ex)
-              {
-                
-              }
-              
-             
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return new Response{
-            Result=new Result(Status.Error,"unexpected error:"+ex.ToString()),
-            };
+
             }
-           
+
+
+        }
+        catch (Exception ex)
+        {
+            return new Response
+            {
+                Result = new Result(Status.Error, "unexpected error:" + ex.ToString()),
+            };
+        }
+
 
         return null;
     }

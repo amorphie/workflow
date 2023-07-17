@@ -45,10 +45,12 @@ public static class StateManagerModule
             .Include(i => i.State)
                 .ThenInclude(s => s.Transitions)
                 .ThenInclude(t => t.ToState)
+                .ThenInclude(t => t!.Workflow)
+                .ThenInclude(t => t!.Entities)
             .Include(i => i.State)
                 .ThenInclude(s => s.Transitions)
-                .ThenInclude(s=>s.Page)
-                .ThenInclude(s=>s!.Pages)
+                .ThenInclude(s => s.Page)
+                .ThenInclude(s => s!.Pages)
             .FirstOrDefault();
 
         if (instance is null)
@@ -66,8 +68,9 @@ public static class StateManagerModule
         else if (targetState.ToLower() == "error")
         {
             string transitionNameAsString = transitionName.ToString();
-            transition = dbContext.Transitions.Include(i => i.ToState).Where(t => t.Name == transitionNameAsString
-           && instance.WorkflowName == t.ToState!.WorkflowName&&t.ToState.Type==StateType.Fail).FirstOrDefault();
+            transition = dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
+                .ThenInclude(t => t!.Entities).Where(t => t.Name == transitionNameAsString
+           && instance.WorkflowName == t.ToState!.WorkflowName && t.ToState.Type == StateType.Fail).FirstOrDefault();
 
         }
         else
@@ -97,7 +100,7 @@ public static class StateManagerModule
             AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString(),
             CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString()),
             CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredByBehalfOf").ToString()),
-            TransitionName=transition.Name
+            TransitionName = transition.Name
         };
         string eventInfo = "worker-completed";
         dbContext.Add(newInstanceTransition);
@@ -141,6 +144,14 @@ public static class StateManagerModule
                 {
                     instance.BaseStatus = transition.ToState!.BaseStatus;
                     instance.StateName = transition.ToStateName;
+                    if (instance.WorkflowName != transition.ToState.WorkflowName)
+                    {
+                        instance.WorkflowName = transition.ToState!.WorkflowName!;
+                        if (!transition.ToState.Workflow!.Entities.Any(a => a.Name == instance.EntityName))
+                        {
+                            instance.EntityName = transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
+                        }
+                    }
                 }
                 else
                 {
@@ -157,13 +168,21 @@ public static class StateManagerModule
         {
             instance.BaseStatus = transition.ToState!.BaseStatus;
             instance.StateName = transition.ToStateName;
+            if (instance.WorkflowName != transition.ToState.WorkflowName)
+            {
+                instance.WorkflowName = transition.ToState!.WorkflowName!;
+                if (!transition.ToState.Workflow!.Entities.Any(a => a.Name == instance.EntityName))
+                {
+                    instance.EntityName = transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
+                }
+            }
 
         }
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
         dbContext.SaveChanges();
 
-        
-        var  responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
+
+        var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
                    "amorphie-workflow-hub.test-amorphie-workflow-hub",
                    "sendMessage",
@@ -174,8 +193,8 @@ public static class StateManagerModule
                        instance.Id,
                        instance.EntityName,
                      newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
-              transition.Page==null?null:
-              new PostPageSignalRData(transition.Page.Operation.ToString(),transition.Page.Type.ToString(),new amorphie.core.Base.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language,transition.Page.Pages!.FirstOrDefault()!.Label),
+              transition.Page == null ? null :
+              new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), new amorphie.core.Base.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
               transition.Page.Timeout)
                    ));
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
