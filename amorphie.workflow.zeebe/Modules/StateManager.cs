@@ -57,12 +57,12 @@ public static class StateManagerModule
         {
             return Results.NotFound($"Instance not found with instance id : {instanceId} ");
         }
-
+        bool error=false;
         Transition? transition = null;
         if (targetState is null || targetState.ToLower() == "default")
         {
             transition = instance.State.Transitions.Where(t => t.Name == transitionName).FirstOrDefault();
-
+            
 
         }
         else if (targetState.ToLower() == "error")
@@ -71,7 +71,7 @@ public static class StateManagerModule
             transition = dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
                 .ThenInclude(t => t!.Entities).Where(t => t.Name == transitionNameAsString
            && instance.WorkflowName == t.ToState!.WorkflowName && t.ToState.Type == StateType.Fail).FirstOrDefault();
-
+            error=true;
         }
         else
         {
@@ -87,23 +87,28 @@ public static class StateManagerModule
         {
             return Results.BadRequest($"Target state is not provided nor defined on transition");
         }
-
-        var newInstanceTransition = new InstanceTransition
+        InstanceTransition? newInstanceTransition;
+        if(!error)
         {
-            InstanceId = instance.Id,
-            FromStateName = instance.StateName,
-            ToStateName = transition.ToStateName,
-            EntityData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData").ToString(),
-            RouteData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("routeData").ToString(),
-            QueryData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("queryData").ToString(),
-            FormData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("formData").ToString(),
-            AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString(),
-            CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString()),
-            CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredByBehalfOf").ToString()),
-            TransitionName = transition.Name
-        };
+            newInstanceTransition=dbContext.InstanceTransitions.OrderByDescending(o=>o.StartedAt)
+            .FirstOrDefault(f=>f.InstanceId==instance.Id&&f.TransitionName==transition.Name);
+        }
+        else
+        {
+            newInstanceTransition=dbContext.InstanceTransitions.Include(s=>s.Transition).OrderByDescending(o=>o.StartedAt)
+            .FirstOrDefault(f=>f.InstanceId==instance.Id&&f.Transition!.FromStateName==transition.FromStateName);
+             newInstanceTransition!.TransitionName=transition.Name;
+              newInstanceTransition!.Transition=transition;
+        }
+        
+        newInstanceTransition!.EntityData=body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData").ToString();
+        newInstanceTransition!.ToStateName=transition.ToStateName;
+       
+        newInstanceTransition!.CreatedBy=Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString());
+        newInstanceTransition!.CreatedByBehalfOf=Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredByBehalfOf").ToString());
+
         string eventInfo = "worker-completed";
-        dbContext.Add(newInstanceTransition);
+
 
 
         if (!string.IsNullOrEmpty(transition.ServiceName))
@@ -125,22 +130,9 @@ public static class StateManagerModule
 
             try
             {
-                // var contentString = response!.Content!.ReadAsStringAsync().Result;
-                // dynamic JsonResultdata = Newtonsoft.Json.Linq.JObject.Parse(contentString);
-                // var status = JsonResultdata.result.status;
-                // if (status != "Success")
-                // {
-                //     var message = JsonResultdata.result.message;
-                //     instance.BaseStatus = transition.FromState!.BaseStatus;
-                //     eventInfo = "worker-error-with-service-" + transition.ServiceName;
-                // }
-                // else
-                // {
-                //     instance.BaseStatus = transition.ToState!.BaseStatus;
-                //     instance.StateName = transition.ToStateName;
-                // }
                 if (response.StatusCode == System.Net.HttpStatusCode.OK ||
-                response.StatusCode == System.Net.HttpStatusCode.Created)
+                response.StatusCode == System.Net.HttpStatusCode.Created||
+                 response.StatusCode == System.Net.HttpStatusCode.NoContent)
                 {
                     instance.BaseStatus = transition.ToState!.BaseStatus;
                     instance.StateName = transition.ToStateName;
@@ -178,6 +170,8 @@ public static class StateManagerModule
             }
 
         }
+        newInstanceTransition!.FinishedAt=DateTime.Now;
+        // dbContext.Add(newInstanceTransition);
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
         dbContext.SaveChanges();
 

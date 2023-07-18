@@ -330,7 +330,7 @@ public static class ConsumerModule
             response.StateManager = instanceRecords.Where(item => item.BaseStatus == StatusType.Completed && item.Workflow.Entities.Any(a => a.IsStateManager == true)).Select(item =>
                new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
                new GetRecordHistoryResponse.Transition(ITransaction.TransitionName!,
-                ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy,
+                ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.StartedAt==null?ITransaction.CreatedAt:ITransaction.StartedAt,ITransaction.FinishedAt, ITransaction.CreatedBy,
                 TemplateEngineForm((dbContext.Transitions.Include(s => s.Forms).FirstOrDefault(f => f.Name == ITransaction.TransitionName))!.Forms.FirstOrDefault(f => f.Language == language)!.Label,
                  ITransaction.EntityData,templateURL)
                )
@@ -344,7 +344,8 @@ public static class ConsumerModule
 
             response.RunningWorkflows = instanceRecords.Where(item => item.BaseStatus != StatusType.Completed).Select(item =>
       new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
-      new GetRecordHistoryResponse.Transition(ITransaction.TransitionName!, ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt,
+      new GetRecordHistoryResponse.Transition(ITransaction.TransitionName!, ITransaction.FromStateName, ITransaction.ToStateName, 
+      ITransaction.StartedAt==null?ITransaction.CreatedAt:ITransaction.StartedAt,ITransaction.FinishedAt,
        ITransaction.CreatedBy, TemplateEngineForm((dbContext.Transitions.Include(s => s.Forms).FirstOrDefault(f => f.Name == ITransaction.TransitionName))!.Forms.FirstOrDefault(f => f.Language == language)!.Label,
                  ITransaction.EntityData,templateURL))
       {
@@ -356,7 +357,8 @@ public static class ConsumerModule
           ).ToList();
             response.CompletedWorkflows = instanceRecords.Where(item => item.BaseStatus == StatusType.Completed).Select(item =>
        new GetRecordHistoryResponse.Workflow(item.WorkflowName, dbContext.InstanceTransitions.Where(w => w.InstanceId == item.Id).Select(ITransaction =>
-       new GetRecordHistoryResponse.Transition(ITransaction.TransitionName!, ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.CreatedAt, ITransaction.CreatedBy,
+       new GetRecordHistoryResponse.Transition(ITransaction.TransitionName!, ITransaction.FromStateName, ITransaction.ToStateName, 
+       ITransaction.StartedAt==null?ITransaction.CreatedAt:ITransaction.StartedAt,ITransaction.FinishedAt, ITransaction.CreatedBy,
          TemplateEngineForm((dbContext.Transitions.Include(s => s.Forms).FirstOrDefault(f => f.Name == ITransaction.TransitionName))!.Forms.FirstOrDefault(f => f.Language == language)!.Label,
                  ITransaction.EntityData,templateURL))
        {
@@ -507,10 +509,11 @@ public record GetRecordHistoryResponse
         public string FromState { get; init; }
         public string ToState { get; init; }
 
-        public DateTime CalledAt { get; init; }
+        public DateTime? CalledAt { get; init; }
+        public DateTime? FinishedAt { get; init; }
         public Guid CalledBy { get; init; }
         public string FormSchema { get; init; }
-        public Transition(string name, string fromState, string toState, DateTime calledAt, Guid calledBy, string formSchema) => (Name, FromState, ToState, CalledAt, CalledBy, FormSchema) = (name, fromState, toState, calledAt, calledBy, formSchema);
+        public Transition(string name, string fromState, string toState, DateTime? calledAt,DateTime? finishedAt, Guid calledBy, string formSchema) => (Name, FromState, ToState, CalledAt,FinishedAt, CalledBy, FormSchema) = (name, fromState, toState, calledAt,finishedAt, calledBy, formSchema);
     }
 }
 
