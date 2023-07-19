@@ -239,8 +239,8 @@ public static class DefinitionModule
         }
         if (existingRecord == null)
         {
-//   var newRecord = ObjectMapper.Mapper.Map<Workflow>(data);
-//   newRecord.Entities=entityList;
+            //   var newRecord = ObjectMapper.Mapper.Map<Workflow>(data);
+            //   newRecord.Entities=entityList;
             Workflow newWorkflow = new Workflow
             {
                 WorkflowStatus = data.status,
@@ -346,7 +346,7 @@ public static class DefinitionModule
             s.Transitions.Select(e => new PostTransitionDefinitionRequest(
      e.Name, e.Titles.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).First(),
      e.ToStateName!, e.Forms.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).FirstOrDefault(),
-     e.FromStateName!, e.ServiceName, e.FlowName, e.Flow != null ? e.Flow.Gateway : null,e.Page==null?null:new PostPageDefinitionRequest(e.Page.Operation,e.Page.Type,new MultilanguageText(language!,e.Page.Pages!.FirstOrDefault(f=>f.Language==language)!.Label),e.Page.Timeout)
+     e.FromStateName!, e.ServiceName, e.FlowName, e.Flow != null ? e.Flow.Gateway : null, e.Page == null ? null : new PostPageDefinitionRequest(e.Page.Operation, e.Page.Type, e.Page.Pages == null ||e.Page.Pages.Count==0? null : new MultilanguageText(language!, e.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), e.Page.Timeout)
 
 )).ToArray()
             ))
@@ -368,9 +368,9 @@ public static class DefinitionModule
     {
         var existingRecord = context.States!.Include(w => w.Titles)
         .Include(w => w.Descriptions)
-        .Include(w => w.Transitions).ThenInclude(s=>s.Titles)
-        .Include(w => w.Transitions).ThenInclude(s=>s.Page).ThenInclude(s=>s!.Pages)
-        .Include(w => w.Transitions).ThenInclude(s=>s.Forms)
+        .Include(w => w.Transitions).ThenInclude(s => s.Titles)
+        .Include(w => w.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s!.Pages)
+        .Include(w => w.Transitions).ThenInclude(s => s.Forms)
        .FirstOrDefault(w => w.WorkflowName == definition && w.Name == state)
        ;
 
@@ -426,16 +426,17 @@ public static class DefinitionModule
                         CreatedAt = DateTime.Now,
                         Process = definition,
                     },
-                    Page=x.page==null?null:new Page(){
-                        Operation=x.page!.operation,
-                        Type=x.page!.type,
-                        Pages=new List<Translation>(){
+                    Page = x.page == null ? null : new Page()
+                    {
+                        Operation = x.page!.operation,
+                        Type = x.page!.type,
+                        Pages = x.page.pageRoute == null ? null : new List<Translation>(){
                             new Translation{
                              Language=x.page.pageRoute.language,
                              Label=x.page.pageRoute.label
                             }
                         },
-                        Timeout=x.page!.timeout
+                        Timeout = x.page!.timeout
 
                     },
                     Titles = new List<Translation>(){
@@ -444,7 +445,7 @@ public static class DefinitionModule
                              Label=x.title.label
                             }
                         },
-                    Forms = x.form==null?new List<Translation>(){}:new List<Translation>(){
+                    Forms = x.form == null ? new List<Translation>() { } : new List<Translation>(){
                             new Translation{
                              Language=x.form!.language,
                              Label=x.form!.label
@@ -496,7 +497,7 @@ public static class DefinitionModule
             foreach (var req in data.transitions)
             {
                 Transition? existingTransition = context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
-                .Include(s => s.Page).ThenInclude(t=>t.Pages)
+                .Include(s => s.Page).ThenInclude(t => t.Pages)
                 .FirstOrDefault(db => db.Name == req.name && db.FromStateName == existingRecord.Name);
                 //Kayıdı olmayan Transition ların eklenmesi
                 if (existingTransition == null)
@@ -513,25 +514,26 @@ public static class DefinitionModule
                                 Language=req.title.language
                             }
                         },
-                        Forms =req.form==null?new List<Translation>(){}: new List<Translation>(){
+                        Forms = req.form == null ? new List<Translation>() { } : new List<Translation>(){
                             new Translation(){
                                 Label=req.form!.label,
                                 Language=req.form!.language
                             }
                         },
-                        Page=req.page==null?null:new Page(){
-                        Operation=req.page!.operation,
-                        Type=req.page!.type,
-                        Pages=new List<Translation>(){
+                        Page = req.page == null ? null : new Page()
+                        {
+                            Operation = req.page!.operation,
+                            Type = req.page!.type,
+                            Pages = req.page.pageRoute == null ? null : new List<Translation>(){
                             new Translation{
                              Language=req.page.pageRoute.language,
                              Label=req.page.pageRoute.label
                             }
                         },
-                        Timeout=req.page!.timeout
+                            Timeout = req.page!.timeout
 
-                    },
-                        FromStateName=req.fromState,
+                        },
+                        FromStateName = req.fromState,
                         CreatedAt = DateTime.Now,
                         CreatedByBehalfOf = Guid.NewGuid(),
                     });
@@ -562,7 +564,7 @@ public static class DefinitionModule
                             ZeebeMessage? zeebeMessage = context!.ZeebeMessages!.FirstOrDefault(f => f.Name == req.message);
                             if (zeebeMessage == null)
                             {
-                                
+
                                 ZeebeMessage flow = new ZeebeMessage()
                                 {
                                     Name = req.message!,
@@ -572,8 +574,8 @@ public static class DefinitionModule
                                     Process = definition,
                                 };
                                 context!.ZeebeMessages.Add(flow);
-                                existingTransition.FlowName=flow.Name;
-                                existingTransition.Flow=flow;
+                                existingTransition.FlowName = flow.Name;
+                                existingTransition.Flow = flow;
                             }
                             else
                             {
@@ -610,46 +612,80 @@ public static class DefinitionModule
                         }
                     }
 
-                       if (req!.page!=null)
+                    if (req!.page != null)
                     {
                         Page? page = existingTransition.Page;
-                        if (page != null )
+                        if (page != null)
                         {
-                          if(page.Operation!=req.page.operation)
-                          {
-                            existingTransition.Page!.Operation=req.page.operation;
-                             hasChanges = true;
-                          }
-                          if(page.Type!=req.page.type)
-                          {
-                            existingTransition.Page!.Type=req.page.type;
-                             hasChanges = true;
-                          }
-                           if(page.Timeout!=req.page.timeout)
-                          {
-                            existingTransition.Page!.Timeout=req.page.timeout;
-                             hasChanges = true;
-                          }
-                          Translation? translation = existingTransition.Page!.Pages!.FirstOrDefault(f => f.Language == language);
-                          if (translation != null && translation.Label != req.page.pageRoute.label)
-                        {
-                            translation.Label = req.page.pageRoute.label;
-                            hasChanges = true;
-                        }
+                            if (page.Operation != req.page.operation)
+                            {
+                                existingTransition.Page!.Operation = req.page.operation;
+                                hasChanges = true;
+                            }
+                            if (page.Type != req.page.type)
+                            {
+                                existingTransition.Page!.Type = req.page.type;
+                                hasChanges = true;
+                            }
+                            if (page.Timeout != req.page.timeout)
+                            {
+                                existingTransition.Page!.Timeout = req.page.timeout;
+                                hasChanges = true;
+                            }
+                            Translation? translation = existingTransition.Page!.Pages!.FirstOrDefault(f => f.Language == language);
+                            if (translation != null && req.page.pageRoute != null && translation.Label != req.page.pageRoute.label)
+                            {
+                                translation.Label = req.page.pageRoute.label;
+                                hasChanges = true;
+                            }
 
-                        }
-                        else{
-                            existingTransition.Page=new Page(){
-                                Operation=req.page!.operation,
-                        Type=req.page!.type,
-                        Pages=new List<Translation>(){
+                            else if ((translation == null && req.page.pageRoute != null)||
+                            (translation != null && req.page.pageRoute == null))
+                            {
+                                Page pageNew = new Page()
+                                {
+                                    Id=new Guid(),
+                                    Operation = req.page!.operation,
+                                    Type = req.page!.type,
+                                    Pages = req.page.pageRoute == null ? null : new List<Translation>(){
                             new Translation{
                              Language=req.page.pageRoute.language,
                              Label=req.page.pageRoute.label
                             }
+                            
                         },
-                        Timeout=req.page!.timeout
-                            };
+                                    Timeout = req.page!.timeout
+                                };
+                                context.Pages.Add(pageNew);
+                                existingTransition.Page=pageNew;
+                                existingTransition.PageId=pageNew.Id;
+                                hasChanges = true;
+                            }
+                            else 
+                            {
+
+                            }
+                        }
+                        else
+                        {
+                                 Page pageNew = new Page()
+                                {
+                                    Id=new Guid(),
+                                    Operation = req.page!.operation,
+                                    Type = req.page!.type,
+                                    Pages = req.page.pageRoute == null ? null : new List<Translation>(){
+                            new Translation{
+                             Language=req.page.pageRoute.language,
+                             Label=req.page.pageRoute.label
+                            }
+                            
+                        },
+                                    Timeout = req.page!.timeout
+                                };
+                                context.Pages.Add(pageNew);
+                                existingTransition.Page=pageNew;
+                                existingTransition.PageId=pageNew.Id;
+                                hasChanges = true;
                         }
                     }
                 }
