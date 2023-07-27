@@ -221,7 +221,7 @@ public static class DefinitionModule
       [FromHeader(Name = "Language")] string? language = "en-EN"
       )
     {
-        var existingRecord = context.Workflows!.Include(s => s.Entities).FirstOrDefault(w => w.Name == data.name);
+        var existingRecord = context.Workflows!.Include(s => s.Entities).Include(s=>s.HistoryForms).FirstOrDefault(w => w.Name == data.name);
         List<WorkflowEntity> entityList = new List<WorkflowEntity>();
         // All available status have to add 
         foreach (var item in data.entities!)
@@ -254,6 +254,11 @@ public static class DefinitionModule
                 Entities = entityList,
                 CreatedAt = DateTime.Now,
                 CreatedByBehalfOf = Guid.NewGuid(),
+                HistoryForms = data.historyForms != null && data.historyForms.Count() > 0 ? data.historyForms.Select(s => new Translation
+                {
+                    Language = s.language,
+                    Label = s.label
+                }).ToList() : new List<Translation>()
             };
             context!.Workflows!.Add(newWorkflow);
             // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
@@ -273,6 +278,53 @@ public static class DefinitionModule
                 existingRecord.ModifiedAt = DateTime.Now;
                 existingRecord.Tags = data.tags;
                 existingRecord.WorkflowStatus = data.status;
+            }
+            if ((existingRecord.HistoryForms == null || existingRecord.HistoryForms.Count == 0) && (data.historyForms != null && data.historyForms.Count() > 0))
+            {
+                existingRecord.HistoryForms = data.historyForms.Select(s => new Translation
+                {
+                    Id=new Guid(),
+                    Label = s.label,
+                    Language = s.language
+                }).ToList();
+                 hasChanges = true;
+            }
+            else if (data.historyForms != null && data.historyForms.Count() > 0)
+            {
+                foreach (var historyFormTranslantion in data.historyForms)
+                {
+                    if (existingRecord.HistoryForms == null)
+                    {
+                        existingRecord.HistoryForms = new List<Translation>();
+                        existingRecord.HistoryForms.Add(new Translation()
+                        {
+                            Label = historyFormTranslantion.label,
+                            Language = historyFormTranslantion.language
+                        });
+                         hasChanges = true;
+                    }
+                    else
+                    {
+                        Translation? translation = existingRecord.HistoryForms.FirstOrDefault(f => f.Language == historyFormTranslantion.language);
+                        if (translation != null && translation.Label != historyFormTranslantion.label)
+                        {
+                            translation.Label = historyFormTranslantion.label;
+                            hasChanges = true;
+                        }
+                        else if (translation == null)
+                        {
+                            existingRecord.HistoryForms.Add(new Translation()
+                            {
+                                Label = historyFormTranslantion.label,
+                                Language = historyFormTranslantion.language
+                            });
+                             hasChanges = true;
+                        }
+                    }
+
+                }
+
+
             }
             foreach (var req in entityList)
             {
@@ -301,6 +353,7 @@ public static class DefinitionModule
                     existingEntity.AvailableInStatus = req.AvailableInStatus;
                     hasChanges = true;
                 }
+
 
             }
 
@@ -346,7 +399,11 @@ public static class DefinitionModule
             s.Transitions.Select(e => new PostTransitionDefinitionRequest(
      e.Name, e.Titles.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).First(),
      e.ToStateName!, e.Forms.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).FirstOrDefault(),
-     e.FromStateName!, e.ServiceName, e.FlowName, e.Flow != null ? e.Flow.Gateway : null, e.Page == null ? null : new PostPageDefinitionRequest(e.Page.Operation, e.Page.Type, e.Page.Pages == null ||e.Page.Pages.Count==0? null : new MultilanguageText(language!, e.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), e.Page.Timeout)
+     e.FromStateName!, e.ServiceName, e.FlowName,
+     e.Flow != null ? e.Flow.Gateway : null, e.Page == null ? null
+     : new PostPageDefinitionRequest(e.Page.Operation, e.Page.Type, e.Page.Pages == null || e.Page.Pages.Count == 0 ? null :
+     new MultilanguageText(language!, e.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), e.Page.Timeout),
+     e.HistoryForms != null && e.HistoryForms.Count() > 0 ? e.HistoryForms.Select(s => new MultilanguageText(s.Language, s.Label)).ToArray() : null
 
 )).ToArray()
             ))
@@ -451,6 +508,11 @@ public static class DefinitionModule
                              Label=x.form!.label
                             }
                         },
+                    HistoryForms = x.historyForms == null ? new List<Translation>() { } : x.historyForms.Select(s => new Translation()
+                    {
+                        Label = s.label,
+                        Language = s.language
+                    }).ToList(),
                     ToState = context!.States!.FirstOrDefault(f => f.Name == x.toState),
                     ToStateName = context!.States!.FirstOrDefault(f => f.Name == x.toState) != null ? x.toState : null,
                     CreatedAt = DateTime.Now,
@@ -520,6 +582,11 @@ public static class DefinitionModule
                                 Language=req.form!.language
                             }
                         },
+                        HistoryForms = req.historyForms == null ? new List<Translation>() { } : req.historyForms.Select(s => new Translation
+                        {
+                            Label = s.label,
+                            Language = s.language
+                        }).ToArray(),
                         Page = req.page == null ? null : new Page()
                         {
                             Operation = req.page!.operation,
@@ -602,6 +669,49 @@ public static class DefinitionModule
                             hasChanges = true;
                         }
                     }
+                    if ((existingTransition.HistoryForms == null || existingTransition.HistoryForms.Count == 0) && (req.historyForms != null && req.historyForms.Count() > 0))
+                    {
+                        existingTransition.HistoryForms = req.historyForms.Select(s => new Translation
+                        {
+                            Label = s.label,
+                            Language = s.language
+                        }).ToList();
+                    }
+                    else if (req.historyForms != null && req.historyForms.Count() > 0)
+                    {
+                        foreach (var historyFormTranslantion in req.historyForms)
+                        {
+                            if (existingTransition.HistoryForms == null)
+                            {
+                                existingTransition.HistoryForms = new List<Translation>();
+                                existingTransition.HistoryForms.Add(new Translation()
+                                {
+                                    Label = historyFormTranslantion.label,
+                                    Language = historyFormTranslantion.language
+                                });
+                            }
+                            else
+                            {
+                                Translation? translation = existingTransition.HistoryForms.FirstOrDefault(f => f.Language == historyFormTranslantion.language);
+                                if (translation != null && translation.Label != historyFormTranslantion.label)
+                                {
+                                    translation.Label = historyFormTranslantion.label;
+                                    hasChanges = true;
+                                }
+                                else if (translation == null)
+                                {
+                                    existingTransition.HistoryForms.Add(new Translation()
+                                    {
+                                        Label = historyFormTranslantion.label,
+                                        Language = historyFormTranslantion.language
+                                    });
+                                }
+                            }
+
+                        }
+
+
+                    }
                     if (req.form != null)
                     {
                         Translation? translation = existingTransition.Forms.FirstOrDefault(f => f.Language == language);
@@ -639,12 +749,12 @@ public static class DefinitionModule
                                 hasChanges = true;
                             }
 
-                            else if ((translation == null && req.page.pageRoute != null)||
+                            else if ((translation == null && req.page.pageRoute != null) ||
                             (translation != null && req.page.pageRoute == null))
                             {
                                 Page pageNew = new Page()
                                 {
-                                    Id=new Guid(),
+                                    Id = new Guid(),
                                     Operation = req.page!.operation,
                                     Type = req.page!.type,
                                     Pages = req.page.pageRoute == null ? null : new List<Translation>(){
@@ -652,40 +762,40 @@ public static class DefinitionModule
                              Language=req.page.pageRoute.language,
                              Label=req.page.pageRoute.label
                             }
-                            
+
                         },
                                     Timeout = req.page!.timeout
                                 };
                                 context.Pages.Add(pageNew);
-                                existingTransition.Page=pageNew;
-                                existingTransition.PageId=pageNew.Id;
+                                existingTransition.Page = pageNew;
+                                existingTransition.PageId = pageNew.Id;
                                 hasChanges = true;
                             }
-                            else 
+                            else
                             {
 
                             }
                         }
                         else
                         {
-                                 Page pageNew = new Page()
-                                {
-                                    Id=new Guid(),
-                                    Operation = req.page!.operation,
-                                    Type = req.page!.type,
-                                    Pages = req.page.pageRoute == null ? null : new List<Translation>(){
+                            Page pageNew = new Page()
+                            {
+                                Id = new Guid(),
+                                Operation = req.page!.operation,
+                                Type = req.page!.type,
+                                Pages = req.page.pageRoute == null ? null : new List<Translation>(){
                             new Translation{
                              Language=req.page.pageRoute.language,
                              Label=req.page.pageRoute.label
                             }
-                            
+
                         },
-                                    Timeout = req.page!.timeout
-                                };
-                                context.Pages.Add(pageNew);
-                                existingTransition.Page=pageNew;
-                                existingTransition.PageId=pageNew.Id;
-                                hasChanges = true;
+                                Timeout = req.page!.timeout
+                            };
+                            context.Pages.Add(pageNew);
+                            existingTransition.Page = pageNew;
+                            existingTransition.PageId = pageNew.Id;
+                            hasChanges = true;
                         }
                     }
                 }

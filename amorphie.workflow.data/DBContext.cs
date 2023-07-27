@@ -97,9 +97,17 @@ public class WorkflowDBContext : DbContext
             .WithOne()
             .HasForeignKey("WorkflowName_Title");
 
+        modelBuilder.Entity<Translation>().Property<string>("WorkflowName_HistoryForm");
+
+        modelBuilder.Entity<Workflow>()
+            .HasMany<Translation>(t => t.HistoryForms)
+            .WithOne()
+            .HasForeignKey("WorkflowName_HistoryForm");
+
         modelBuilder.Entity<Translation>().Property<string>("TransitionName_Title");
         modelBuilder.Entity<Translation>().Property<string>("TransitionName_Form");
         modelBuilder.Entity<Translation>().Property<string>("TransitionName_Page");
+        modelBuilder.Entity<Translation>().Property<string>("TransitionName_HistoryForm");
          
 
         modelBuilder.Entity<Transition>()
@@ -116,6 +124,11 @@ public class WorkflowDBContext : DbContext
            .HasMany<Translation>(t => t.Pages)
            .WithOne()
            .HasForeignKey("TransitionName_Page");
+
+        modelBuilder.Entity<Transition>()
+           .HasMany<Translation>(t => t.HistoryForms)
+           .WithOne()
+           .HasForeignKey("TransitionName_HistoryForm");
          
         modelBuilder.Entity<Translation>().Property<Guid?>("PageId_Page");
         modelBuilder.Entity<Page>()
