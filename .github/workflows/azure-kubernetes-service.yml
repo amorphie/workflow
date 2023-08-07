@@ -55,7 +55,7 @@ jobs:
 
       - name: Deploy appsettings as Configmap
         run: |
-          cd /amorphie.workflow
+          cd ./amorphie.workflow
           ls
           if [ -e appsettings.Test.json ]
           then
