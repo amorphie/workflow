@@ -139,7 +139,6 @@ public static class ConsumerModule
             string responseBody = response.Content.ReadAsStringAsync().Result;
             form = form.Insert(startindex, " \"json\":" + responseBody + " ,");
             startindex += responseBody.Length + 23 + indexofUrlEndSub;
-            var test = Newtonsoft.Json.JsonConvert.DeserializeObject<object>(form);
         }
 
         return form;
