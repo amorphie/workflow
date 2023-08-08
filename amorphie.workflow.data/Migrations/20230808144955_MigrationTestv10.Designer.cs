@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    [Migration("20230704085957_MigrationsTest6")]
-    partial class MigrationsTest6
+    [Migration("20230808144955_MigrationTestv10")]
+    partial class MigrationTestv10
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -154,6 +154,9 @@ namespace amorphie.workflow.data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("FormData")
                         .HasColumnType("text");
 
@@ -169,6 +172,9 @@ namespace amorphie.workflow.data.Migrations
 
                     b.Property<string>("RouteData")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ToStateName")
                         .IsRequired()
@@ -188,6 +194,44 @@ namespace amorphie.workflow.data.Migrations
                     b.HasIndex("TransitionName");
 
                     b.ToTable("InstanceTransitions");
+                });
+
+            modelBuilder.Entity("Page", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ModifiedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Operation")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Timeout")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Pages");
                 });
 
             modelBuilder.Entity("State", b =>
@@ -237,7 +281,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasIndex("WorkflowName");
 
                     b.ToTable("States");
-
                 });
 
             modelBuilder.Entity("Transition", b =>
@@ -270,6 +313,9 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("PageId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ServiceName")
                         .HasColumnType("text");
 
@@ -282,10 +328,11 @@ namespace amorphie.workflow.data.Migrations
 
                     b.HasIndex("FromStateName");
 
+                    b.HasIndex("PageId");
+
                     b.HasIndex("ToStateName");
 
                     b.ToTable("Transitions");
-
                 });
 
             modelBuilder.Entity("Workflow", b =>
@@ -330,8 +377,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasIndex("ZeebeFlowName");
 
                     b.ToTable("Workflows");
-
-
                 });
 
             modelBuilder.Entity("WorkflowEntity", b =>
@@ -380,8 +425,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasIndex("WorkflowName");
 
                     b.ToTable("WorkflowEntities");
-
-                    
                 });
 
             modelBuilder.Entity("ZeebeMessage", b =>
@@ -425,8 +468,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasKey("Name");
 
                     b.ToTable("ZeebeMessages");
-
-                   
                 });
 
             modelBuilder.Entity("amorphie.core.Base.Translation", b =>
@@ -461,6 +502,9 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("PageId_Page")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("StateName_Description")
                         .HasColumnType("text");
 
@@ -470,10 +514,16 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<string>("TransitionName_Form")
                         .HasColumnType("text");
 
+                    b.Property<string>("TransitionName_HistoryForm")
+                        .HasColumnType("text");
+
                     b.Property<string>("TransitionName_Page")
                         .HasColumnType("text");
 
                     b.Property<string>("TransitionName_Title")
+                        .HasColumnType("text");
+
+                    b.Property<string>("WorkflowName_HistoryForm")
                         .HasColumnType("text");
 
                     b.Property<string>("WorkflowName_Title")
@@ -481,21 +531,25 @@ namespace amorphie.workflow.data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PageId_Page");
+
                     b.HasIndex("StateName_Description");
 
                     b.HasIndex("StateName_Title");
 
                     b.HasIndex("TransitionName_Form");
 
+                    b.HasIndex("TransitionName_HistoryForm");
+
                     b.HasIndex("TransitionName_Page");
 
                     b.HasIndex("TransitionName_Title");
 
+                    b.HasIndex("WorkflowName_HistoryForm");
+
                     b.HasIndex("WorkflowName_Title");
 
                     b.ToTable("Translation");
-
-                    
                 });
 
             modelBuilder.Entity("Instance", b =>
@@ -600,6 +654,10 @@ namespace amorphie.workflow.data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Page", "Page")
+                        .WithMany()
+                        .HasForeignKey("PageId");
+
                     b.HasOne("State", "ToState")
                         .WithMany()
                         .HasForeignKey("ToStateName");
@@ -607,6 +665,8 @@ namespace amorphie.workflow.data.Migrations
                     b.Navigation("Flow");
 
                     b.Navigation("FromState");
+
+                    b.Navigation("Page");
 
                     b.Navigation("ToState");
                 });
@@ -637,6 +697,10 @@ namespace amorphie.workflow.data.Migrations
 
             modelBuilder.Entity("amorphie.core.Base.Translation", b =>
                 {
+                    b.HasOne("Page", null)
+                        .WithMany("Pages")
+                        .HasForeignKey("PageId_Page");
+
                     b.HasOne("State", null)
                         .WithMany("Descriptions")
                         .HasForeignKey("StateName_Description");
@@ -650,6 +714,10 @@ namespace amorphie.workflow.data.Migrations
                         .HasForeignKey("TransitionName_Form");
 
                     b.HasOne("Transition", null)
+                        .WithMany("HistoryForms")
+                        .HasForeignKey("TransitionName_HistoryForm");
+
+                    b.HasOne("Transition", null)
                         .WithMany("Pages")
                         .HasForeignKey("TransitionName_Page");
 
@@ -658,8 +726,17 @@ namespace amorphie.workflow.data.Migrations
                         .HasForeignKey("TransitionName_Title");
 
                     b.HasOne("Workflow", null)
+                        .WithMany("HistoryForms")
+                        .HasForeignKey("WorkflowName_HistoryForm");
+
+                    b.HasOne("Workflow", null)
                         .WithMany("Titles")
                         .HasForeignKey("WorkflowName_Title");
+                });
+
+            modelBuilder.Entity("Page", b =>
+                {
+                    b.Navigation("Pages");
                 });
 
             modelBuilder.Entity("State", b =>
@@ -675,6 +752,8 @@ namespace amorphie.workflow.data.Migrations
                 {
                     b.Navigation("Forms");
 
+                    b.Navigation("HistoryForms");
+
                     b.Navigation("Pages");
 
                     b.Navigation("Titles");
@@ -683,6 +762,8 @@ namespace amorphie.workflow.data.Migrations
             modelBuilder.Entity("Workflow", b =>
                 {
                     b.Navigation("Entities");
+
+                    b.Navigation("HistoryForms");
 
                     b.Navigation("States");
 
