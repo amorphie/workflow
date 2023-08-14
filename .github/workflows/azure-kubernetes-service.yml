@@ -85,7 +85,6 @@ jobs:
             ${{ github.workspace }}/manifest/dapr/secret-store.yaml
             ${{ github.workspace }}/manifest/dapr/state-store.yaml
             ${{ github.workspace }}/manifest/dapr/zeebe-command.yaml
-          # ${{ github.workspace }}/manifest/ingress.yaml
           images: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.APP_NAME }}:${{ github.sha }}
           imagepullsecrets: |
