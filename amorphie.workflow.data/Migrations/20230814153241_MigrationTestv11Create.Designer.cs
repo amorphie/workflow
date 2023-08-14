@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    [Migration("20230808144955_MigrationTestv10")]
-    partial class MigrationTestv10
+    [Migration("20230814153241_MigrationTestv11Create")]
+    partial class MigrationTestv11Create
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
