@@ -4,16 +4,17 @@ using System.Dynamic;
 using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.IBase;
+using amorphie.workflow.core.Dtos;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 
-public interface IPostTransactionService
+public  interface IPostTransactionService
 {
-    IResponse Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data);
-    IResponse Execute();
+    Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data);
+    Task<IResponse> Execute();
 }
 
 
@@ -51,7 +52,7 @@ public class PostTransactionService : IPostTransactionService
         _data = default!;
     }
 
-    public IResponse Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data)
+    public async Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data)
     {
         _entity = entity;
         _recordId = recordId;
@@ -61,10 +62,10 @@ public class PostTransactionService : IPostTransactionService
         _data = data;
 
         // var transition = _dbContext.Transitions.Find(_transitionName);
-        var transition = _dbContext.Transitions.Where(w => w.Name == _transitionName).Include(t => t.Page).ThenInclude(t => t!.Pages)
+        var transition = await _dbContext.Transitions.Where(w => w.Name == _transitionName).Include(t => t.Page).ThenInclude(t => t!.Pages)
         .Include(s => s.FromState).ThenInclude(s => s.Workflow).ThenInclude(s => s!.Entities)
          .Include(s => s.ToState).ThenInclude(s => s!.Workflow).ThenInclude(s => s!.Entities)
-        .FirstOrDefault();
+        .FirstOrDefaultAsync();
         if (transition == null)
         {
 
@@ -79,9 +80,9 @@ public class PostTransactionService : IPostTransactionService
         }
 
         // Load all running instances of record
-        _activeInstances = _dbContext.Instances.Where(i => i.EntityName == entity
+        _activeInstances = await _dbContext.Instances.Where(i => i.EntityName == entity
         && i.RecordId == recordId
-        && i.BaseStatus != StatusType.Completed).ToList();
+        && i.BaseStatus != StatusType.Completed).ToListAsync();
 
         if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName) && !(_activeInstances.Count == 0 && _transition.FromState.Type == StateType.Start))
         {
@@ -105,10 +106,10 @@ public class PostTransactionService : IPostTransactionService
         };
     }
 
-    public IResponse Execute()
+    public async Task<IResponse> Execute()
     {
         DateTime? started=DateTime.Now;
-        var instanceAtState = _activeInstances?.Where(i => i.StateName == _transition.FromStateName).FirstOrDefault();
+        var instanceAtState =  _activeInstances?.Where(i => i.StateName == _transition.FromStateName).FirstOrDefault();
 
         // There is no active instance at submited state
         if (instanceAtState == null)
@@ -120,7 +121,7 @@ public class PostTransactionService : IPostTransactionService
 
                 if (string.IsNullOrEmpty(_transition.FlowName))
                 {
-                    return noFlowNoInstance(started);
+                    return await noFlowNoInstance(started);
                 }
                 else
                 {
@@ -140,7 +141,7 @@ public class PostTransactionService : IPostTransactionService
             if (string.IsNullOrEmpty(_transition.FlowName))
             {
 
-                return noFlowHasInstance(instanceAtState,started);
+                return await noFlowHasInstance(instanceAtState,started);
             }
             else
             {
@@ -149,7 +150,7 @@ public class PostTransactionService : IPostTransactionService
         }
     }
 
-    private IResponse noFlowNoInstance(DateTime? started)
+    private async Task<IResponse> noFlowNoInstance(DateTime? started)
     {
 
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
@@ -170,16 +171,16 @@ public class PostTransactionService : IPostTransactionService
         // addInstanceTansition(newInstance);
         // _dbContext.SaveChanges();
 
-        return ServiceKontrol(newInstance, false,started).Result;
+        return await ServiceKontrol(newInstance, false,started);
         //return Results.Ok();
     }
 
-    private IResponse noFlowHasInstance(Instance instanceAtState,DateTime? started)
+    private async Task<IResponse> noFlowHasInstance(Instance instanceAtState,DateTime? started)
     {
 
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
 
-        return ServiceKontrol(instanceAtState, true,started).Result;
+        return await ServiceKontrol(instanceAtState, true,started);
 
 
     }
@@ -290,7 +291,7 @@ public class PostTransactionService : IPostTransactionService
             try
             {
 
-                amorphie.workflow.core.Dtos.SendTransitionInfoRequest request = new amorphie.workflow.core.Dtos.SendTransitionInfoRequest()
+               SendTransitionInfoRequest request = new SendTransitionInfoRequest()
                 {
                     recordId = instance.RecordId,
                     newStatus = _transition.ToStateName!,
@@ -392,9 +393,10 @@ public class PostTransactionService : IPostTransactionService
     {
         try
         {
+            
             var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
                       HttpMethod.Post,
-                      "amorphie-workflow-hub.test-amorphie-workflow-hub.aks-amorphie-workflow-hub",
+                      "amorphie-workflow-hub.amorphie-workflow-hub.svc.cluster.local",
                       "sendMessage",
                       new PostSignalRData(
                           _user,

@@ -1,5 +1,6 @@
 using System.Dynamic;
 using System.Text.Json;
+using amorphie.workflow.core.Dtos;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -133,7 +134,7 @@ var jsonString=System.Text.Json.JsonSerializer.Serialize(newInstanceTransition!.
             ClientFactory _factory=new ClientFactory ();
              var clientFactory = _factory.CreateClient(transition.ServiceName);
             // TODO : Use refit rather than httpclient and consider resiliency.
-            amorphie.workflow.core.Dtos.SendTransitionInfoRequest sendTransitionInfoRequest = new amorphie.workflow.core.Dtos.SendTransitionInfoRequest()
+            SendTransitionInfoRequest sendTransitionInfoRequest = new SendTransitionInfoRequest()
             {
                 recordId = instance.RecordId,
                 newStatus = transition.ToStateName!,
@@ -209,7 +210,7 @@ if(response.StatusCode==System.Net.HttpStatusCode.OK
 
         var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
-                   "amorphie-workflow-hub.test-amorphie-workflow-hub.aks-amorphie-workflow-hub",
+                   "amorphie-workflow-hub.amorphie-workflow-hub.svc.cluster.local",
                    "sendMessage",
                    new PostSignalRData(
                        newInstanceTransition.CreatedBy,
@@ -222,21 +223,6 @@ if(response.StatusCode==System.Net.HttpStatusCode.OK
               new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages==null|| transition.Page.Pages.Count==0?null:new amorphie.core.Base.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
               transition.Page.Timeout),hubMessage,newInstanceTransition.AdditionalData
                    ),cancellationToken);
-                   if(transitionName=="user-registration-approve")
-                   {
-try{
-      dynamic dataChanged2 = Newtonsoft.Json.JsonConvert.DeserializeObject<ExpandoObject>(data.ToString());
-    //         dynamicObject.AdditionalData = "newInstanceTransition.AdditionalData";
-
-            dataChanged2.additionalData = "newInstanceTransition.AdditionalData";
-           // data = Newtonsoft.Json.JsonConvert.SerializeObject(dynamicObject);
-             return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), dataChanged2));
-}
-catch(Exception ex)
-{
-
-}
-                   }
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
     }
     private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
