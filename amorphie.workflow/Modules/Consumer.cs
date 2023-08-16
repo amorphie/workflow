@@ -283,7 +283,7 @@ public static class ConsumerModule
         // return Results.Ok(response);
     }
 
-    static IResponse postTransition(
+    static async Task<IResponse> postTransition(
             [FromServices] WorkflowDBContext dbContext,
             [FromHeader(Name = "User")] Guid user,
             [FromHeader(Name = "Behalf-Of-User")] Guid behalOfUser,
@@ -296,11 +296,11 @@ public static class ConsumerModule
             [FromServices] DaprClient client
         )
     {
-        var result = service.Init(entity, recordId, transition, user, behalOfUser, data);
+        var result =await service.Init(entity, recordId, transition, user, behalOfUser, data);
         var templateURL = configuration["templateEngineUrl"];
         if (result.Result.Status == Status.Success.ToString())
         {
-            result = service.Execute();
+            result =  await service.Execute();
         }
 
         // var response = client.InvokeMethodAsync<PostPublishStatusRequest, string>(
