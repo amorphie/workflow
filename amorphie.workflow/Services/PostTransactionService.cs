@@ -36,8 +36,9 @@ public class PostTransactionService : IPostTransactionService
     private ConsumerPostTransitionRequest _data { get; set; }
 
     private List<Instance>? _activeInstances { get; set; }
+    private IConfiguration _configuration{ get; set; }
 
-    public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService, DaprClient client)
+    public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService, DaprClient client,IConfiguration configuration)
     {
         _dbContext = dbContext;
         _zeebeService = zeebeService;
@@ -50,6 +51,7 @@ public class PostTransactionService : IPostTransactionService
 
         _transition = default!;
         _data = default!;
+        _configuration=configuration;
     }
 
     public async Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data)
@@ -393,10 +395,10 @@ public class PostTransactionService : IPostTransactionService
     {
         try
         {
-            
+              string hubUrl=_configuration["hubUrl"]!.ToString();
             var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
                       HttpMethod.Post,
-                      "amorphie-workflow-hub.amorphie-workflow-hub.svc.cluster.local",
+                      hubUrl,
                       "sendMessage",
                       new PostSignalRData(
                           _user,

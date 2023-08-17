@@ -29,7 +29,8 @@ public static class StateManagerModule
             HttpRequest request,
             HttpContext httpContext,
             [FromServices] DaprClient client,
-             CancellationToken cancellationToken
+             CancellationToken cancellationToken,
+             IConfiguration configuration
         )
     {
         // TODO : Include a parameter for the cancelation token and add cancelation token to FirstOrDefault
@@ -207,10 +208,10 @@ if(response.StatusCode==System.Net.HttpStatusCode.OK
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
        await dbContext.SaveChangesAsync(cancellationToken);
 
-
+        string hubUrl=configuration["hubUrl"]!.ToString();
         var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
-                   "amorphie-workflow-hub.amorphie-workflow-hub.svc.cluster.local",
+                    hubUrl,
                    "sendMessage",
                    new PostSignalRData(
                        newInstanceTransition.CreatedBy,
