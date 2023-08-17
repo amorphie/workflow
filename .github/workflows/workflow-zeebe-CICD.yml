@@ -1,9 +1,10 @@
 name: WORKFLOW-ZEEBE-CI-CD
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - 'main'
+    paths:
+      - './amorphie.workflow.zeebe'
   workflow_dispatch:
 env:
   APP_NAME: amorphie.workflow-zeebe
