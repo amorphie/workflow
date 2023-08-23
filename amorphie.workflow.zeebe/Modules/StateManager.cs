@@ -209,7 +209,7 @@ if(response.StatusCode==System.Net.HttpStatusCode.OK
        await dbContext.SaveChangesAsync(cancellationToken);
 
         string hubUrl=configuration["hubUrl"]!.ToString();
-        Console.WriteLine(hubUrl);
+        Console.WriteLine("test"+hubUrl);
         var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
                     hubUrl,
