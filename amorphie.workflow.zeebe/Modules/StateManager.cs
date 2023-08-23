@@ -259,8 +259,3 @@ public record ConsumerPostTransitionRequest
     public dynamic? RouteData { get; set; }
     public dynamic? QueryData { get; set; }
 }
-// public interface ITodoAPI
-// {
-//     [Refit.Post("/todos")]
-//     Task<List<dynamic>> GetTodos();
-// }
