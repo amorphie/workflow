@@ -634,4 +634,3 @@ public record GetRecordHistoryDetailResponse
         }
     }
 }
-
