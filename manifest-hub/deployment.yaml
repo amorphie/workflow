@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: amorphie-workflow-hub
+  namespace: amorphie-workflow-hub
+spec:
+  selector:
+    matchLabels:
+      app: amorphie-workflow-hub
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: amorphie-workflow-hub
+      annotations:
+        dapr.io/app-id: amorphie-workflow-hub
+        dapr.io/enabled: 'true'
+        dapr.io/app-port: '5000'
+    spec:
+      serviceAccountName: amorphie-workflow-hubuser
+      containers:
+        - name: amorphie-workflow-hub
+          image: burganbank/amorphie.workflow-hub:latest
+          ports:
+            - containerPort: 5000
+          env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: "Test"
+          - name: EnableApm
+            value: "true"
+          - name: TZ
+            value: Europe/Istanbul
+          - name: DAPR_STATE_STORE_NAME
+            value: workflow-cache
+          - name: DAPR_SECRET_STORE_NAME
+            value: workflow-secretstore
+          - name: DAPR_ZEEBE_COMMAND_NAME
+            value: workflow-zeebe-command
+          resources:
+            limits:
+              cpu: "1"
+              memory: "4096Mi"
+            requests:
+              cpu: "0.1"
+              memory: "64Mi"

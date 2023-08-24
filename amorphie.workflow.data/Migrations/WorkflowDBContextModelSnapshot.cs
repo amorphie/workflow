@@ -511,10 +511,16 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<string>("TransitionName_Form")
                         .HasColumnType("text");
 
+                    b.Property<string>("TransitionName_HistoryForm")
+                        .HasColumnType("text");
+
                     b.Property<string>("TransitionName_Page")
                         .HasColumnType("text");
 
                     b.Property<string>("TransitionName_Title")
+                        .HasColumnType("text");
+
+                    b.Property<string>("WorkflowName_HistoryForm")
                         .HasColumnType("text");
 
                     b.Property<string>("WorkflowName_Title")
@@ -530,9 +536,13 @@ namespace amorphie.workflow.data.Migrations
 
                     b.HasIndex("TransitionName_Form");
 
+                    b.HasIndex("TransitionName_HistoryForm");
+
                     b.HasIndex("TransitionName_Page");
 
                     b.HasIndex("TransitionName_Title");
+
+                    b.HasIndex("WorkflowName_HistoryForm");
 
                     b.HasIndex("WorkflowName_Title");
 
@@ -701,12 +711,20 @@ namespace amorphie.workflow.data.Migrations
                         .HasForeignKey("TransitionName_Form");
 
                     b.HasOne("Transition", null)
+                        .WithMany("HistoryForms")
+                        .HasForeignKey("TransitionName_HistoryForm");
+
+                    b.HasOne("Transition", null)
                         .WithMany("Pages")
                         .HasForeignKey("TransitionName_Page");
 
                     b.HasOne("Transition", null)
                         .WithMany("Titles")
                         .HasForeignKey("TransitionName_Title");
+
+                    b.HasOne("Workflow", null)
+                        .WithMany("HistoryForms")
+                        .HasForeignKey("WorkflowName_HistoryForm");
 
                     b.HasOne("Workflow", null)
                         .WithMany("Titles")
@@ -731,6 +749,8 @@ namespace amorphie.workflow.data.Migrations
                 {
                     b.Navigation("Forms");
 
+                    b.Navigation("HistoryForms");
+
                     b.Navigation("Pages");
 
                     b.Navigation("Titles");
@@ -739,6 +759,8 @@ namespace amorphie.workflow.data.Migrations
             modelBuilder.Entity("Workflow", b =>
                 {
                     b.Navigation("Entities");
+
+                    b.Navigation("HistoryForms");
 
                     b.Navigation("States");
 

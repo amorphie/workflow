@@ -11,6 +11,7 @@ public class Workflow : EntityBaseWithOutId
     public ZeebeMessage? ZeebeFlow { get; set; }
     public List<WorkflowEntity> Entities { get; set; } = default!;
     public WorkflowStatus? WorkflowStatus { get; set; }
+    public ICollection<Translation> HistoryForms { get; set; } = default!;
 
 }
 

@@ -23,6 +23,7 @@ public class Transition : EntityBaseWithOutId
 
     public ICollection<Translation> Forms { get; set; } = default!;
     public ICollection<Translation> Pages { get; set; } = default!;
+    public ICollection<Translation> HistoryForms { get; set; } = default!;
     
     public string? ServiceName { get; set; } 
 }
