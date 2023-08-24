@@ -206,14 +206,15 @@ public class PostTransactionService : IPostTransactionService
         };
 
         dynamic variables = createMessageVariables(newInstance);
-
-        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
+        
+        
 
         _dbContext.Add(newInstance);
-        SendSignalRData(newInstance, "worker-started",string.Empty);
+       
         addInstanceTansition(newInstance,started,null);
         _dbContext.SaveChanges();
-
+        SendSignalRData(newInstance, "worker-started",string.Empty);
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
         return new Response
         {
             Result = new Result(Status.Success, "Instance Has been Created"),
@@ -232,12 +233,13 @@ public class PostTransactionService : IPostTransactionService
         instanceAtState.BaseStatus = StatusType.LockedInFlow;
 
         dynamic variables = createMessageVariables(instanceAtState);
-        SendSignalRData(instanceAtState, "worker-started",string.Empty);
-        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
+       
+       
 
         addInstanceTansition(instanceAtState,started,null);
         _dbContext.SaveChanges();
-
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
+        SendSignalRData(instanceAtState, "worker-started",string.Empty);
         //return Results.Ok();
         return new Response
         {
@@ -383,9 +385,10 @@ public class PostTransactionService : IPostTransactionService
         {
             _dbContext.Add(instance);
         }
-        SendSignalRData(instance, "transition-completed",string.Empty);
+       
         addInstanceTansition(instance,started,DateTime.Now);
         _dbContext.SaveChanges();
+         SendSignalRData(instance, "transition-completed",string.Empty);
         return new Response
         {
             Result = new Result(Status.Success, "Instance has been updated"),
@@ -411,7 +414,7 @@ public class PostTransactionService : IPostTransactionService
                         new PostPageSignalRData(_transition.Page.Operation.ToString(), _transition.Page.Type.ToString(),_transition.Page.Pages==null||_transition.Page.Pages.Count==0?null: new MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language, _transition.Page.Pages!.FirstOrDefault()!.Label),
                         _transition.Page.Timeout),message,_data.AdditionalData
 
-                      )).Result;
+                      ));
         }
         catch (Exception ex)
         {
