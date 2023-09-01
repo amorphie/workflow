@@ -6,7 +6,7 @@ using amorphie.core.Enums;
 
 public class WorkflowEntity : EntityBase
 {
-     [JsonIgnore]
+    [JsonIgnore]
     public Workflow Workflow { get; set; } = default!;
     public string WorkflowName { get; set; } = default!;
 

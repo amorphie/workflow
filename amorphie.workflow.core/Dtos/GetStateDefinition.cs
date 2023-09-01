@@ -2,7 +2,7 @@
 using amorphie.core.Base;
 using amorphie.core.Enums;
 
-public  record GetStateDefinition(string name, MultilanguageText title, StatusType baseStatus, PostTransitionDefinitionRequest[] transitions);
+public record GetStateDefinition(string name, MultilanguageText title, StatusType baseStatus, PostTransitionDefinitionRequest[] transitions);
 
 public record GetStateDefinitionRequest(string name, MultilanguageText title, StatusType baseStatus, PostTransitionDefinitionRequest[] transitions) :
     GetStateDefinition(name, title, baseStatus, transitions);

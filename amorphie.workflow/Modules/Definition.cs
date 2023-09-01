@@ -221,7 +221,7 @@ public static class DefinitionModule
       [FromHeader(Name = "Language")] string? language = "en-EN"
       )
     {
-        var existingRecord = context.Workflows!.Include(s => s.Entities).Include(s=>s.HistoryForms).FirstOrDefault(w => w.Name == data.name);
+        var existingRecord = context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefault(w => w.Name == data.name);
         List<WorkflowEntity> entityList = new List<WorkflowEntity>();
         // All available status have to add 
         foreach (var item in data.entities!)
@@ -283,11 +283,11 @@ public static class DefinitionModule
             {
                 existingRecord.HistoryForms = data.historyForms.Select(s => new Translation
                 {
-                    Id=new Guid(),
+                    Id = new Guid(),
                     Label = s.label,
                     Language = s.language
                 }).ToList();
-                 hasChanges = true;
+                hasChanges = true;
             }
             else if (data.historyForms != null && data.historyForms.Count() > 0)
             {
@@ -301,7 +301,7 @@ public static class DefinitionModule
                             Label = historyFormTranslantion.label,
                             Language = historyFormTranslantion.language
                         });
-                         hasChanges = true;
+                        hasChanges = true;
                     }
                     else
                     {
@@ -318,7 +318,7 @@ public static class DefinitionModule
                                 Label = historyFormTranslantion.label,
                                 Language = historyFormTranslantion.language
                             });
-                             hasChanges = true;
+                            hasChanges = true;
                         }
                     }
 

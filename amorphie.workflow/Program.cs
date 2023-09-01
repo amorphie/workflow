@@ -1,13 +1,13 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
 using amorphie.core.security.Extensions;
- //using amorphie.workflow;
+//using amorphie.workflow;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 //using SecretExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
-await builder.Configuration.AddVaultSecrets("workflow-secretstore",new string[]{"workflow-secretstore"});
+await builder.Configuration.AddVaultSecrets("workflow-secretstore", new string[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
 
 

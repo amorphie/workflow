@@ -2,11 +2,11 @@ using AutoMapper;
 
 namespace amorphie.workflow.core.Mapper
 {
-    public class StateMapper:Profile
+    public class StateMapper : Profile
     {
-     public StateMapper()
-    {
-       
+        public StateMapper()
+        {
+
+        }
     }
-}
 }

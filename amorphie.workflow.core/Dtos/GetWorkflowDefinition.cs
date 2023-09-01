@@ -4,7 +4,7 @@ using amorphie.core.Enums;
 /// <summary>
 /// Abstract record for workflow definition
 /// </summary>
-public  record GetWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities);
+public record GetWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities);
 
 /// <summary>
 /// State Machine workflow definition record
