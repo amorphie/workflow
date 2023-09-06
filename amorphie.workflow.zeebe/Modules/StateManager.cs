@@ -48,7 +48,6 @@ public static class StateManagerModule
         }
        
         var instanceIdAsString = body.GetProperty("InstanceId").ToString();
-        var data = body.GetProperty($"TRX-{transitionName}").GetProperty("Data");
         Guid instanceId;
         if (!Guid.TryParse(instanceIdAsString, out instanceId))
         {
@@ -103,10 +102,13 @@ public static class StateManagerModule
             return Results.BadRequest($"Target state is not provided nor defined on transition");
         }
         InstanceTransition? newInstanceTransition;
+        dynamic? data;
+        bool transitionDataFound=true;
         if(!error)
         {
             newInstanceTransition=await dbContext.InstanceTransitions.OrderByDescending(o=>o.StartedAt)
             .FirstOrDefaultAsync(f=>f.InstanceId==instance.Id&&f.TransitionName==transition.Name,cancellationToken);
+            data = body.GetProperty($"TRX-{transitionName}").GetProperty("Data");
         }
         else
         {
@@ -114,15 +116,38 @@ public static class StateManagerModule
             .FirstOrDefaultAsync(f=>f.InstanceId==instance.Id&&f.Transition!.FromStateName==transition.FromStateName,cancellationToken);
              newInstanceTransition!.TransitionName=transition.Name;
               newInstanceTransition!.Transition=transition;
+              
+            try
+            {
+                data = body.GetProperty($"TRX-{transitionName}").GetProperty("Data");
+            }
+            catch
+            {
+                data = body.GetProperty($"TRX-{transitionName}").GetProperty("Data");
+                transitionDataFound = false;
+                newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
+
+
+                newInstanceTransition!.EntityData = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("entityData").ToString();
+                newInstanceTransition!.ToStateName = transition.ToStateName;
+
+                newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("TriggeredBy").ToString());
+                newInstanceTransition!.CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("TriggeredByBehalfOf").ToString());
+            }
+            newInstanceTransition!.TransitionName = transition.Name;
+            newInstanceTransition!.Transition = transition;
         }
-        newInstanceTransition!.AdditionalData=body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
-        
-        
-        newInstanceTransition!.EntityData=body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData").ToString();
-        newInstanceTransition!.ToStateName=transition.ToStateName;
-       
-        newInstanceTransition!.CreatedBy=Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString());
-        newInstanceTransition!.CreatedByBehalfOf=Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredByBehalfOf").ToString());
+        if (transitionDataFound)
+        {
+            newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
+
+
+            newInstanceTransition!.EntityData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData").ToString();
+            newInstanceTransition!.ToStateName = transition.ToStateName;
+
+            newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString());
+            newInstanceTransition!.CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredByBehalfOf").ToString());
+        }
 var jsonString=System.Text.Json.JsonSerializer.Serialize(newInstanceTransition!.AdditionalData);
 
         string eventInfo = "worker-completed";
