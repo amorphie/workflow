@@ -37,16 +37,16 @@ public static class StateManagerModule
 
         var targetState = request.Headers["TARGET_STATE"].ToString();
         var transitionName = body.GetProperty("LastTransition").ToString();
-        string hubMessage =string.Empty;
+        string hubMessage = string.Empty;
         try
         {
-              hubMessage = body.GetProperty("message").ToString();
+            hubMessage = body.GetProperty("message").ToString();
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            hubMessage =string.Empty;
+            hubMessage = string.Empty;
         }
-       
+
         var instanceIdAsString = body.GetProperty("InstanceId").ToString();
         Guid instanceId;
         if (!Guid.TryParse(instanceIdAsString, out instanceId))
@@ -54,7 +54,7 @@ public static class StateManagerModule
             return Results.BadRequest("InstanceId not provided or not as a GUID");
         }
 
-        Instance? instance =await  dbContext.Instances
+        Instance? instance = await dbContext.Instances
             .Where(i => i.Id == instanceId)
             .Include(i => i.State)
                 .ThenInclude(s => s.Transitions)
@@ -71,21 +71,21 @@ public static class StateManagerModule
         {
             return Results.NotFound($"Instance not found with instance id : {instanceId} ");
         }
-        bool error=false;
+        bool error = false;
         Transition? transition = null;
         if (targetState is null || targetState.ToLower() == "default")
         {
             transition = instance.State.Transitions.Where(t => t.Name == transitionName).FirstOrDefault();
-            
+
 
         }
         else if (targetState.ToLower() == "error")
         {
             string transitionNameAsString = transitionName.ToString();
-            transition =await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
+            transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
                 .ThenInclude(t => t!.Entities).Where(t => t.Name == transitionNameAsString
            && instance.WorkflowName == t.ToState!.WorkflowName && t.ToState.Type == StateType.Fail).FirstOrDefaultAsync(cancellationToken);
-            error=true;
+            error = true;
         }
         else
         {
@@ -103,20 +103,20 @@ public static class StateManagerModule
         }
         InstanceTransition? newInstanceTransition;
         dynamic? data;
-        bool transitionDataFound=true;
-        if(!error)
+        bool transitionDataFound = true;
+        if (!error)
         {
-            newInstanceTransition=await dbContext.InstanceTransitions.OrderByDescending(o=>o.StartedAt)
-            .FirstOrDefaultAsync(f=>f.InstanceId==instance.Id&&f.TransitionName==transition.Name,cancellationToken);
+            newInstanceTransition = await dbContext.InstanceTransitions.OrderByDescending(o => o.StartedAt)
+            .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.TransitionName == transition.Name, cancellationToken);
             data = body.GetProperty($"TRX-{transitionName}").GetProperty("Data");
         }
         else
         {
-            newInstanceTransition=await dbContext.InstanceTransitions.Include(s=>s.Transition).OrderByDescending(o=>o.StartedAt)
-            .FirstOrDefaultAsync(f=>f.InstanceId==instance.Id&&f.Transition!.FromStateName==transition.FromStateName,cancellationToken);
-             newInstanceTransition!.TransitionName=transition.Name;
-              newInstanceTransition!.Transition=transition;
-              
+            newInstanceTransition = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
+            .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.Transition!.FromStateName == transition.FromStateName, cancellationToken);
+            newInstanceTransition!.TransitionName = transition.Name;
+            newInstanceTransition!.Transition = transition;
+
             try
             {
                 data = body.GetProperty($"TRX-{transitionName}").GetProperty("Data");
@@ -148,7 +148,7 @@ public static class StateManagerModule
             newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString());
             newInstanceTransition!.CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredByBehalfOf").ToString());
         }
-var jsonString=System.Text.Json.JsonSerializer.Serialize(newInstanceTransition!.AdditionalData);
+        var jsonString = System.Text.Json.JsonSerializer.Serialize(newInstanceTransition!.AdditionalData);
 
         string eventInfo = "worker-completed";
 
@@ -157,8 +157,8 @@ var jsonString=System.Text.Json.JsonSerializer.Serialize(newInstanceTransition!.
         if (!string.IsNullOrEmpty(transition.ServiceName))
         {
             // var userAPI = RestService.For<ITodoAPI>(transition.ServiceName);
-            ClientFactory _factory=new ClientFactory ();
-             var clientFactory = _factory.CreateClient(transition.ServiceName);
+            ClientFactory _factory = new ClientFactory();
+            var clientFactory = _factory.CreateClient(transition.ServiceName);
             // TODO : Use refit rather than httpclient and consider resiliency.
             SendTransitionInfoRequest sendTransitionInfoRequest = new SendTransitionInfoRequest()
             {
@@ -171,12 +171,12 @@ var jsonString=System.Text.Json.JsonSerializer.Serialize(newInstanceTransition!.
             };
             try
             {
-              var    response =await clientFactory.PostModel(sendTransitionInfoRequest);
+                var response = await clientFactory.PostModel(sendTransitionInfoRequest);
 
-if(response.StatusCode==System.Net.HttpStatusCode.OK
-||response.StatusCode ==  System.Net.HttpStatusCode.Created
-||response.StatusCode ==  System.Net.HttpStatusCode.NoContent)
-                  {
+                if (response.StatusCode == System.Net.HttpStatusCode.OK
+                || response.StatusCode == System.Net.HttpStatusCode.Created
+                || response.StatusCode == System.Net.HttpStatusCode.NoContent)
+                {
                     instance.BaseStatus = transition.ToState!.BaseStatus;
                     instance.StateName = transition.ToStateName;
                     if (instance.WorkflowName != transition.ToState.WorkflowName)
@@ -187,20 +187,20 @@ if(response.StatusCode==System.Net.HttpStatusCode.OK
                             instance.EntityName = transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
                         }
                     }
-                  }
-                  
+                }
+
                 else
                 {
-                    
+
                     try
                     {
 
-                        var problem=Newtonsoft.Json.JsonConvert.DeserializeObject<Refit.ProblemDetails>(response.Error!.Content!);
-                       hubMessage+= problem!.Detail;
+                        var problem = Newtonsoft.Json.JsonConvert.DeserializeObject<Refit.ProblemDetails>(response.Error!.Content!);
+                        hubMessage += problem!.Detail;
                     }
                     catch (Exception ex)
                     {
-                        hubMessage+=response.ReasonPhrase;
+                        hubMessage += response.ReasonPhrase;
                     }
                     instance.BaseStatus = transition.FromState!.BaseStatus;
                     eventInfo = "worker-error-with-service-" + transition.ServiceName;
@@ -209,9 +209,9 @@ if(response.StatusCode==System.Net.HttpStatusCode.OK
             catch (Exception ex)
             {
 
-                    instance.BaseStatus = transition.FromState!.BaseStatus;
-                    eventInfo = "worker-error-with-service-" + transition.ServiceName;
-                    
+                instance.BaseStatus = transition.FromState!.BaseStatus;
+                eventInfo = "worker-error-with-service-" + transition.ServiceName;
+
             }
         }
         else
@@ -228,12 +228,12 @@ if(response.StatusCode==System.Net.HttpStatusCode.OK
             }
 
         }
-        newInstanceTransition!.FinishedAt=DateTime.Now;
+        newInstanceTransition!.FinishedAt = DateTime.Now;
         // dbContext.Add(newInstanceTransition);
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
-       await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
-        string hubUrl=configuration["hubUrl"]!.ToString();
+        string hubUrl = configuration["hubUrl"]!.ToString();
         Console.WriteLine(hubUrl);
         var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
@@ -247,9 +247,9 @@ if(response.StatusCode==System.Net.HttpStatusCode.OK
                        instance.EntityName,
                      newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
               transition.Page == null ? null :
-              new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages==null|| transition.Page.Pages.Count==0?null:new amorphie.core.Base.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-              transition.Page.Timeout),hubMessage,newInstanceTransition.AdditionalData
-                   ),cancellationToken);
+              new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.core.Base.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
+              transition.Page.Timeout), hubMessage, newInstanceTransition.AdditionalData
+                   ), cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
     }
     private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
