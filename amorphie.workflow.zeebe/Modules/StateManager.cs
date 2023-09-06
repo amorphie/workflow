@@ -235,6 +235,7 @@ public static class StateManagerModule
 
         string hubUrl = configuration["hubUrl"]!.ToString();
         Console.WriteLine(hubUrl);
+
         var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
                     hubUrl,
