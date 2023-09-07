@@ -114,8 +114,7 @@ public static class StateManagerModule
         {
             newInstanceTransition = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
             .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.Transition!.FromStateName == transition.FromStateName, cancellationToken);
-            newInstanceTransition!.TransitionName = transition.Name;
-            newInstanceTransition!.Transition = transition;
+
 
             try
             {
@@ -123,9 +122,9 @@ public static class StateManagerModule
             }
             catch
             {
-                data = body.GetProperty($"TRX-{transitionName}").GetProperty("Data");
+                data = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data");
                 transitionDataFound = false;
-                newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
+                newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
 
 
                 newInstanceTransition!.EntityData = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("entityData").ToString();
