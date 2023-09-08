@@ -7,8 +7,8 @@ public class ObjectMapper
 {
     var config = new MapperConfiguration(cfg =>
     {
-         cfg.AddProfile<amorphie.workflow.core.Mapper.WorkflowMapper>();
-             cfg.AddProfile<amorphie.workflow.core.Mapper.PageComponentMapper>();
+        cfg.AddProfile<amorphie.workflow.core.Mapper.WorkflowMapper>();
+        cfg.AddProfile<amorphie.workflow.core.Mapper.PageComponentMapper>();
     });
 
     return config.CreateMapper();

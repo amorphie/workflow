@@ -14,7 +14,7 @@ public class DtoPageComponents : DtoBase
     public List<DtoComponent>? components { get; set; }
     public string? pageRoute { get; set; }
 }
-public class DtoComponent 
+public class DtoComponent
 {
     public DtoPageComponentUiModel? uiModel { get; set; }
     public string? componentName { get; set; }

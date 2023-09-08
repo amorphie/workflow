@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace amorphie.workflow.core.Dtos
 {
-   public record MultilanguageText
-        (
-            string language,
-            string label
-        );
+    public record MultilanguageText
+         (
+             string language,
+             string label
+         );
 }

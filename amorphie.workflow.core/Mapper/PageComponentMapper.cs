@@ -6,17 +6,17 @@ using AutoMapper;
 
 namespace amorphie.workflow.core.Mapper
 {
-      public class PageComponentMapper : Profile
+    public class PageComponentMapper : Profile
     {
         public PageComponentMapper()
         {
 
-           
-         CreateMap<PageComponent, DtoPageComponents>()
-          .ConstructUsing(x=> new DtoPageComponents
-          {
-              pageRoute=x.PageName,
-              components=new List<DtoComponent>(){
+
+            CreateMap<PageComponent, DtoPageComponents>()
+             .ConstructUsing(x => new DtoPageComponents
+             {
+                 pageRoute = x.PageName,
+                 components = new List<DtoComponent>(){
                 new DtoComponent(){
                     componentName=x.componentName,
                      transitionName=x.transitionName,
@@ -32,9 +32,9 @@ namespace amorphie.workflow.core.Mapper
                        visibility=s.visibility,
                        }).ToList():null
                 }
-              }
-                
-          }); 
+                 }
+
+             });
         }
     }
 }

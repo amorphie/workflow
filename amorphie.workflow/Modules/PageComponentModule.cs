@@ -21,41 +21,41 @@ namespace amorphie.workflow.Modules
         public override string[]? PropertyCheckList => new string[] { "type", "componentName", "visibility", "transitionName" };
 
         public override string? UrlFragment => "pageComponent";
-           public override void AddRoutes(RouteGroupBuilder routeGroupBuilder)
-    {
-        base.AddRoutes(routeGroupBuilder);
-
-        routeGroupBuilder.MapGet("search", getAllPageComponentFullTextSearch);
-    }
-
-    async ValueTask<IResult> getAllPageComponentFullTextSearch(
-        [FromServices] WorkflowDBContext context,
-       [AsParameters] PageComponentSearch dataSearch
-   )
-    {
-        var query = context!.PageComponents!
-        .Include(s=>s.ChildComponents)
-        .Include(s=>s.uiModel)
-        .Include(s=>s.transition)
-            .Skip(dataSearch.Page * dataSearch.PageSize)
-            .Take(dataSearch.PageSize);
-
-        
-        if (!string.IsNullOrEmpty(dataSearch.Keyword))
+        public override void AddRoutes(RouteGroupBuilder routeGroupBuilder)
         {
-            query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", dataSearch.Keyword)));
+            base.AddRoutes(routeGroupBuilder);
+
+            routeGroupBuilder.MapGet("search", getAllPageComponentFullTextSearch);
         }
 
-        var securityQuestions = query.ToList();
-
-        if (securityQuestions.Count() > 0)
+        async ValueTask<IResult> getAllPageComponentFullTextSearch(
+            [FromServices] WorkflowDBContext context,
+           [AsParameters] PageComponentSearch dataSearch
+       )
         {
-            var response = securityQuestions.Select(x => ObjectMapper.Mapper.Map<DtoPageComponents>(x)).ToList();
-            return Results.Ok(response);            
-        }
+            var query = context!.PageComponents!
+            .Include(s => s.ChildComponents)
+            .Include(s => s.uiModel)
+            .Include(s => s.transition)
+                .Skip(dataSearch.Page * dataSearch.PageSize)
+                .Take(dataSearch.PageSize);
 
-         return Results.NoContent();        
-    }
+
+            if (!string.IsNullOrEmpty(dataSearch.Keyword))
+            {
+                query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", dataSearch.Keyword)));
+            }
+
+            var securityQuestions = query.ToList();
+
+            if (securityQuestions.Count() > 0)
+            {
+                var response = securityQuestions.Select(x => ObjectMapper.Mapper.Map<DtoPageComponents>(x)).ToList();
+                return Results.Ok(response);
+            }
+
+            return Results.NoContent();
+        }
 
         protected override async ValueTask<IResult> UpsertMethod(
             [FromServices] IMapper mapper,
@@ -92,17 +92,18 @@ namespace amorphie.workflow.Modules
                         transitionName = s.transitionName,
                         visibility = s.visibility,
                         type = s.type,
-                        uiModel =s.uiModel!=null&&s.uiModel.buttonText!=null? new PageComponentUiModel(){
-                            buttonText=new List<amorphie.core.Base.Translation>(){new amorphie.core.Base.Translation(){
+                        uiModel = s.uiModel != null && s.uiModel.buttonText != null ? new PageComponentUiModel()
+                        {
+                            buttonText = new List<amorphie.core.Base.Translation>(){new amorphie.core.Base.Translation(){
                                 Language=s.uiModel.buttonText.language,
                                 Label=s.uiModel.buttonText.label,
                             }
                             }
-                            
-                        }:null,
+
+                        } : null,
                         ChildComponents = s.childComponents != null && s.childComponents.Count > 0 ? pageComponentsMap(Page.Id, data.pageRoute, s.childComponents, token, bbtIdentity) : null
                     });
-                   
+
 
 
                     var pageComponentUpdate = data.components.Where(w => Page.PagesComponents!.Any(a => a.componentName == w.componentName));
@@ -135,13 +136,13 @@ namespace amorphie.workflow.Modules
 
                         }
                     }
-                   
-                         if (insertList != null && insertList.Count() > 0)
+
+                    if (insertList != null && insertList.Count() > 0)
                     {
                         await context.PageComponents.AddRangeAsync(insertList, token);
                         saveChanges = true;
                     }
-                     if (saveChanges)
+                    if (saveChanges)
                         await context.SaveChangesAsync(token);
                 }
             }
@@ -154,7 +155,7 @@ namespace amorphie.workflow.Modules
         }
         private List<PageComponent> pageComponentsMap(Guid? PageId, string pageRoute, List<DtoComponent> dtoComponents, CancellationToken token, IBBTIdentity identity)
         {
-            List<PageComponent> list= dtoComponents.Select(s => new PageComponent
+            List<PageComponent> list = dtoComponents.Select(s => new PageComponent
             {
                 PageId = PageId,
                 PageName = pageRoute,
@@ -165,20 +166,21 @@ namespace amorphie.workflow.Modules
                 transitionName = s.transitionName,
                 visibility = s.visibility,
                 type = s.type,
-               uiModel =s.uiModel!=null&&s.uiModel.buttonText!=null? new PageComponentUiModel(){
-                            buttonText=new List<amorphie.core.Base.Translation>(){new amorphie.core.Base.Translation(){
+                uiModel = s.uiModel != null && s.uiModel.buttonText != null ? new PageComponentUiModel()
+                {
+                    buttonText = new List<amorphie.core.Base.Translation>(){new amorphie.core.Base.Translation(){
                                 Language=s.uiModel.buttonText.language,
                                 Label=s.uiModel.buttonText.label,
                             }
                             }
-                            
-                        }:null,
+
+                } : null,
                 ChildComponents = s.childComponents != null && s.childComponents.Count > 0 ? pageComponentsMap(PageId, pageRoute, s.childComponents, token, identity) : null
 
             }).ToList();
             return list;
         }
-       
+
 
     }
 }

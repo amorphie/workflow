@@ -108,7 +108,7 @@ public static class InstanceModule
                    s.RecordId.ToString(),
                    s.Id,
                    s.WorkflowName,
-                   new GetStateDefinition(s.StateName, new  amorphie.workflow.core.Dtos.MultilanguageText(
+                   new GetStateDefinition(s.StateName, new amorphie.workflow.core.Dtos.MultilanguageText(
                     language!, s.State.Titles.FirstOrDefault(f => f.Language == language)!.Label
                     ),
                     s.State.BaseStatus,
@@ -123,9 +123,9 @@ public static class InstanceModule
                         t.ServiceName,
                         t.FlowName,
                         null,
-                        t.Page==null?null:
-                       new PostPageDefinitionRequest(t.Page.Operation,t.Page.Type,t.Page.Pages==null||t.Page.Pages.Count == 0?null:new amorphie.workflow.core.Dtos.MultilanguageText(language!,t.Page.Pages!.FirstOrDefault(f=>f.Language==language)!.Label),t.Page.Timeout)
-                       ,t.HistoryForms!=null&&t.HistoryForms.Count()>0?t.HistoryForms.Select(s=>new amorphie.workflow.core.Dtos.MultilanguageText(s.Language,s.Label)).ToArray():null
+                        t.Page == null ? null :
+                       new PostPageDefinitionRequest(t.Page.Operation, t.Page.Type, t.Page.Pages == null || t.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(language!, t.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), t.Page.Timeout)
+                       , t.HistoryForms != null && t.HistoryForms.Count() > 0 ? t.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null
                     )).ToArray()
                     ),
                    s.CreatedAt,
@@ -171,9 +171,9 @@ public static class InstanceModule
                                   t.ServiceName,
                                   t.FlowName,
                                   null,
-                                 t.Page==null?null:
-                       new PostPageDefinitionRequest(t.Page.Operation,t.Page.Type,t.Page.Pages==null||t.Page.Pages.Count == 0?null:new amorphie.workflow.core.Dtos.MultilanguageText(language!,t.Page.Pages!.FirstOrDefault(f=>f.Language==language)!.Label),t.Page.Timeout)
-                              ,t.HistoryForms!=null&&t.HistoryForms.Count()>0?t.HistoryForms.Select(s=>new amorphie.workflow.core.Dtos.MultilanguageText(s.Language,s.Label)).ToArray():null
+                                 t.Page == null ? null :
+                       new PostPageDefinitionRequest(t.Page.Operation, t.Page.Type, t.Page.Pages == null || t.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(language!, t.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), t.Page.Timeout)
+                              , t.HistoryForms != null && t.HistoryForms.Count() > 0 ? t.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null
                               )).ToArray()
                               ),
                              instance.CreatedAt,
@@ -193,33 +193,33 @@ public static class InstanceModule
    )
     {
         // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
-        var query = context.InstanceTransitions!.Include(i=>i.Instance)
-   .Where(w => w.InstanceId== instanceId);
-   var instances = query.Skip(page * pageSize)
-         .Take(pageSize)
-         .ToList();
-        return Results.Ok(instances.Select(it=>new GetInstanceTransitionHistoryResponse(
+        var query = context.InstanceTransitions!.Include(i => i.Instance)
+   .Where(w => w.InstanceId == instanceId);
+        var instances = query.Skip(page * pageSize)
+              .Take(pageSize)
+              .ToList();
+        return Results.Ok(instances.Select(it => new GetInstanceTransitionHistoryResponse(
 it.Id,
 it.FromStateName,
 it.ToStateName,
-context!.Transitions.FirstOrDefault(f=>f.ToStateName==it.ToStateName&&f.FromStateName==it.ToStateName)!.Name,
+context!.Transitions.FirstOrDefault(f => f.ToStateName == it.ToStateName && f.FromStateName == it.ToStateName)!.Name,
 it.EntityData,
 it.FormData!,
 it.CreatedAt,
-context!.InstanceEvents.Where(w=>w.InstanceTransitionId==it.Id).Select(s=>new GetInstanceEventHistoryResponse(
-    s.Id,
-    s.Id.ToString(),
-    new Dictionary<string, string>(),
-    s.InputData.Split(';', System.StringSplitOptions.None)
-    .Select (part  => part.Split('=', System.StringSplitOptions.None))
-    .Where (part => part.Length == 2)
-    .ToDictionary (sp => sp[0], sp => sp[1]),
-    s.OutputData.Split(';', System.StringSplitOptions.None)
-    .Select (part  => part.Split('=', System.StringSplitOptions.None))
-    .Where (part => part.Length == 2)
-    .ToDictionary (sp => sp[0], sp => sp[1]),
-    s.CreatedAt
-)).ToArray()
-        )).ToArray() );
+context!.InstanceEvents.Where(w => w.InstanceTransitionId == it.Id).Select(s => new GetInstanceEventHistoryResponse(
+        s.Id,
+        s.Id.ToString(),
+        new Dictionary<string, string>(),
+        s.InputData.Split(';', System.StringSplitOptions.None)
+        .Select(part => part.Split('=', System.StringSplitOptions.None))
+        .Where(part => part.Length == 2)
+        .ToDictionary(sp => sp[0], sp => sp[1]),
+        s.OutputData.Split(';', System.StringSplitOptions.None)
+        .Select(part => part.Split('=', System.StringSplitOptions.None))
+        .Where(part => part.Length == 2)
+        .ToDictionary(sp => sp[0], sp => sp[1]),
+        s.CreatedAt
+    )).ToArray()
+        )).ToArray());
     }
 }
