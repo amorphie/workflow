@@ -1,7 +1,15 @@
-using System.Reflection;
+
 using System.Text.Json.Serialization;
-using amorphie.core.security.Extensions;
- //using amorphie.workflow;
+using amorphie.workflow.core.Mapper;
+using System.Reflection;
+using amorphie.core.Extension;
+using amorphie.core.Identity;
+using amorphie.core.security;
+using amorphie.core.Swagger;
+using FluentValidation;
+
+
+//using amorphie.workflow;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 //using SecretExtensions;
@@ -31,7 +39,7 @@ builder.Services.AddScoped<IZeebeCommandService, ZeebeCommandService>();
 
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
-
+builder.Services.AddScoped<IBBTIdentity, FakeIdentity>();
 builder.Services.AddDaprClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -61,6 +69,13 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod();
         });
 });
+var assemblies = new Assembly[]
+                {
+                     typeof(PageComponentValidator).Assembly, typeof(PageComponentMapper).Assembly
+                };
+
+builder.Services.AddValidatorsFromAssemblies(assemblies);
+builder.Services.AddAutoMapper(assemblies);
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -93,5 +108,13 @@ app.MapDefinitionEndpoints();
 app.MapInstanceEndpoints();
 app.MapConsumerEndpoints();
 
-app.Run();
-
+try
+{
+    app.Logger.LogInformation("Starting application...");
+    app.AddRoutes();
+    app.Run();
+}
+catch (Exception ex)
+{
+    app.Logger.LogCritical(ex, "Aplication is terminated unexpectedly ");
+}

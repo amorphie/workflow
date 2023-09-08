@@ -108,24 +108,24 @@ public static class InstanceModule
                    s.RecordId.ToString(),
                    s.Id,
                    s.WorkflowName,
-                   new GetStateDefinition(s.StateName, new MultilanguageText(
+                   new GetStateDefinition(s.StateName, new  amorphie.workflow.core.Dtos.MultilanguageText(
                     language!, s.State.Titles.FirstOrDefault(f => f.Language == language)!.Label
                     ),
                     s.State.BaseStatus,
                     s.State.Transitions.Select(t => new PostTransitionDefinitionRequest(
                         t.Name,
-                        new MultilanguageText(
+                        new amorphie.workflow.core.Dtos.MultilanguageText(
                             language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                         t.ToStateName!,
-                         new MultilanguageText(
+                         new amorphie.workflow.core.Dtos.MultilanguageText(
                             language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label),
                         t.FromStateName,
                         t.ServiceName,
                         t.FlowName,
                         null,
                         t.Page==null?null:
-                       new PostPageDefinitionRequest(t.Page.Operation,t.Page.Type,t.Page.Pages==null||t.Page.Pages.Count == 0?null:new MultilanguageText(language!,t.Page.Pages!.FirstOrDefault(f=>f.Language==language)!.Label),t.Page.Timeout)
-                       ,t.HistoryForms!=null&&t.HistoryForms.Count()>0?t.HistoryForms.Select(s=>new MultilanguageText(s.Language,s.Label)).ToArray():null
+                       new PostPageDefinitionRequest(t.Page.Operation,t.Page.Type,t.Page.Pages==null||t.Page.Pages.Count == 0?null:new amorphie.workflow.core.Dtos.MultilanguageText(language!,t.Page.Pages!.FirstOrDefault(f=>f.Language==language)!.Label),t.Page.Timeout)
+                       ,t.HistoryForms!=null&&t.HistoryForms.Count()>0?t.HistoryForms.Select(s=>new amorphie.workflow.core.Dtos.MultilanguageText(s.Language,s.Label)).ToArray():null
                     )).ToArray()
                     ),
                    s.CreatedAt,
@@ -156,24 +156,24 @@ public static class InstanceModule
                              instance!.RecordId.ToString(),
                              instance.Id,
                              instance.WorkflowName,
-                             new GetStateDefinition(instance.StateName, new MultilanguageText(
+                             new GetStateDefinition(instance.StateName, new amorphie.workflow.core.Dtos.MultilanguageText(
                               language!, instance.State.Titles.FirstOrDefault(f => f.Language == language)!.Label
                               ),
                               instance.State.BaseStatus,
                               instance.State.Transitions.Select(t => new PostTransitionDefinitionRequest(
                                   t.Name,
-                                  new MultilanguageText(
+                                  new amorphie.workflow.core.Dtos.MultilanguageText(
                                       language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                                   t.ToStateName!,
-                                   new MultilanguageText(
+                                   new amorphie.workflow.core.Dtos.MultilanguageText(
                                       language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label),
                                   t.FromStateName,
                                   t.ServiceName,
                                   t.FlowName,
                                   null,
                                  t.Page==null?null:
-                       new PostPageDefinitionRequest(t.Page.Operation,t.Page.Type,t.Page.Pages==null||t.Page.Pages.Count == 0?null:new MultilanguageText(language!,t.Page.Pages!.FirstOrDefault(f=>f.Language==language)!.Label),t.Page.Timeout)
-                              ,t.HistoryForms!=null&&t.HistoryForms.Count()>0?t.HistoryForms.Select(s=>new MultilanguageText(s.Language,s.Label)).ToArray():null
+                       new PostPageDefinitionRequest(t.Page.Operation,t.Page.Type,t.Page.Pages==null||t.Page.Pages.Count == 0?null:new amorphie.workflow.core.Dtos.MultilanguageText(language!,t.Page.Pages!.FirstOrDefault(f=>f.Language==language)!.Label),t.Page.Timeout)
+                              ,t.HistoryForms!=null&&t.HistoryForms.Count()>0?t.HistoryForms.Select(s=>new amorphie.workflow.core.Dtos.MultilanguageText(s.Language,s.Label)).ToArray():null
                               )).ToArray()
                               ),
                              instance.CreatedAt,

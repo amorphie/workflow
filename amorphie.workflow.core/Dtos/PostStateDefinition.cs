@@ -1,5 +1,5 @@
 
-using amorphie.core.Base;
+using amorphie.workflow.core.Dtos;
 using amorphie.core.Enums;
 
 public record PostStateDefinitionRequest(string name, MultilanguageText title, StatusType baseStatus,StateType type ,PostTransitionDefinitionRequest[] transitions);

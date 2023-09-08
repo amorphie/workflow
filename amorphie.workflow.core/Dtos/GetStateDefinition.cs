@@ -1,7 +1,7 @@
 
-using amorphie.core.Base;
-using amorphie.core.Enums;
 
+using amorphie.core.Enums;
+using amorphie.workflow.core.Dtos;
 public  record GetStateDefinition(string name, MultilanguageText title, StatusType baseStatus, PostTransitionDefinitionRequest[] transitions);
 
 public record GetStateDefinitionRequest(string name, MultilanguageText title, StatusType baseStatus, PostTransitionDefinitionRequest[] transitions) :

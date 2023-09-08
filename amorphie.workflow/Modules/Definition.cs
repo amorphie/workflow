@@ -394,16 +394,16 @@ public static class DefinitionModule
         .Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
         .Take(pageSize.GetValueOrDefault(10)).Select(s => new GetStateDefinition(
             s.Name,
-            s.Titles.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).First(),
+            s.Titles.Where(s => s.Language == language).Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).First(),
             s.BaseStatus!,
             s.Transitions.Select(e => new PostTransitionDefinitionRequest(
-     e.Name, e.Titles.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).First(),
-     e.ToStateName!, e.Forms.Where(s => s.Language == language).Select(s => new MultilanguageText(s.Language, s.Label)).FirstOrDefault(),
+     e.Name, e.Titles.Where(s => s.Language == language).Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).First(),
+     e.ToStateName!, e.Forms.Where(s => s.Language == language).Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).FirstOrDefault(),
      e.FromStateName!, e.ServiceName, e.FlowName,
      e.Flow != null ? e.Flow.Gateway : null, e.Page == null ? null
      : new PostPageDefinitionRequest(e.Page.Operation, e.Page.Type, e.Page.Pages == null || e.Page.Pages.Count == 0 ? null :
-     new MultilanguageText(language!, e.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), e.Page.Timeout),
-     e.HistoryForms != null && e.HistoryForms.Count() > 0 ? e.HistoryForms.Select(s => new MultilanguageText(s.Language, s.Label)).ToArray() : null
+     new amorphie.workflow.core.Dtos.MultilanguageText(language!, e.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), e.Page.Timeout),
+     e.HistoryForms != null && e.HistoryForms.Count() > 0 ? e.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null
 
 )).ToArray()
             ))

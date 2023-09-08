@@ -8,5 +8,6 @@ public class Page: amorphie.core.Base.EntityBase
     public PageType Type { get; set; }
     public ICollection<amorphie.core.Base.Translation>? Pages { get; set; } = default!;
     public int? Timeout { get; set; }
+    public ICollection<PageComponent>? PagesComponents { get; set; } = default!;
 
 }

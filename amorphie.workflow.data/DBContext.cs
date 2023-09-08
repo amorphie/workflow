@@ -26,6 +26,8 @@ public class WorkflowDBContext : DbContext
     public DbSet<InstanceTransition> InstanceTransitions { get; set; } = default!;
     public DbSet<InstanceEvent> InstanceEvents { get; set; } = default!;
      public DbSet<Page> Pages { get; set; } = default!;
+      public DbSet<PageComponent> PageComponents { get; set; } = default!;
+      public DbSet<PageComponentUiModel> PageComponentUiModels { get; set; } = default!;
 
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
@@ -57,9 +59,14 @@ public class WorkflowDBContext : DbContext
 
         modelBuilder.Entity<Instance>()
            .HasKey(s => s.Id);
+             modelBuilder.Entity<PageComponent>()
+           .HasKey(s => s.Id);
+  modelBuilder.Entity<PageComponentUiModel>()
+           .HasKey(s => s.Id);
 
-       
 
+ modelBuilder.Entity<PageComponent>().HasIndex(item => item.SearchVector).HasMethod("GIN");
+        modelBuilder.Entity<PageComponent>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new string[] { "type", "componentName","PageName" ,"transitionName" }), true); 
         modelBuilder.Entity<Instance>()
           .HasIndex("EntityName", "RecordId", "StateName");
 

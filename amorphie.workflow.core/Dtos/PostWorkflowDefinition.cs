@@ -1,7 +1,7 @@
 
-using amorphie.core.Base;
-using amorphie.core.Enums;
 
+using amorphie.core.Enums;
+using  amorphie.workflow.core.Dtos;
 public  record PostWorkflowDefinitionRequest(string name, MultilanguageText[] title, PostWorkflowEntity[]? entities, string[] tags,WorkflowStatus status,MultilanguageText[]? historyForms);
 
 public record PostFSMWorkflowDefinitionRequest(string name, MultilanguageText[] title, PostWorkflowEntity[] entities, string[] tags,WorkflowStatus status,MultilanguageText[]? historyForms) : PostWorkflowDefinitionRequest(name, title, entities, tags,status,historyForms);
