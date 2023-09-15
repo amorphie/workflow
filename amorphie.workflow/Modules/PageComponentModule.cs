@@ -21,41 +21,41 @@ namespace amorphie.workflow.Modules;
         public override string[]? PropertyCheckList => new [] { "type", "componentName", "visibility", "transitionName" };
 
         public override string? UrlFragment => "pageComponent";
-           public override void AddRoutes(RouteGroupBuilder routeGroupBuilder)
-    {
-        base.AddRoutes(routeGroupBuilder);
-
-        routeGroupBuilder.MapGet("search", getAllPageComponentFullTextSearch);
-    }
-
-    async ValueTask<IResult> getAllPageComponentFullTextSearch(
-        [FromServices] WorkflowDBContext context,
-       [AsParameters] PageComponentSearch dataSearch
-   )
-    {
-        var query = context!.PageComponents!
-        .Include(s=>s.ChildComponents)
-        .Include(s=>s.uiModel)
-        .Include(s=>s.transition)
-            .Skip(dataSearch.Page * dataSearch.PageSize)
-            .Take(dataSearch.PageSize);
-
-        
-        if (!string.IsNullOrEmpty(dataSearch.Keyword))
+        public override void AddRoutes(RouteGroupBuilder routeGroupBuilder)
         {
-            query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", dataSearch.Keyword)));
+            base.AddRoutes(routeGroupBuilder);
+
+            routeGroupBuilder.MapGet("search", getAllPageComponentFullTextSearch);
         }
 
-        var securityQuestions = query.ToList();
-
-        if (securityQuestions.Count() > 0)
+        async ValueTask<IResult> getAllPageComponentFullTextSearch(
+            [FromServices] WorkflowDBContext context,
+           [AsParameters] PageComponentSearch dataSearch
+       )
         {
-            var response = securityQuestions.Select(x => ObjectMapper.Mapper.Map<DtoPageComponents>(x)).ToList();
-            return Results.Ok(response);            
-        }
+            var query = context!.PageComponents!
+            .Include(s => s.ChildComponents)
+            .Include(s => s.uiModel)
+            .Include(s => s.transition)
+                .Skip(dataSearch.Page * dataSearch.PageSize)
+                .Take(dataSearch.PageSize);
 
-         return Results.NoContent();        
-    }
+
+            if (!string.IsNullOrEmpty(dataSearch.Keyword))
+            {
+                query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", dataSearch.Keyword)));
+            }
+
+            var securityQuestions = query.ToList();
+
+            if (securityQuestions.Count() > 0)
+            {
+                var response = securityQuestions.Select(x => ObjectMapper.Mapper.Map<DtoPageComponents>(x)).ToList();
+                return Results.Ok(response);
+            }
+
+            return Results.NoContent();
+        }
 
         protected override async ValueTask<IResult> UpsertMethod(
             [FromServices] IMapper mapper,
@@ -104,7 +104,7 @@ namespace amorphie.workflow.Modules;
                         }:null,
                         ChildComponents = s.childComponents.Any() ? pageComponentsMap(Page.Id, data.pageRoute, s.childComponents, bbtIdentity, token) : null
                     });
-                   
+
 
 
                     var pageComponentUpdate = data.components.Where(w => Page.PagesComponents!.Any(a => a.componentName == w.componentName));
@@ -161,7 +161,7 @@ namespace amorphie.workflow.Modules;
         }
         private List<PageComponent> pageComponentsMap(Guid? PageId, string pageRoute, List<DtoComponent> dtoComponents, IBBTIdentity identity, CancellationToken token)
         {
-            List<PageComponent> list= dtoComponents.Select(s => new PageComponent
+            List<PageComponent> list = dtoComponents.Select(s => new PageComponent
             {
                 PageId = PageId,
                 PageName = pageRoute,
@@ -186,6 +186,6 @@ namespace amorphie.workflow.Modules;
             }).ToList();
             return list;
         }
-       
+
 
     }

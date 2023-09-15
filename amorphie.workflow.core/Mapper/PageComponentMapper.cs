@@ -11,12 +11,12 @@ namespace amorphie.workflow.core.Mapper;
         public PageComponentMapper()
         {
 
-           
-         CreateMap<PageComponent, DtoPageComponents>()
-          .ConstructUsing(x=> new DtoPageComponents
-          {
-              pageRoute=x.PageName,
-              components=new List<DtoComponent>(){
+
+            CreateMap<PageComponent, DtoPageComponents>()
+             .ConstructUsing(x => new DtoPageComponents
+             {
+                 pageRoute = x.PageName,
+                 components = new List<DtoComponent>(){
                 new DtoComponent(){
                     componentName=x.componentName,
                      transitionName=x.transitionName,
@@ -33,8 +33,8 @@ namespace amorphie.workflow.core.Mapper;
                        componentJson=s.componentJson
                        }).ToList():null
                 }
-              }
-                
-          }); 
+                 }
+
+             });
         }
     }
