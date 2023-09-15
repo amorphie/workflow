@@ -48,7 +48,7 @@ namespace amorphie.workflow.Modules;
 
         var securityQuestions = query.ToList();
 
-        if (securityQuestions.Count() > 0)
+        if (securityQuestions.Any())
         {
             var response = securityQuestions.Select(x => ObjectMapper.Mapper.Map<DtoPageComponents>(x)).ToList();
             return Results.Ok(response);
