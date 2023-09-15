@@ -7,7 +7,4 @@ using FluentValidation;
 
     public class PageComponentValidator: AbstractValidator<PageComponent>
     {
-        public PageComponentValidator()
-        {
-        }
     }

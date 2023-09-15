@@ -22,6 +22,7 @@ using NpgsqlTypes;
 
         public PageComponent? parentComponent { get; set; } = default!;
         public  Guid? parentComponentId { get; set; } 
+        public  string? componentJson { get; set; } 
 
     }
 

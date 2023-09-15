@@ -10,15 +10,15 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-namespace amorphie.workflow.Modules
-{
+namespace amorphie.workflow.Modules;
+
     public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent, WorkflowDBContext>
     {
         public PageComponentModule(WebApplication app) : base(app)
         {
         }
 
-        public override string[]? PropertyCheckList => new string[] { "type", "componentName", "visibility", "transitionName" };
+        public override string[]? PropertyCheckList => new [] { "type", "componentName", "visibility", "transitionName" };
 
         public override string? UrlFragment => "pageComponent";
            public override void AddRoutes(RouteGroupBuilder routeGroupBuilder)
@@ -71,7 +71,7 @@ namespace amorphie.workflow.Modules
             {
 
                 Page? Page = await context.Pages!.Include(s => s.Pages).Include(s => s.PagesComponents)
-                      .FirstOrDefaultAsync(w => w.Pages != null && w.Pages.Any(a => a.Label == data.pageRoute), token)
+                      .FirstOrDefaultAsync(w => w.Pages.Any(a => a.Label == data.pageRoute), token)
                       ;
                 if (Page == null)
                 {
@@ -81,10 +81,11 @@ namespace amorphie.workflow.Modules
                 {
                     bool saveChanges = false;
 
-                    var insertList = data.components.Where(w => !Page.PagesComponents!.Any(a => a.componentName == w.componentName)).Select(s => new PageComponent
+                    var insertList = data.components.Where(w => Page.PagesComponents!.All(a => a.componentName 
+                    != w.componentName)).Select(s => new PageComponent
                     {
                         PageId = Page.Id,
-                        CreatedAt = DateTime.Now,
+                        CreatedAt = DateTime.UtcNow,
                         CreatedBy = bbtIdentity.UserId.Value,
                         CreatedByBehalfOf = bbtIdentity.BehalfOfId.Value,
                         PageName = data.pageRoute,
@@ -92,7 +93,8 @@ namespace amorphie.workflow.Modules
                         transitionName = s.transitionName,
                         visibility = s.visibility,
                         type = s.type,
-                        uiModel =s.uiModel!=null&&s.uiModel.buttonText!=null? new PageComponentUiModel(){
+                        componentJson=s.componentJson,
+                        uiModel =s.uiModel?.buttonText!=null? new PageComponentUiModel(){
                             buttonText=new List<amorphie.core.Base.Translation>(){new amorphie.core.Base.Translation(){
                                 Language=s.uiModel.buttonText.language,
                                 Label=s.uiModel.buttonText.label,
@@ -100,7 +102,7 @@ namespace amorphie.workflow.Modules
                             }
                             
                         }:null,
-                        ChildComponents = s.childComponents != null && s.childComponents.Count > 0 ? pageComponentsMap(Page.Id, data.pageRoute, s.childComponents, token, bbtIdentity) : null
+                        ChildComponents = s.childComponents.Any() ? pageComponentsMap(Page.Id, data.pageRoute, s.childComponents, bbtIdentity, token) : null
                     });
                    
 
@@ -136,36 +138,42 @@ namespace amorphie.workflow.Modules
                         }
                     }
                    
-                         if (insertList != null && insertList.Count() > 0)
+                         if (insertList.Any())
                     {
                         await context.PageComponents.AddRangeAsync(insertList, token);
                         saveChanges = true;
                     }
                      if (saveChanges)
+                     {
                         await context.SaveChangesAsync(token);
+                          return Results.Ok();
+                     }
+                        else{
+                             return Results.NoContent();
+                        }
                 }
             }
             catch (Exception ex)
             {
-
+                 return Results.Problem("Unexcepted error:"+ex.ToString());
             }
-
-            return Results.NoContent();
+              return Results.NoContent();
         }
-        private List<PageComponent> pageComponentsMap(Guid? PageId, string pageRoute, List<DtoComponent> dtoComponents, CancellationToken token, IBBTIdentity identity)
+        private List<PageComponent> pageComponentsMap(Guid? PageId, string pageRoute, List<DtoComponent> dtoComponents, IBBTIdentity identity, CancellationToken token)
         {
             List<PageComponent> list= dtoComponents.Select(s => new PageComponent
             {
                 PageId = PageId,
                 PageName = pageRoute,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 CreatedBy = identity.UserId.Value,
                 CreatedByBehalfOf = identity.BehalfOfId.Value,
                 componentName = s.componentName!,
                 transitionName = s.transitionName,
                 visibility = s.visibility,
+                componentJson=s.componentJson,
                 type = s.type,
-               uiModel =s.uiModel!=null&&s.uiModel.buttonText!=null? new PageComponentUiModel(){
+               uiModel =s.uiModel?.buttonText!=null? new PageComponentUiModel(){
                             buttonText=new List<amorphie.core.Base.Translation>(){new amorphie.core.Base.Translation(){
                                 Language=s.uiModel.buttonText.language,
                                 Label=s.uiModel.buttonText.label,
@@ -173,7 +181,7 @@ namespace amorphie.workflow.Modules
                             }
                             
                         }:null,
-                ChildComponents = s.childComponents != null && s.childComponents.Count > 0 ? pageComponentsMap(PageId, pageRoute, s.childComponents, token, identity) : null
+                ChildComponents = s.childComponents.Any() ? pageComponentsMap(PageId, pageRoute, s.childComponents, identity, token) : null
 
             }).ToList();
             return list;
@@ -181,4 +189,3 @@ namespace amorphie.workflow.Modules
        
 
     }
-}

@@ -66,7 +66,7 @@ public class WorkflowDBContext : DbContext
 
 
  modelBuilder.Entity<PageComponent>().HasIndex(item => item.SearchVector).HasMethod("GIN");
-        modelBuilder.Entity<PageComponent>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new string[] { "type", "componentName","PageName" ,"transitionName" }), true); 
+        modelBuilder.Entity<PageComponent>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new [] { "type", "componentName","PageName" ,"transitionName" }), true); 
         modelBuilder.Entity<Instance>()
           .HasIndex("EntityName", "RecordId", "StateName");
 

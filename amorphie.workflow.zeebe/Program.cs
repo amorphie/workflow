@@ -11,7 +11,7 @@ var daprClient = new DaprClientBuilder().Build();
 //     {
 //         options.UseNpgsql("Host=localhost:5432;Database=workflow;Username=postgres;Password=postgres");
 //     });
-await builder.Configuration.AddVaultSecrets("workflow-secretstore",new string[]{"workflow-secretstore"});
+await builder.Configuration.AddVaultSecrets("workflow-secretstore",new []{"workflow-secretstore"});
 var postgreSql = builder.Configuration["workflowdb"];
 builder.Services.AddDaprClient();
 builder.Logging.ClearProviders();

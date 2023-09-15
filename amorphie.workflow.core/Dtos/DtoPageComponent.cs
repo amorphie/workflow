@@ -21,6 +21,7 @@ public class DtoComponent
     public string? transitionName { get; set; }
     public bool? visibility { get; set; }
     public string? type { get; set; }
+    public string? componentJson { get; set; }
     public List<DtoComponent>? childComponents { get; set; }
 }
 public class DtoPageComponentUiModel
