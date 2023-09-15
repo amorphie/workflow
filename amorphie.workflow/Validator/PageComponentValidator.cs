@@ -5,6 +5,6 @@ using System.Threading.Tasks;
 using FluentValidation;
 
 
-    public class PageComponentValidator: AbstractValidator<PageComponent>
-    {
-    }
+public class PageComponentValidator : AbstractValidator<PageComponent>
+{
+}

@@ -110,8 +110,8 @@ public class PostTransactionService : IPostTransactionService
 
     public async Task<IResponse> Execute()
     {
-        DateTime? started=DateTime.UtcNow;
-        var instanceAtState =  _activeInstances?.Where(i => i.StateName == _transition.FromStateName).FirstOrDefault();
+        DateTime? started = DateTime.UtcNow;
+        var instanceAtState = _activeInstances?.Where(i => i.StateName == _transition.FromStateName).FirstOrDefault();
 
         // There is no active instance at submited state
         if (instanceAtState == null)
@@ -189,7 +189,7 @@ public class PostTransactionService : IPostTransactionService
 
     private IResponse hasFlowNoInstance()
     {
-        DateTime started=DateTime.UtcNow;
+        DateTime started = DateTime.UtcNow;
         _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
 
         var newInstance = new Instance
@@ -225,7 +225,7 @@ public class PostTransactionService : IPostTransactionService
     {
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
         _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
-        DateTime started=DateTime.UtcNow;
+        DateTime started = DateTime.UtcNow;
         instanceAtState.StateName = _transition.FromStateName!;
         instanceAtState.ModifiedBy = _user;
         instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
@@ -290,12 +290,12 @@ public class PostTransactionService : IPostTransactionService
     {
         if (!string.IsNullOrEmpty(_transition.ServiceName))
         {
-            ClientFactory _factory=new ();
-             var clientFactory = _factory.CreateClient(_transition.ServiceName);
+            ClientFactory _factory = new();
+            var clientFactory = _factory.CreateClient(_transition.ServiceName);
             try
             {
 
-               SendTransitionInfoRequest request = new ()
+                SendTransitionInfoRequest request = new()
                 {
                     recordId = instance.RecordId,
                     newStatus = _transition.ToStateName!,
@@ -374,8 +374,8 @@ public class PostTransactionService : IPostTransactionService
             instance.BaseStatus = _transition.ToState!.BaseStatus;
             if (instance.WorkflowName != _transition.ToState.WorkflowName)
             {
-                instance.WorkflowName=_transition.ToState!.WorkflowName!;
-                if(_transition.ToState.Workflow!.Entities.All(a=>a.Name!=instance.EntityName))
+                instance.WorkflowName = _transition.ToState!.WorkflowName!;
+                if (_transition.ToState.Workflow!.Entities.All(a => a.Name != instance.EntityName))
                 {
                     instance.EntityName = _transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
                 }
@@ -385,8 +385,8 @@ public class PostTransactionService : IPostTransactionService
         {
             _dbContext.Add(instance);
         }
-       
-        addInstanceTansition(instance,started,DateTime.UtcNow);
+
+        addInstanceTansition(instance, started, DateTime.UtcNow);
         _dbContext.SaveChanges();
         SendSignalRData(instance, "transition-completed", string.Empty);
         return new Response

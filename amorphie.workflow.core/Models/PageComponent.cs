@@ -20,9 +20,9 @@ public class PageComponent : amorphie.core.Base.EntityBase
 
     public ICollection<PageComponent>? ChildComponents { get; set; } = default!;
 
-        public PageComponent? parentComponent { get; set; } = default!;
-        public  Guid? parentComponentId { get; set; } 
-        public  string? componentJson { get; set; } 
+    public PageComponent? parentComponent { get; set; } = default!;
+    public Guid? parentComponentId { get; set; }
+    public string? componentJson { get; set; }
 
 }
 
