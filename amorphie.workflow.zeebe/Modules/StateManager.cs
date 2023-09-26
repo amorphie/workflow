@@ -36,7 +36,8 @@ public static class StateManagerModule
         )
     {
         // TODO : Include a parameter for the cancelation token and add cancelation token to FirstOrDefault
-
+        dynamic additionalDataDynamic = default!;
+        dynamic entityDataDynamic = default!;
         var targetState = request.Headers["TARGET_STATE"].ToString();
         var transitionName = body.GetProperty("LastTransition").ToString();
         string hubMessage = string.Empty;
@@ -127,9 +128,24 @@ public static class StateManagerModule
                 data = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data");
                 transitionDataFound = false;
                 newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
-
+                try
+                {
+                    additionalDataDynamic = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("additionalData");
+                }
+                catch (Exception ex)
+                {
+                    additionalDataDynamic = newInstanceTransition!.AdditionalData;
+                }
 
                 newInstanceTransition!.EntityData = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("entityData").ToString();
+                try
+                {
+                    entityDataDynamic = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("entityData");
+                }
+                catch (Exception ex)
+                {
+                    entityDataDynamic = newInstanceTransition!.EntityData;
+                }
                 newInstanceTransition!.ToStateName = transition.ToStateName;
 
                 newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("TriggeredBy").ToString());
@@ -142,7 +158,23 @@ public static class StateManagerModule
         {
             newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
 
+            try
+            {
+                additionalDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData");
+            }
+            catch (Exception ex)
+            {
+                additionalDataDynamic = newInstanceTransition!.AdditionalData;
+            }
             newInstanceTransition!.EntityData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData").ToString();
+            try
+            {
+                entityDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData");
+            }
+            catch (Exception ex)
+            {
+                entityDataDynamic = newInstanceTransition!.EntityData;
+            }
             newInstanceTransition!.ToStateName = transition.ToStateName;
 
             newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString());
@@ -235,13 +267,6 @@ public static class StateManagerModule
 
         string hubUrl = configuration["hubUrl"]!.ToString();
         Console.WriteLine(hubUrl);
-        string additionalData = string.Empty;
-        if (!string.IsNullOrEmpty(newInstanceTransition.AdditionalData))
-        {
-            var notUnicodeString = Newtonsoft.Json.JsonConvert.DeserializeObject(newInstanceTransition.AdditionalData);
-            byte[] bytes = System.Text.Encoding.Default.GetBytes(notUnicodeString.ToString());
-            additionalData = System.Text.Encoding.UTF8.GetString(bytes);
-        }
 
         var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
@@ -253,10 +278,10 @@ public static class StateManagerModule
                       eventInfo,
                        instance.Id,
                        instance.EntityName,
-                     newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
+                     entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
               transition.Page == null ? null :
               new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-              transition.Page.Timeout), hubMessage, additionalData
+              transition.Page.Timeout), hubMessage, additionalDataDynamic
                    ), cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
     }
