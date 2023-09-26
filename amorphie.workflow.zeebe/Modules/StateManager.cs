@@ -36,8 +36,8 @@ public static class StateManagerModule
         )
     {
         // TODO : Include a parameter for the cancelation token and add cancelation token to FirstOrDefault
-        dynamic additionalDataDynamic=default!;
-        dynamic entityDataDynamic=default!;
+        dynamic additionalDataDynamic = default!;
+        dynamic entityDataDynamic = default!;
         var targetState = request.Headers["TARGET_STATE"].ToString();
         var transitionName = body.GetProperty("LastTransition").ToString();
         string hubMessage = string.Empty;
@@ -132,17 +132,17 @@ public static class StateManagerModule
                 {
                     additionalDataDynamic = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("additionalData");
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     additionalDataDynamic = newInstanceTransition!.AdditionalData;
                 }
 
                 newInstanceTransition!.EntityData = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("entityData").ToString();
-                 try
+                try
                 {
                     entityDataDynamic = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("entityData");
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     entityDataDynamic = newInstanceTransition!.EntityData;
                 }
@@ -158,23 +158,23 @@ public static class StateManagerModule
         {
             newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
 
-              try
-                {
-                    additionalDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData");
-                }
-                catch(Exception ex)
-                {
-                    additionalDataDynamic = newInstanceTransition!.AdditionalData;
-                }
+            try
+            {
+                additionalDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData");
+            }
+            catch (Exception ex)
+            {
+                additionalDataDynamic = newInstanceTransition!.AdditionalData;
+            }
             newInstanceTransition!.EntityData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData").ToString();
-             try
-                {
-                    entityDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData");
-                }
-                catch(Exception ex)
-                {
-                    entityDataDynamic = newInstanceTransition!.EntityData;
-                }
+            try
+            {
+                entityDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData");
+            }
+            catch (Exception ex)
+            {
+                entityDataDynamic = newInstanceTransition!.EntityData;
+            }
             newInstanceTransition!.ToStateName = transition.ToStateName;
 
             newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString());
@@ -267,7 +267,7 @@ public static class StateManagerModule
 
         string hubUrl = configuration["hubUrl"]!.ToString();
         Console.WriteLine(hubUrl);
-           
+
         var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
                     hubUrl,
@@ -281,7 +281,7 @@ public static class StateManagerModule
                      entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
               transition.Page == null ? null :
               new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-              transition.Page.Timeout), hubMessage,additionalDataDynamic
+              transition.Page.Timeout), hubMessage, additionalDataDynamic
                    ), cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
     }
