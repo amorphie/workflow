@@ -1,10 +1,12 @@
 using System.Dynamic;
 using System.Text.Json;
 using amorphie.workflow.core.Dtos;
+using AutoMapper.Configuration.Annotations;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Microsoft.VisualBasic;
 using Refit;
 
 public static class StateManagerModule
@@ -140,7 +142,6 @@ public static class StateManagerModule
         {
             newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
 
-
             newInstanceTransition!.EntityData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData").ToString();
             newInstanceTransition!.ToStateName = transition.ToStateName;
 
@@ -234,7 +235,14 @@ public static class StateManagerModule
 
         string hubUrl = configuration["hubUrl"]!.ToString();
         Console.WriteLine(hubUrl);
-
+        string additionalData=string.Empty;
+        if(!string.IsNullOrEmpty(newInstanceTransition.AdditionalData))
+        {
+            var notUnicodeString = Newtonsoft.Json.JsonConvert.DeserializeObject(newInstanceTransition.AdditionalData);
+            byte[] bytes = System.Text.Encoding.Default.GetBytes(notUnicodeString.ToString());
+           additionalData = System.Text.Encoding.UTF8.GetString(bytes);
+        }
+           
         var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
                     hubUrl,
@@ -248,7 +256,7 @@ public static class StateManagerModule
                      newInstanceTransition.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
               transition.Page == null ? null :
               new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-              transition.Page.Timeout), hubMessage, newInstanceTransition.AdditionalData
+              transition.Page.Timeout), hubMessage,additionalData
                    ), cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
     }

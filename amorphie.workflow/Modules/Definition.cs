@@ -172,7 +172,7 @@ public static class DefinitionModule
         }
 
     }
-    static IResponse deleteDefinition(
+    static IResult deleteDefinition(
         [FromServices] WorkflowDBContext context,
         [FromRoute(Name = "definition-name")] string definition
     )
@@ -191,31 +191,22 @@ public static class DefinitionModule
                 context!.Remove(existingRecord);
                 // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
                 context.SaveChanges();
-                return new Response
-                {
-                    Result = new Result(Status.Success, "Successfully Delete " + definition + " workflow"),
-                };
-                // return Results.Ok();
+                return Results.Ok();
             }
             else
             {
-                return new Response
-                {
-                    Result = new Result(Status.Error, "No Content"),
-                };
+                return Results.NoContent();
+
             }
         }
         catch (Exception ex)
         {
-            return new Response
-            {
-                Result = new Result(Status.Error, ex.ToString()),
-            };
+              return Results.Problem(ex.ToString());
         }
 
 
     }
-    static IResponse<PostWorkflowDefinitionResponse> saveDefinition(
+    static IResult saveDefinition(
       [FromServices] WorkflowDBContext context,
       [FromBody] PostWorkflowDefinitionRequest data,
       [FromHeader(Name = "Language")] string? language = "en-EN"
@@ -252,7 +243,7 @@ public static class DefinitionModule
                     Language = s.language
                 }).ToList(),
                 Entities = entityList,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 CreatedByBehalfOf = Guid.NewGuid(),
                 HistoryForms = data.historyForms != null && data.historyForms.Count() > 0 ? data.historyForms.Select(s => new Translation
                 {
@@ -263,11 +254,12 @@ public static class DefinitionModule
             context!.Workflows!.Add(newWorkflow);
             // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
             context.SaveChanges();
-            return new Response<PostWorkflowDefinitionResponse>
-            {
-                Result = new Result(Status.Success, "Success Create"),
-                Data = new PostWorkflowDefinitionResponse(newWorkflow.Name),
-            };
+            return Results.Ok();
+            // return new Response<PostWorkflowDefinitionResponse>
+            // {
+            //     Result = new Result(Status.Success, "Success Create"),
+            //     Data = new PostWorkflowDefinitionResponse(newWorkflow.Name),
+            // };
         }
         else
         {
@@ -275,7 +267,7 @@ public static class DefinitionModule
             if (existingRecord.Tags != data.tags || existingRecord.WorkflowStatus != data.status)
             {
                 hasChanges = true;
-                existingRecord.ModifiedAt = DateTime.Now;
+                existingRecord.ModifiedAt = DateTime.UtcNow;
                 existingRecord.Tags = data.tags;
                 existingRecord.WorkflowStatus = data.status;
             }
@@ -338,7 +330,7 @@ public static class DefinitionModule
                         //  IsExclusive = req.IsExclusive,
                         IsStateManager = req.IsStateManager,
                         AvailableInStatus = req.AvailableInStatus,
-                        CreatedAt = DateTime.Now,
+                        CreatedAt = DateTime.UtcNow,
                         CreatedByBehalfOf = Guid.NewGuid(),
                     });
                     hasChanges = true;
@@ -360,23 +352,15 @@ public static class DefinitionModule
             if (hasChanges)
             {
                 context!.SaveChanges();
-                return new Response<PostWorkflowDefinitionResponse>
-                {
-                    Result = new Result(Status.Success, "Success Update"),
-                    Data = new PostWorkflowDefinitionResponse(existingRecord.Name),
-                };
-                // return Results.Ok(new PostWorkflowDefinitionResponse(data.name));
+                return Results.Ok();
             }
             else
             {
-                return new Response<PostWorkflowDefinitionResponse>
-                {
-                    Result = new Result(Status.Error, "Not Modiefied"),
-                };
+                return Results.NoContent();
             }
         }
     }
-    static IResponse<IQueryable<GetStateDefinition>> getState(
+    static IResult getState(
            [FromServices] WorkflowDBContext context,
            [FromRoute(Name = "definition-name")] string definition,
            [FromQuery(Name = "state-name")] string? state,
@@ -409,14 +393,9 @@ public static class DefinitionModule
             ))
 //    .ToList();
 ;
-        return new Response<IQueryable<GetStateDefinition>>
-        {
-            Data = states,
-            Result = new Result(Status.Success, "Success")
-        };
-        //return Results.Ok(states);
+        return Results.Ok(states);
     }
-    static IResponse deleteState(
+    static IResult deleteState(
             [FromServices] WorkflowDBContext context,
             [FromRoute(Name = "name")] string definition,
               [FromRoute(Name = "state-name")] string state,
@@ -436,17 +415,15 @@ public static class DefinitionModule
             context!.Remove(existingRecord);
             // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
             context.SaveChanges();
-            return new Response
-            {
-                Result = new Result(Status.Success, "Success"),
-            };
+            // return new Response
+            // {
+            //     Result = new Result(Status.Success, "Success"),
+            // };
+            return Results.Ok();
         }
         else
         {
-            return new Response
-            {
-                Result = new Result(Status.Error, "No Content"),
-            };
+             return Results.NoContent();
         }
 
     }
@@ -468,7 +445,7 @@ public static class DefinitionModule
                 WorkflowName = definition,
                 Name = data.name,
                 BaseStatus = data.baseStatus,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 CreatedByBehalfOf = Guid.NewGuid(),
                 Type = data.type,
                 Transitions = data!.transitions!.Select(x => new Transition
@@ -480,7 +457,7 @@ public static class DefinitionModule
                         Name = x.message,
                         Message = x.message,
                         Gateway = x.gateway!,
-                        CreatedAt = DateTime.Now,
+                        CreatedAt = DateTime.UtcNow,
                         Process = definition,
                     },
                     Page = x.page == null ? null : new Page()
@@ -515,7 +492,7 @@ public static class DefinitionModule
                     }).ToList(),
                     ToState = context!.States!.FirstOrDefault(f => f.Name == x.toState),
                     ToStateName = context!.States!.FirstOrDefault(f => f.Name == x.toState) != null ? x.toState : null,
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = DateTime.UtcNow,
                     //  Type = TransitionType.AutoTransition,
                     CreatedByBehalfOf = Guid.NewGuid(),
                 }).ToList(),
@@ -601,7 +578,7 @@ public static class DefinitionModule
 
                         },
                         FromStateName = req.fromState,
-                        CreatedAt = DateTime.Now,
+                        CreatedAt = DateTime.UtcNow,
                         CreatedByBehalfOf = Guid.NewGuid(),
                     });
                     hasChanges = true;
@@ -636,7 +613,7 @@ public static class DefinitionModule
                                 {
                                     Name = req.message!,
                                     Gateway = req.gateway!,
-                                    CreatedAt = DateTime.Now,
+                                    CreatedAt = DateTime.UtcNow,
                                     Message = req.message!,
                                     Process = definition,
                                 };

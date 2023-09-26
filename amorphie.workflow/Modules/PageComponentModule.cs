@@ -30,7 +30,8 @@ namespace amorphie.workflow.Modules;
 
     async ValueTask<IResult> getAllPageComponentFullTextSearch(
         [FromServices] WorkflowDBContext context,
-       [AsParameters] PageComponentSearch dataSearch
+       [AsParameters] PageComponentSearch dataSearch,
+        CancellationToken cancellationToken
    )
     {
         var query = context!.PageComponents!
@@ -46,11 +47,11 @@ namespace amorphie.workflow.Modules;
             query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", dataSearch.Keyword)));
         }
 
-        var securityQuestions = query.ToList();
+        var securityQuestions =await query.ToListAsync(cancellationToken);
 
         if (securityQuestions.Any())
         {
-            var response = securityQuestions.Select(x => ObjectMapper.Mapper.Map<DtoPageComponents>(x)).ToList();
+            var response = securityQuestions.Select(x => ObjectMapper.Mapper.Map<DtoPageComponents>(x));
             return Results.Ok(response);
         }
 
@@ -80,9 +81,9 @@ namespace amorphie.workflow.Modules;
             else
             {
                 bool saveChanges = false;
-
-                var insertList = data.components.Where(w => Page.PagesComponents!.All(a => a.componentName
-                != w.componentName)).Select(s => new PageComponent
+                
+                var insertList = data.components.Where(w =>!Page.PagesComponents!.Any(a => a.componentName
+                == w.componentName)).Select(s => new PageComponent
                 {
                     PageId = Page.Id,
                     CreatedAt = DateTime.UtcNow,
@@ -161,7 +162,7 @@ namespace amorphie.workflow.Modules;
         }
         return Results.NoContent();
     }
-    private List<PageComponent> pageComponentsMap(Guid? PageId, string pageRoute, List<DtoComponent> dtoComponents, IBBTIdentity identity, CancellationToken token)
+    private  List<PageComponent> pageComponentsMap(Guid? PageId, string pageRoute, List<DtoComponent> dtoComponents, IBBTIdentity identity, CancellationToken token)
     {
         List<PageComponent> list = dtoComponents.Select(s => new PageComponent
         {
