@@ -30,7 +30,8 @@ namespace amorphie.workflow.Modules;
 
     async ValueTask<IResult> getAllPageComponentFullTextSearch(
         [FromServices] WorkflowDBContext context,
-       [AsParameters] PageComponentSearch dataSearch
+       [AsParameters] PageComponentSearch dataSearch,
+        CancellationToken cancellationToken
    )
     {
         var query = context!.PageComponents!
@@ -46,11 +47,11 @@ namespace amorphie.workflow.Modules;
             query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", dataSearch.Keyword)));
         }
 
-        var securityQuestions = query.ToList();
+        var securityQuestions = await query.ToListAsync(cancellationToken);
 
         if (securityQuestions.Any())
         {
-            var response = securityQuestions.Select(x => ObjectMapper.Mapper.Map<DtoPageComponents>(x)).ToList();
+            var response = securityQuestions.Select(x => ObjectMapper.Mapper.Map<DtoPageComponents>(x));
             return Results.Ok(response);
         }
 
@@ -81,30 +82,30 @@ namespace amorphie.workflow.Modules;
             {
                 bool saveChanges = false;
 
-                var insertList = data.components.Where(w => Page.PagesComponents!.All(a => a.componentName
-                != w.componentName)).Select(s => new PageComponent
-                {
-                    PageId = Page.Id,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = bbtIdentity.UserId.Value,
-                    CreatedByBehalfOf = bbtIdentity.BehalfOfId.Value,
-                    PageName = data.pageRoute,
-                    componentName = s.componentName,
-                    transitionName = s.transitionName,
-                    visibility = s.visibility,
-                    type = s.type,
-                    componentJson = s.componentJson,
-                    uiModel = s.uiModel?.buttonText != null ? new PageComponentUiModel()
-                    {
-                        buttonText = new List<amorphie.core.Base.Translation>(){new amorphie.core.Base.Translation(){
+                var insertList = data.components.Where(w => !Page.PagesComponents!.Any(a => a.componentName
+                 == w.componentName)).Select(s => new PageComponent
+                 {
+                     PageId = Page.Id,
+                     CreatedAt = DateTime.UtcNow,
+                     CreatedBy = bbtIdentity.UserId.Value,
+                     CreatedByBehalfOf = bbtIdentity.BehalfOfId.Value,
+                     PageName = data.pageRoute,
+                     componentName = s.componentName,
+                     transitionName = s.transitionName,
+                     visibility = s.visibility,
+                     type = s.type,
+                     componentJson = s.componentJson,
+                     uiModel = s.uiModel?.buttonText != null ? new PageComponentUiModel()
+                     {
+                         buttonText = new List<amorphie.core.Base.Translation>(){new amorphie.core.Base.Translation(){
                                 Language=s.uiModel.buttonText.language,
                                 Label=s.uiModel.buttonText.label,
                             }
-                        }
+                         }
 
-                    } : null,
-                    ChildComponents = s.childComponents.Any() ? pageComponentsMap(Page.Id, data.pageRoute, s.childComponents, bbtIdentity, token) : null
-                });
+                     } : null,
+                     ChildComponents = s.childComponents.Any() ? pageComponentsMap(Page.Id, data.pageRoute, s.childComponents, bbtIdentity, token) : null
+                 });
 
 
 

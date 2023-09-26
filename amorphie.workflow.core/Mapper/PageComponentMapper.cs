@@ -22,6 +22,7 @@ namespace amorphie.workflow.core.Mapper;
                      transitionName=x.transitionName,
                       type= x.type,
                        visibility=x.visibility,
+                       componentJson=x.componentJson,
                        uiModel=x.uiModel!=null&&x.uiModel.buttonText!=null?new DtoPageComponentUiModel(){
                         buttonText=new amorphie.workflow.core.Dtos.MultilanguageText(x.uiModel.buttonText.FirstOrDefault().Language,x.uiModel.buttonText.FirstOrDefault().Label)
                        }:null,
