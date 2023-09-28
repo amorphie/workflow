@@ -185,10 +185,10 @@ public static class DefinitionModule
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Titles)
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Forms)
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s.Pages)
-                  .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s.PagesComponents).ThenInclude(s=>s.ChildComponents)
+                  .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s.PagesComponents).ThenInclude(s => s.ChildComponents)
                 .Include(s => s.Entities)
-                .Include(s=>s.HistoryForms)
-                
+                .Include(s => s.HistoryForms)
+
                  .FirstOrDefault(w => w.Name == definition);
 
             if (existingRecord != null)
