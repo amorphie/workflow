@@ -184,6 +184,11 @@ public static class DefinitionModule
                   .Include(s => s.States).ThenInclude(s => s.Titles)
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Titles)
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Forms)
+                  .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s.Pages)
+                  .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s.PagesComponents).ThenInclude(s => s.ChildComponents)
+                .Include(s => s.Entities)
+                .Include(s => s.HistoryForms)
+
                  .FirstOrDefault(w => w.Name == definition);
 
             if (existingRecord != null)
@@ -254,7 +259,7 @@ public static class DefinitionModule
             context!.Workflows!.Add(newWorkflow);
             // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
             context.SaveChanges();
-            return Results.Ok();
+            return Results.Created($"/workflow/definition/{data.name}", data);
             // return new Response<PostWorkflowDefinitionResponse>
             // {
             //     Result = new Result(Status.Success, "Success Create"),
