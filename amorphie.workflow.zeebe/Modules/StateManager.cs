@@ -130,7 +130,12 @@ public static class StateManagerModule
                 newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
                 try
                 {
-                    additionalDataDynamic = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("additionalData");
+                    if (!string.IsNullOrEmpty(newInstanceTransition!.AdditionalData))
+                        additionalDataDynamic = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("additionalData");
+                    else
+                    {
+                        additionalDataDynamic = new { };
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -160,7 +165,12 @@ public static class StateManagerModule
 
             try
             {
-                additionalDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData");
+                if (!string.IsNullOrEmpty(newInstanceTransition!.AdditionalData))
+                    additionalDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData");
+                else
+                {
+                    additionalDataDynamic = new { };
+                }
             }
             catch (Exception ex)
             {
