@@ -1,10 +1,11 @@
 
 
 using amorphie.core.Enums;
+using amorphie.workflow.core.Dtos;
 /// <summary>
 /// Abstract record for workflow definition
 /// </summary>
-public  record GetWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities);
+public record GetWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities);
 
 /// <summary>
 /// State Machine workflow definition record
@@ -19,7 +20,10 @@ public record GetFSMWorkflowDefinition(string name, string title, string[] tags,
 /// Zeebe based workflow definition record
 /// </summary>
 public record GetZeebeWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities, string process, string gateway) : GetWorkflowDefinition(name, title, tags, entities);
-
+/// <summary>
+///  Workflow definition record with states
+/// </summary>
+public record GetWorkflowDefinitionWithStates(string name, string title, string[] tags, GetWorkflowEntity[] entities, GetStateDefinitionWithMultiLanguage[] states) : GetWorkflowDefinition(name, title, tags, entities);
 /// <summary>
 /// Workflow entity relation
 /// </summary>
