@@ -14,7 +14,7 @@ public class Workflow : EntityBaseWithOutId
     public WorkflowStatus? WorkflowStatus { get; set; }
     public ICollection<Translation> HistoryForms { get; set; } = default!;
     public NpgsqlTsVector? SearchVector { get; set; }
-    public Guid? RecordId {get;set;}
+    public Guid? RecordId { get; set; }
 
 }
 
