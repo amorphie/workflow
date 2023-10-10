@@ -4,6 +4,7 @@ using System.Linq;
 using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.IBase;
+using amorphie.workflow.core.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -32,9 +33,33 @@ public static class DefinitionModule
                 operation.Responses["204"].Description = "No definitions found.";
                 return operation;
             });
-
+        app.MapGet("/workflow/definition/{recordId}", getAllWorkflowByRecordId)
+               .WithOpenApi()
+       .WithSummary("Gets registered workflows")
+       .WithDescription("Returns existing workflows with metadata.Query parameter reference is can contain request or order reference of workflow.")
+       .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
+       .Produces(StatusCodes.Status404NotFound);
+        app.MapGet("/workflow/definition/search", getAllWorkflowWithFullTextSearch)
+               .WithOpenApi()
+       .WithSummary("Gets registered workflows")
+       .WithDescription("Returns existing workflows with metadata.Query parameter reference is can contain request or order reference of workflow.")
+       .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
+       .Produces(StatusCodes.Status404NotFound);
 
         app.MapPost("/workflow/definition", saveDefinition)
+            .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status201Created)
+            .WithOpenApi(operation =>
+              {
+                  operation.Summary = "Saves or updates workflow definition.";
+                  operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
+
+                  operation.Responses["200"] = new OpenApiResponse { Description = "Definition updated." };
+                  operation.Responses["201"] = new OpenApiResponse { Description = "New definition created." };
+
+                  return operation;
+              });
+              app.MapPost("/workflow/definition/saveWorkflowWitFlow", saveWorkflowWitFlowAsync)
             .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status201Created)
             .WithOpenApi(operation =>
@@ -363,6 +388,249 @@ public static class DefinitionModule
             {
                 return Results.NoContent();
             }
+        }
+    }
+        static async Task<IResult> saveWorkflowWitFlowAsync(
+      [FromServices] WorkflowDBContext context,
+      [FromBody] PostWorkflowWithFlow data,
+      CancellationToken cancellationToken,
+      [FromHeader(Name = "Language")] string? language = "en-EN"
+      )
+    {
+        DtoSaveWorkflowWithFlow request=data.entityData!;
+        var existingRecord =await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name ==request.name ,cancellationToken);
+        List<WorkflowEntity> entityList =request.entities!.Select(s => new WorkflowEntity()
+            {
+                AvailableInStatus = s.AvailableInStatus,
+                IsStateManager = s.isStateManager,
+                Name = s.name!,
+                WorkflowName =  request.name!,
+                AllowOnlyOneActiveInstance=s.allowOnlyOneActiveInstance
+            }).ToList();
+        if (existingRecord == null)
+        {
+            Workflow newWorkflow = new Workflow
+            {
+                WorkflowStatus = request.status,
+                Name = request.name!,
+                Tags = request.tags,
+                Titles = request.title!.Select(s=>new Translation{
+                    Language=s.language,
+                    Label=s.label
+                })
+                .ToList()!,
+                Entities = entityList,
+                CreatedAt = DateTime.UtcNow,
+                CreatedByBehalfOf = Guid.NewGuid(),
+                RecordId=data.recordId,
+                HistoryForms =request.historyForms != null && request.historyForms.Count() > 0 ?
+                 request.historyForms.Where(w=>!string.IsNullOrEmpty(w.label)&&!string.IsNullOrEmpty(w.language)).Select(s=>new Translation{
+                    Label=s.label,
+                    Language=s.language
+                 }).ToList() : new List<Translation>()
+            };
+            context!.Workflows!.Add(newWorkflow);
+            // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
+            await context.SaveChangesAsync(cancellationToken);
+            return Results.Created($"/workflow/definition/{newWorkflow.Name}", data);
+        }
+        else
+        {
+            var hasChanges = false;
+            if (existingRecord.Tags != request.tags || existingRecord.WorkflowStatus != request.status)
+            {
+                hasChanges = true;
+                existingRecord.ModifiedAt = DateTime.UtcNow;
+                existingRecord.Tags = request.tags;
+                existingRecord.WorkflowStatus = request.status;
+            }
+            if ((existingRecord.HistoryForms == null || existingRecord.HistoryForms.Count == 0) && (request.historyForms != null && request.historyForms.Count() > 0))
+            {
+                existingRecord.HistoryForms = request.historyForms.Select(s => new Translation
+                {
+                    Id = new Guid(),
+                    Label = s.label,
+                    Language = s.language
+                }).ToList();
+                hasChanges = true;
+            }
+            else if (request.historyForms != null && request.historyForms.Count() > 0)
+            {
+                foreach (var historyFormTranslantion in request.historyForms)
+                {
+                    if (existingRecord.HistoryForms == null)
+                    {
+                        existingRecord.HistoryForms = new List<Translation>();
+                        existingRecord.HistoryForms.Add(new Translation()
+                        {
+                            Label = historyFormTranslantion.label,
+                            Language = historyFormTranslantion.language
+                        });
+                        hasChanges = true;
+                    }
+                    else
+                    {
+                        Translation? translation = existingRecord.HistoryForms.FirstOrDefault(f => f.Language == historyFormTranslantion.language);
+                        if (translation != null && translation.Label != historyFormTranslantion.label)
+                        {
+                            translation.Label = historyFormTranslantion.label;
+                            hasChanges = true;
+                        }
+                        else if (translation == null)
+                        {
+                            existingRecord.HistoryForms.Add(new Translation()
+                            {
+                                Label = historyFormTranslantion.label,
+                                Language = historyFormTranslantion.language
+                            });
+                            hasChanges = true;
+                        }
+                    }
+
+                }
+
+
+            }
+            foreach (var req in entityList)
+            {
+                WorkflowEntity? existingEntity = existingRecord.Entities!.FirstOrDefault(db => db.Name == req.Name);
+                //Kayıdı olmayan entitylerin eklenmesi
+                if (existingEntity == null)
+                {
+                    context!.WorkflowEntities!.Add(new WorkflowEntity
+                    {
+                        Name = req.Name,
+                        //  IsExclusive = req.IsExclusive,
+                        IsStateManager = req.IsStateManager,
+                        AvailableInStatus = req.AvailableInStatus,
+                        CreatedAt = DateTime.UtcNow,
+                        CreatedByBehalfOf = Guid.NewGuid(),
+                    });
+                    hasChanges = true;
+                }
+                else if (existingEntity.IsStateManager != req.IsStateManager
+                //  || existingEntity.IsExclusive != req.IsExclusive
+                || existingEntity.AvailableInStatus != req.AvailableInStatus)
+                {
+                    //Kayıdı olup update edilmesi gereken entityler 
+                    // existingEntity.IsExclusive = req.IsExclusive;
+                    existingEntity.IsStateManager = req.IsStateManager;
+                    existingEntity.AvailableInStatus = req.AvailableInStatus;
+                    hasChanges = true;
+                }
+
+
+            }
+
+            if (hasChanges)
+            {
+                context!.SaveChanges();
+                return Results.Ok();
+            }
+            else
+            {
+                return Results.NoContent();
+            }
+        }
+    }
+    
+static async ValueTask<IResult> getAllWorkflowWithFullTextSearch(
+       [FromServices] WorkflowDBContext context,
+       [AsParameters] WorkflowSearch userSearch
+       )
+    {
+        var query = context!.Workflows!
+            .Include(d => d.Entities)
+            .Include(x => x.States).ThenInclude(s=>s.Transitions)
+            .Skip(userSearch.Page * userSearch.PageSize)
+            .Take(userSearch.PageSize);
+
+        if (!string.IsNullOrEmpty(userSearch.Keyword))
+        {
+            query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", userSearch.Keyword)));
+        }
+
+        if (!string.IsNullOrEmpty(userSearch.WorkflowEntities))
+        {
+            query = query.AsNoTracking().Where(p => p.Entities.Any(t => t.Name == userSearch.WorkflowEntities));
+        }
+
+        var workflows = query.ToList();
+
+        if (workflows.Count() > 0)
+        {
+            var response = query.Select(s => new GetWorkflowDefinition(
+                s.Name,
+                s.Titles.FirstOrDefault()!.Label,
+                s.Tags!,
+                s.Entities.Select(e => new GetWorkflowEntity(
+         e.Name, e.InclusiveWorkflows == null ? false : true, e.IsStateManager,
+         new StatusType[]{
+        e.AvailableInStatus
+         }
+    )).ToArray()
+                ));
+
+            return Results.Ok(response);
+        }
+
+        return Results.NoContent();
+    }
+    
+static async ValueTask<IResult> getAllWorkflowByRecordId(
+       [FromServices] WorkflowDBContext context,
+       [FromRoute(Name = "recordId")] string recordIdAsString,
+       CancellationToken cancellationToken
+       )
+    {
+        Guid recordId;
+         if (!Guid.TryParse(recordIdAsString, out recordId))
+        {
+            return Results.BadRequest("RecordID not provided or not as a GUID");
+        }
+        var workflow =await context!.Workflows!
+            .Include(d => d.Entities)
+            .Include(x => x.States).ThenInclude(s=>s.Titles)
+            .Include(x => x.States).ThenInclude(s=>s.Transitions).ThenInclude(s=>s.Forms)
+            .Include(x => x.States).ThenInclude(s=>s.Transitions).ThenInclude(s=>s.Titles)
+            .Include(x => x.States).ThenInclude(s=>s.Transitions).ThenInclude(s=>s.Flow)
+            .Include(x => x.States).ThenInclude(s=>s.Transitions).ThenInclude(s=>s.Page).ThenInclude(s=>s!.Pages)
+            .Where(w=>w.RecordId==recordId).Select(s => new GetWorkflowDefinitionWithStates(
+                s.Name,
+                s.Titles.FirstOrDefault()!.Label,
+                s.Tags!,
+                s.Entities.Select(e => new GetWorkflowEntity(
+         e.Name, e.InclusiveWorkflows == null ? false : true, e.IsStateManager,
+         new StatusType[]{
+        e.AvailableInStatus
+         }
+    )).ToArray(),
+    s.States.Select(st=>new GetStateDefinitionWithMultiLanguage(
+        st.Name,
+        st.Titles.Select(tit=>new amorphie.workflow.core.Dtos.MultilanguageText(tit.Language,tit.Label)).ToArray(),
+        st.BaseStatus,
+        st.Transitions.Select(tr=>new PostTransitionWithMultiLanguage(
+            tr.Name,
+            tr.Titles.Select(tit=>new amorphie.workflow.core.Dtos.MultilanguageText(tit.Language,tit.Label)).ToArray(),
+            tr.ToStateName,
+            tr.Forms.Select(tit=>new amorphie.workflow.core.Dtos.MultilanguageText(tit.Language,tit.Label)).ToArray(),
+            tr.FromStateName,
+            tr.ServiceName,
+            tr.FlowName,
+            tr.Flow==null?string.Empty:tr.Flow.Gateway,
+            tr.Page==null?null:new PostPageDefinitionRequest(tr.Page.Operation,tr.Page.Type,tr.Page.Pages.Any()?tr.Page.Pages.Select(tit=>new amorphie.workflow.core.Dtos.MultilanguageText(tit.Language,tit.Label)).FirstOrDefault():null,tr.Page.Timeout)))
+        .ToArray()  )).ToArray()
+
+                )).FirstOrDefaultAsync(cancellationToken);
+
+        if(workflow==null)
+        {
+             return Results.NoContent();
+        }
+        else
+        {
+
+            return Results.Ok(workflow);
         }
     }
     static IResult getState(

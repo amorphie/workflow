@@ -70,7 +70,10 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<Instance>()
           .HasIndex("EntityName", "RecordId", "StateName");
 
+        modelBuilder.Entity<Workflow>().HasIndex(item => item.SearchVector).HasMethod("GIN");
+        modelBuilder.Entity<Workflow>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new[] { "Name" }), true);
 
+   
 
         modelBuilder.Entity<InstanceTransition>()
            .HasKey(s => s.Id);
