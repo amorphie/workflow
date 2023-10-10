@@ -424,7 +424,7 @@ public static class DefinitionModule
                 CreatedAt = DateTime.UtcNow,
                 CreatedByBehalfOf = Guid.NewGuid(),
                 RecordId = data.recordId,
-                HistoryForms = request.historyForms != null && request.historyForms.Count() > 0 ?
+                HistoryForms = request.historyForms.Any()?
                  request.historyForms.Where(w => !string.IsNullOrEmpty(w.label) && !string.IsNullOrEmpty(w.language)).Select(s => new Translation
                  {
                      Label = s.label,
@@ -446,7 +446,7 @@ public static class DefinitionModule
                 existingRecord.Tags = request.tags;
                 existingRecord.WorkflowStatus = request.status;
             }
-            if ((existingRecord.HistoryForms == null || existingRecord.HistoryForms.Count == 0) && (request.historyForms != null && request.historyForms.Count() > 0))
+            if ((!existingRecord.HistoryForms.Any()) && (request.historyForms.Any()))
             {
                 existingRecord.HistoryForms = request.historyForms.Select(s => new Translation
                 {
@@ -456,7 +456,7 @@ public static class DefinitionModule
                 }).ToList();
                 hasChanges = true;
             }
-            else if (request.historyForms != null && request.historyForms.Count() > 0)
+            else if (request.historyForms.Any())
             {
                 foreach (var historyFormTranslantion in request.historyForms)
                 {
