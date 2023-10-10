@@ -424,7 +424,7 @@ public static class DefinitionModule
                 CreatedAt = DateTime.UtcNow,
                 CreatedByBehalfOf = Guid.NewGuid(),
                 RecordId = data.recordId,
-                HistoryForms = request.historyForms.Any()?
+                HistoryForms = request.historyForms.Any() ?
                  request.historyForms.Where(w => !string.IsNullOrEmpty(w.label) && !string.IsNullOrEmpty(w.language)).Select(s => new Translation
                  {
                      Label = s.label,
