@@ -223,9 +223,10 @@ public static class ConsumerModule
                           new GetRecordWorkflowAndTransitionsResponse.Transition
                           {
                               Name = t.Name,
-                              Page = t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
+                              Type = string.IsNullOrEmpty(t.TypeofUi.ToString()) ? amorphie.workflow.core.Enums.TypeofUiEnum.Formio.ToString() : t.TypeofUi.ToString(),
                               Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
-                              Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData, templateURL, string.Empty)
+                              Form = t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
+                              : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData, templateURL, string.Empty)
                           }).ToArray()
                   }
                       ).FirstOrDefault();
@@ -242,9 +243,11 @@ public static class ConsumerModule
                            new GetRecordWorkflowAndTransitionsResponse.Transition
                            {
                                Name = t.Name,
-                               Page = t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
+                               Type = string.IsNullOrEmpty(t.TypeofUi.ToString()) ? amorphie.workflow.core.Enums.TypeofUiEnum.Formio.ToString() : t.TypeofUi.ToString(),
+
                                Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.FirstOrDefault()!.Label,
-                               Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty, templateURL, string.Empty)
+                               Form = t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
+                               : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty, templateURL, string.Empty)
                            }).ToArray()
                    }
                        ).FirstOrDefault();
@@ -260,9 +263,11 @@ public static class ConsumerModule
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
                             Name = t.Name,
-                            Page = t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
+                            Type = string.IsNullOrEmpty(t.TypeofUi.ToString()) ? amorphie.workflow.core.Enums.TypeofUiEnum.Formio.ToString() : t.TypeofUi.ToString(),
+
                             Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
-                            Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata, templateURL, string.Empty)
+                            Form = t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
+                            : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata, templateURL, string.Empty)
                         }).ToArray()
                 }
             ).ToArray();
@@ -276,9 +281,10 @@ public static class ConsumerModule
                   new GetRecordWorkflowAndTransitionsResponse.Transition
                   {
                       Name = t.Name,
-                      Page = t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
+                      Type = string.IsNullOrEmpty(t.TypeofUi.ToString()) ? amorphie.workflow.core.Enums.TypeofUiEnum.Formio.ToString() : t.TypeofUi.ToString(),
                       Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First(f => f.Language == language).Label,
-                      Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First(f => f.Language == language).Label, dbContext.InstanceTransitions.OrderBy(o => o.CreatedAt)
+                      Form = t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
+                      : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First(f => f.Language == language).Label, dbContext.InstanceTransitions.OrderBy(o => o.CreatedAt)
                       .FirstOrDefault(f => f.InstanceId == item.Id)!.EntityData, templateURL, string.Empty)
                   }).ToArray()
           }
@@ -514,8 +520,7 @@ public record GetRecordWorkflowAndTransitionsResponse
         public string? Name { get; set; }
         public string? Title { get; set; }
         public string? Form { get; set; }
-        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
-        public string? Page { get; set; }
+        public string? Type { get; set; }
     }
 }
 

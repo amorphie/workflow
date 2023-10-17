@@ -432,7 +432,6 @@ public static class DefinitionModule
                  }).ToList() : new List<Translation>()
             };
             context!.Workflows!.Add(newWorkflow);
-            // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
             await context.SaveChangesAsync(cancellationToken);
             return Results.Created($"/workflow/definition/{newWorkflow.Name}", data);
         }
@@ -662,7 +661,8 @@ public static class DefinitionModule
      e.Flow != null ? e.Flow.Gateway : null, e.Page == null ? null
      : new PostPageDefinitionRequest(e.Page.Operation, e.Page.Type, e.Page.Pages == null || e.Page.Pages.Count == 0 ? null :
      new amorphie.workflow.core.Dtos.MultilanguageText(language!, e.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), e.Page.Timeout),
-     e.HistoryForms != null && e.HistoryForms.Count() > 0 ? e.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null
+     e.HistoryForms != null && e.HistoryForms.Count() > 0 ? e.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null,
+     e.TypeofUi
 
 )).ToArray()
             ))
@@ -727,6 +727,7 @@ public static class DefinitionModule
                 {
                     Name = x.name,
                     ServiceName = x.serviceName,
+                    TypeofUi = x.typeofUi,
                     Flow = x.message == null ? null : new ZeebeMessage()
                     {
                         Name = x.message,
@@ -834,6 +835,7 @@ public static class DefinitionModule
                                 Language=req.form!.language
                             }
                         },
+                        TypeofUi = req.typeofUi,
                         HistoryForms = req.historyForms == null ? new List<Translation>() { } : req.historyForms.Select(s => new Translation
                         {
                             Label = s.label,
@@ -869,6 +871,11 @@ public static class DefinitionModule
                         if (existingTransition.ToState != null)
                             existingTransition.ToStateName = req.toState;
                         // existingTransition.FromState = req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!;
+                        hasChanges = true;
+                    }
+                    if (existingTransition.TypeofUi != req.typeofUi)
+                    {
+                        existingTransition.TypeofUi = req.typeofUi;
                         hasChanges = true;
                     }
                     if (req!.message != existingTransition.FlowName)
