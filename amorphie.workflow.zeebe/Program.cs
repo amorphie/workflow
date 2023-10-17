@@ -1,4 +1,5 @@
 using amorphie.core.security.Extensions;
+using amorphie.workflow.zeebe.Modules;
 using Dapr.Client;
 using Microsoft.EntityFrameworkCore;
 
@@ -46,5 +47,5 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapStateManagerEndpoints();
-
+app.MapHttpServiceManagerEndpoints();
 app.Run();
