@@ -175,6 +175,11 @@ public static class ConsumerModule
                     .ThenInclude(w => w.States)
                     .ThenInclude(s => s.Transitions)
                     .ThenInclude(t => t.Forms.Where(l => l.Language == language))
+                    .Include(e => e.Workflow)
+                    .ThenInclude(w => w.States)
+                    .ThenInclude(s => s.Transitions)
+                    .ThenInclude(t => t.Page)
+                    .ThenInclude(t => t.Pages)
                 .ToList();
         // TODO: Avoid using where after tolist because tolist runs queries and loads data into memory.
 
@@ -218,6 +223,7 @@ public static class ConsumerModule
                           new GetRecordWorkflowAndTransitionsResponse.Transition
                           {
                               Name = t.Name,
+                              Page= t.Page== null ? string.Empty :  t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
                               Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
                               Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData, templateURL, string.Empty)
                           }).ToArray()
@@ -236,6 +242,7 @@ public static class ConsumerModule
                            new GetRecordWorkflowAndTransitionsResponse.Transition
                            {
                                Name = t.Name,
+                               Page= t.Page== null ? string.Empty :  t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
                                Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.FirstOrDefault()!.Label,
                                Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty, templateURL, string.Empty)
                            }).ToArray()
@@ -253,6 +260,7 @@ public static class ConsumerModule
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
                             Name = t.Name,
+                            Page= t.Page== null ? string.Empty :  t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
                             Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
                             Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata, templateURL, string.Empty)
                         }).ToArray()
@@ -268,6 +276,7 @@ public static class ConsumerModule
                   new GetRecordWorkflowAndTransitionsResponse.Transition
                   {
                       Name = t.Name,
+                      Page= t.Page== null ? string.Empty :  t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
                       Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First(f => f.Language == language).Label,
                       Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First(f => f.Language == language).Label, dbContext.InstanceTransitions.OrderBy(o => o.CreatedAt)
                       .FirstOrDefault(f => f.InstanceId == item.Id)!.EntityData, templateURL, string.Empty)
@@ -505,6 +514,8 @@ public record GetRecordWorkflowAndTransitionsResponse
         public string? Name { get; set; }
         public string? Title { get; set; }
         public string? Form { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public string? Page { get; set; }
     }
 }
 
