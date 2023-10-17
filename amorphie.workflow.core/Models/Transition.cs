@@ -2,6 +2,7 @@
 
 using System.ComponentModel.DataAnnotations.Schema;
 using amorphie.core.Base;
+using amorphie.workflow.core.Enums;
 
 public class Transition : EntityBaseWithOutId
 {
@@ -26,4 +27,5 @@ public class Transition : EntityBaseWithOutId
     public ICollection<Translation> HistoryForms { get; set; } = default!;
     
     public string? ServiceName { get; set; } 
+    public TypeofUiEnum? TypeofUi { get; set; } 
 }
