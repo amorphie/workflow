@@ -78,15 +78,16 @@ namespace amorphie.workflow.zeebe.Modules
             string responseBody = string.Empty;
             string statusCode = string.Empty;
             HttpResponseMessage response;
-            string content=string.Empty;
+            string content = string.Empty;
             try
             {
                 //var httpClientDapr = DaprClient.CreateInvokeHttpClient();
-                HttpClient httpClient=new HttpClient();
-                try{
+                HttpClient httpClient = new HttpClient();
+                try
+                {
                     content = body.GetProperty("body").ToString();
                 }
-                 catch (Exception ex)
+                catch (Exception ex)
                 {
 
                 }
@@ -121,7 +122,7 @@ namespace amorphie.workflow.zeebe.Modules
                 {
                     response = await httpClient.GetAsync(url);
                 }
-                int statusCodeInt=(int)response!.StatusCode;
+                int statusCodeInt = (int)response!.StatusCode;
                 statusCode = statusCodeInt.ToString();
                 if (FailureCodesControl(failureCodes, statusCode))
                     return Results.Problem("Fail Code" + statusCode);
@@ -134,7 +135,7 @@ namespace amorphie.workflow.zeebe.Modules
             }
 
 
-            return Results.Ok(createMessageVariables(responseBody,statusCode));
+            return Results.Ok(createMessageVariables(responseBody, statusCode));
         }
         private static bool FailureCodesControl(string failureCodes, string statusCode)
         {
@@ -143,16 +144,16 @@ namespace amorphie.workflow.zeebe.Modules
             return failCodes.Any(a => { var match = Regex.Match(statusCode, a.Replace("x", @"\d")); return match.Success; });
 
         }
-            private static dynamic createMessageVariables( string body, string statuscode)
-    {
-        dynamic variables = new Dictionary<string, dynamic>();
+        private static dynamic createMessageVariables(string body, string statuscode)
+        {
+            dynamic variables = new Dictionary<string, dynamic>();
 
-        variables.Add("bodyHttpWorker", body);
-        variables.Add("statuscode", statuscode);
+            variables.Add("bodyHttpWorker", body);
+            variables.Add("statuscode", statuscode);
 
-    
-        return variables;
-    }
+
+            return variables;
+        }
     }
 
 }
