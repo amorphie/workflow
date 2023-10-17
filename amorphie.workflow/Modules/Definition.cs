@@ -204,7 +204,7 @@ public static class DefinitionModule
     {
 
         try
-        {   
+        {
             var existingRecord = context.Workflows!.Include(s => s.Titles)
                   .Include(s => s.States).ThenInclude(s => s.Titles)
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Titles)
@@ -727,7 +727,7 @@ public static class DefinitionModule
                 {
                     Name = x.name,
                     ServiceName = x.serviceName,
-                    TypeofUi=x.typeofUi,
+                    TypeofUi = x.typeofUi,
                     Flow = x.message == null ? null : new ZeebeMessage()
                     {
                         Name = x.message,
@@ -835,7 +835,7 @@ public static class DefinitionModule
                                 Language=req.form!.language
                             }
                         },
-                        TypeofUi=req.typeofUi,
+                        TypeofUi = req.typeofUi,
                         HistoryForms = req.historyForms == null ? new List<Translation>() { } : req.historyForms.Select(s => new Translation
                         {
                             Label = s.label,
@@ -873,7 +873,7 @@ public static class DefinitionModule
                         // existingTransition.FromState = req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!;
                         hasChanges = true;
                     }
-                       if (existingTransition.TypeofUi != req.typeofUi)
+                    if (existingTransition.TypeofUi != req.typeofUi)
                     {
                         existingTransition.TypeofUi = req.typeofUi;
                         hasChanges = true;

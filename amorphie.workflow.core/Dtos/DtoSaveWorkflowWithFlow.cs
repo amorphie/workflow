@@ -26,23 +26,23 @@ public class DtoSaveEntitiesWithFlow
 }
 public class DtoSaveStatesWithFlow
 {
-    public string definition {get;set;}
-    public string name {get;set;}
-    public amorphie.core.Enums.StatusType baseStatus {get;set;}
-    public StateType type {get;set;}
+    public string definition { get; set; }
+    public string name { get; set; }
+    public amorphie.core.Enums.StatusType baseStatus { get; set; }
+    public StateType type { get; set; }
     public amorphie.workflow.core.Dtos.MultilanguageText[]? title { get; set; }
-    
+
 }
 public class DtoSaveTransitionsWithFlow
 {
     public amorphie.workflow.core.Dtos.MultilanguageText[]? title { get; set; }
-    public string? name {get;set;}
-    public string? toState {get;set;}
-    public string? fromState {get;set;}
-    public string? message {get;set;}
-    public string? gateway {get;set;}
-    public string? serviceName {get;set;}
-    
+    public string? name { get; set; }
+    public string? toState { get; set; }
+    public string? fromState { get; set; }
+    public string? message { get; set; }
+    public string? gateway { get; set; }
+    public string? serviceName { get; set; }
+
     public PostPageDefinitionRequest[]? page { get; set; }
 }
 
