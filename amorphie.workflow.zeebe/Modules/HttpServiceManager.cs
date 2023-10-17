@@ -42,13 +42,6 @@ namespace amorphie.workflow.zeebe.Modules
             {
                 return Results.BadRequest("InstanceId not provided or not as a GUID");
             }
-            var test = FailureCodesControl("5xx", "501");
-            var test2 = FailureCodesControl("4xx", "501");
-            var test3 = FailureCodesControl("5xx", "404");
-            var test4 = FailureCodesControl("5x1", "521");
-            var test5 = FailureCodesControl("40x", "404");
-            var test6 = FailureCodesControl("5xx,4xx,304", "404");
-            var test7 = FailureCodesControl("5xx,4xx,3xx", "201");
             var url = request.Headers["url"].ToString();
             if (string.IsNullOrEmpty(url))
             {
@@ -88,7 +81,7 @@ namespace amorphie.workflow.zeebe.Modules
             string content=string.Empty;
             try
             {
-                var httpClientDapr = DaprClient.CreateInvokeHttpClient();
+                //var httpClientDapr = DaprClient.CreateInvokeHttpClient();
                 HttpClient httpClient=new HttpClient();
                 try{
                     content = body.GetProperty("body").ToString();
