@@ -223,7 +223,7 @@ public static class ConsumerModule
                           new GetRecordWorkflowAndTransitionsResponse.Transition
                           {
                               Name = t.Name,
-                              Page= t.Page== null ? string.Empty :  t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
+                              Page = t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
                               Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
                               Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData, templateURL, string.Empty)
                           }).ToArray()
@@ -242,7 +242,7 @@ public static class ConsumerModule
                            new GetRecordWorkflowAndTransitionsResponse.Transition
                            {
                                Name = t.Name,
-                               Page= t.Page== null ? string.Empty :  t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
+                               Page = t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
                                Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.FirstOrDefault()!.Label,
                                Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty, templateURL, string.Empty)
                            }).ToArray()
@@ -260,7 +260,7 @@ public static class ConsumerModule
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
                             Name = t.Name,
-                            Page= t.Page== null ? string.Empty :  t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
+                            Page = t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
                             Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
                             Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata, templateURL, string.Empty)
                         }).ToArray()
@@ -276,7 +276,7 @@ public static class ConsumerModule
                   new GetRecordWorkflowAndTransitionsResponse.Transition
                   {
                       Name = t.Name,
-                      Page= t.Page== null ? string.Empty :  t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
+                      Page = t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label,
                       Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First(f => f.Language == language).Label,
                       Form = t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First(f => f.Language == language).Label, dbContext.InstanceTransitions.OrderBy(o => o.CreatedAt)
                       .FirstOrDefault(f => f.InstanceId == item.Id)!.EntityData, templateURL, string.Empty)
@@ -305,11 +305,11 @@ public static class ConsumerModule
             [FromServices] DaprClient client
         )
     {
-        var result =await service.Init(entity, recordId, transition, user, behalOfUser, data);
+        var result = await service.Init(entity, recordId, transition, user, behalOfUser, data);
         var templateURL = configuration["templateEngineUrl"];
         if (result.Result.Status == Status.Success.ToString())
         {
-            result =  await service.Execute();
+            result = await service.Execute();
         }
 
         // var response = client.InvokeMethodAsync<PostPublishStatusRequest, string>(
@@ -354,15 +354,15 @@ public static class ConsumerModule
                 ITransaction.FromStateName, ITransaction.ToStateName, ITransaction.StartedAt == null ? ITransaction.CreatedAt : ITransaction.StartedAt, ITransaction.FinishedAt, ITransaction.CreatedBy,
                    dbContext.Transitions.Include(s => s.HistoryForms).FirstOrDefault(f => f.Name == ITransaction.TransitionName && f.HistoryForms != null && f.HistoryForms.Count() > 0) != null ?
                 TemplateEngineForm(dbContext.Transitions.Include(s => s.Forms).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.HistoryForms.FirstOrDefault(f => f.Language == language)!.Label,
-                 ITransaction.EntityData, templateURL,  dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName )!.Titles!.FirstOrDefault(f=> f.Language == language)!.Label) :
+                 ITransaction.EntityData, templateURL, dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.Titles!.FirstOrDefault(f => f.Language == language)!.Label) :
                   dbContext.Transitions.Include(s => s.FromState).ThenInclude(t => t.Workflow).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.FromState!.Workflow!.HistoryForms != null
        && dbContext.Transitions.Include(s => s.FromState).ThenInclude(t => t.Workflow).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.FromState!.Workflow!.HistoryForms.Count() > 0
        ? TemplateEngineForm(dbContext.Transitions.Include(s => s.FromState).ThenInclude(t => t.Workflow).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.FromState!.Workflow!.HistoryForms!.FirstOrDefault(f => f.Language == language)!.Label, ITransaction.EntityData, templateURL
-       ,  dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName )!.Titles!.FirstOrDefault(f=> f.Language == language)!.Label) :
+       , dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.Titles!.FirstOrDefault(f => f.Language == language)!.Label) :
 
                 TemplateEngineForm((dbContext.Transitions.Include(s => s.Forms).FirstOrDefault(f => f.Name == ITransaction.TransitionName))!.Forms.FirstOrDefault(f => f.Language == language)!.Label,
                  ITransaction.EntityData, templateURL
-                 ,  dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName )!.Titles!.FirstOrDefault(f=> f.Language == language)!.Label)
+                 , dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.Titles!.FirstOrDefault(f => f.Language == language)!.Label)
                )
                {
 
@@ -380,15 +380,15 @@ public static class ConsumerModule
         dbContext.Transitions.Include(s => s.HistoryForms).FirstOrDefault(f => f.Name == ITransaction.TransitionName && f.HistoryForms != null && f.HistoryForms.Count() > 0) != null ?
                 TemplateEngineForm(dbContext.Transitions.Include(s => s.Forms).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.HistoryForms.FirstOrDefault(f => f.Language == language)!.Label,
                  ITransaction.EntityData, templateURL,
-                   dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName )!.Titles!.FirstOrDefault(f=> f.Language == language)!.Label) :
+                   dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.Titles!.FirstOrDefault(f => f.Language == language)!.Label) :
        dbContext.Transitions.Include(s => s.FromState).ThenInclude(t => t.Workflow).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.FromState!.Workflow!.HistoryForms != null
        && dbContext.Transitions.Include(s => s.FromState).ThenInclude(t => t.Workflow).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.FromState!.Workflow!.HistoryForms.Count() > 0 ?
        TemplateEngineForm(dbContext.Transitions.Include(s => s.FromState).ThenInclude(t => t.Workflow).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.FromState!.Workflow!.HistoryForms!.FirstOrDefault(f => f.Language == language)!.Label, ITransaction.EntityData, templateURL
-       ,  dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName )!.Titles!.FirstOrDefault(f=> f.Language == language)!.Label) :
+       , dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.Titles!.FirstOrDefault(f => f.Language == language)!.Label) :
 
                 TemplateEngineForm((dbContext.Transitions.Include(s => s.Forms).FirstOrDefault(f => f.Name == ITransaction.TransitionName))!.Forms.FirstOrDefault(f => f.Language == language)!.Label,
                  ITransaction.EntityData, templateURL
-                 ,  dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName )!.Titles!.FirstOrDefault(f=> f.Language == language)!.Label)
+                 , dbContext.Transitions.Include(s => s.Titles).FirstOrDefault(f => f.Name == ITransaction.TransitionName)!.Titles!.FirstOrDefault(f => f.Language == language)!.Label)
                  )
       {
 
