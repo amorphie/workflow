@@ -680,13 +680,36 @@ public static class DefinitionModule
         var existingRecord = context.States!.Include(w => w.Titles)
         .Include(w => w.Descriptions)
         .Include(w => w.Transitions).ThenInclude(s => s.Titles)
-        .Include(w => w.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s!.Pages)
+        .Include(w => w.Transitions).ThenInclude(s => s.Pages)
         .Include(w => w.Transitions).ThenInclude(s => s.Forms)
        .FirstOrDefault(w => w.WorkflowName == definition && w.Name == state)
        ;
-
+     
+       
         if (existingRecord != null)
         {
+            var toStateChangesTrans=context.Transitions!.Where(w=>w.ToStateName==state);
+            foreach(var transition in toStateChangesTrans)
+            {
+                transition.ToStateName=null;
+                transition.ToState=null;
+            }
+         
+            foreach(var transition in existingRecord.Transitions)
+            {
+                var PageComponentList=context.PageComponents.Where(w=>w.transitionName==transition.Name);
+                var InstanceTransitions=context.InstanceTransitions.Where(w=>w.TransitionName==transition.Name);
+                foreach(InstanceTransition instanceTr in InstanceTransitions)
+                {
+                    instanceTr.TransitionName=null;
+                    instanceTr.Transition=null;
+                }
+                foreach(PageComponent pComponent in PageComponentList)
+                {
+                    pComponent.transitionName=null;
+                    pComponent.transition=null;
+                }
+            }
             context!.Remove(existingRecord);
             // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
             context.SaveChanges();

@@ -162,6 +162,18 @@ namespace amorphie.workflow.Modules;
         }
         return Results.NoContent();
     }
+    protected override async ValueTask<IResult> DeleteMethod([FromServices] IMapper mapper, [FromServices] WorkflowDBContext context, [FromRoute(Name = "id")] Guid id, HttpContext httpContext, CancellationToken token)
+    {
+       
+        PageComponent? model =await context.PageComponents!.Include(s => s.uiModel).Include(s => s.ChildComponents).FirstOrDefaultAsync(w => w.Id==id, token);
+        if (model != null)
+        {
+            context.Remove(model);
+            await context.SaveChangesAsync(token);
+            return Results.Ok(mapper.Map<PageComponent>(model));
+        }
+        return Results.NotFound();
+    }
     private List<PageComponent> pageComponentsMap(Guid? PageId, string pageRoute, List<DtoComponent> dtoComponents, IBBTIdentity identity, CancellationToken token)
     {
         List<PageComponent> list = dtoComponents.Select(s => new PageComponent
