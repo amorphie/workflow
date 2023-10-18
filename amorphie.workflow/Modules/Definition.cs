@@ -684,30 +684,30 @@ public static class DefinitionModule
         .Include(w => w.Transitions).ThenInclude(s => s.Forms)
        .FirstOrDefault(w => w.WorkflowName == definition && w.Name == state)
        ;
-     
-       
+
+
         if (existingRecord != null)
         {
-            var toStateChangesTrans=context.Transitions!.Where(w=>w.ToStateName==state);
-            foreach(var transition in toStateChangesTrans)
+            var toStateChangesTrans = context.Transitions!.Where(w => w.ToStateName == state);
+            foreach (var transition in toStateChangesTrans)
             {
-                transition.ToStateName=null;
-                transition.ToState=null;
+                transition.ToStateName = null;
+                transition.ToState = null;
             }
-         
-            foreach(var transition in existingRecord.Transitions)
+
+            foreach (var transition in existingRecord.Transitions)
             {
-                var PageComponentList=context.PageComponents.Where(w=>w.transitionName==transition.Name);
-                var InstanceTransitions=context.InstanceTransitions.Where(w=>w.TransitionName==transition.Name);
-                foreach(InstanceTransition instanceTr in InstanceTransitions)
+                var PageComponentList = context.PageComponents.Where(w => w.transitionName == transition.Name);
+                var InstanceTransitions = context.InstanceTransitions.Where(w => w.TransitionName == transition.Name);
+                foreach (InstanceTransition instanceTr in InstanceTransitions)
                 {
-                    instanceTr.TransitionName=null;
-                    instanceTr.Transition=null;
+                    instanceTr.TransitionName = null;
+                    instanceTr.Transition = null;
                 }
-                foreach(PageComponent pComponent in PageComponentList)
+                foreach (PageComponent pComponent in PageComponentList)
                 {
-                    pComponent.transitionName=null;
-                    pComponent.transition=null;
+                    pComponent.transitionName = null;
+                    pComponent.transition = null;
                 }
             }
             context!.Remove(existingRecord);
