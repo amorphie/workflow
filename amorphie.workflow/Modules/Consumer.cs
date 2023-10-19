@@ -271,7 +271,9 @@ public static class ConsumerModule
                         }).ToArray()
                 }
             ).ToArray();
-        response.RunningWorkflows = instanceRecords.Where(w => w.Workflow.Entities.Any(a => a.IsStateManager == false)).Select(item =>
+            if(instanceRecords.Any())
+            {
+                  response.RunningWorkflows = instanceRecords.Where(w => w.Workflow.Entities.Any(a => a.IsStateManager == false)).Select(item =>
           new GetRecordWorkflowAndTransitionsResponse.RunningWorkflow
           {
               InstanceId = item.Id,
@@ -289,6 +291,8 @@ public static class ConsumerModule
                   }).ToArray()
           }
       ).ToArray();
+            }
+            
 
         return new Response<GetRecordWorkflowAndTransitionsResponse>
         {
