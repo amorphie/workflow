@@ -271,24 +271,28 @@ public static class ConsumerModule
                         }).ToArray()
                 }
             ).ToArray();
-        response.RunningWorkflows = instanceRecords.Where(w => w.Workflow.Entities.Any(a => a.IsStateManager == false)).Select(item =>
-          new GetRecordWorkflowAndTransitionsResponse.RunningWorkflow
-          {
-              InstanceId = item.Id,
-              Name = item.Workflow.Name,
-              Title = item.Workflow.Titles.First().Label,
-              Transitions = item.State.Transitions.Where(w => w.ToState == null || w.ToState.Type != StateType.Fail).Select(t =>
-                  new GetRecordWorkflowAndTransitionsResponse.Transition
-                  {
-                      Name = t.Name,
-                      Type = string.IsNullOrEmpty(t.TypeofUi.ToString()) ? amorphie.workflow.core.Enums.TypeofUiEnum.Formio.ToString() : t.TypeofUi.ToString(),
-                      Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First(f => f.Language == language).Label,
-                      Form = t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
-                      : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First(f => f.Language == language).Label, dbContext.InstanceTransitions.OrderBy(o => o.CreatedAt)
-                      .FirstOrDefault(f => f.InstanceId == item.Id)!.EntityData, templateURL, string.Empty)
-                  }).ToArray()
-          }
-      ).ToArray();
+        if (instanceRecords.Any())
+        {
+            response.RunningWorkflows = instanceRecords.Where(w => w.Workflow.Entities.Any(a => a.IsStateManager == false)).Select(item =>
+    new GetRecordWorkflowAndTransitionsResponse.RunningWorkflow
+    {
+        InstanceId = item.Id,
+        Name = item.Workflow.Name,
+        Title = item.Workflow.Titles.First().Label,
+        Transitions = item.State.Transitions.Where(w => w.ToState == null || w.ToState.Type != StateType.Fail).Select(t =>
+            new GetRecordWorkflowAndTransitionsResponse.Transition
+            {
+                Name = t.Name,
+                Type = string.IsNullOrEmpty(t.TypeofUi.ToString()) ? amorphie.workflow.core.Enums.TypeofUiEnum.Formio.ToString() : t.TypeofUi.ToString(),
+                Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First(f => f.Language == language).Label,
+                Form = t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
+                : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First(f => f.Language == language).Label, dbContext.InstanceTransitions.OrderBy(o => o.CreatedAt)
+                .FirstOrDefault(f => f.InstanceId == item.Id)!.EntityData, templateURL, string.Empty)
+            }).ToArray()
+    }
+).ToArray();
+        }
+
 
         return new Response<GetRecordWorkflowAndTransitionsResponse>
         {
