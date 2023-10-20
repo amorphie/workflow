@@ -83,17 +83,28 @@ namespace amorphie.workflow.zeebe.Modules
             try
             {
                 //var httpClientDapr = DaprClient.CreateInvokeHttpClient();
-                HttpClient httpClient = new HttpClient();
+                var handler = new HttpClientHandler();
+handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+handler.ServerCertificateCustomValidationCallback = 
+    (httpRequestMessage, cert, cetChain, policyErrors) =>
+{
+    return true;
+};
+                HttpClient httpClient = new HttpClient(handler);
+                
                 try
                 {
-                    content = body.GetProperty("body").ToString();
-                    requestBody = content;
+                    content =body.GetProperty("body").ToString();
+                    requestBody = content.ToString();
+                       
+
                 }
                 catch (Exception ex)
                 {
 
                 }
-                var serialized = new StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(content), System.Text.Encoding.UTF8, "application/json");
+                
+                var serialized = new StringContent(content, System.Text.Encoding.UTF8, "application/json");
                 try
                 {
                     var authorization = body.GetProperty("authorization").ToString();
