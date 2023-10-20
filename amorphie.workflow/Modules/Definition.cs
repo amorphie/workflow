@@ -708,7 +708,7 @@ public static class DefinitionModule
                 {
                     pComponent.transitionName = null;
                     pComponent.transition = null;
-                    
+
                 }
             }
             context!.Remove(existingRecord);
