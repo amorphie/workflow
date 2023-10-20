@@ -79,6 +79,7 @@ namespace amorphie.workflow.zeebe.Modules
             string statusCode = string.Empty;
             HttpResponseMessage response;
             string content = string.Empty;
+            string requestBody = string.Empty;
             try
             {
                 //var httpClientDapr = DaprClient.CreateInvokeHttpClient();
@@ -86,6 +87,7 @@ namespace amorphie.workflow.zeebe.Modules
                 try
                 {
                     content = body.GetProperty("body").ToString();
+                    requestBody = content;
                 }
                 catch (Exception ex)
                 {
@@ -135,7 +137,7 @@ namespace amorphie.workflow.zeebe.Modules
             }
 
 
-            return Results.Ok(createMessageVariables(responseBody, statusCode));
+            return Results.Ok(createMessageVariables(responseBody, statusCode, requestBody));
         }
         private static bool FailureCodesControl(string failureCodes, string statusCode)
         {
@@ -144,12 +146,13 @@ namespace amorphie.workflow.zeebe.Modules
             return failCodes.Any(a => { var match = Regex.Match(statusCode, a.Replace("x", @"\d")); return match.Success; });
 
         }
-        private static dynamic createMessageVariables(string body, string statuscode)
+        private static dynamic createMessageVariables(string body, string statuscode, string requestBody)
         {
             dynamic variables = new Dictionary<string, dynamic>();
 
             variables.Add("bodyHttpWorker", body);
             variables.Add("statuscode", statuscode);
+            variables.Add("requestBody", requestBody);
 
 
             return variables;
