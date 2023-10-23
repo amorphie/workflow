@@ -307,14 +307,18 @@ public static class StateManagerModule
         variables.Add("RecordId", instanceTransition.Instance.RecordId);
         variables.Add("InstanceId", instanceTransition.InstanceId);
         variables.Add("LastTransition", _transitionName);
-
         dynamic targetObject = new System.Dynamic.ExpandoObject();
         targetObject.Data = _data;
         targetObject.TriggeredBy = instanceTransition.CreatedBy;
         targetObject.TriggeredByBehalfOf = instanceTransition.CreatedByBehalfOf;
-
+        string updateName=deleteUnAllowedCharecters(_transitionName);
         variables.Add($"TRX-{_transitionName}", targetObject);
+        variables.Add($"TRX{updateName}", targetObject);
         return variables;
+    }
+  private static  string deleteUnAllowedCharecters(string transitionName)
+    {
+        return  System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
     }
 
 }
