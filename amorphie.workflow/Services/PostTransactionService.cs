@@ -261,10 +261,15 @@ public class PostTransactionService : IPostTransactionService
         targetObject.TriggeredBy = _user;
         targetObject.TriggeredByBehalfOf = _behalfOfUser;
 
+        string updateName = deleteUnAllowedCharecters(_transitionName);
         variables.Add($"TRX-{_transitionName}", targetObject);
+        variables.Add($"TRX{updateName}", targetObject);
         return variables;
     }
-
+    private static string deleteUnAllowedCharecters(string transitionName)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
+    }
     private void addInstanceTansition(Instance instance, DateTime? started, DateTime? finished)
     {
         var newInstanceTransition = new InstanceTransition
