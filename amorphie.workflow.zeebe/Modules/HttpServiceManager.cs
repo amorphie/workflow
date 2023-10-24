@@ -42,7 +42,7 @@ namespace amorphie.workflow.zeebe.Modules
             {
                 return Results.BadRequest("InstanceId not provided or not as a GUID");
             }
-            var url = request.Headers["url"].ToString();
+            var url = body.GetProperty("url").ToString();
             if (string.IsNullOrEmpty(url))
             {
                 return Results.BadRequest("Header parameter 'url' is mandatory");
@@ -125,11 +125,11 @@ namespace amorphie.workflow.zeebe.Modules
                 }
                 else if (httpMethodEnum == HttpMethodEnum.put)
                 {
-                    response = await httpClient.PutAsJsonAsync(url, serialized);
+                    response = await httpClient.PutAsJsonAsync(new Uri(url), serialized);
                 }
                 else if (httpMethodEnum == HttpMethodEnum.patch)
                 {
-                    response = await httpClient.PatchAsJsonAsync(url, serialized);
+                    response = await httpClient.PatchAsJsonAsync(new Uri(url), serialized);
                 }
                 else
                 {
