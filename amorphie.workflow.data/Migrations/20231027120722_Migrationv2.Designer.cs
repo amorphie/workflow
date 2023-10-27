@@ -12,8 +12,8 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    [Migration("20231027113830_Migrationv1")]
-    partial class Migrationv1
+    [Migration("20231027120722_Migrationv2")]
+    partial class Migrationv2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
