@@ -5,21 +5,22 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using NpgsqlTypes;
 
 #nullable disable
 
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    [Migration("20230808144955_MigrationTestv10")]
-    partial class MigrationTestv10
+    [Migration("20231027113830_Migrationv1")]
+    partial class Migrationv1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.3")
+                .HasAnnotation("ProductVersion", "7.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -234,6 +235,110 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("Pages");
                 });
 
+            modelBuilder.Entity("PageComponent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ModifiedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PageName")
+                        .HasColumnType("text");
+
+                    b.Property<NpgsqlTsVector>("SearchVector")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tsvector")
+                        .HasComputedColumnSql("to_tsvector('english', coalesce(\"type\", '') || ' ' || coalesce(\"componentName\", '') || ' ' || coalesce(\"PageName\", '') || ' ' || coalesce(\"transitionName\", ''))", true);
+
+                    b.Property<string>("componentJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("componentName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("parentComponentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("transitionName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("type")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("uiModelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("visibility")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PageId");
+
+                    b.HasIndex("SearchVector");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "GIN");
+
+                    b.HasIndex("parentComponentId");
+
+                    b.HasIndex("transitionName");
+
+                    b.HasIndex("uiModelId");
+
+                    b.ToTable("PageComponents");
+                });
+
+            modelBuilder.Entity("PageComponentUiModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ModifiedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PageComponentUiModels");
+                });
+
             modelBuilder.Entity("State", b =>
                 {
                     b.Property<string>("Name")
@@ -322,6 +427,9 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<string>("ToStateName")
                         .HasColumnType("text");
 
+                    b.Property<int?>("TypeofUi")
+                        .HasColumnType("integer");
+
                     b.HasKey("Name");
 
                     b.HasIndex("FlowName");
@@ -358,6 +466,14 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("RecordId")
+                        .HasColumnType("uuid");
+
+                    b.Property<NpgsqlTsVector>("SearchVector")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tsvector")
+                        .HasComputedColumnSql("to_tsvector('english', coalesce(\"Name\", ''))", true);
+
                     b.Property<string[]>("Tags")
                         .HasColumnType("text[]");
 
@@ -371,6 +487,10 @@ namespace amorphie.workflow.data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Name");
+
+                    b.HasIndex("SearchVector");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "GIN");
 
                     b.HasIndex("WorkflowEntityId");
 
@@ -502,6 +622,9 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("PageComponentUiModelId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("PageId_Page")
                         .HasColumnType("uuid");
 
@@ -530,6 +653,8 @@ namespace amorphie.workflow.data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PageComponentUiModelId");
 
                     b.HasIndex("PageId_Page");
 
@@ -621,6 +746,33 @@ namespace amorphie.workflow.data.Migrations
                     b.Navigation("Transition");
                 });
 
+            modelBuilder.Entity("PageComponent", b =>
+                {
+                    b.HasOne("Page", "Page")
+                        .WithMany("PagesComponents")
+                        .HasForeignKey("PageId");
+
+                    b.HasOne("PageComponent", "parentComponent")
+                        .WithMany("ChildComponents")
+                        .HasForeignKey("parentComponentId");
+
+                    b.HasOne("Transition", "transition")
+                        .WithMany()
+                        .HasForeignKey("transitionName");
+
+                    b.HasOne("PageComponentUiModel", "uiModel")
+                        .WithMany()
+                        .HasForeignKey("uiModelId");
+
+                    b.Navigation("Page");
+
+                    b.Navigation("parentComponent");
+
+                    b.Navigation("transition");
+
+                    b.Navigation("uiModel");
+                });
+
             modelBuilder.Entity("State", b =>
                 {
                     b.HasOne("ZeebeMessage", "OnEntryFlow")
@@ -697,6 +849,10 @@ namespace amorphie.workflow.data.Migrations
 
             modelBuilder.Entity("amorphie.core.Base.Translation", b =>
                 {
+                    b.HasOne("PageComponentUiModel", null)
+                        .WithMany("buttonText")
+                        .HasForeignKey("PageComponentUiModelId");
+
                     b.HasOne("Page", null)
                         .WithMany("Pages")
                         .HasForeignKey("PageId_Page");
@@ -737,6 +893,18 @@ namespace amorphie.workflow.data.Migrations
             modelBuilder.Entity("Page", b =>
                 {
                     b.Navigation("Pages");
+
+                    b.Navigation("PagesComponents");
+                });
+
+            modelBuilder.Entity("PageComponent", b =>
+                {
+                    b.Navigation("ChildComponents");
+                });
+
+            modelBuilder.Entity("PageComponentUiModel", b =>
+                {
+                    b.Navigation("buttonText");
                 });
 
             modelBuilder.Entity("State", b =>
