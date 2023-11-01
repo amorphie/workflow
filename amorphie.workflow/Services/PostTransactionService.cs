@@ -84,8 +84,15 @@ public class PostTransactionService : IPostTransactionService
         // Load all running instances of record
         _activeInstances = await _dbContext.Instances.Where(i => i.EntityName == entity
         && i.RecordId == recordId
-        && i.BaseStatus != StatusType.Completed).ToListAsync();
-
+        && i.BaseStatus != StatusType.Completed).Include(w=>w.Workflow).OrderByDescending(o=>o.CreatedAt).ToListAsync();
+        Instance? lastInstance=_activeInstances.FirstOrDefault();
+        if(lastInstance!=null&&lastInstance.Workflow.WorkflowStatus==WorkflowStatus.Deactive)
+        {
+             return new Response
+            {
+                Result = new Result(Status.Error, $"{lastInstance.WorkflowName} is deactive flow."),
+            };
+        }
         if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName) && !(_activeInstances.Count == 0 && _transition.FromState.Type == StateType.Start))
         {
             if (_transition.FromState.Type == StateType.Start && _transition.FromState.Workflow!.Entities.Any(a => a.IsStateManager == false))
