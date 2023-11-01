@@ -46,6 +46,6 @@ public class DtoSaveTransitionsWithFlow
     public string? serviceName { get; set; }
 
     public PostPageDefinitionRequest page { get; set; }
-     public amorphie.workflow.core.Enums.TypeofUiEnum? typeofUi { get; set; }
+    public amorphie.workflow.core.Enums.TypeofUiEnum? typeofUi { get; set; }
 }
 

@@ -216,23 +216,23 @@ public static class ConsumerModule
                 .Where(f => f.InstanceId == stateManagerInstace.Id)
                 .OrderByDescending(o => o.CreatedAt).First();
                 lastTransitionEntitydata = lastTransition.EntityData;
-                State? state=dbContext.States.FirstOrDefault(s => s.Name == stateManagerInstace.StateName);
+                State? state = dbContext.States.FirstOrDefault(s => s.Name == stateManagerInstace.StateName);
                 response.StateManager = workflows.Where(item => item.IsStateManager == true).Select(item =>
                   new GetRecordWorkflowAndTransitionsResponse.StateManagerWorkflow
                   {
                       Name = item.Workflow.Name,
                       Title = item.Workflow.Titles.First().Label,
                       Status = stateManagerInstace.StateName,
-                      IsPublicForm=state?.IsPublicForm.GetValueOrDefault(false),
-                      PublicForm=state?.IsPublicForm!=true?null:
-                     TemplateEngineForm(state?.PublicForms!.FirstOrDefault(f=>f.Language==language)!.Label!, lastTransition.EntityData, templateURL, string.Empty),
+                      IsPublicForm = state?.IsPublicForm.GetValueOrDefault(false),
+                      PublicForm = state?.IsPublicForm != true ? null :
+                     TemplateEngineForm(state?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, lastTransition.EntityData, templateURL, string.Empty),
                       Transitions = item.Workflow.States.FirstOrDefault(s => s.Name == stateManagerInstace.StateName)?.Transitions.Where(w => w.ToState == null || w.ToState.Type != StateType.Fail).Select(t =>
-                          new GetRecordWorkflowAndTransitionsResponse.Transition  
+                          new GetRecordWorkflowAndTransitionsResponse.Transition
                           {
                               Name = t.Name,
                               Type = string.IsNullOrEmpty(t.TypeofUi.ToString()) ? amorphie.workflow.core.Enums.TypeofUiEnum.Formio.ToString() : t.TypeofUi.ToString(),
                               Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
-                              Form = state?.IsPublicForm==true?string.Empty:t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
+                              Form = state?.IsPublicForm == true ? string.Empty : t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
                               : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData, templateURL, string.Empty)
                           }).ToArray()
                   }
@@ -246,17 +246,17 @@ public static class ConsumerModule
                    {
                        Name = item.Workflow.Name,
                        Title = item.Workflow.Titles.First().Label,
-                       IsPublicForm=item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.IsPublicForm.GetValueOrDefault(false),
-                       PublicForm=item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.IsPublicForm!=true ?null:
-                       TemplateEngineForm(item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.PublicForms!.FirstOrDefault(f=>f.Language==language)!.Label!, string.Empty, templateURL, string.Empty),
+                       IsPublicForm = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.IsPublicForm.GetValueOrDefault(false),
+                       PublicForm = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.IsPublicForm != true ? null :
+                       TemplateEngineForm(item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, string.Empty, templateURL, string.Empty),
                        Transitions = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)!.Transitions!.Where(w => w.ToState == null || w.ToState.Type != StateType.Fail).Select(t =>
                            new GetRecordWorkflowAndTransitionsResponse.Transition
                            {
                                Name = t.Name,
                                Type = string.IsNullOrEmpty(t.TypeofUi.ToString()) ? amorphie.workflow.core.Enums.TypeofUiEnum.Formio.ToString() : t.TypeofUi.ToString(),
-                              
+
                                Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.FirstOrDefault()!.Label,
-                               Form = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.IsPublicForm==true?string.Empty:t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
+                               Form = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.IsPublicForm == true ? string.Empty : t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
                                : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty, templateURL, string.Empty)
                            }).ToArray()
                    }
@@ -269,9 +269,9 @@ public static class ConsumerModule
                 {
                     Name = item.Workflow.Name,
                     Title = item.Workflow.Titles.First().Label,
-                    IsPublicForm=item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm.GetValueOrDefault(false),
-                    PublicForm=item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm!=true?null:
-                    TemplateEngineForm(item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.PublicForms!.FirstOrDefault(f=>f.Language==language)!.Label!, string.Empty, templateURL, string.Empty),
+                    IsPublicForm = item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm.GetValueOrDefault(false),
+                    PublicForm = item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm != true ? null :
+                    TemplateEngineForm(item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, string.Empty, templateURL, string.Empty),
                     Transitions = item.Workflow.States.Where(s => s.Type == StateType.Start).First().Transitions.Where(w => w.ToState == null || w.ToState.Type != StateType.Fail).Select(t =>
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
@@ -292,9 +292,9 @@ public static class ConsumerModule
         InstanceId = item.Id,
         Name = item.Workflow.Name,
         Title = item.Workflow.Titles.First().Label,
-        IsPublicForm=item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm.GetValueOrDefault(false),
-        PublicForm=item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm!=true?null:
-        TemplateEngineForm(item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.PublicForms!.FirstOrDefault(f=>f.Language==language)!.Label!, string.Empty, templateURL, string.Empty),
+        IsPublicForm = item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm.GetValueOrDefault(false),
+        PublicForm = item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm != true ? null :
+        TemplateEngineForm(item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, string.Empty, templateURL, string.Empty),
         Transitions = item.State.Transitions.Where(w => w.ToState == null || w.ToState.Type != StateType.Fail).Select(t =>
             new GetRecordWorkflowAndTransitionsResponse.Transition
             {

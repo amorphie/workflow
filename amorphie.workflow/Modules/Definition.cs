@@ -85,19 +85,19 @@ public static class DefinitionModule
 
             return operation;
         });
-         app.MapPost("/workflow/definition/ActiviteWorkflowWithFlow",ActiviteWorkflowWithFlowAsync)
-      .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
-      .Produces(StatusCodes.Status201Created)
-      .WithOpenApi(operation =>
-        {
-            operation.Summary = "Activite  workflow definition.";
-            operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
+        app.MapPost("/workflow/definition/ActiviteWorkflowWithFlow", ActiviteWorkflowWithFlowAsync)
+     .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
+     .Produces(StatusCodes.Status201Created)
+     .WithOpenApi(operation =>
+       {
+           operation.Summary = "Activite  workflow definition.";
+           operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
 
-            operation.Responses["200"] = new OpenApiResponse { Description = "Definition updated." };
-            operation.Responses["201"] = new OpenApiResponse { Description = "New definition created." };
+           operation.Responses["200"] = new OpenApiResponse { Description = "Definition updated." };
+           operation.Responses["201"] = new OpenApiResponse { Description = "New definition created." };
 
-            return operation;
-        });
+           return operation;
+       });
 
 
         app.MapDelete("/workflow/definition/{definition-name}", deleteDefinition)
@@ -462,19 +462,19 @@ public static class DefinitionModule
 
             await context.SaveChangesAsync(cancellationToken);
 
-            var resultState=await InsertStateAndTransitions(request, context, cancellationToken);
-            if(resultState.Status!=Status.Success.ToString())
+            var resultState = await InsertStateAndTransitions(request, context, cancellationToken);
+            if (resultState.Status != Status.Success.ToString())
             {
-              return  Results.Problem(resultState.Message);
+                return Results.Problem(resultState.Message);
             }
             return Results.Created($"/workflow/definition/{newWorkflow.Name}", data);
         }
         else
         {
-            var resultState=await InsertStateAndTransitions(request, context, cancellationToken);
-              if(resultState.Status!=Status.Success.ToString())
+            var resultState = await InsertStateAndTransitions(request, context, cancellationToken);
+            if (resultState.Status != Status.Success.ToString())
             {
-               return Results.Problem(resultState.Message);
+                return Results.Problem(resultState.Message);
             }
             var hasChanges = false;
             if (existingRecord.Tags != request.tags || existingRecord.WorkflowStatus != request.status)
@@ -575,37 +575,37 @@ public static class DefinitionModule
         }
 
     }
-       static async Task<IResult> DeactiviteWorkflowWithFlowAsync(
-  [FromServices] WorkflowDBContext context,
-  [FromBody] PostWorkflowWithFlow data,
-  CancellationToken cancellationToken
-  
-  )
-  {
-           DtoSaveWorkflowWithFlow request = data.entityData!;
+    static async Task<IResult> DeactiviteWorkflowWithFlowAsync(
+[FromServices] WorkflowDBContext context,
+[FromBody] PostWorkflowWithFlow data,
+CancellationToken cancellationToken
+
+)
+    {
+        DtoSaveWorkflowWithFlow request = data.entityData!;
         var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name == request.name, cancellationToken);
-        if(existingRecord.WorkflowStatus!=WorkflowStatus.Deactive) 
+        if (existingRecord.WorkflowStatus != WorkflowStatus.Deactive)
         {
-            existingRecord.WorkflowStatus=WorkflowStatus.Deactive;
+            existingRecord.WorkflowStatus = WorkflowStatus.Deactive;
             await context.SaveChangesAsync(cancellationToken);
         }
         return Results.Ok();
-  }
-   static async Task<IResult> ActiviteWorkflowWithFlowAsync(
-  [FromServices] WorkflowDBContext context,
-  [FromBody] PostWorkflowWithFlow data,
-  CancellationToken cancellationToken
-  )
-  {
-           DtoSaveWorkflowWithFlow request = data.entityData!;
+    }
+    static async Task<IResult> ActiviteWorkflowWithFlowAsync(
+   [FromServices] WorkflowDBContext context,
+   [FromBody] PostWorkflowWithFlow data,
+   CancellationToken cancellationToken
+   )
+    {
+        DtoSaveWorkflowWithFlow request = data.entityData!;
         var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name == request.name, cancellationToken);
-        if(existingRecord.WorkflowStatus!=WorkflowStatus.Active) 
+        if (existingRecord.WorkflowStatus != WorkflowStatus.Active)
         {
-            existingRecord.WorkflowStatus=WorkflowStatus.Active;
+            existingRecord.WorkflowStatus = WorkflowStatus.Active;
             await context.SaveChangesAsync(cancellationToken);
         }
         return Results.Ok();
-  }
+    }
     private static async ValueTask<Result> InsertStateAndTransitions(DtoSaveWorkflowWithFlow request, WorkflowDBContext context, CancellationToken cancellationToken)
     {
         try
@@ -627,18 +627,20 @@ public static class DefinitionModule
                             CreatedAt = DateTime.UtcNow,
                             CreatedByBehalfOf = Guid.NewGuid(),
                             Type = state.type,
-                            IsPublicForm=state.isPublicForm,
-                            PublicForms= state.publicForms.Select(s=>
-                            new Translation{
-                             Language=s.language,
-                             Label=s.label
-                            }).ToList(),
-                            Titles = state.title.Select(s=>
-                            new Translation{
-                             Language=s.language,
-                             Label=s.label
+                            IsPublicForm = state.isPublicForm,
+                            PublicForms = state.publicForms.Select(s =>
+                             new Translation
+                             {
+                                 Language = s.language,
+                                 Label = s.label
+                             }).ToList(),
+                            Titles = state.title.Select(s =>
+                            new Translation
+                            {
+                                Language = s.language,
+                                Label = s.label
                             }).ToList()
-                        
+
                         };
                         await context!.States!.AddAsync(newRecord, cancellationToken);
 
@@ -753,12 +755,12 @@ public static class DefinitionModule
                     {
                         if (existingTransition.ToStateName != req.toState)
                         {
-                            existingTransition.ToStateName=req.toState;
+                            existingTransition.ToStateName = req.toState;
                             hasChanges = true;
                         }
-                         if (existingTransition.FromStateName != req.fromState)
+                        if (existingTransition.FromStateName != req.fromState)
                         {
-                            existingTransition.FromStateName=req.fromState;
+                            existingTransition.FromStateName = req.fromState;
                             hasChanges = true;
                         }
                         if (existingTransition.TypeofUi != req.typeofUi)
@@ -934,11 +936,11 @@ public static class DefinitionModule
                     await context!.SaveChangesAsync(cancellationToken);
             }
 
-        return new Result(Status.Success,"Success");
+            return new Result(Status.Success, "Success");
         }
         catch (Exception ex)
         {
-            return new Result(Status.Error,ex.ToString());
+            return new Result(Status.Error, ex.ToString());
         }
     }
     static async ValueTask<IResult> getAllWorkflowWithFullTextSearch(
@@ -1153,12 +1155,13 @@ public static class DefinitionModule
                 CreatedAt = DateTime.UtcNow,
                 CreatedByBehalfOf = Guid.NewGuid(),
                 Type = data.type,
-                IsPublicForm=data.ispublicForm,
-                PublicForms=data.publicForms.Select(s=>new Translation(){
+                IsPublicForm = data.ispublicForm,
+                PublicForms = data.publicForms.Select(s => new Translation()
+                {
 
-                Language=s.language,
-                             Label=s.label
-                            }).ToList(),
+                    Language = s.language,
+                    Label = s.label
+                }).ToList(),
                 Transitions = data!.transitions!.Select(x => new Transition
                 {
                     Name = x.name,
@@ -1246,26 +1249,26 @@ public static class DefinitionModule
                 }
             }
             if (data.publicForms.Any())
+            {
+                foreach (var languageForm in data.publicForms)
+                {
+                    Translation? translation = existingRecord.PublicForms.FirstOrDefault(f => f.Language == languageForm.language);
+                    if (translation != null && translation.Label != languageForm.label)
+                    {
+                        translation.Label = languageForm.label;
+                        hasChanges = true;
+                    }
+                    else if (translation == null)
+                    {
+                        existingRecord.PublicForms.Add(new Translation()
                         {
-                            foreach (var languageForm in data.publicForms)
-                            {
-                                Translation? translation = existingRecord.PublicForms.FirstOrDefault(f => f.Language == languageForm.language);
-                                if (translation != null && translation.Label != languageForm.label)
-                                {
-                                    translation.Label = languageForm.label;
-                                    hasChanges = true;
-                                }
-                                else if (translation == null)
-                                {
-                                    existingRecord.PublicForms.Add(new Translation()
-                                    {
-                                        Label = languageForm.label,
-                                        Language = languageForm.language
-                                    });
-                                    hasChanges = true;
-                                }
-                            }
-                        }
+                            Label = languageForm.label,
+                            Language = languageForm.language
+                        });
+                        hasChanges = true;
+                    }
+                }
+            }
             foreach (var req in data.transitions)
             {
                 Transition? existingTransition = context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
@@ -1280,7 +1283,7 @@ public static class DefinitionModule
                         ToStateName = context!.States!.FirstOrDefault(f => f.Name == req.toState) != null ? req.toState : string.Empty,
                         ToState = context!.States!.FirstOrDefault(f => f.Name == req.toState),
                         ServiceName = req.serviceName,
-                          
+
                         Titles = new List<Translation>(){
                             new Translation(){
                                 Label=req.title.label,
