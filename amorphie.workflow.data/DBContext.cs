@@ -89,6 +89,7 @@ public class WorkflowDBContext : DbContext
         // Translation Relations
         modelBuilder.Entity<Translation>().Property<string>("StateName_Title");
         modelBuilder.Entity<Translation>().Property<string>("StateName_Description");
+        modelBuilder.Entity<Translation>().Property<string>("StateName_PublicForm");
 
         modelBuilder.Entity<State>()
             .HasMany<Translation>(t => t.Titles)
@@ -99,6 +100,10 @@ public class WorkflowDBContext : DbContext
             .HasMany<Translation>(t => t.Descriptions)
             .WithOne()
             .HasForeignKey("StateName_Description");
+        modelBuilder.Entity<State>()
+            .HasMany<Translation>(t => t.PublicForms)
+            .WithOne()
+            .HasForeignKey("StateName_PublicForm");
 
         modelBuilder.Entity<Translation>().Property<string>("WorkflowName_Title");
 

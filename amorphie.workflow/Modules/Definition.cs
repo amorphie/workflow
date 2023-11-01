@@ -59,7 +59,7 @@ public static class DefinitionModule
 
                   return operation;
               });
-        app.MapPost("/workflow/definition/saveWorkflowWitFlow", saveWorkflowWitFlowAsync)
+        app.MapPost("/workflow/definition/saveWorkflowWithFlow", saveWorkflowWitFlowAsync)
       .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
       .Produces(StatusCodes.Status201Created)
       .WithOpenApi(operation =>
@@ -72,6 +72,33 @@ public static class DefinitionModule
 
             return operation;
         });
+        app.MapPost("/workflow/definition/DeactiveWorkflowWithFlow", DeactiviteWorkflowWithFlowAsync)
+      .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
+      .Produces(StatusCodes.Status201Created)
+      .WithOpenApi(operation =>
+        {
+            operation.Summary = "Deactivite workflow definition.";
+            operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
+
+            operation.Responses["200"] = new OpenApiResponse { Description = "Definition updated." };
+            operation.Responses["201"] = new OpenApiResponse { Description = "New definition created." };
+
+            return operation;
+        });
+        app.MapPost("/workflow/definition/ActiviteWorkflowWithFlow", ActiviteWorkflowWithFlowAsync)
+     .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
+     .Produces(StatusCodes.Status201Created)
+     .WithOpenApi(operation =>
+       {
+           operation.Summary = "Activite  workflow definition.";
+           operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
+
+           operation.Responses["200"] = new OpenApiResponse { Description = "Definition updated." };
+           operation.Responses["201"] = new OpenApiResponse { Description = "New definition created." };
+
+           return operation;
+       });
+
 
         app.MapDelete("/workflow/definition/{definition-name}", deleteDefinition)
               .WithOpenApi(operation =>
@@ -401,11 +428,11 @@ public static class DefinitionModule
         var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name == request.name, cancellationToken);
         List<WorkflowEntity> entityList = request.entities!.Select(s => new WorkflowEntity()
         {
-            AvailableInStatus = s.AvailableInStatus,
-            IsStateManager = s.isStateManager,
+            AvailableInStatus = s.availableInStatus.GetValueOrDefault(amorphie.core.Enums.StatusType.InProgress),
+            IsStateManager = s.isStateManager.GetValueOrDefault(false),
             Name = s.name!,
             WorkflowName = request.name!,
-            AllowOnlyOneActiveInstance = s.allowOnlyOneActiveInstance
+            AllowOnlyOneActiveInstance = s.allowOnlyOneActiveInstance.GetValueOrDefault(false),
         }).ToList();
         if (existingRecord == null)
         {
@@ -432,11 +459,23 @@ public static class DefinitionModule
                  }).ToList() : new List<Translation>()
             };
             context!.Workflows!.Add(newWorkflow);
+
             await context.SaveChangesAsync(cancellationToken);
+
+            var resultState = await InsertStateAndTransitions(request, context, cancellationToken);
+            if (resultState.Status != Status.Success.ToString())
+            {
+                return Results.Problem(resultState.Message);
+            }
             return Results.Created($"/workflow/definition/{newWorkflow.Name}", data);
         }
         else
         {
+            var resultState = await InsertStateAndTransitions(request, context, cancellationToken);
+            if (resultState.Status != Status.Success.ToString())
+            {
+                return Results.Problem(resultState.Message);
+            }
             var hasChanges = false;
             if (existingRecord.Tags != request.tags || existingRecord.WorkflowStatus != request.status)
             {
@@ -521,11 +560,12 @@ public static class DefinitionModule
                 }
 
 
+
             }
 
             if (hasChanges)
             {
-                context!.SaveChanges();
+                await context!.SaveChangesAsync(cancellationToken);
                 return Results.Ok();
             }
             else
@@ -533,8 +573,376 @@ public static class DefinitionModule
                 return Results.NoContent();
             }
         }
-    }
 
+    }
+    static async Task<IResult> DeactiviteWorkflowWithFlowAsync(
+[FromServices] WorkflowDBContext context,
+[FromBody] PostWorkflowWithFlow data,
+CancellationToken cancellationToken
+
+)
+    {
+        DtoSaveWorkflowWithFlow request = data.entityData!;
+        var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name == request.name, cancellationToken);
+        if (existingRecord.WorkflowStatus != WorkflowStatus.Deactive)
+        {
+            existingRecord.WorkflowStatus = WorkflowStatus.Deactive;
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        return Results.Ok();
+    }
+    static async Task<IResult> ActiviteWorkflowWithFlowAsync(
+   [FromServices] WorkflowDBContext context,
+   [FromBody] PostWorkflowWithFlow data,
+   CancellationToken cancellationToken
+   )
+    {
+        DtoSaveWorkflowWithFlow request = data.entityData!;
+        var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name == request.name, cancellationToken);
+        if (existingRecord.WorkflowStatus != WorkflowStatus.Active)
+        {
+            existingRecord.WorkflowStatus = WorkflowStatus.Active;
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        return Results.Ok();
+    }
+    private static async ValueTask<Result> InsertStateAndTransitions(DtoSaveWorkflowWithFlow request, WorkflowDBContext context, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (request.states.Any())
+            {
+                bool hasChanges = false;
+                foreach (var state in request.states)
+                {
+                    var existingState = await context.States!.Include(s => s.PublicForms).Include(s => s.Titles).Include(s => s.Transitions)
+               .FirstOrDefaultAsync(w => w.WorkflowName == request.name && w.Name == state.name, cancellationToken);
+                    if (existingState == null)
+                    {
+                        State newRecord = new State
+                        {
+                            WorkflowName = request.name,
+                            Name = state.name,
+                            BaseStatus = state.baseStatus,
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedByBehalfOf = Guid.NewGuid(),
+                            Type = state.type,
+                            IsPublicForm = state.isPublicForm,
+                            PublicForms = state.publicForms.Select(s =>
+                             new Translation
+                             {
+                                 Language = s.language,
+                                 Label = s.label
+                             }).ToList(),
+                            Titles = state.title.Select(s =>
+                            new Translation
+                            {
+                                Language = s.language,
+                                Label = s.label
+                            }).ToList()
+
+                        };
+                        await context!.States!.AddAsync(newRecord, cancellationToken);
+
+                    }
+                    else
+                    {
+                        if (existingState.BaseStatus != state.baseStatus || existingState.Type != state.type)
+                        {
+                            hasChanges = true;
+                            existingState.BaseStatus = state.baseStatus;
+                            existingState.Type = state.type;
+
+                        }
+                        if (state.title.Any())
+                        {
+                            foreach (var language in state.title)
+                            {
+                                Translation? translation = existingState.Titles.FirstOrDefault(f => f.Language == language.language);
+                                if (translation != null && translation.Label != language.label)
+                                {
+                                    translation.Label = language.label;
+                                    hasChanges = true;
+                                }
+                                else if (translation == null)
+                                {
+                                    existingState.Titles.Add(new Translation()
+                                    {
+                                        Label = language.label,
+                                        Language = language.language
+                                    });
+                                    hasChanges = true;
+                                }
+                            }
+                        }
+                        if (state.publicForms.Any())
+                        {
+                            foreach (var language in state.publicForms)
+                            {
+                                Translation? translation = existingState.PublicForms.FirstOrDefault(f => f.Language == language.language);
+                                if (translation != null && translation.Label != language.label)
+                                {
+                                    translation.Label = language.label;
+                                    hasChanges = true;
+                                }
+                                else if (translation == null)
+                                {
+                                    existingState.PublicForms.Add(new Translation()
+                                    {
+                                        Label = language.label,
+                                        Language = language.language
+                                    });
+                                    hasChanges = true;
+                                }
+                            }
+                        }
+
+                    }
+
+                }
+                if (hasChanges)
+                    await context!.SaveChangesAsync(cancellationToken);
+
+
+
+            }
+            if (request.transitions.Any())
+            {
+                bool hasChanges = false;
+                foreach (var req in request.transitions)
+                {
+                    Transition? existingTransition = await context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
+                  .Include(s => s.Page).ThenInclude(t => t.Pages)
+                  .FirstOrDefaultAsync(db => db.Name == req.name, cancellationToken);
+                    if (existingTransition == null)
+                    {
+                        context!.Transitions!.Add(new Transition
+                        {
+                            Name = req.name,
+                            ToStateName = req.toState,
+                            ServiceName = req.serviceName,
+                            Titles = req.title.Select(s => new Translation()
+                            {
+                                Label = s.label,
+                                Language = s.language
+                            }).ToList(),
+                            Forms = req.forms == null ? new List<Translation>() { } : req.title.Select(s => new Translation()
+                            {
+                                Label = s.label,
+                                Language = s.language
+                            }).ToList(),
+                            TypeofUi = req.typeofUi,
+                            Page = req.page == null ? null : new Page()
+                            {
+                                Operation = req.page!.operation,
+                                Type = req.page!.type,
+                                Pages = req.page.pageRoute == null ? null : string.IsNullOrEmpty(req.page.pageRoute.language) ? null : new List<Translation>(){
+                            new Translation{
+                             Language=req.page.pageRoute.language,
+                             Label=req.page.pageRoute.label
+                            }
+                            },
+                                Timeout = req.page!.timeout
+
+                            },
+                            FromStateName = req.fromState,
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedByBehalfOf = Guid.NewGuid(),
+                        });
+                        hasChanges = true;
+                    }
+                    else
+                    {
+                        if (existingTransition.ToStateName != req.toState)
+                        {
+                            existingTransition.ToStateName = req.toState;
+                            hasChanges = true;
+                        }
+                        if (existingTransition.FromStateName != req.fromState)
+                        {
+                            existingTransition.FromStateName = req.fromState;
+                            hasChanges = true;
+                        }
+                        if (existingTransition.TypeofUi != req.typeofUi)
+                        {
+                            existingTransition.TypeofUi = req.typeofUi;
+                            hasChanges = true;
+                        }
+                        if (req!.message != existingTransition.FlowName)
+                        {
+                            if (string.IsNullOrEmpty(req!.message))
+                            {
+                                existingTransition.FlowName = null;
+                                existingTransition.Flow = null;
+                            }
+                            else
+                            {
+                                ZeebeMessage? zeebeMessage = context!.ZeebeMessages!.FirstOrDefault(f => f.Name == req.message);
+                                if (zeebeMessage == null)
+                                {
+
+                                    ZeebeMessage flow = new ZeebeMessage()
+                                    {
+                                        Name = req.message!,
+                                        Gateway = req.gateway!,
+                                        CreatedAt = DateTime.UtcNow,
+                                        Message = req.message!,
+                                        Process = request.name!
+                                    };
+                                    context!.ZeebeMessages.Add(flow);
+                                    existingTransition.FlowName = flow.Name;
+                                    existingTransition.Flow = flow;
+                                }
+                                else
+                                {
+                                    existingTransition.Flow = zeebeMessage;
+                                    existingTransition.FlowName = req.message;
+                                }
+
+
+                            }
+                            hasChanges = true;
+                        }
+                        if (req!.serviceName != existingTransition.ServiceName)
+                        {
+                            existingTransition.ServiceName = req.serviceName;
+
+                            hasChanges = true;
+                        }
+                        if (req.title != null)
+                        {
+                            foreach (var language in req.title)
+                            {
+                                Translation? translation = existingTransition.Titles.FirstOrDefault(f => f.Language == language.language);
+                                if (translation != null && translation.Label != language.label)
+                                {
+                                    translation.Label = language.label;
+                                    hasChanges = true;
+                                }
+                                else if (translation == null)
+                                {
+                                    existingTransition.Titles.Add(new Translation()
+                                    {
+                                        Label = language.label,
+                                        Language = language.language
+                                    });
+                                    hasChanges = true;
+                                }
+                            }
+                        }
+                        if (req.forms != null)
+                        {
+                            foreach (var language in req.forms)
+                            {
+                                Translation? translation = existingTransition.Forms.FirstOrDefault(f => f.Language == language.language);
+                                if (translation != null && translation.Label != language.label)
+                                {
+                                    translation.Label = language.label;
+                                    hasChanges = true;
+                                }
+                                else if (translation == null)
+                                {
+                                    existingTransition.Forms.Add(new Translation()
+                                    {
+                                        Label = language.label,
+                                        Language = language.language
+                                    });
+                                    hasChanges = true;
+                                }
+                            }
+
+                        }
+
+                        if (req!.page != null)
+                        {
+                            Page? page = existingTransition.Page;
+                            if (page != null)
+                            {
+                                if (page.Operation != req.page.operation)
+                                {
+                                    existingTransition.Page!.Operation = req.page.operation;
+                                    hasChanges = true;
+                                }
+                                if (page.Type != req.page.type)
+                                {
+                                    existingTransition.Page!.Type = req.page.type;
+                                    hasChanges = true;
+                                }
+                                if (page.Timeout != req.page.timeout)
+                                {
+                                    existingTransition.Page!.Timeout = req.page.timeout;
+                                    hasChanges = true;
+                                }
+                                Translation? translation = existingTransition.Page!.Pages!.FirstOrDefault(f => f.Language == req.page.pageRoute!.language);
+                                if (translation != null && req.page.pageRoute != null && translation.Label != req.page.pageRoute.label)
+                                {
+                                    translation.Label = req.page.pageRoute.label;
+                                    hasChanges = true;
+                                }
+
+                                else if ((translation == null && req.page.pageRoute != null) ||
+                                (translation != null && req.page.pageRoute == null))
+                                {
+                                    Page pageNew = new Page()
+                                    {
+                                        Id = new Guid(),
+                                        Operation = req.page!.operation,
+                                        Type = req.page!.type,
+                                        Pages = req.page.pageRoute == null ? null : new List<Translation>(){
+                            new Translation{
+                             Language=req.page.pageRoute.language,
+                             Label=req.page.pageRoute.label
+                            }
+
+                        },
+                                        Timeout = req.page!.timeout
+                                    };
+                                    context.Pages.Add(pageNew);
+                                    existingTransition.Page = pageNew;
+                                    existingTransition.PageId = pageNew.Id;
+                                    hasChanges = true;
+                                }
+                                else
+                                {
+
+                                }
+                            }
+                            else
+                            {
+                                Page pageNew = new Page()
+                                {
+                                    Id = new Guid(),
+                                    Operation = req.page!.operation,
+                                    Type = req.page!.type,
+                                    Pages = req.page.pageRoute == null ? null : new List<Translation>(){
+                            new Translation{
+                             Language=req.page.pageRoute.language,
+                             Label=req.page.pageRoute.label
+                            }
+
+                        },
+                                    Timeout = req.page!.timeout
+                                };
+                                context.Pages.Add(pageNew);
+                                existingTransition.Page = pageNew;
+                                existingTransition.PageId = pageNew.Id;
+                                hasChanges = true;
+                            }
+                        }
+                    }
+
+                }
+                if (hasChanges)
+                    await context!.SaveChangesAsync(cancellationToken);
+            }
+
+            return new Result(Status.Success, "Success");
+        }
+        catch (Exception ex)
+        {
+            return new Result(Status.Error, ex.ToString());
+        }
+    }
     static async ValueTask<IResult> getAllWorkflowWithFullTextSearch(
            [FromServices] WorkflowDBContext context,
            [AsParameters] WorkflowSearch userSearch
@@ -747,6 +1155,13 @@ public static class DefinitionModule
                 CreatedAt = DateTime.UtcNow,
                 CreatedByBehalfOf = Guid.NewGuid(),
                 Type = data.type,
+                IsPublicForm = data.ispublicForm,
+                PublicForms = data.publicForms.Select(s => new Translation()
+                {
+
+                    Language = s.language,
+                    Label = s.label
+                }).ToList(),
                 Transitions = data!.transitions!.Select(x => new Transition
                 {
                     Name = x.name,
@@ -833,6 +1248,27 @@ public static class DefinitionModule
                     hasChanges = true;
                 }
             }
+            if (data.publicForms.Any())
+            {
+                foreach (var languageForm in data.publicForms)
+                {
+                    Translation? translation = existingRecord.PublicForms.FirstOrDefault(f => f.Language == languageForm.language);
+                    if (translation != null && translation.Label != languageForm.label)
+                    {
+                        translation.Label = languageForm.label;
+                        hasChanges = true;
+                    }
+                    else if (translation == null)
+                    {
+                        existingRecord.PublicForms.Add(new Translation()
+                        {
+                            Label = languageForm.label,
+                            Language = languageForm.language
+                        });
+                        hasChanges = true;
+                    }
+                }
+            }
             foreach (var req in data.transitions)
             {
                 Transition? existingTransition = context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
@@ -847,6 +1283,7 @@ public static class DefinitionModule
                         ToStateName = context!.States!.FirstOrDefault(f => f.Name == req.toState) != null ? req.toState : string.Empty,
                         ToState = context!.States!.FirstOrDefault(f => f.Name == req.toState),
                         ServiceName = req.serviceName,
+
                         Titles = new List<Translation>(){
                             new Translation(){
                                 Label=req.title.label,
