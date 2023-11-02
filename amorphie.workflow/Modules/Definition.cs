@@ -610,7 +610,7 @@ CancellationToken cancellationToken
     {
         try
         {
-            if (request.states != null&&data.states.Any())
+            if (request.states != null&&request.states.Any())
             {
                 bool hasChanges = false;
                 foreach (var state in request.states)
@@ -706,7 +706,7 @@ CancellationToken cancellationToken
 
 
             }
-            if (request.transitions != null&&data.transitions.Any())
+            if (request.transitions != null&&request.transitions.Any())
             {
                 bool hasChanges = false;
                 foreach (var req in request.transitions)
