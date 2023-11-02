@@ -610,7 +610,7 @@ CancellationToken cancellationToken
     {
         try
         {
-            if (request.states.Any())
+            if (request.states != null && request.states.Any())
             {
                 bool hasChanges = false;
                 foreach (var state in request.states)
@@ -654,7 +654,7 @@ CancellationToken cancellationToken
                             existingState.Type = state.type;
 
                         }
-                        if (state.title.Any())
+                        if (state.title != null && state.title.Any())
                         {
                             foreach (var language in state.title)
                             {
@@ -675,7 +675,7 @@ CancellationToken cancellationToken
                                 }
                             }
                         }
-                        if (state.publicForms.Any())
+                        if (state.publicForms != null && state.publicForms.Any())
                         {
                             foreach (var language in state.publicForms)
                             {
@@ -706,7 +706,7 @@ CancellationToken cancellationToken
 
 
             }
-            if (request.transitions.Any())
+            if (request.transitions != null && request.transitions.Any())
             {
                 bool hasChanges = false;
                 foreach (var req in request.transitions)
@@ -1248,7 +1248,7 @@ CancellationToken cancellationToken
                     hasChanges = true;
                 }
             }
-            if (data.publicForms.Any())
+            if (data.publicForms != null && data.publicForms.Any())
             {
                 foreach (var languageForm in data.publicForms)
                 {
