@@ -20,7 +20,13 @@ namespace amorphie.workflow.hub
         Clients.All.SendAsync("ClientConnected", "Client Connected");
         return base.OnConnectedAsync();
     }
+        public override Task OnDisconnectedAsync(Exception? exception)
+        {
+            _logger.LogInformation($"Client Disconnected: "+DateTime.UtcNow);
+            _logger.LogInformation(exception?.ToString());
+            return base.OnDisconnectedAsync(exception);
+        }
 
-}
+    }
 
 }
