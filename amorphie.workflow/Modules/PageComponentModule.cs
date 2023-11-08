@@ -77,7 +77,7 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
             PageComponent? existingPageComponent = await context.PageComponents.FirstOrDefaultAsync(f => f.PageName == data.pageName && f.Id == data.Id, token);
             if (existingPageComponent == null)
             {
-                PageComponent add=new PageComponent()
+                PageComponent add = new PageComponent()
                 {
 
                     PageName = data.pageName,

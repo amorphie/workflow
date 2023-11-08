@@ -720,14 +720,14 @@ CancellationToken cancellationToken
                             Name = req.name,
                             ToStateName = req.toState,
                             Flow = req.message == null ? null : new ZeebeMessage()
-                                {
-                                    Name = req.message,
-                                    Message = req.message,
-                                    Gateway = req.gateway!,
-                                    CreatedAt = DateTime.UtcNow,
-                                    Process = request.name!,
-                                },  
-                            FlowName= req.message == null ? null :req.message,
+                            {
+                                Name = req.message,
+                                Message = req.message,
+                                Gateway = req.gateway!,
+                                CreatedAt = DateTime.UtcNow,
+                                Process = request.name!,
+                            },
+                            FlowName = req.message == null ? null : req.message,
                             ServiceName = req.serviceName,
                             Titles = req.title.Select(s => new Translation()
                             {

@@ -84,11 +84,11 @@ namespace amorphie.workflow.data.Migrations
                 name: "visibility",
                 table: "PageComponents");
 
-            
 
 
 
-     
+
+
         }
 
         /// <inheritdoc />

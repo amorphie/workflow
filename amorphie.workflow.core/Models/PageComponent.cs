@@ -7,7 +7,7 @@ using NpgsqlTypes;
 public class PageComponent : amorphie.core.Base.EntityBase
 {
 
-    public string PageName { get; set; }= string.Empty;
+    public string PageName { get; set; } = string.Empty;
 
     public NpgsqlTsVector SearchVector { get; set; }
 
