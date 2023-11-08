@@ -61,9 +61,9 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
         CancellationToken cancellationToken
    )
     {
-        var query  =await context!.PageComponents!.FirstOrDefaultAsync(f=>f.PageName==pageName,cancellationToken);
-        if(query!=null)
-        return Results.Ok(ObjectMapper.Mapper.Map<DtoPageComponents>(query));
+        var query = await context!.PageComponents!.FirstOrDefaultAsync(f => f.PageName == pageName, cancellationToken);
+        if (query != null)
+            return Results.Ok(ObjectMapper.Mapper.Map<DtoPageComponents>(query));
         return Results.NoContent();
     }
     protected override async ValueTask<IResult> UpsertMethod(
