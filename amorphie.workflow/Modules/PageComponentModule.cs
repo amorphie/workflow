@@ -26,6 +26,7 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
         base.AddRoutes(routeGroupBuilder);
 
         routeGroupBuilder.MapGet("search", getAllPageComponentFullTextSearch);
+        routeGroupBuilder.MapGet("/page/{pageName}", getPageComponentByPageName);
     }
 
     async ValueTask<IResult> getAllPageComponentFullTextSearch(
@@ -54,7 +55,17 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
 
         return Results.NoContent();
     }
-
+    async ValueTask<IResult> getPageComponentByPageName(
+        [FromServices] WorkflowDBContext context,
+         [FromRoute(Name = "pageName")] string pageName,
+        CancellationToken cancellationToken
+   )
+    {
+        var query  =await context!.PageComponents!.FirstOrDefaultAsync(f=>f.PageName==pageName,cancellationToken);
+        if(query!=null)
+        return Results.Ok(ObjectMapper.Mapper.Map<DtoPageComponents>(query));
+        return Results.NoContent();
+    }
     protected override async ValueTask<IResult> UpsertMethod(
         [FromServices] IMapper mapper,
         [FromServices] IValidator<PageComponent> validator,
