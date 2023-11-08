@@ -237,7 +237,6 @@ public static class DefinitionModule
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Titles)
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Forms)
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s.Pages)
-                  .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s.PagesComponents).ThenInclude(s => s.ChildComponents)
                 .Include(s => s.Entities)
                 .Include(s => s.HistoryForms)
 
@@ -720,6 +719,15 @@ CancellationToken cancellationToken
                         {
                             Name = req.name,
                             ToStateName = req.toState,
+                            Flow = req.message == null ? null : new ZeebeMessage()
+                            {
+                                Name = req.message,
+                                Message = req.message,
+                                Gateway = req.gateway!,
+                                CreatedAt = DateTime.UtcNow,
+                                Process = request.name!,
+                            },
+                            FlowName = req.message == null ? null : req.message,
                             ServiceName = req.serviceName,
                             Titles = req.title.Select(s => new Translation()
                             {
@@ -1105,18 +1113,11 @@ CancellationToken cancellationToken
 
             foreach (var transition in existingRecord.Transitions)
             {
-                var PageComponentList = context.PageComponents.Where(w => w.transitionName == transition.Name);
                 var InstanceTransitions = context.InstanceTransitions.Where(w => w.TransitionName == transition.Name);
                 foreach (InstanceTransition instanceTr in InstanceTransitions)
                 {
                     instanceTr.TransitionName = null;
                     instanceTr.Transition = null;
-                }
-                foreach (PageComponent pComponent in PageComponentList)
-                {
-                    pComponent.transitionName = null;
-                    pComponent.transition = null;
-
                 }
             }
             context!.Remove(existingRecord);
