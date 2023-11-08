@@ -8,6 +8,6 @@ public record PostTransitionRequest(
 
 public record PostTransitionResponse(
     Dictionary<string, dynamic> entityUpdates,
-    string? signalRHub, 
+    string? signalRHub,
     string? signalRHubToken
     );

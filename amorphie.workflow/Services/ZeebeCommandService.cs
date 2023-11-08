@@ -9,7 +9,7 @@ using Microsoft.OpenApi.Models;
 
 public interface IZeebeCommandService
 {
-    Task<long> PublishMessage(string message, dynamic variables, string? correlationKey,string? gateway);
+    Task<long> PublishMessage(string message, dynamic variables, string? correlationKey, string? gateway);
 }
 
 
@@ -23,7 +23,7 @@ public class ZeebeCommandService : IZeebeCommandService
     }
 
 
-    public async Task<long> PublishMessage(string message, dynamic variables, string? correlationKey,string? gateway)
+    public async Task<long> PublishMessage(string message, dynamic variables, string? correlationKey, string? gateway)
     {
 
         dynamic messageData = new ExpandoObject();
@@ -35,17 +35,18 @@ public class ZeebeCommandService : IZeebeCommandService
         }
 
         messageData.variables = variables;
-        try{
- var messageResult = await _daprClinet.InvokeBindingAsync<dynamic, dynamic>(gateway, "publish-message", messageData);
-        return messageResult;
-        }
-        catch(Exception ex)
+        try
         {
-            var test=ex.ToString();
-            Console.WriteLine(ex.ToString());
-                return 0;
+            var messageResult = await _daprClinet.InvokeBindingAsync<dynamic, dynamic>(gateway, "publish-message", messageData);
+            return messageResult;
         }
-       
+        catch (Exception ex)
+        {
+            var test = ex.ToString();
+            Console.WriteLine(ex.ToString());
+            return 0;
+        }
+
     }
 
     private record publishMessageResponse(long Key);

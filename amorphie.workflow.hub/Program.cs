@@ -84,10 +84,10 @@ app.MapHub<WorkflowHub>("/hubs/workflow");
 
 app.MapPost("/sendMessage",
 
-async Task<IResult> (IHubContext <WorkflowHub> hubContext,PostSignalRData data) =>
+async Task<IResult>(IHubContext < WorkflowHub > hubContext, PostSignalRData data) =>
 {
-    Console.WriteLine("Hub veri gönderildi:"+data.eventInfo+" " +DateTime.Now);
-      string jsonString = JsonSerializer.Serialize(data);
+    Console.WriteLine("Hub veri gönderildi:" + data.eventInfo + " " + DateTime.Now);
+    string jsonString = JsonSerializer.Serialize(data);
     //  await hubContext.Clients.User(data.UserId.ToString()).SendAsync("SendMessage", jsonString);
     await hubContext.Clients.All.SendAsync("SendMessage", jsonString);
     return Results.Ok("");

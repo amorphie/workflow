@@ -92,7 +92,7 @@ public static class SecretExtensions
         catch (Exception ex)
         {
             //var test=ex.Message;
-            var test= ex.InnerException!.Message;
+            var test = ex.InnerException!.Message;
             throw new SecretException("An Error Occured At Dapr Secret Store. Detail:" + ex);
         }
     }
