@@ -11,28 +11,29 @@ namespace amorphie.workflow.core.Mapper;
 {
     public PageComponentMapper()
     {
-        CreateMap<PageComponent, DtoPageComponents>() .ConstructUsing(x=> new DtoPageComponents(){
-            pageName=x.PageName,
-            componentJson=x.ComponentJson==null?new{}:ConvertToDynamic(x.ComponentJson)
-            
+        CreateMap<PageComponent, DtoPageComponents>().ConstructUsing(x => new DtoPageComponents()
+        {
+            pageName = x.PageName,
+            componentJson = x.ComponentJson == null ? new { } : ConvertToDynamic(x.ComponentJson)
+
         }).ReverseMap();
-        CreateMap<PageComponent, dynamic>() .ConstructUsing(x=> ConvertToDynamic(x.ComponentJson)
-            
+        CreateMap<PageComponent, dynamic>().ConstructUsing(x => ConvertToDynamic(x.ComponentJson)
+
         ).ReverseMap();
 
     }
-   public dynamic ConvertToDynamic(string str)
-   {
-        if(string.IsNullOrEmpty(str))
-            return new {};
+    public dynamic ConvertToDynamic(string str)
+    {
+        if (string.IsNullOrEmpty(str))
+            return new { };
         try
         {
             return System.Text.Json.JsonSerializer.Deserialize<dynamic>(str);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            return new {};
+            return new { };
         }
-   }
+    }
 
 }

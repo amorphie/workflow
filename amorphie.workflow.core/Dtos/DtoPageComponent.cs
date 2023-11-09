@@ -6,7 +6,7 @@ using amorphie.core.Base;
 public class DtoPageComponents : DtoEntityBaseWithOutId
 {
     public string? pageName { get; set; }
-    public dynamic? componentJson { get; set; }=default!;
+    public dynamic? componentJson { get; set; } = default!;
 }
 
 public class PageComponentSearch : DtoSearchBase

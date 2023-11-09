@@ -80,16 +80,16 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
         {
 
             bool IsChange = false;
-            string json=string.Empty;
+            string json = string.Empty;
             try
             {
-               json= System.Text.Json.JsonSerializer.Serialize(data.componentJson);
+                json = System.Text.Json.JsonSerializer.Serialize(data.componentJson);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
             }
-            PageComponent? existingPageComponent = await context.PageComponents.FirstOrDefaultAsync(f => f.PageName == data.pageName , token);
+            PageComponent? existingPageComponent = await context.PageComponents.FirstOrDefaultAsync(f => f.PageName == data.pageName, token);
             if (existingPageComponent == null)
             {
                 PageComponent add = new PageComponent()
