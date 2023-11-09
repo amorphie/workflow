@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using amorphie.core.Identity;
 using amorphie.core.Module.minimal_api;
@@ -63,7 +63,7 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
     {
         var query = await context!.PageComponents!.FirstOrDefaultAsync(f => f.PageName == pageName, cancellationToken);
         if (query != null)
-            return Results.Ok(ObjectMapper.Mapper.Map<DtoPageComponents>(query));
+            return Results.Ok(ObjectMapper.Mapper.Map<dynamic>(query));
         return Results.NoContent();
     }
     protected override async ValueTask<IResult> UpsertMethod(
@@ -80,20 +80,23 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
         {
 
             bool IsChange = false;
-
-            if (await context.PageComponents.AnyAsync(a => (a.PageName == data.pageName && a.Id != data.Id) || (a.PageName != data.pageName && a.Id == data.Id), token))
+            string json=string.Empty;
+            try
             {
-                return Results.Problem(data.Id + " ID value does not match pageName:" + data.pageName);
+               json= System.Text.Json.JsonSerializer.Serialize(data.componentJson);
             }
-            PageComponent? existingPageComponent = await context.PageComponents.FirstOrDefaultAsync(f => f.PageName == data.pageName && f.Id == data.Id, token);
+            catch(Exception ex)
+            {
+
+            }
+            PageComponent? existingPageComponent = await context.PageComponents.FirstOrDefaultAsync(f => f.PageName == data.pageName , token);
             if (existingPageComponent == null)
             {
                 PageComponent add = new PageComponent()
                 {
 
                     PageName = data.pageName,
-                    Id = data.Id,
-                    ComponentJson = data.componentJson,
+                    ComponentJson = json,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = bbtIdentity.UserId.Value,
                     CreatedByBehalfOf = bbtIdentity.BehalfOfId.Value,
@@ -109,7 +112,7 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
             }
             else
             {
-                existingPageComponent.ComponentJson = data.componentJson;
+                existingPageComponent.ComponentJson = json;
                 existingPageComponent.ModifiedAt = DateTime.UtcNow;
                 existingPageComponent.ModifiedBy = bbtIdentity.UserId.Value;
                 existingPageComponent.ModifiedByBehalfOf = bbtIdentity.BehalfOfId.Value;
