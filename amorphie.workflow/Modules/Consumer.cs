@@ -126,7 +126,7 @@ public static class ConsumerModule
         if (string.IsNullOrEmpty(form))
             return new { };
         if (JsonEnum.Json.GetHashCode() == json)
-           return System.Text.Json.JsonSerializer.Deserialize<dynamic>(form);
+            return System.Text.Json.JsonSerializer.Deserialize<dynamic>(form);
         else return form;
     }
     private static string ReplaceDropdown(string form)
