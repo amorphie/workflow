@@ -72,16 +72,16 @@ public static class ConsumerModule
            return operation;
        });
     }
-   private static string TemplateEngineFormWithoutJson(string templateName, string entityData, string templateUrlFromVault, string? transitionName)
+    private static string TemplateEngineFormWithoutJson(string templateName, string entityData, string templateUrlFromVault, string? transitionName)
     {
-      var responseDynamic=  TemplateEngineForm(templateName,entityData,templateUrlFromVault,transitionName,amorphie.workflow.core.Enums.JsonEnum.NotJson.GetHashCode());
-      if(responseDynamic==null)
-      {
-        return string.Empty;
-      }
-      return Convert.ToString(responseDynamic);
+        var responseDynamic = TemplateEngineForm(templateName, entityData, templateUrlFromVault, transitionName, amorphie.workflow.core.Enums.JsonEnum.NotJson.GetHashCode());
+        if (responseDynamic == null)
+        {
+            return string.Empty;
+        }
+        return Convert.ToString(responseDynamic);
     }
-    private static dynamic? TemplateEngineForm(string templateName, string entityData, string templateUrlFromVault, string? transitionName,int? json)
+    private static dynamic? TemplateEngineForm(string templateName, string entityData, string templateUrlFromVault, string? transitionName, int? json)
     {
         string form = string.Empty;
 
@@ -123,10 +123,10 @@ public static class ConsumerModule
         {
             form = string.Empty;
         }
-        if(string.IsNullOrEmpty(form))
-        return new {};
-        if(JsonEnum.Json.GetHashCode()==json)
-        return Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic?>(form)!;
+        if (string.IsNullOrEmpty(form))
+            return new { };
+        if (JsonEnum.Json.GetHashCode() == json)
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic?>(form)!;
         else return form;
     }
     private static string ReplaceDropdown(string form)
@@ -200,8 +200,8 @@ public static class ConsumerModule
                 .ToList();
         // TODO: Avoid using where after tolist because tolist runs queries and loads data into memory.
 
-        if(json==null)
-        json=amorphie.workflow.core.Enums.JsonEnum.NotJson.GetHashCode();
+        if (json == null)
+            json = amorphie.workflow.core.Enums.JsonEnum.NotJson.GetHashCode();
 
         var stateManagerWorkflow = workflows.Where(item => item.IsStateManager == true).FirstOrDefault();
 
@@ -240,7 +240,7 @@ public static class ConsumerModule
                       Status = stateManagerInstace.StateName,
                       IsPublicForm = state?.IsPublicForm.GetValueOrDefault(false),
                       PublicForm = state?.IsPublicForm != true ? null :
-                     TemplateEngineForm(state?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, lastTransition.EntityData, templateURL, string.Empty,json),
+                     TemplateEngineForm(state?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, lastTransition.EntityData, templateURL, string.Empty, json),
                       Transitions = item.Workflow.States.FirstOrDefault(s => s.Name == stateManagerInstace.StateName)?.Transitions.Where(w => w.ToState == null || w.ToState.Type != StateType.Fail).Select(t =>
                           new GetRecordWorkflowAndTransitionsResponse.Transition
                           {
@@ -248,7 +248,7 @@ public static class ConsumerModule
                               Type = string.IsNullOrEmpty(t.TypeofUi.ToString()) ? amorphie.workflow.core.Enums.TypeofUiEnum.Formio.ToString() : t.TypeofUi.ToString(),
                               Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
                               Form = state?.IsPublicForm == true ? string.Empty : t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
-                              : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData, templateURL, string.Empty,json)
+                              : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransition.EntityData, templateURL, string.Empty, json)
                           }).ToArray()
                   }
                       ).FirstOrDefault();
@@ -263,7 +263,7 @@ public static class ConsumerModule
                        Title = item.Workflow.Titles.First().Label,
                        IsPublicForm = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.IsPublicForm.GetValueOrDefault(false),
                        PublicForm = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.IsPublicForm != true ? null :
-                       TemplateEngineForm(item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, string.Empty, templateURL, string.Empty,json),
+                       TemplateEngineForm(item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, string.Empty, templateURL, string.Empty, json),
                        Transitions = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)!.Transitions!.Where(w => w.ToState == null || w.ToState.Type != StateType.Fail).Select(t =>
                            new GetRecordWorkflowAndTransitionsResponse.Transition
                            {
@@ -272,7 +272,7 @@ public static class ConsumerModule
 
                                Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.FirstOrDefault()!.Label,
                                Form = item.Workflow.States.FirstOrDefault(s => s.Type == StateType.Start)?.IsPublicForm == true ? string.Empty : t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
-                               : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty, templateURL, string.Empty,json)
+                               : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.FirstOrDefault()!.Label, string.Empty, templateURL, string.Empty, json)
                            }).ToArray()
                    }
                        ).FirstOrDefault();
@@ -286,7 +286,7 @@ public static class ConsumerModule
                     Title = item.Workflow.Titles.First().Label,
                     IsPublicForm = item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm.GetValueOrDefault(false),
                     PublicForm = item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm != true ? null :
-                    TemplateEngineForm(item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, string.Empty, templateURL, string.Empty,json),
+                    TemplateEngineForm(item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, string.Empty, templateURL, string.Empty, json),
                     Transitions = item.Workflow.States.Where(s => s.Type == StateType.Start).First().Transitions.Where(w => w.ToState == null || w.ToState.Type != StateType.Fail).Select(t =>
                         new GetRecordWorkflowAndTransitionsResponse.Transition
                         {
@@ -295,7 +295,7 @@ public static class ConsumerModule
 
                             Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First().Label,
                             Form = t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
-                            : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata, templateURL, string.Empty,json)
+                            : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First().Label, lastTransitionEntitydata, templateURL, string.Empty, json)
                         }).ToArray()
                 }
             ).ToArray();
@@ -309,7 +309,7 @@ public static class ConsumerModule
         Title = item.Workflow.Titles.First().Label,
         IsPublicForm = item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm.GetValueOrDefault(false),
         PublicForm = item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.IsPublicForm != true ? null :
-        TemplateEngineForm(item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, string.Empty, templateURL, string.Empty,json),
+        TemplateEngineForm(item.Workflow.States.Where(s => s.Type == StateType.Start).First()?.PublicForms!.FirstOrDefault(f => f.Language == language)!.Label!, string.Empty, templateURL, string.Empty, json),
         Transitions = item.State.Transitions.Where(w => w.ToState == null || w.ToState.Type != StateType.Fail).Select(t =>
             new GetRecordWorkflowAndTransitionsResponse.Transition
             {
@@ -318,7 +318,7 @@ public static class ConsumerModule
                 Title = t.Titles.FirstOrDefault() == null ? string.Empty : t.Titles.First(f => f.Language == language).Label,
                 Form = t.TypeofUi == amorphie.workflow.core.Enums.TypeofUiEnum.PageUrl ? t.Page == null ? string.Empty : t.Page!.Pages!.FirstOrDefault() == null ? string.Empty : t.Page!.Pages!.First().Label
                 : t.Forms.FirstOrDefault() == null ? string.Empty : TemplateEngineForm(t.Forms.First(f => f.Language == language).Label, dbContext.InstanceTransitions.OrderBy(o => o.CreatedAt)
-                .FirstOrDefault(f => f.InstanceId == item.Id)!.EntityData, templateURL, string.Empty,json)
+                .FirstOrDefault(f => f.InstanceId == item.Id)!.EntityData, templateURL, string.Empty, json)
             }).ToArray()
     }
 ).ToArray();
