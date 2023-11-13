@@ -96,11 +96,11 @@ public static class InstanceModule
     {
         // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
         var query = context.Instances!
-   .Where(w =>(string.IsNullOrEmpty(entity)|| w.EntityName == entity) &&(!recordId.HasValue|| w.RecordId == recordId)).Include(s=>s.State).ThenInclude(s=>s.Titles)
-   .Include(s=>s.State).ThenInclude(s=>s.Transitions).ThenInclude(t=>t.Forms)
-   .Include(s=>s.State).ThenInclude(s=>s.Transitions).ThenInclude(t=>t.Titles)
-   .Include(s=>s.State).ThenInclude(s=>s.Transitions).ThenInclude(t=>t.HistoryForms)
-   .Include(s=>s.State).ThenInclude(s=>s.Transitions).ThenInclude(t=>t.Page).ThenInclude(t=>t.Pages)
+   .Where(w => (string.IsNullOrEmpty(entity) || w.EntityName == entity) && (!recordId.HasValue || w.RecordId == recordId)).Include(s => s.State).ThenInclude(s => s.Titles)
+   .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
+   .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Titles)
+   .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.HistoryForms)
+   .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Page).ThenInclude(t => t.Pages)
    ;
 
         var instances = query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
