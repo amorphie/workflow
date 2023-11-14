@@ -91,7 +91,7 @@ public static class InstanceModule
           [FromQuery] GetInstanceStatusType? status,
            [FromQuery][Range(0, 100)] int? page = 0,
         [FromQuery][Range(5, 100)] int? pageSize = 10,
-           [FromHeader(Name = "Language")] string? language = "en-EN"
+         [FromHeader(Name = "Language")] string? language = "en-EN"
     )
     {
         // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
@@ -104,7 +104,7 @@ public static class InstanceModule
    ;
 
         var instances = query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
-         .Take(pageSize.GetValueOrDefault(10))
+         .Take(pageSize.GetValueOrDefault(10)).OrderBy(o => o.CreatedAt)
          .ToList();
         return Results.Ok(
                 instances.Select(s => new GetInstanceResponse(
@@ -121,8 +121,8 @@ public static class InstanceModule
                         new amorphie.workflow.core.Dtos.MultilanguageText(
                             language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                         t.ToStateName!,
-                         new amorphie.workflow.core.Dtos.MultilanguageText(
-                            language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label),
+                        t.Forms.Any() ? new amorphie.workflow.core.Dtos.MultilanguageText(
+                            language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label) : null,
                         t.FromStateName,
                         t.ServiceName,
                         t.FlowName,
@@ -139,15 +139,16 @@ public static class InstanceModule
                     )
                 ).ToArray());
     }
-    static IResult getInstance(
+    static async Task<IResult> getInstance(
           [FromServices] WorkflowDBContext context,
           [FromRoute(Name = "instance-id")] Guid instanceId,
+          CancellationToken cancellationToken,
              [FromHeader(Name = "Language")] string? language = "en-EN"
       )
     {
         // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
-        var instance = context.Instances!
-   .FirstOrDefault(w => w.Id == instanceId)
+        var instance = await context.Instances!
+   .FirstOrDefaultAsync(w => w.Id == instanceId, cancellationToken)
    ;
         if (instance == null)
         {
@@ -170,8 +171,8 @@ public static class InstanceModule
                                   new amorphie.workflow.core.Dtos.MultilanguageText(
                                       language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                                   t.ToStateName!,
-                                   new amorphie.workflow.core.Dtos.MultilanguageText(
-                                      language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label),
+                                   t.Forms.Any() ? new amorphie.workflow.core.Dtos.MultilanguageText(
+                                      language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label) : null,
                                   t.FromStateName,
                                   t.ServiceName,
                                   t.FlowName,
