@@ -212,7 +212,8 @@ public static class DefinitionModule
          new StatusType[]{
         e.AvailableInStatus
          }
-    )).ToArray()
+    )).ToArray(),
+                s.RecordId==null?string.Empty:s.RecordId.ToString()
                 ))
     ;
             return Results.Ok(workflows)
@@ -270,6 +271,12 @@ public static class DefinitionModule
     {
         var existingRecord = context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefault(w => w.Name == data.name);
         List<WorkflowEntity> entityList = new List<WorkflowEntity>();
+        Guid recordId;
+        bool recordIdNull=false;
+        if (!Guid.TryParse(data.recordId, out recordId))
+        {
+            recordIdNull=true;
+        }
         // All available status have to add 
         foreach (var item in data.entities!)
         {
@@ -299,6 +306,7 @@ public static class DefinitionModule
                     Language = s.language
                 }).ToList(),
                 Entities = entityList,
+                RecordId=recordIdNull?null:recordId,
                 CreatedAt = DateTime.UtcNow,
                 CreatedByBehalfOf = Guid.NewGuid(),
                 HistoryForms = data.historyForms != null && data.historyForms.Count() > 0 ? data.historyForms.Select(s => new Translation
@@ -326,6 +334,12 @@ public static class DefinitionModule
                 existingRecord.ModifiedAt = DateTime.UtcNow;
                 existingRecord.Tags = data.tags;
                 existingRecord.WorkflowStatus = data.status;
+            }
+              if (!recordIdNull&&existingRecord.RecordId != recordId )
+            {
+                hasChanges = true;
+                existingRecord.ModifiedAt = DateTime.UtcNow;
+                existingRecord.RecordId =recordId;
             }
             if ((existingRecord.HistoryForms == null || existingRecord.HistoryForms.Count == 0) && (data.historyForms != null && data.historyForms.Count() > 0))
             {
@@ -953,14 +967,14 @@ CancellationToken cancellationToken
     }
     static async ValueTask<IResult> getAllWorkflowWithFullTextSearch(
            [FromServices] WorkflowDBContext context,
-           [AsParameters] WorkflowSearch userSearch
+           [AsParameters] WorkflowSearch userSearch,
+   CancellationToken cancellationToken
            )
     {
         var query = context!.Workflows!
             .Include(d => d.Entities)
-            .Include(x => x.States).ThenInclude(s => s.Transitions)
-            .Skip(userSearch.Page * userSearch.PageSize)
-            .Take(userSearch.PageSize);
+            .Include(x => x.States).ThenInclude(s => s.Transitions).AsQueryable()
+            ;
 
         if (!string.IsNullOrEmpty(userSearch.Keyword))
         {
@@ -972,9 +986,10 @@ CancellationToken cancellationToken
             query = query.AsNoTracking().Where(p => p.Entities.Any(t => t.Name == userSearch.WorkflowEntities));
         }
 
-        var workflows = query.ToList();
+        var workflows = query.Skip(userSearch.Page * userSearch.PageSize)
+            .Take(userSearch.PageSize);
 
-        if (workflows.Count() > 0)
+        if (await workflows.CountAsync(cancellationToken) > 0)
         {
             var response = query.Select(s => new GetWorkflowDefinition(
                 s.Name,
@@ -985,7 +1000,8 @@ CancellationToken cancellationToken
          new StatusType[]{
         e.AvailableInStatus
          }
-    )).ToArray()
+    )).ToArray(),
+                s.RecordId==null?string.Empty:s.RecordId.ToString()
                 ));
 
             return Results.Ok(response);
@@ -1036,8 +1052,8 @@ CancellationToken cancellationToken
                 tr.FlowName,
                 tr.Flow == null ? string.Empty : tr.Flow.Gateway,
                 tr.Page == null ? null : new PostPageDefinitionRequest(tr.Page.Operation, tr.Page.Type, tr.Page.Pages.Any() ? tr.Page.Pages.Select(tit => new amorphie.workflow.core.Dtos.MultilanguageText(tit.Language, tit.Label)).FirstOrDefault() : null, tr.Page.Timeout)))
-            .ToArray())).ToArray()
-
+            .ToArray())).ToArray(),
+             s.RecordId==null?string.Empty:s.RecordId.ToString()
                     )).FirstOrDefaultAsync(cancellationToken);
 
         if (workflow == null)

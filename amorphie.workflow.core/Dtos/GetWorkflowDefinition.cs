@@ -5,7 +5,7 @@ using amorphie.workflow.core.Dtos;
 /// <summary>
 /// Abstract record for workflow definition
 /// </summary>
-public record GetWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities);
+public record GetWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities,string? recordId);
 
 /// <summary>
 /// State Machine workflow definition record
@@ -14,16 +14,16 @@ public record GetWorkflowDefinition(string name, string title, string[] tags, Ge
 /// <param name="title">Workflow description as expected language</param>
 /// <param name="entities">Entity list to which the workflow can be applied.</param>
 /// <param name="tags">Workflow related tag list.</param>
-public record GetFSMWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities) : GetWorkflowDefinition(name, title, tags, entities);
+public record GetFSMWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities,string recordId) : GetWorkflowDefinition(name, title, tags, entities,recordId);
 
 /// <summary>
 /// Zeebe based workflow definition record
 /// </summary>
-public record GetZeebeWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities, string process, string gateway) : GetWorkflowDefinition(name, title, tags, entities);
+public record GetZeebeWorkflowDefinition(string name, string title, string[] tags, GetWorkflowEntity[] entities, string process, string gatewa,string recordId) : GetWorkflowDefinition(name, title, tags, entities,recordId);
 /// <summary>
 ///  Workflow definition record with states
 /// </summary>
-public record GetWorkflowDefinitionWithStates(string name, string title, string[] tags, GetWorkflowEntity[] entities, GetStateDefinitionWithMultiLanguage[] states) : GetWorkflowDefinition(name, title, tags, entities);
+public record GetWorkflowDefinitionWithStates(string name, string title, string[] tags, GetWorkflowEntity[] entities, GetStateDefinitionWithMultiLanguage[] states,string recordId) : GetWorkflowDefinition(name, title, tags, entities,recordId);
 /// <summary>
 /// Workflow entity relation
 /// </summary>
