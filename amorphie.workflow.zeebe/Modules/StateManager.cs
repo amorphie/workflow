@@ -291,7 +291,7 @@ public static class StateManagerModule
                      entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
               transition.Page == null ? null :
               new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-              transition.Page.Timeout), hubMessage, additionalDataDynamic
+              transition.Page.Timeout), hubMessage, additionalDataDynamic, instance.WorkflowName
                    ), cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
     }
