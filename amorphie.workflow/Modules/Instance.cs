@@ -84,7 +84,7 @@ public static class InstanceModule
               });
     }
 
-    static  IResult getAllInstance(
+    static IResult getAllInstance(
         [FromServices] WorkflowDBContext context,
         [FromQuery] string? entity,
          [FromQuery] Guid? recordId,
@@ -103,8 +103,8 @@ public static class InstanceModule
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Page).ThenInclude(t => t.Pages)
    ;
 
-        var instances =  query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
-         .Take(pageSize.GetValueOrDefault(10)).OrderBy(o=>o.CreatedAt)
+        var instances = query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
+         .Take(pageSize.GetValueOrDefault(10)).OrderBy(o => o.CreatedAt)
          .ToList();
         return Results.Ok(
                 instances.Select(s => new GetInstanceResponse(
@@ -122,7 +122,7 @@ public static class InstanceModule
                             language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                         t.ToStateName!,
                         t.Forms.Any() ? new amorphie.workflow.core.Dtos.MultilanguageText(
-                            language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label):null,
+                            language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label) : null,
                         t.FromStateName,
                         t.ServiceName,
                         t.FlowName,
@@ -147,8 +147,8 @@ public static class InstanceModule
       )
     {
         // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
-        var instance =await context.Instances!
-   .FirstOrDefaultAsync(w => w.Id == instanceId,cancellationToken)
+        var instance = await context.Instances!
+   .FirstOrDefaultAsync(w => w.Id == instanceId, cancellationToken)
    ;
         if (instance == null)
         {
@@ -171,8 +171,8 @@ public static class InstanceModule
                                   new amorphie.workflow.core.Dtos.MultilanguageText(
                                       language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                                   t.ToStateName!,
-                                   t.Forms.Any()?new amorphie.workflow.core.Dtos.MultilanguageText(
-                                      language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label):null,
+                                   t.Forms.Any() ? new amorphie.workflow.core.Dtos.MultilanguageText(
+                                      language!, t.Forms.FirstOrDefault(f => f.Language == language)!.Label) : null,
                                   t.FromStateName,
                                   t.ServiceName,
                                   t.FlowName,
