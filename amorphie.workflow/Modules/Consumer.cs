@@ -17,7 +17,7 @@ public static class ConsumerModule
     public static void MapConsumerEndpoints(this WebApplication app)
     {
 
-        app.MapGet("/workflow/consumer/{entity}/record/{recordid}/transition", getTransitions)
+        app.MapGet("/workflow/consumer/{entity}/record/{recordId}/transition", getTransitions)
            .Produces<GetRecordWorkflowAndTransitionsResponse>(StatusCodes.Status200OK)
            .WithOpenApi(operation =>
            {
@@ -27,7 +27,7 @@ public static class ConsumerModule
                return operation;
            });
 
-        app.MapPost("/workflow/consumer/{entity}/record/{recordid}/transition/{transition}", postTransition)
+        app.MapPost("/workflow/consumer/{entity}/record/{recordId}/transition/{transition}", postTransition)
             .Produces<ConsumerPostTransitionResponse>(StatusCodes.Status200OK)
             .Produces<ConsumerPostTransitionResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status404NotFound)
