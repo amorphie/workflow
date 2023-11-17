@@ -590,7 +590,7 @@ public static class DefinitionModule
     }
     static async Task<IResult> DeactiviteWorkflowWithFlowAsync(
 [FromServices] WorkflowDBContext context,
-[FromBody] PostWorkflowWithFlow data,
+[FromBody] PostWorkflowWithFlowDynamic data,
 CancellationToken cancellationToken
 
 )
@@ -606,7 +606,7 @@ CancellationToken cancellationToken
     }
     static async Task<IResult> ActiviteWorkflowWithFlowAsync(
    [FromServices] WorkflowDBContext context,
-   [FromBody] PostWorkflowWithFlow data,
+   [FromBody] PostWorkflowWithFlowDynamic data,
    CancellationToken cancellationToken
    )
     {

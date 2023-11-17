@@ -3,6 +3,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using amorphie.core.Base;
 using amorphie.workflow.core.Enums;
+using amorphie.workflow.core.Models;
 
 public class Transition : EntityBaseWithOutId
 {
@@ -21,7 +22,7 @@ public class Transition : EntityBaseWithOutId
 
     public Page? Page { get; set; }
     public Guid? PageId { get; set; }
-
+    public ICollection<UiForm>? UiForms { get; set; }
     public ICollection<Translation> Forms { get; set; } = default!;
     public ICollection<Translation> Pages { get; set; } = default!;
     public ICollection<Translation> HistoryForms { get; set; } = default!;
