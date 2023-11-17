@@ -733,7 +733,7 @@ CancellationToken cancellationToken
                         {
                             Name = req.name,
                             ToStateName = req.toState,
-                            Flow = req.message == null ? null : new ZeebeMessage()
+                            Flow = string.IsNullOrEmpty(req.message) ? null : new ZeebeMessage()
                             {
                                 Name = req.message,
                                 Message = req.message,
@@ -741,7 +741,7 @@ CancellationToken cancellationToken
                                 CreatedAt = DateTime.UtcNow,
                                 Process = request.name!,
                             },
-                            FlowName = req.message == null ? null : req.message,
+                            FlowName =string.IsNullOrEmpty(req.message)  ? null : req.message,
                             ServiceName = req.serviceName,
                             Titles = req.title.Select(s => new Translation()
                             {
