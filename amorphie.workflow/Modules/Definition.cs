@@ -741,7 +741,7 @@ CancellationToken cancellationToken
                                 CreatedAt = DateTime.UtcNow,
                                 Process = request.name!,
                             },
-                            FlowName =string.IsNullOrEmpty(req.message)  ? null : req.message,
+                            FlowName = string.IsNullOrEmpty(req.message) ? null : req.message,
                             ServiceName = req.serviceName,
                             Titles = req.title.Select(s => new Translation()
                             {
