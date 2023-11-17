@@ -1159,7 +1159,7 @@ CancellationToken cancellationToken
         )
     {
         // data.transitions[0].
-        var existingRecord = context.States!.Include(s => s.Titles).Include(s => s.Transitions)
+        var existingRecord = context.States!.Include(s => s.Titles).Include(s => s.Transitions).Include(s=>s.PublicForms)
                .FirstOrDefault(w => w.WorkflowName == definition && w.Name == data.name)
                ;
         if (existingRecord == null)
