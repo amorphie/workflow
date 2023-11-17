@@ -1,4 +1,5 @@
 ﻿using amorphie.core.Base;
+using amorphie.workflow.core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -28,7 +29,7 @@ public class WorkflowDBContext : DbContext
     public DbSet<Page> Pages { get; set; } = default!;
     public DbSet<PageComponent> PageComponents { get; set; } = default!;
     public DbSet<PageComponentUiModel> PageComponentUiModels { get; set; } = default!;
-
+    public DbSet<UiForm> UiForms { get; set; } = default!;
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -55,6 +56,8 @@ public class WorkflowDBContext : DbContext
            .HasKey(s => s.Name);
 
         modelBuilder.Entity<Page>()
+          .HasKey(s => s.Id);
+        modelBuilder.Entity<UiForm>()
           .HasKey(s => s.Id);
 
         modelBuilder.Entity<Instance>()
@@ -151,6 +154,12 @@ public class WorkflowDBContext : DbContext
            .WithOne()
            .HasForeignKey("PageId_Page");
 
+
+        modelBuilder.Entity<Translation>().Property<Guid?>("UiForm_Id");
+        modelBuilder.Entity<UiForm>()
+           .HasMany<Translation>(t => t.Forms)
+           .WithOne()
+           .HasForeignKey("UiForm_Id");
         // modelBuilder.SeedUserResetPassword();
         // modelBuilder.SeedUserLifecycle();
 

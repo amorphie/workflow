@@ -14,6 +14,7 @@ public class State : EntityBaseWithOutId
     public ICollection<Transition> Transitions { get; set; } = default!;
     public bool? IsPublicForm { get; set; }
     public ICollection<Translation>? PublicForms { get; set; } = default!;
+    public ICollection<amorphie.workflow.core.Models.UiForm>? UiForms { get; set; }
 
     public ZeebeMessage? OnEntryFlow { get; set; }
     public ZeebeMessage? OnExitFlow { get; set; }
