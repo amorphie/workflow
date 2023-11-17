@@ -8,8 +8,8 @@ namespace amorphie.workflow.core.Dtos
 {
     public class UiFormDto
     {
-        public TypeofUiEnum typeofUi {get;set;}=TypeofUiEnum.Formio;
-        public MultilanguageText[]? forms {get;set;}
+        public TypeofUiEnum typeofUi { get; set; } = TypeofUiEnum.Formio;
+        public MultilanguageText[]? forms { get; set; }
 
     }
 }
