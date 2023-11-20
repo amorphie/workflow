@@ -67,8 +67,8 @@ public class WorkflowDBContext : DbContext
       .HasKey(s => s.Id);
         modelBuilder.Entity<PageComponentUiModel>()
                  .HasKey(s => s.Id);
-          modelBuilder.Entity<FlowHeader>()
-            .HasKey(w => w.Key);
+        modelBuilder.Entity<FlowHeader>()
+          .HasKey(w => w.Key);
 
 
         modelBuilder.Entity<PageComponent>().HasIndex(item => item.SearchVector).HasMethod("GIN");

@@ -1278,13 +1278,13 @@ CancellationToken cancellationToken
                     }
                     else if (translation == null)
                     {
-                        
+
                         existingRecord.PublicForms.Add(new Translation()
                         {
                             Label = languageForm.label,
                             Language = languageForm.language
                         });
-                        existingRecord.ModifiedAt=DateTime.UtcNow;
+                        existingRecord.ModifiedAt = DateTime.UtcNow;
                         hasChanges = true;
                     }
                 }

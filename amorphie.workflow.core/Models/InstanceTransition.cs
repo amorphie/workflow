@@ -17,9 +17,9 @@ public class InstanceTransition : EntityBaseLog
     public string? QueryData { get; set; } = default!;
     public string? HeadersData { get; set; } = default!;
 
-    public Transition?  Transition { get; set; } = default!;
+    public Transition? Transition { get; set; } = default!;
     public string? TransitionName { get; set; } = default!;
-    public DateTime? FinishedAt {get;set;}=default!;
-    public DateTime? StartedAt {get;set;}=default!;
-   
+    public DateTime? FinishedAt { get; set; } = default!;
+    public DateTime? StartedAt { get; set; } = default!;
+
 }

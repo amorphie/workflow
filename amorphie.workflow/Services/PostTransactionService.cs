@@ -14,7 +14,7 @@ using Microsoft.OpenApi.Models;
 
 public interface IPostTransactionService
 {
-    Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data,IHeaderDictionary? headerParameters );
+    Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters);
     Task<IResponse> Execute();
 }
 
@@ -38,8 +38,8 @@ public class PostTransactionService : IPostTransactionService
 
     private List<Instance>? _activeInstances { get; set; }
     private IConfiguration _configuration { get; set; }
-    private IHeaderDictionary? _headerParameters {get;set;}
-    private dynamic? headers {get;set;}
+    private IHeaderDictionary? _headerParameters { get; set; }
+    private dynamic? headers { get; set; }
 
     public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService, DaprClient client, IConfiguration configuration)
     {
@@ -57,7 +57,7 @@ public class PostTransactionService : IPostTransactionService
         _configuration = configuration;
     }
 
-    public async Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data,IHeaderDictionary? headerParameters )
+    public async Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters)
     {
         _entity = entity;
         _recordId = recordId;
@@ -65,8 +65,8 @@ public class PostTransactionService : IPostTransactionService
         _user = user;
         _behalfOfUser = behalfOfUser;
         _data = data;
-        _headerParameters=headerParameters;
-       
+        _headerParameters = headerParameters;
+
         // var transition = _dbContext.Transitions.Find(_transitionName);
         var transition = await _dbContext.Transitions.Where(w => w.Name == _transitionName).Include(t => t.Page).ThenInclude(t => t!.Pages)
         .Include(s => s.FromState).ThenInclude(s => s.Workflow).ThenInclude(s => s!.Entities)
@@ -84,7 +84,7 @@ public class PostTransactionService : IPostTransactionService
         {
             _transition = transition;
         }
-         
+
         // Load all running instances of record
         _activeInstances = await _dbContext.Instances.Where(i => i.EntityName == entity
         && i.RecordId == recordId
@@ -112,10 +112,10 @@ public class PostTransactionService : IPostTransactionService
             }
 
         }
-         InstanceTransition? lastTrans=null;
-        if(lastInstance!=null)
+        InstanceTransition? lastTrans = null;
+        if (lastInstance != null)
         {
-            lastTrans=await _dbContext.InstanceTransitions.Where(w=>w.InstanceId==lastInstance.Id).OrderByDescending(c=>c.CreatedAt).FirstOrDefaultAsync();
+            lastTrans = await _dbContext.InstanceTransitions.Where(w => w.InstanceId == lastInstance.Id).OrderByDescending(c => c.CreatedAt).FirstOrDefaultAsync();
         }
         await SetHeaders(lastTrans);
         return new Response
@@ -299,7 +299,7 @@ public class PostTransactionService : IPostTransactionService
             AdditionalData = Convert.ToString(_data.AdditionalData),
             QueryData = Convert.ToString(_data.QueryData),
             RouteData = Convert.ToString(_data.RouteData),
-            HeadersData=Convert.ToString(headers),
+            HeadersData = Convert.ToString(headers),
             CreatedBy = _user,
             CreatedByBehalfOf = _behalfOfUser,
             TransitionName = _transition.Name,
@@ -448,17 +448,17 @@ public class PostTransactionService : IPostTransactionService
     }
     private async ValueTask<bool> SetHeaders(InstanceTransition? lastTransition)
     {
-      List<string> listFlowHeaders= await  _dbContext.FlowHeaders.Select(s=>s.Key).ToListAsync();
-      Dictionary<string, string> headerDict 
-       = _headerParameters.Where(w=>listFlowHeaders.Contains(w.Key)).ToDictionary(a => a.Key, a => string.Join(";", a.Value));
-         if(lastTransition!=null)
-      {
-             Dictionary<string, string> lastTrDict=System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(lastTransition.HeadersData);
-            
-             headerDict=headerDict.Concat(lastTrDict.Where( x=> !headerDict.Keys.Contains(x.Key))).ToDictionary(x=>x.Key,x=>x.Value);
-      }
-       var serialize=System.Text.Json.JsonSerializer.Serialize(headerDict);
-       headers=System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
+        List<string> listFlowHeaders = await _dbContext.FlowHeaders.Select(s => s.Key).ToListAsync();
+        Dictionary<string, string> headerDict
+         = _headerParameters.Where(w => listFlowHeaders.Contains(w.Key)).ToDictionary(a => a.Key, a => string.Join(";", a.Value));
+        if (lastTransition != null)
+        {
+            Dictionary<string, string> lastTrDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(lastTransition.HeadersData);
+
+            headerDict = headerDict.Concat(lastTrDict.Where(x => !headerDict.Keys.Contains(x.Key))).ToDictionary(x => x.Key, x => x.Value);
+        }
+        var serialize = System.Text.Json.JsonSerializer.Serialize(headerDict);
+        headers = System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
         return true;
     }
 }
