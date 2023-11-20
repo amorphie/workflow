@@ -15,6 +15,7 @@ public class InstanceTransition : EntityBaseLog
     public string? AdditionalData { get; set; } = default!;
     public string? RouteData { get; set; } = default!;
     public string? QueryData { get; set; } = default!;
+    public string? HeadersData { get; set; } = default!;
 
     public Transition?  Transition { get; set; } = default!;
     public string? TransitionName { get; set; } = default!;

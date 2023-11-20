@@ -30,6 +30,7 @@ public class WorkflowDBContext : DbContext
     public DbSet<PageComponent> PageComponents { get; set; } = default!;
     public DbSet<PageComponentUiModel> PageComponentUiModels { get; set; } = default!;
     public DbSet<UiForm> UiForms { get; set; } = default!;
+    public DbSet<FlowHeader> FlowHeaders { get; set; } = default!;
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -66,6 +67,8 @@ public class WorkflowDBContext : DbContext
       .HasKey(s => s.Id);
         modelBuilder.Entity<PageComponentUiModel>()
                  .HasKey(s => s.Id);
+          modelBuilder.Entity<FlowHeader>()
+            .HasKey(w => w.Key);
 
 
         modelBuilder.Entity<PageComponent>().HasIndex(item => item.SearchVector).HasMethod("GIN");
