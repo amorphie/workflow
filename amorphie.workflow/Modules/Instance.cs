@@ -87,6 +87,7 @@ public static class InstanceModule
     static IResult getAllInstance(
         [FromServices] WorkflowDBContext context,
         [FromQuery] string? entity,
+         [FromQuery] string? workflowName,
          [FromQuery] Guid? recordId,
           [FromQuery] GetInstanceStatusType? status,
            [FromQuery][Range(0, 100)] int? page = 0,
@@ -96,7 +97,8 @@ public static class InstanceModule
     {
         // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
         var query = context.Instances!
-   .Where(w => (string.IsNullOrEmpty(entity) || w.EntityName == entity) && (!recordId.HasValue || w.RecordId == recordId)).Include(s => s.State).ThenInclude(s => s.Titles)
+   .Where(w => (string.IsNullOrEmpty(entity) || w.EntityName == entity) && (!recordId.HasValue || w.RecordId == recordId) &&
+   (string.IsNullOrEmpty(workflowName) || w.WorkflowName == workflowName)).Include(s => s.State).ThenInclude(s => s.Titles)
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Titles)
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.HistoryForms)

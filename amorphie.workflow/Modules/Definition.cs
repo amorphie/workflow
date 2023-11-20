@@ -748,7 +748,7 @@ CancellationToken cancellationToken
                                 Label = s.label,
                                 Language = s.language
                             }).ToList(),
-                            Forms = req.forms == null ? new List<Translation>() { } : req.title.Select(s => new Translation()
+                            Forms = req.forms == null ? new List<Translation>() { } : req.forms.Select(s => new Translation()
                             {
                                 Label = s.label,
                                 Language = s.language
@@ -1111,6 +1111,7 @@ CancellationToken cancellationToken
     {
         var existingRecord = context.States!.Include(w => w.Titles)
         .Include(w => w.Descriptions)
+         .Include(w => w.PublicForms)
         .Include(w => w.Transitions).ThenInclude(s => s.Titles)
         .Include(w => w.Transitions).ThenInclude(s => s.Pages)
         .Include(w => w.Transitions).ThenInclude(s => s.Forms)
@@ -1277,11 +1278,13 @@ CancellationToken cancellationToken
                     }
                     else if (translation == null)
                     {
+
                         existingRecord.PublicForms.Add(new Translation()
                         {
                             Label = languageForm.label,
                             Language = languageForm.language
                         });
+                        existingRecord.ModifiedAt = DateTime.UtcNow;
                         hasChanges = true;
                     }
                 }

@@ -343,10 +343,11 @@ public static class ConsumerModule
             [FromBody] ConsumerPostTransitionRequest data,
             [FromServices] IPostTransactionService service,
             IConfiguration configuration,
-            [FromServices] DaprClient client
+            [FromServices] DaprClient client,
+             HttpRequest request
         )
     {
-        var result = await service.Init(entity, recordId, transition, user, behalOfUser, data);
+        var result = await service.Init(entity, recordId, transition, user, behalOfUser, data, request.Headers);
         var templateURL = configuration["templateEngineUrl"];
         if (result.Result.Status == Status.Success.ToString())
         {
