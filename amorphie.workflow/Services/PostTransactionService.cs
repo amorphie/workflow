@@ -449,6 +449,8 @@ public class PostTransactionService : IPostTransactionService
     private async ValueTask<bool> SetHeaders(InstanceTransition? lastTransition)
     {
         List<string> listFlowHeaders = await _dbContext.FlowHeaders.Select(s => s.Key).ToListAsync();
+        var test= System.Text.Json.JsonSerializer.Serialize(_headerParameters);
+        Console.WriteLine(test);
         Dictionary<string, string> headerDict
          = _headerParameters.Where(w => listFlowHeaders.Contains(w.Key)).ToDictionary(a => a.Key, a => string.Join(";", a.Value));
         if (lastTransition != null)
