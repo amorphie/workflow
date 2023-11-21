@@ -448,16 +448,14 @@ public class PostTransactionService : IPostTransactionService
     }
     private async ValueTask<bool> SetHeaders(InstanceTransition? lastTransition)
     {
-        List<string> listFlowHeaders = await _dbContext.FlowHeaders.Select(s => s.Key).ToListAsync();
-        var test= System.Text.Json.JsonSerializer.Serialize(_headerParameters);
-        Console.WriteLine(test);
+        List<string> listFlowHeaders = await _dbContext.FlowHeaders.Select(s => s.Key.ToLower()).ToListAsync();
         Dictionary<string, string> headerDict
-         = _headerParameters.Where(w => listFlowHeaders.Contains(w.Key)).ToDictionary(a => a.Key, a => string.Join(";", a.Value));
+         = _headerParameters.Where(w => listFlowHeaders.Contains(w.Key.ToLower())).ToDictionary(a => a.Key.ToLower(), a => string.Join(";", a.Value));
         if (lastTransition != null)
         {
             Dictionary<string, string> lastTrDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(lastTransition.HeadersData);
 
-            headerDict = headerDict.Concat(lastTrDict.Where(x => !headerDict.Keys.Contains(x.Key))).ToDictionary(x => x.Key, x => x.Value);
+            headerDict = headerDict.Concat(lastTrDict.Where(x => !headerDict.Keys.Contains(x.Key.ToLower()))).ToDictionary(x => x.Key.ToLower(), x => x.Value);
         }
         var serialize = System.Text.Json.JsonSerializer.Serialize(headerDict);
         headers = System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
