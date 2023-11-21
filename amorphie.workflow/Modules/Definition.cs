@@ -595,8 +595,7 @@ CancellationToken cancellationToken
 
 )
     {
-        DtoSaveWorkflowWithFlow request = data.entityData!;
-        var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name == request.name, cancellationToken);
+        var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.RecordId == data.recordId, cancellationToken);
         if (existingRecord.WorkflowStatus != WorkflowStatus.Deactive)
         {
             existingRecord.WorkflowStatus = WorkflowStatus.Deactive;
@@ -610,8 +609,7 @@ CancellationToken cancellationToken
    CancellationToken cancellationToken
    )
     {
-        DtoSaveWorkflowWithFlow request = data.entityData!;
-        var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name == request.name, cancellationToken);
+        var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.RecordId == data.recordId, cancellationToken);
         if (existingRecord.WorkflowStatus != WorkflowStatus.Active)
         {
             existingRecord.WorkflowStatus = WorkflowStatus.Active;
