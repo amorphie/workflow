@@ -48,4 +48,5 @@ app.UseSwaggerUI();
 
 app.MapStateManagerEndpoints();
 app.MapHttpServiceManagerEndpoints();
+app.MapAccountFlowManagerEndpoints();
 app.Run();
