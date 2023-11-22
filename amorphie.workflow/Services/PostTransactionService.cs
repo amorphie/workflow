@@ -457,7 +457,7 @@ public class PostTransactionService : IPostTransactionService
 
             headerDict = headerDict.Concat(lastTrDict.Where(x => !headerDict.Keys.Contains(x.Key.ToLower()))).ToDictionary(x => x.Key.ToLower(), x => x.Value);
         }
-        var serialize = System.Text.Json.JsonSerializer.Serialize(headerDict.ToDictionary(x=> x.Key.Replace("-",string.Empty),x=> x.Value));
+        var serialize = System.Text.Json.JsonSerializer.Serialize(headerDict.ToDictionary(x => x.Key.Replace("-", string.Empty), x => x.Value));
         headers = System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
         return true;
     }
