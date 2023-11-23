@@ -109,11 +109,10 @@ namespace amorphie.workflow.zeebe.Modules
                 {
                     var authorization = body.GetProperty("authorization").ToString();
                     if (!string.IsNullOrEmpty(authorization))
-                        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(authorization);
+                        httpClient.DefaultRequestHeaders.Add("Authorization", authorization);
                 }
                 catch (Exception ex)
                 {
-
                 }
                 if (httpMethodEnum == HttpMethodEnum.post)
                 {
