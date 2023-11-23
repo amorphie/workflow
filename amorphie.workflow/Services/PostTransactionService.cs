@@ -448,16 +448,16 @@ public class PostTransactionService : IPostTransactionService
     }
     private async ValueTask<bool> SetHeaders(InstanceTransition? lastTransition)
     {
-        List<string> listFlowHeaders = await _dbContext.FlowHeaders.Select(s => s.Key.ToLower()).ToListAsync();
+        List<string> listFlowHeaders = await _dbContext.FlowHeaders.Select(s => s.Key.Replace("-", string.Empty).ToLower()).ToListAsync();
         Dictionary<string, string> headerDict
-         = _headerParameters.Where(w => listFlowHeaders.Contains(w.Key.ToLower())).ToDictionary(a => a.Key.ToLower(), a => string.Join(";", a.Value));
+         = _headerParameters.Where(w => listFlowHeaders.Contains(w.Key.Replace("-", string.Empty).ToLower())).ToDictionary(a => a.Key.Replace("-", string.Empty).ToLower(), a => string.Join(";", a.Value));
         if (lastTransition != null)
         {
             Dictionary<string, string> lastTrDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(lastTransition.HeadersData);
 
-            headerDict = headerDict.Concat(lastTrDict.Where(x => !headerDict.Keys.Contains(x.Key.ToLower()))).ToDictionary(x => x.Key.ToLower(), x => x.Value);
+            headerDict = headerDict.Concat(lastTrDict.Where(x => !headerDict.Keys.Contains(x.Key.Replace("-", string.Empty).ToLower()))).ToDictionary(x => x.Key.Replace("-", string.Empty).ToLower(), x => x.Value);
         }
-        var serialize = System.Text.Json.JsonSerializer.Serialize(headerDict.ToDictionary(x=> x.Key.Replace("-",string.Empty),x=> x.Value));
+        var serialize = System.Text.Json.JsonSerializer.Serialize(headerDict.ToDictionary(x => x.Key.Replace("-", string.Empty), x => x.Value));
         headers = System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
         return true;
     }
