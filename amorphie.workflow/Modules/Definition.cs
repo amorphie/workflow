@@ -989,7 +989,7 @@ CancellationToken cancellationToken
 
         if (await workflows.CountAsync(cancellationToken) > 0)
         {
-            var response = query.Select(s => new GetWorkflowDefinition(
+            var response = workflows.Select(s => new GetWorkflowDefinition(
                 s.Name,
                 s.Titles.FirstOrDefault()!.Label,
                 s.Tags!,
