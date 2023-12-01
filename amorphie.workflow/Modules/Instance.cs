@@ -319,7 +319,7 @@ public static class InstanceModule
         var result = await service.InitWithoutEntity(instanceId, transitionName, user, behalOfUser, body, request.Headers, cancellationToken);
         if (result.Result.Status == Status.Success.ToString())
         {
-            result = await service.Execute();
+            result = await service.ExecuteWithoutEntity();
         }
 
         return result;

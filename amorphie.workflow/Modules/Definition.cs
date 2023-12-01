@@ -345,7 +345,7 @@ public static class DefinitionModule
             {
                 existingRecord.HistoryForms = data.historyForms.Select(s => new Translation
                 {
-                    Id = new Guid(),
+                    Id = Guid.NewGuid(),
                     Label = s.label,
                     Language = s.language
                 }).ToList();
@@ -501,7 +501,7 @@ public static class DefinitionModule
             {
                 existingRecord.HistoryForms = request.historyForms.Select(s => new Translation
                 {
-                    Id = new Guid(),
+                    Id = Guid.NewGuid(),
                     Label = s.label,
                     Language = s.language
                 }).ToList();
@@ -905,7 +905,7 @@ CancellationToken cancellationToken
                                 {
                                     Page pageNew = new Page()
                                     {
-                                        Id = new Guid(),
+                                        Id =Guid.NewGuid(),
                                         Operation = req.page!.operation,
                                         Type = req.page!.type,
                                         Pages = req.page.pageRoute == null ? null : new List<Translation>(){
@@ -931,7 +931,7 @@ CancellationToken cancellationToken
                             {
                                 Page pageNew = new Page()
                                 {
-                                    Id = new Guid(),
+                                    Id = Guid.NewGuid(),
                                     Operation = req.page!.operation,
                                     Type = req.page!.type,
                                     Pages = req.page.pageRoute == null ? null : new List<Translation>(){
@@ -1595,7 +1595,7 @@ CancellationToken cancellationToken
                             {
                                 Page pageNew = new Page()
                                 {
-                                    Id = new Guid(),
+                                    Id = Guid.NewGuid(),
                                     Operation = req.page!.operation,
                                     Type = req.page!.type,
                                     Pages = req.page.pageRoute == null ? null : new List<Translation>(){
@@ -1621,7 +1621,7 @@ CancellationToken cancellationToken
                         {
                             Page pageNew = new Page()
                             {
-                                Id = new Guid(),
+                                Id = Guid.NewGuid(),
                                 Operation = req.page!.operation,
                                 Type = req.page!.type,
                                 Pages = req.page.pageRoute == null ? null : new List<Translation>(){

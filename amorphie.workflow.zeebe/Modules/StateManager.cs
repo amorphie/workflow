@@ -107,11 +107,13 @@ public static class StateManagerModule
         InstanceTransition? newInstanceTransition;
         dynamic? data;
         bool transitionDataFound = true;
+        string updateName = deleteUnAllowedCharecters(transitionName);
         if (!error)
         {
             newInstanceTransition = await dbContext.InstanceTransitions.OrderByDescending(o => o.StartedAt)
             .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.TransitionName == transition.Name, cancellationToken);
-            data = body.GetProperty($"TRX-{transitionName}").GetProperty("Data");
+       
+            data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
         }
         else
         {
@@ -121,17 +123,19 @@ public static class StateManagerModule
 
             try
             {
-                data = body.GetProperty($"TRX-{transitionName}").GetProperty("Data");
+                data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
             }
             catch
             {
-                data = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data");
                 transitionDataFound = false;
-                newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
+                updateName = deleteUnAllowedCharecters(newInstanceTransition.TransitionName);
+                data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
+                
+                newInstanceTransition!.AdditionalData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData").ToString();
                 try
                 {
                     if (!string.IsNullOrEmpty(newInstanceTransition!.AdditionalData))
-                        additionalDataDynamic = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("additionalData");
+                        additionalDataDynamic = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData");
                     else
                     {
                         additionalDataDynamic = new { };
@@ -142,10 +146,10 @@ public static class StateManagerModule
                     additionalDataDynamic = newInstanceTransition!.AdditionalData;
                 }
 
-                newInstanceTransition!.EntityData = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("entityData").ToString();
+                newInstanceTransition!.EntityData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("entityData").ToString();
                 try
                 {
-                    entityDataDynamic = body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("Data").GetProperty("entityData");
+                    entityDataDynamic = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("entityData");
                 }
                 catch (Exception ex)
                 {
@@ -153,21 +157,20 @@ public static class StateManagerModule
                 }
                 newInstanceTransition!.ToStateName = transition.ToStateName;
 
-                newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("TriggeredBy").ToString());
-                newInstanceTransition!.CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX-{newInstanceTransition.TransitionName}").GetProperty("TriggeredByBehalfOf").ToString());
+                newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX{updateName}").GetProperty("TriggeredBy").ToString());
+                newInstanceTransition!.CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX{updateName}").GetProperty("TriggeredByBehalfOf").ToString());
             }
             newInstanceTransition!.TransitionName = transition.Name;
             newInstanceTransition!.Transition = transition;
         }
         if (transitionDataFound)
         {
-            string updateName = deleteUnAllowedCharecters(transitionName);
             newInstanceTransition!.AdditionalData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData").ToString();
 
             try
             {
                 if (!string.IsNullOrEmpty(newInstanceTransition!.AdditionalData))
-                    additionalDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData");
+                    additionalDataDynamic = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData");
                 else
                 {
                     additionalDataDynamic = new { };
@@ -180,7 +183,7 @@ public static class StateManagerModule
             newInstanceTransition!.EntityData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("entityData").ToString();
             try
             {
-                entityDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData");
+                entityDataDynamic = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("entityData");
             }
             catch (Exception ex)
             {
@@ -188,8 +191,8 @@ public static class StateManagerModule
             }
             newInstanceTransition!.ToStateName = transition.ToStateName;
 
-            newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredBy").ToString());
-            newInstanceTransition!.CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX-{transitionName}").GetProperty("TriggeredByBehalfOf").ToString());
+            newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX{updateName}").GetProperty("TriggeredBy").ToString());
+            newInstanceTransition!.CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX{updateName}").GetProperty("TriggeredByBehalfOf").ToString());
         }
         var jsonString = System.Text.Json.JsonSerializer.Serialize(newInstanceTransition!.AdditionalData);
 
