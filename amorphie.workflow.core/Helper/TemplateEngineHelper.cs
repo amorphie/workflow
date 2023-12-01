@@ -50,7 +50,9 @@ namespace amorphie.workflow.core.Helper
                 return new { };
             if (Enums.JsonEnum.Json.GetHashCode() == json)
                 return System.Text.Json.JsonSerializer.Deserialize<dynamic>(form);
-            else return form;
+            if (Enums.JsonEnum.Json.GetHashCode() != json)
+                return form;
+            return form;
         }
         public static string TemplateEngineFormWithoutJson(string templateName, string entityData, string templateUrlFromVault, string? transitionName)
         {

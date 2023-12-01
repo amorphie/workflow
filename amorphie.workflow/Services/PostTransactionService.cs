@@ -86,14 +86,7 @@ public class PostTransactionService : IPostTransactionService
         && i.RecordId == recordId
         && i.BaseStatus != StatusType.Completed).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).ToListAsync();
         Instance? lastInstance = _activeInstances.FirstOrDefault();
-        if (lastInstance != null)
-        {
-            _instanceId = lastInstance.Id;
-        }
-        else
-        {
-            _instanceId = new Guid();
-        }
+        _instanceId = lastInstance != null ? lastInstance.Id : new Guid();
         return await InstanceControl(lastInstance, recordId);
     }
 
@@ -122,12 +115,7 @@ public class PostTransactionService : IPostTransactionService
         //TODO Taner: Entity olmadan instance başlattı instance üzerinden devam etmeyip sonrasında consumer üzerinden(entity ile) devam ederse oluşacak hatayı gidermek amacıyla yapıldı.
         //Bu durum ortadan kalktığında kaldırılacak
         WorkflowEntity? entity = _transition.FromState.Workflow!.Entities.OrderByDescending(c => c.Name).FirstOrDefault();
-        if (entity != null)
-            _entity = entity.Name;
-        else
-        {
-            _entity = string.Empty;
-        }
+        _entity = entity != null ? entity.Name : string.Empty;
         _activeInstance = await _dbContext.Instances.Where(i => i.Id == instanceId).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
         _activeInstances = new List<Instance>();
         if (_activeInstance != null)
@@ -157,7 +145,7 @@ public class PostTransactionService : IPostTransactionService
                 Result = new Result(Status.Error, $"{_transitionName} is not found."),
             };
         }
-        else
+        if (transition != null)
         {
             _transition = transition;
             return new Response
@@ -165,6 +153,10 @@ public class PostTransactionService : IPostTransactionService
                 Result = new Result(Status.Success, "Success"),
             };
         }
+        return new Response
+        {
+            Result = new Result(Status.Error, "Not Found transition"),
+        };
 
     }
     private async Task<IResponse> InstanceControl(Instance? lastInstance, Guid id)
