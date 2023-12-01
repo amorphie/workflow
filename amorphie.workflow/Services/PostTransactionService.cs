@@ -6,6 +6,7 @@ using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.IBase;
 using amorphie.workflow.core.Dtos;
+using amorphie.workflow.core.Enums;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +16,9 @@ using Microsoft.OpenApi.Models;
 public interface IPostTransactionService
 {
     Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters);
+    Task<IResponse> InitWithoutEntity(Guid instanceId, string transitionName, Guid user, Guid behalfOfUser, dynamic data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken);
     Task<IResponse> Execute();
+    Task<IResponse> ExecuteWithoutEntity();
 }
 
 
@@ -32,11 +35,13 @@ public class PostTransactionService : IPostTransactionService
 
     private string _entity { get; set; }
     private Guid _recordId { get; set; }
+    private Guid _instanceId { get; set; }
     private DaprClient _client { get; set; }
 
     private ConsumerPostTransitionRequest _data { get; set; }
 
     private List<Instance>? _activeInstances { get; set; }
+    private Instance? _activeInstance { get; set; }
     private IConfiguration _configuration { get; set; }
     private IHeaderDictionary? _headerParameters { get; set; }
     private dynamic? headers { get; set; }
@@ -68,10 +73,82 @@ public class PostTransactionService : IPostTransactionService
         _headerParameters = headerParameters;
 
         // var transition = _dbContext.Transitions.Find(_transitionName);
+        var Control = await TransitionControl(_transitionName);
+        if (Control!.Result.Status == Status.Error.ToString())
+        {
+
+            return Control;
+        }
+
+
+        // Load all running instances of record
+        _activeInstances = await _dbContext.Instances.Where(i => i.EntityName == entity
+        && i.RecordId == recordId
+        && i.BaseStatus != StatusType.Completed).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).ToListAsync();
+        Instance? lastInstance = _activeInstances.FirstOrDefault();
+        if (lastInstance != null)
+        { 
+            _instanceId = lastInstance.Id; 
+        }
+        else
+        {
+             _instanceId =new Guid();
+        }
+        return await InstanceControl(lastInstance, recordId);
+    }
+
+    public async Task<IResponse> InitWithoutEntity(Guid instanceId, string transitionName, Guid user, Guid behalfOfUser, dynamic data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken)
+    {
+        _transitionName = transitionName;
+        _user = user;
+        _behalfOfUser = behalfOfUser;
+        _headerParameters = headerParameters;
+        _instanceId = instanceId;
+        _recordId=instanceId;
+        ConsumerPostTransitionRequest request=new ConsumerPostTransitionRequest()
+        {
+            EntityData=data,
+            AdditionalData=string.Empty,
+            GetSignalRHub=true
+
+        };
+        _data=request;
+        var Control = await TransitionControl(_transitionName);
+        if (Control!.Result.Status == Status.Error.ToString())
+        {
+
+            return Control;
+        }
+        //TODO Taner: Entity olmadan instance başlattı instance üzerinden devam etmeyip sonrasında consumer üzerinden(entity ile) devam ederse oluşacak hatayı gidermek amacıyla yapıldı.
+        //Bu durum ortadan kalktığında kaldırılacak
+        WorkflowEntity? entity=_transition.FromState.Workflow!.Entities.OrderByDescending(c=>c.Name).FirstOrDefault();
+        if(entity!=null)
+        _entity=entity.Name;
+        else
+        {
+            _entity=string.Empty;
+        }
+        _activeInstance = await _dbContext.Instances.Where(i => i.Id == instanceId).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
+        _activeInstances = new List<Instance>();
+        if (_activeInstance != null)
+            _activeInstances.Add(_activeInstance);
+        
+        return await InstanceControl(_activeInstance, _instanceId);
+    }
+    private async Task<IResponse?> TransitionControl(string transitionName)
+    {
+        // _entity = entity;
+        // _recordId = recordId;
+        // _transitionName = transitionName;
+        // _user = user;
+        // _behalfOfUser = behalfOfUser;
+        // _data = data;
+        // _headerParameters = headerParameters;
+        // _instanceId=instanceId;
         var transition = await _dbContext.Transitions.Where(w => w.Name == _transitionName).Include(t => t.Page).ThenInclude(t => t!.Pages)
-        .Include(s => s.FromState).ThenInclude(s => s.Workflow).ThenInclude(s => s!.Entities)
-         .Include(s => s.ToState).ThenInclude(s => s!.Workflow).ThenInclude(s => s!.Entities)
-        .FirstOrDefaultAsync();
+   .Include(s => s.FromState).ThenInclude(s => s.Workflow).ThenInclude(s => s!.Entities)
+    .Include(s => s.ToState).ThenInclude(s => s!.Workflow).ThenInclude(s => s!.Entities)
+   .FirstOrDefaultAsync();
         if (transition == null)
         {
 
@@ -82,14 +159,16 @@ public class PostTransactionService : IPostTransactionService
         }
         else
         {
-            _transition = transition;
+            _transition=transition;
+            return new Response
+            {
+                Result = new Result(Status.Success, "Success"),
+            };
         }
 
-        // Load all running instances of record
-        _activeInstances = await _dbContext.Instances.Where(i => i.EntityName == entity
-        && i.RecordId == recordId
-        && i.BaseStatus != StatusType.Completed).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).ToListAsync();
-        Instance? lastInstance = _activeInstances.FirstOrDefault();
+    }
+    private async Task<IResponse> InstanceControl(Instance? lastInstance, Guid id)
+    {
         if (lastInstance != null && lastInstance.Workflow.WorkflowStatus == WorkflowStatus.Deactive)
         {
             return new Response
@@ -107,7 +186,7 @@ public class PostTransactionService : IPostTransactionService
             {
                 return new Response
                 {
-                    Result = new Result(Status.Error, $"There is an active workflow exists for {recordId} at different state."),
+                    Result = new Result(Status.Error, $"There is an active workflow exists for {id} at different state."),
                 };
             }
 
@@ -122,14 +201,26 @@ public class PostTransactionService : IPostTransactionService
         {
             Result = new Result(Status.Success, "Success"),
         };
+
     }
+
 
     public async Task<IResponse> Execute()
     {
-        DateTime? started = DateTime.UtcNow;
-        var instanceAtState = _activeInstances?.Where(i => i.StateName == _transition.FromStateName).FirstOrDefault();
 
-        // There is no active instance at submited state
+        var instanceAtState = _activeInstances?.Where(i => i.StateName == _transition.FromStateName).FirstOrDefault();
+        return await ExecuteWithInstance(instanceAtState, _recordId, ExecuteFlowMethod.RecordId);
+
+    }
+    public async Task<IResponse> ExecuteWithoutEntity()
+    {
+
+        return await ExecuteWithInstance(_activeInstance, _instanceId, ExecuteFlowMethod.InstanceId);
+
+    }
+    private async Task<IResponse> ExecuteWithInstance(Instance? instanceAtState, Guid id, ExecuteFlowMethod executeMethod)
+    {
+        DateTime? started = DateTime.UtcNow;
         if (instanceAtState == null)
         {
             _dbContext.Entry(_transition).Reference(t => t.FromState).Load();
@@ -150,7 +241,7 @@ public class PostTransactionService : IPostTransactionService
             {
                 return new Response
                 {
-                    Result = new Result(Status.Error, _transition.ServiceName + $"There is no active workflow for {_recordId} and also {_transition.Name} is not transition of any start state."),
+                    Result = new Result(Status.Error, _transition.ServiceName + $"There is no active workflow for {id} and also {_transition.Name} is not transition of any start state."),
                 };
             }
         }
@@ -175,6 +266,7 @@ public class PostTransactionService : IPostTransactionService
         //Create an instace for request.
         var newInstance = new Instance
         {
+            Id = _instanceId,
             WorkflowName = _transition.FromState.WorkflowName!,
             EntityName = _entity,
             RecordId = _recordId,
@@ -210,6 +302,7 @@ public class PostTransactionService : IPostTransactionService
 
         var newInstance = new Instance
         {
+            Id = _instanceId,
             WorkflowName = _transition.FromState.WorkflowName!,
             EntityName = _entity,
             RecordId = _recordId,

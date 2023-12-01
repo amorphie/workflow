@@ -161,7 +161,8 @@ public static class StateManagerModule
         }
         if (transitionDataFound)
         {
-            newInstanceTransition!.AdditionalData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("additionalData").ToString();
+              string updateName = deleteUnAllowedCharecters(transitionName);
+            newInstanceTransition!.AdditionalData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData").ToString();
 
             try
             {
@@ -176,7 +177,7 @@ public static class StateManagerModule
             {
                 additionalDataDynamic = newInstanceTransition!.AdditionalData;
             }
-            newInstanceTransition!.EntityData = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData").ToString();
+            newInstanceTransition!.EntityData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("entityData").ToString();
             try
             {
                 entityDataDynamic = body.GetProperty($"TRX-{transitionName}").GetProperty("Data").GetProperty("entityData");

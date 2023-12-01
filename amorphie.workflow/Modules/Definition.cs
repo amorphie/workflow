@@ -1086,13 +1086,19 @@ CancellationToken cancellationToken
             s.BaseStatus!,
             s.Transitions.Select(e => new PostTransitionDefinitionRequest(
      e.Name, e.Titles.Where(s => s.Language == language).Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).First(),
-     e.ToStateName!, e.Forms.Where(s => s.Language == language).Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).FirstOrDefault(),
+     e.ToStateName!, e.UiForms.Any() ? null : e.UiForms.Select(st => new amorphie.workflow.core.Dtos.UiFormDto()
+     {
+         typeofUi = st.TypeofUiEnum,
+         navigationType = st.Navigation,
+         forms = st.Forms.Select(sf => new amorphie.workflow.core.Dtos.MultilanguageText(
+         sf.Language, sf.Label)).ToArray()
+     }).ToArray(),
      e.FromStateName!, e.ServiceName, e.FlowName,
      e.Flow != null ? e.Flow.Gateway : null, e.Page == null ? null
      : new PostPageDefinitionRequest(e.Page.Operation, e.Page.Type, e.Page.Pages == null || e.Page.Pages.Count == 0 ? null :
      new amorphie.workflow.core.Dtos.MultilanguageText(language!, e.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), e.Page.Timeout),
      e.HistoryForms != null && e.HistoryForms.Count() > 0 ? e.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null,
-     e.TypeofUi
+     e.TypeofUi,e.transitionButtonType
 
 )).ToArray()
             ))
@@ -1172,12 +1178,24 @@ CancellationToken cancellationToken
                 CreatedByBehalfOf = Guid.NewGuid(),
                 Type = data.type,
                 IsPublicForm = data.ispublicForm,
-                PublicForms = data.publicForms.Select(s => new Translation()
-                {
+                // PublicForms = data.publicForms.Select(s => new Translation()
+                // {
 
-                    Language = s.language,
-                    Label = s.label
-                }).ToList(),
+                //     Language = s.L,
+                //     Label = s.label
+                // }).ToList(),
+                UiForms = data.ispublicForm == true ? data.publicForms.Select(s => new amorphie.workflow.core.Models.UiForm()
+                {
+                    StateName = data.name,
+                    TypeofUiEnum = s.typeofUi,
+                    Navigation = s.navigationType,
+                    Forms = s.forms.Select(s => new Translation()
+                    {
+
+                        Language = s.language,
+                        Label = s.label
+                    }).ToList()
+                }).ToList() : null,
                 Transitions = data!.transitions!.Select(x => new Transition
                 {
                     Name = x.name,
@@ -1204,18 +1222,32 @@ CancellationToken cancellationToken
                         Timeout = x.page!.timeout
 
                     },
+
                     Titles = new List<Translation>(){
                             new Translation{
                              Language=x.title.language,
                              Label=x.title.label
                             }
                         },
+                    transitionButtonType=x.buttonType,
                     Forms = x.form == null ? new List<Translation>() { } : new List<Translation>(){
                             new Translation{
-                             Language=x.form!.language,
-                             Label=x.form!.label
+                             Language=x.form!.FirstOrDefault(f=>f.typeofUi==x.typeofUi).forms.FirstOrDefault().language,
+                             Label=x.form!.FirstOrDefault(f=>f.typeofUi==x.typeofUi).forms.FirstOrDefault().label
                             }
                         },
+                    UiForms = x.form.Select(s => new amorphie.workflow.core.Models.UiForm()
+                    {
+                        TransitionName = x.name,
+                        TypeofUiEnum = s.typeofUi,
+                        Navigation = s.navigationType,
+                        Forms = s.forms.Select(s => new Translation()
+                        {
+
+                            Language = s.language,
+                            Label = s.label
+                        }).ToList()
+                    }).ToList(),
                     HistoryForms = x.historyForms == null ? new List<Translation>() { } : x.historyForms.Select(s => new Translation()
                     {
                         Label = s.label,
@@ -1268,24 +1300,77 @@ CancellationToken cancellationToken
             {
                 foreach (var languageForm in data.publicForms)
                 {
-                    Translation? translation = existingRecord.PublicForms.FirstOrDefault(f => f.Language == languageForm.language);
-                    if (translation != null && translation.Label != languageForm.label)
-                    {
-                        translation.Label = languageForm.label;
-                        hasChanges = true;
-                    }
-                    else if (translation == null)
-                    {
+                    // Translation? translation = existingRecord.PublicForms.FirstOrDefault(f => f.Language == languageForm.language);
+                    // if (translation != null && translation.Label != languageForm.label)
+                    // {
+                    //     translation.Label = languageForm.label;
+                    //     hasChanges = true;
+                    // }
+                    // else if (translation == null)
+                    // {
 
-                        existingRecord.PublicForms.Add(new Translation()
+                    //     existingRecord.PublicForms.Add(new Translation()
+                    //     {
+                    //         Label = languageForm.label,
+                    //         Language = languageForm.language
+                    //     });
+                    //     existingRecord.ModifiedAt = DateTime.UtcNow;
+                    //     hasChanges = true;
+                    // }
+                    amorphie.workflow.core.Models.UiForm? uiForm = existingRecord.UiForms.FirstOrDefault(f => languageForm.typeofUi == f.TypeofUiEnum);
+                    if (uiForm == null)
+                    {
+                        uiForm = new amorphie.workflow.core.Models.UiForm()
                         {
-                            Label = languageForm.label,
-                            Language = languageForm.language
-                        });
-                        existingRecord.ModifiedAt = DateTime.UtcNow;
+                            TypeofUiEnum = languageForm.typeofUi,
+                            Navigation = languageForm.navigationType,
+                            StateName = existingRecord.Name,
+                            Forms = languageForm.forms.Select(s => new Translation()
+                            {
+                                Label = s.label,
+                                Language = s.language
+                            }).ToList()
+                        };
+                        context.UiForms.Add(uiForm);
                         hasChanges = true;
                     }
+                    else
+                    {
+                        if (languageForm.forms != null && languageForm.forms.Any())
+                        {
+                            foreach (var languagePF in languageForm.forms)
+                            {
+                                Translation? translation = uiForm.Forms.FirstOrDefault(f => f.Language == languagePF.language);
+                                if (translation != null && translation.Label != languagePF.label)
+                                {
+                                    translation.Label = languagePF.label;
+                                    hasChanges = true;
+                                }
+                                else if (translation == null)
+                                {
+
+                                    uiForm.Forms.Add(new Translation()
+                                    {
+                                        Label = languagePF.label,
+                                        Language = languagePF.language
+                                    });
+                                    existingRecord.ModifiedAt = DateTime.UtcNow;
+                                    hasChanges = true;
+                                }
+                            }
+                        }
+                        if (uiForm.Navigation != languageForm.navigationType)
+                        {
+                            hasChanges = true;
+                            uiForm.Navigation = languageForm.navigationType;
+                        }
+
+                    }
+
+
                 }
+
+
             }
             foreach (var req in data.transitions)
             {
@@ -1310,11 +1395,24 @@ CancellationToken cancellationToken
                         },
                         Forms = req.form == null ? new List<Translation>() { } : new List<Translation>(){
                             new Translation(){
-                                Label=req.form!.label,
-                                Language=req.form!.language
+                      Language=req.form!.FirstOrDefault(f=>f.typeofUi==req.typeofUi).forms.FirstOrDefault().language,
+                             Label=req.form!.FirstOrDefault(f=>f.typeofUi==req.typeofUi).forms.FirstOrDefault().label
                             }
                         },
+                         UiForms = req.form.Select(s => new amorphie.workflow.core.Models.UiForm()
+                    {
+                        TransitionName = req.name,
+                        TypeofUiEnum = s.typeofUi,
+                        Navigation = s.navigationType,
+                        Forms = s.forms.Select(s => new Translation()
+                        {
+
+                            Language = s.language,
+                            Label = s.label
+                        }).ToList()
+                    }).ToList(),
                         TypeofUi = req.typeofUi,
+                        transitionButtonType=req.buttonType,
                         HistoryForms = req.historyForms == null ? new List<Translation>() { } : req.historyForms.Select(s => new Translation
                         {
                             Label = s.label,
@@ -1355,6 +1453,11 @@ CancellationToken cancellationToken
                     if (existingTransition.TypeofUi != req.typeofUi)
                     {
                         existingTransition.TypeofUi = req.typeofUi;
+                        hasChanges = true;
+                    }
+                         if (existingTransition.transitionButtonType != req.buttonType)
+                    {
+                        existingTransition.transitionButtonType = req.buttonType;
                         hasChanges = true;
                     }
                     if (req!.message != existingTransition.FlowName)
@@ -1452,12 +1555,12 @@ CancellationToken cancellationToken
                     }
                     if (req.form != null)
                     {
-                        Translation? translation = existingTransition.Forms.FirstOrDefault(f => f.Language == language);
-                        if (translation != null && translation.Label != req.form.label)
-                        {
-                            translation.Label = req.form.label;
-                            hasChanges = true;
-                        }
+                        // Translation? translation = existingTransition.Forms.FirstOrDefault(f => f.Language == language);
+                        // if (translation != null && translation.Label != req.form.label)
+                        // {
+                        //     translation.Label = req.form.label;
+                        //     hasChanges = true;
+                        // }
                     }
 
                     if (req!.page != null)

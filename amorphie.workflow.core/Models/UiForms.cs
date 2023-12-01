@@ -8,11 +8,12 @@ namespace amorphie.workflow.core.Models
 {
     public class UiForm : amorphie.core.Base.EntityBase
     {
-        public Transition? transition { get; set; }
-        public string? transitionName { get; set; }
-        public State? state { get; set; }
-        public string? stateName { get; set; }
-        public TypeofUiEnum typeofUiEnum { get; set; }
-        public ICollection<amorphie.core.Base.Translation> Forms { get; set; } = default!;
+        public Transition? Transition { get; set; }
+        public string? TransitionName { get; set; }
+        public State? State { get; set; }
+        public string? StateName { get; set; }
+        public NavigationType? Navigation { get; set; }
+        public TypeofUiEnum? TypeofUiEnum { get; set; }
+        public ICollection<amorphie.core.Base.Translation>? Forms { get; set; } = default!;
     }
 }
