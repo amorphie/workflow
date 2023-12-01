@@ -19,6 +19,7 @@ public class Transition : EntityBaseWithOutId
 
     public ZeebeMessage? Flow { get; set; }
     public string? FlowName { get; set; }
+    public bool? requireData { get; set; }
 
     public Page? Page { get; set; }
     public Guid? PageId { get; set; }
@@ -29,4 +30,5 @@ public class Transition : EntityBaseWithOutId
 
     public string? ServiceName { get; set; }
     public TypeofUiEnum? TypeofUi { get; set; }
+    public TransitionButtonType? transitionButtonType { get; set; }
 }
