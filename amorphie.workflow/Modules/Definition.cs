@@ -1098,7 +1098,7 @@ CancellationToken cancellationToken
      : new PostPageDefinitionRequest(e.Page.Operation, e.Page.Type, e.Page.Pages == null || e.Page.Pages.Count == 0 ? null :
      new amorphie.workflow.core.Dtos.MultilanguageText(language!, e.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), e.Page.Timeout),
      e.HistoryForms != null && e.HistoryForms.Count() > 0 ? e.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null,
-     e.TypeofUi,e.transitionButtonType
+     e.TypeofUi, e.transitionButtonType
 
 )).ToArray()
             ))
@@ -1229,7 +1229,7 @@ CancellationToken cancellationToken
                              Label=x.title.label
                             }
                         },
-                    transitionButtonType=x.buttonType,
+                    transitionButtonType = x.buttonType,
                     Forms = x.form == null ? new List<Translation>() { } : new List<Translation>(){
                             new Translation{
                              Language=x.form!.FirstOrDefault(f=>f.typeofUi==x.typeofUi).forms.FirstOrDefault().language,
@@ -1399,20 +1399,20 @@ CancellationToken cancellationToken
                              Label=req.form!.FirstOrDefault(f=>f.typeofUi==req.typeofUi).forms.FirstOrDefault().label
                             }
                         },
-                         UiForms = req.form.Select(s => new amorphie.workflow.core.Models.UiForm()
-                    {
-                        TransitionName = req.name,
-                        TypeofUiEnum = s.typeofUi,
-                        Navigation = s.navigationType,
-                        Forms = s.forms.Select(s => new Translation()
+                        UiForms = req.form.Select(s => new amorphie.workflow.core.Models.UiForm()
                         {
+                            TransitionName = req.name,
+                            TypeofUiEnum = s.typeofUi,
+                            Navigation = s.navigationType,
+                            Forms = s.forms.Select(s => new Translation()
+                            {
 
-                            Language = s.language,
-                            Label = s.label
-                        }).ToList()
-                    }).ToList(),
+                                Language = s.language,
+                                Label = s.label
+                            }).ToList()
+                        }).ToList(),
                         TypeofUi = req.typeofUi,
-                        transitionButtonType=req.buttonType,
+                        transitionButtonType = req.buttonType,
                         HistoryForms = req.historyForms == null ? new List<Translation>() { } : req.historyForms.Select(s => new Translation
                         {
                             Label = s.label,
@@ -1455,7 +1455,7 @@ CancellationToken cancellationToken
                         existingTransition.TypeofUi = req.typeofUi;
                         hasChanges = true;
                     }
-                         if (existingTransition.transitionButtonType != req.buttonType)
+                    if (existingTransition.transitionButtonType != req.buttonType)
                     {
                         existingTransition.transitionButtonType = req.buttonType;
                         hasChanges = true;

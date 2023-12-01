@@ -8,7 +8,7 @@ namespace amorphie.workflow.core.Enums
 {
     public enum TransitionButtonType
     {
-         [Description("forward")]
+        [Description("forward")]
         Forward = 1,
         [Description("back")]
         Back = 2,

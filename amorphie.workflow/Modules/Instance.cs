@@ -375,7 +375,7 @@ public static class InstanceModule
                         t.Page == null ? null :
                        new PostPageDefinitionRequest(t.Page.Operation, t.Page.Type, t.Page.Pages == null || t.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(language!, t.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), t.Page.Timeout)
                        , t.HistoryForms.Any() ? t.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null
-                       , t.TypeofUi,t.transitionButtonType
+                       , t.TypeofUi, t.transitionButtonType
                     )).ToArray()
                     ),
                    s.CreatedAt,
@@ -429,7 +429,7 @@ public static class InstanceModule
                                  t.Page == null ? null :
                        new PostPageDefinitionRequest(t.Page.Operation, t.Page.Type, t.Page.Pages == null || t.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(language!, t.Page.Pages!.FirstOrDefault(f => f.Language == language)!.Label), t.Page.Timeout)
                               , t.HistoryForms.Any() ? t.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null
-                              , t.TypeofUi,t.transitionButtonType
+                              , t.TypeofUi, t.transitionButtonType
                               )).ToArray()
                               ),
                              instance.CreatedAt,
@@ -496,7 +496,7 @@ public static class InstanceModule
             return Results.NotFound("Instance:" + instanceId + " not found");
         }
 
-        if (latest == null && latestPayload == null & firstPayload == null&&string.IsNullOrEmpty(transitionName))
+        if (latest == null && latestPayload == null & firstPayload == null && string.IsNullOrEmpty(transitionName))
         {
             latest = true;
         }
@@ -506,7 +506,7 @@ public static class InstanceModule
             .FirstOrDefaultAsync(cancellationToken);
             if (instanceTransition == null)
             {
-               return Results.NotFound("Instance does not have a transition");
+                return Results.NotFound("Instance does not have a transition");
             }
             try
             {
@@ -566,15 +566,15 @@ public static class InstanceModule
                 return Results.Problem(ex.ToString());
             }
         }
-         else if (!string.IsNullOrEmpty(transitionName))
+        else if (!string.IsNullOrEmpty(transitionName))
         {
             try
             {
-                instanceTransition = await context.InstanceTransitions.Where(w => w.InstanceId == instanceId&&transitionName==w.TransitionName)
+                instanceTransition = await context.InstanceTransitions.Where(w => w.InstanceId == instanceId && transitionName == w.TransitionName)
                 .FirstOrDefaultAsync(cancellationToken);
                 if (instanceTransition == null)
                 {
-                    return Results.NotFound("Transition "+transitionName+" is not found");
+                    return Results.NotFound("Transition " + transitionName + " is not found");
                 }
                 var serializeResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData);
                 if (serializeResponse != null)

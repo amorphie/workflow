@@ -87,12 +87,12 @@ public class PostTransactionService : IPostTransactionService
         && i.BaseStatus != StatusType.Completed).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).ToListAsync();
         Instance? lastInstance = _activeInstances.FirstOrDefault();
         if (lastInstance != null)
-        { 
-            _instanceId = lastInstance.Id; 
+        {
+            _instanceId = lastInstance.Id;
         }
         else
         {
-             _instanceId =new Guid();
+            _instanceId = new Guid();
         }
         return await InstanceControl(lastInstance, recordId);
     }
@@ -104,15 +104,15 @@ public class PostTransactionService : IPostTransactionService
         _behalfOfUser = behalfOfUser;
         _headerParameters = headerParameters;
         _instanceId = instanceId;
-        _recordId=instanceId;
-        ConsumerPostTransitionRequest request=new ConsumerPostTransitionRequest()
+        _recordId = instanceId;
+        ConsumerPostTransitionRequest request = new ConsumerPostTransitionRequest()
         {
-            EntityData=data,
-            AdditionalData=string.Empty,
-            GetSignalRHub=true
+            EntityData = data,
+            AdditionalData = string.Empty,
+            GetSignalRHub = true
 
         };
-        _data=request;
+        _data = request;
         var Control = await TransitionControl(_transitionName);
         if (Control!.Result.Status == Status.Error.ToString())
         {
@@ -121,18 +121,18 @@ public class PostTransactionService : IPostTransactionService
         }
         //TODO Taner: Entity olmadan instance başlattı instance üzerinden devam etmeyip sonrasında consumer üzerinden(entity ile) devam ederse oluşacak hatayı gidermek amacıyla yapıldı.
         //Bu durum ortadan kalktığında kaldırılacak
-        WorkflowEntity? entity=_transition.FromState.Workflow!.Entities.OrderByDescending(c=>c.Name).FirstOrDefault();
-        if(entity!=null)
-        _entity=entity.Name;
+        WorkflowEntity? entity = _transition.FromState.Workflow!.Entities.OrderByDescending(c => c.Name).FirstOrDefault();
+        if (entity != null)
+            _entity = entity.Name;
         else
         {
-            _entity=string.Empty;
+            _entity = string.Empty;
         }
         _activeInstance = await _dbContext.Instances.Where(i => i.Id == instanceId).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
         _activeInstances = new List<Instance>();
         if (_activeInstance != null)
             _activeInstances.Add(_activeInstance);
-        
+
         return await InstanceControl(_activeInstance, _instanceId);
     }
     private async Task<IResponse?> TransitionControl(string transitionName)
@@ -159,7 +159,7 @@ public class PostTransactionService : IPostTransactionService
         }
         else
         {
-            _transition=transition;
+            _transition = transition;
             return new Response
             {
                 Result = new Result(Status.Success, "Success"),

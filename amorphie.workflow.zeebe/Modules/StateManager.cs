@@ -161,7 +161,7 @@ public static class StateManagerModule
         }
         if (transitionDataFound)
         {
-              string updateName = deleteUnAllowedCharecters(transitionName);
+            string updateName = deleteUnAllowedCharecters(transitionName);
             newInstanceTransition!.AdditionalData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData").ToString();
 
             try
