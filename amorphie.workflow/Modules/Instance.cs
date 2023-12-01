@@ -1,5 +1,6 @@
 
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using amorphie.core.Base;
@@ -98,7 +99,7 @@ public static class InstanceModule
                 operation.Responses["404"].Description = "No instance found.";
                 return operation;
             });
-        app.MapGet("/amorphie/instance/{instanceId}/transition", getTransitionByInstance
+        app.MapGet("/amorphie/instance/{instanceId}/transition", getTransitionByInstanceAsync
             )
             .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
@@ -113,7 +114,7 @@ public static class InstanceModule
                 operation.Responses["404"].Description = "No instance found.";
                 return operation;
             });
-        app.MapGet("/amorphie/instance/{instanceId}/data", getInstanceData
+        app.MapGet("/amorphie/instance/{instanceId}/data", getInstanceDataAsync
          )
          .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
          .Produces(StatusCodes.Status404NotFound)
@@ -209,7 +210,7 @@ public static class InstanceModule
         {
 
             UiForm? uiForm;
-            type = type.ToLower();
+            type = type.ToLower(new CultureInfo("en-US", false));
 
             Transition? transition = await context.Transitions.Include(s => s.UiForms).ThenInclude(t => t.Forms).FirstOrDefaultAsync(f => f.Name == transitionName, cancellationToken);
             if (transition != null)
@@ -218,10 +219,11 @@ public static class InstanceModule
                 uiForm = transition.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
                 return await View(configuration, transitionName, type, typeof(Transition).ToString(), uiForm, language, json);
             }
-            else
+            if (transition == null)
             {
                 return Results.NotFound("Transition does not exist");
             }
+            return Results.NotFound();
         }
         catch (Exception ex)
         {
@@ -243,7 +245,7 @@ public static class InstanceModule
         {
 
             UiForm? uiForm;
-            type = type.ToLower();
+            type = type.ToLower(new CultureInfo("en-US", false));
 
             State? state = await context.States.Include(s => s.UiForms).ThenInclude(t => t.Forms).FirstOrDefaultAsync(f => f.Name == stateName, cancellationToken);
             if (state != null)
@@ -252,10 +254,11 @@ public static class InstanceModule
                 uiForm = state.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
                 return await View(configuration, stateName, type, typeof(State).ToString(), uiForm, language, json);
             }
-            else
+            if (state == null)
             {
                 return Results.NotFound("State does not exist");
             }
+            return Results.NotFound();
         }
         catch (Exception ex)
         {
@@ -288,7 +291,7 @@ public static class InstanceModule
                 language = form.Language,
                 navigation = uiForm.Navigation.ToString(),
                 data = "latest",
-                body = type.ToLower() == TypeofUiEnum.PageUrl.ToString().ToLower() ? form.Label
+                body = string.Equals(type, TypeofUiEnum.PageUrl.ToString(), StringComparison.OrdinalIgnoreCase) ? form.Label
                 : amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(form.Label, string.Empty, templateURL, string.Empty, json)
             });
 
@@ -398,7 +401,7 @@ public static class InstanceModule
         {
             return Results.NotFound();
         }
-        else
+        if (instance != null)
         {
             return Results.Ok(
                           new GetInstanceResponse(
@@ -438,9 +441,10 @@ public static class InstanceModule
                               )
                           );
         }
+        return Results.NotFound();
 
     }
-    static async Task<IResult> getTransitionByInstance(
+    static async Task<IResult> getTransitionByInstanceAsync(
       [FromServices] WorkflowDBContext context,
       [FromRoute(Name = "instanceId")] Guid instanceId,
       CancellationToken cancellationToken,
@@ -454,7 +458,7 @@ public static class InstanceModule
         {
             return Results.NotFound();
         }
-        else
+        if (instance != null)
         {
             return Results.Ok(
                           new InstanceStateTransitions()
@@ -473,9 +477,10 @@ public static class InstanceModule
                           }
                           );
         }
+        return Results.NotFound();
 
     }
-    static async Task<IResult> getInstanceData(
+    static async Task<IResult> getInstanceDataAsync(
       [FromServices] WorkflowDBContext context,
       [FromRoute(Name = "instanceId")] Guid instanceId,
       CancellationToken cancellationToken,
@@ -518,7 +523,7 @@ public static class InstanceModule
             }
             return Results.Ok(instanceTransition.EntityData);
         }
-        else if (latestPayload.GetValueOrDefault(false))
+        if (latestPayload.GetValueOrDefault(false))
         {
             try
             {
@@ -531,7 +536,7 @@ public static class InstanceModule
                 var serializeResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData);
                 if (serializeResponse != null)
                     return Results.Ok(serializeResponse);
-                else
+                if (serializeResponse == null)
                 {
                     //if data can not deserialize return entitydata without deserialize
                     return Results.Ok(instanceTransition.EntityData);
@@ -542,7 +547,7 @@ public static class InstanceModule
                 return Results.Problem("Try latest instead of latest-payload");
             }
         }
-        else if (firstPayload.GetValueOrDefault(false))
+        if (firstPayload.GetValueOrDefault(false))
         {
             try
             {
@@ -555,7 +560,7 @@ public static class InstanceModule
                 var serializeResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData);
                 if (serializeResponse != null)
                     return Results.Ok(serializeResponse);
-                else
+                if (serializeResponse == null)
                 {
                     //if data can not deserialize return entitydata without deserialize
                     return Results.Ok(instanceTransition.EntityData);
@@ -566,7 +571,7 @@ public static class InstanceModule
                 return Results.Problem(ex.ToString());
             }
         }
-        else if (!string.IsNullOrEmpty(transitionName))
+        if (!string.IsNullOrEmpty(transitionName))
         {
             try
             {
@@ -579,7 +584,7 @@ public static class InstanceModule
                 var serializeResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData);
                 if (serializeResponse != null)
                     return Results.Ok(serializeResponse);
-                else
+                if (serializeResponse == null)
                 {
                     //if data can not deserialize return entitydata without deserialize
                     return Results.Ok(instanceTransition.EntityData);
@@ -634,33 +639,3 @@ context!.InstanceEvents.Where(w => w.InstanceTransitionId == it.Id).Select(s => 
     }
 }
 
-public class GetRecordWorkflowInit
-{
-    public string? state { get; set; }
-    [JsonPropertyName("view-source")]
-    public string? viewSource { get; set; }
-    public List<InitTransition>? transition { get; set; }
-}
-public class InstanceStateTransitions : GetRecordWorkflowInit
-{
-    [JsonPropertyName("base-state")]
-    public string? baseState { get; set; }
-}
-public class InitTransition
-{
-    public string? transition { get; set; }
-    public string? type { get; set; }
-    [JsonPropertyName("require-data")]
-    public bool? requireData { get; set; }
-    [JsonPropertyName("has-view-variant")]
-    public bool? hasViewVariant { get; set; }
-}
-public class ViewTransitionModel
-{
-    public string? name { get; set; }
-    public string? type { get; set; }
-    public string? language { get; set; }
-    public string? navigation { get; set; }
-    public string? data { get; set; }
-    public dynamic? body { get; set; }
-}

@@ -1277,7 +1277,7 @@ CancellationToken cancellationToken
             // };
             return Results.Created($"workflow/definition/>{definition}/state?state-name:" + data.name, definition);
         }
-        else
+        if (existingRecord != null)
         {
             var hasChanges = false;
             if (existingRecord.BaseStatus != data.baseStatus || existingRecord.Type != data.type)
@@ -1334,19 +1334,19 @@ CancellationToken cancellationToken
                         context.UiForms.Add(uiForm);
                         hasChanges = true;
                     }
-                    else
+                    if (uiForm != null)
                     {
                         if (languageForm.forms != null && languageForm.forms.Any())
                         {
                             foreach (var languagePF in languageForm.forms)
                             {
                                 Translation? translation = uiForm.Forms.FirstOrDefault(f => f.Language == languagePF.language);
-                                if (translation != null && translation.Label != languagePF.label)
+                                if (translation?.Label != languagePF.label)
                                 {
                                     translation.Label = languagePF.label;
                                     hasChanges = true;
                                 }
-                                else if (translation == null)
+                                if (translation == null)
                                 {
 
                                     uiForm.Forms.Add(new Translation()
@@ -1437,7 +1437,7 @@ CancellationToken cancellationToken
                     });
                     hasChanges = true;
                 }
-                else
+                if (existingTransition != null)
                 {
                     if (existingTransition.ToStateName != req.toState)
                     {
@@ -1485,7 +1485,7 @@ CancellationToken cancellationToken
                                 existingTransition.FlowName = flow.Name;
                                 existingTransition.Flow = flow;
                             }
-                            else
+                            if (zeebeMessage != null)
                             {
                                 existingTransition.Flow = zeebeMessage;
                                 existingTransition.FlowName = req.message;
@@ -1655,7 +1655,7 @@ CancellationToken cancellationToken
             }
         }
 
-
+        return Results.NotFound();
     }
 }
 
