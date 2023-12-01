@@ -115,7 +115,7 @@ public class PostTransactionService : IPostTransactionService
         //TODO Taner: Entity olmadan instance başlattı instance üzerinden devam etmeyip sonrasında consumer üzerinden(entity ile) devam ederse oluşacak hatayı gidermek amacıyla yapıldı.
         //Bu durum ortadan kalktığında kaldırılacak
         WorkflowEntity? entity = _transition.FromState.Workflow!.Entities.OrderByDescending(c => c.Name).FirstOrDefault();
-        _entity=entity!=null? entity.Name:string.Empty;
+        _entity = entity != null ? entity.Name : string.Empty;
         _activeInstance = await _dbContext.Instances.Where(i => i.Id == instanceId).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
         _activeInstances = new List<Instance>();
         if (_activeInstance != null)
@@ -153,10 +153,10 @@ public class PostTransactionService : IPostTransactionService
                 Result = new Result(Status.Success, "Success"),
             };
         }
-      return new Response
-            {
-                Result = new Result(Status.Error, "Not Found transition"),
-            };
+        return new Response
+        {
+            Result = new Result(Status.Error, "Not Found transition"),
+        };
 
     }
     private async Task<IResponse> InstanceControl(Instance? lastInstance, Guid id)
