@@ -112,7 +112,7 @@ public static class StateManagerModule
         {
             newInstanceTransition = await dbContext.InstanceTransitions.OrderByDescending(o => o.StartedAt)
             .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.TransitionName == transition.Name, cancellationToken);
-       
+
             data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
         }
         else
@@ -130,7 +130,7 @@ public static class StateManagerModule
                 transitionDataFound = false;
                 updateName = deleteUnAllowedCharecters(newInstanceTransition.TransitionName);
                 data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
-                
+
                 newInstanceTransition!.AdditionalData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData").ToString();
                 try
                 {

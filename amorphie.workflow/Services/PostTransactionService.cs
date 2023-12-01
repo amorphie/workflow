@@ -86,7 +86,7 @@ public class PostTransactionService : IPostTransactionService
         && i.RecordId == recordId
         && i.BaseStatus != StatusType.Completed).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).ToListAsync();
         Instance? lastInstance = _activeInstances.FirstOrDefault();
-        _instanceId=lastInstance != null?lastInstance.Id:Guid.NewGuid();
+        _instanceId = lastInstance != null ? lastInstance.Id : Guid.NewGuid();
         return await InstanceControl(lastInstance, recordId);
     }
 

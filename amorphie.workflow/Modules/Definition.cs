@@ -905,7 +905,7 @@ CancellationToken cancellationToken
                                 {
                                     Page pageNew = new Page()
                                     {
-                                        Id =Guid.NewGuid(),
+                                        Id = Guid.NewGuid(),
                                         Operation = req.page!.operation,
                                         Type = req.page!.type,
                                         Pages = req.page.pageRoute == null ? null : new List<Translation>(){
