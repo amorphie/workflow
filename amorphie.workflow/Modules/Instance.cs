@@ -345,12 +345,14 @@ public static class InstanceModule
         return result;
 
     }
-    static IResult getAllInstance(
+    static async Task<IResult> getAllInstance(
         [FromServices] WorkflowDBContext context,
         [FromQuery] string? entity,
          [FromQuery] string? workflowName,
          [FromQuery] Guid? recordId,
           [FromQuery] GetInstanceStatusType? status,
+           [FromQuery] string? SortColumn,
+           [FromQuery] SortDirectionEnum? SortDirection,
            [FromQuery][Range(0, 100)] int? page = 0,
         [FromQuery][Range(5, 100)] int? pageSize = 10,
          [FromHeader(Name = "Language")] string? language = "en-EN"
@@ -365,9 +367,10 @@ public static class InstanceModule
     .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.UiForms).ThenInclude(t => t.Forms)
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Titles)
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.HistoryForms)
-   .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Page).ThenInclude(t => t.Pages)
+   .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Page).ThenInclude(t => t.Pages).AsQueryable()
    ;
 
+        query = await query.Sort<Instance>(SortColumn, SortDirection.GetValueOrDefault(0));
         var instances = query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
          .Take(pageSize.GetValueOrDefault(10)).OrderBy(o => o.CreatedAt)
          .ToList();
