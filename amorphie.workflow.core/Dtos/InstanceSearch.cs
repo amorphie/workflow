@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using amorphie.workflow.core.Enums;
 
-
-
-public class WorkflowSearch : amorphie.core.Base.DtoSearchBase
+public class InstanceSearch : amorphie.core.Base.DtoSearchBase
 {
-    public string? WorkflowEntities { get; set; }
+    public GetInstanceStatusType? status { get; set; }
+
+
 }

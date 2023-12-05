@@ -1,8 +1,10 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Linq.Expressions;
 using amorphie.core.Base;
 using amorphie.core.Enums;
+using amorphie.core.Extension;
 using amorphie.core.IBase;
 using amorphie.workflow.core.Dtos;
 using Microsoft.AspNetCore.Mvc;
@@ -40,7 +42,11 @@ public static class DefinitionModule
        .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
        .Produces(StatusCodes.Status404NotFound);
         app.MapGet("/workflow/definition/search", getAllWorkflowWithFullTextSearch)
-               .WithOpenApi()
+               .WithOpenApi(operation =>
+            {
+                operation.Parameters[5].Description = "Enum :  OrderByDescending=>1,OrderBy=>0";
+                return operation;
+            })
        .WithSummary("Gets registered workflows")
        .WithDescription("Returns existing workflows with metadata.Query parameter reference is can contain request or order reference of workflow.")
        .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
@@ -965,7 +971,7 @@ CancellationToken cancellationToken
     }
     static async ValueTask<IResult> getAllWorkflowWithFullTextSearch(
            [FromServices] WorkflowDBContext context,
-           [AsParameters] WorkflowSearch userSearch,
+           [AsParameters] WorkflowSearch workflowSearch,
    CancellationToken cancellationToken
            )
     {
@@ -974,18 +980,40 @@ CancellationToken cancellationToken
             .Include(x => x.States).ThenInclude(s => s.Transitions).AsQueryable()
             ;
 
-        if (!string.IsNullOrEmpty(userSearch.Keyword))
+        if (!string.IsNullOrEmpty(workflowSearch.Keyword))
         {
-            query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", userSearch.Keyword)));
+            query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", workflowSearch.Keyword)));
         }
 
-        if (!string.IsNullOrEmpty(userSearch.WorkflowEntities))
+        if (!string.IsNullOrEmpty(workflowSearch.WorkflowEntities))
         {
-            query = query.AsNoTracking().Where(p => p.Entities.Any(t => t.Name == userSearch.WorkflowEntities));
+            query = query.AsNoTracking().Where(p => p.Entities.Any(t => t.Name == workflowSearch.WorkflowEntities));
         }
+        query = await query.Sort<Workflow>(workflowSearch.SortColumn, workflowSearch.SortDirection);
+        // if (!string.IsNullOrEmpty(workflowSearch.SortColumn))
+        // {
+        //      string command = amorphie.workflow.core.Enums.SortColumnEnum.OrderBy.ToString();
+        //     if (workflowSearch.SortColumnType == amorphie.workflow.core.Enums.SortColumnEnum.OrderByDescending)
+        //     {
+        //         command =  amorphie.workflow.core.Enums.SortColumnEnum.OrderByDescending.ToString();
+        //     }
 
-        var workflows = query.Skip(userSearch.Page * userSearch.PageSize)
-            .Take(userSearch.PageSize);
+        //     var queryExpr = query.Expression;
+        //     var parameter = Expression.Parameter(typeof(Workflow), "p");
+        //     var property=typeof(Workflow).GetProperties().FirstOrDefault(p => string.Equals(p.Name, workflowSearch.SortColumn, StringComparison.OrdinalIgnoreCase));
+        //     if(property==null)
+        //     {
+        //         return  Results.NotFound("Property:"+workflowSearch.SortColumn+" not found");
+        //     }
+        //     var propertyAccess = Expression.MakeMemberAccess(parameter, property);
+        //     var expression = Expression.Lambda(propertyAccess, parameter);
+
+        //     queryExpr = Expression.Call(typeof(Queryable), command, new Type[] { typeof(Workflow), property.PropertyType }, expression, Expression.Quote(expression));
+        //     query = query.Provider.CreateQuery<Workflow>(queryExpr);
+
+        // }
+        var workflows = query.Skip(workflowSearch.Page * workflowSearch.PageSize)
+            .Take(workflowSearch.PageSize);
 
         if (await workflows.CountAsync(cancellationToken) > 0)
         {

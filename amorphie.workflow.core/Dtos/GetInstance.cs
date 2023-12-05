@@ -1,5 +1,6 @@
 
-public enum GetInstanceStatusType {
+public enum GetInstanceStatusType
+{
     All,
     Completed,
     Running,
@@ -7,10 +8,10 @@ public enum GetInstanceStatusType {
 }
 
 public record GetInstanceResponse(
-    string entity,
-    string entityRecordId,
-    Guid instanceId,
-    string workflow,
+    string EntityName,
+    string RecordId,
+    Guid Id,
+    string WorkflowName,
     GetStateDefinition State,
     DateTime CreatedAt,
     DateTime LastTransitionAt

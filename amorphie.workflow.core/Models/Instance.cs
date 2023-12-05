@@ -1,6 +1,7 @@
 
 
 using amorphie.core.Base;
+using NpgsqlTypes;
 
 public class Instance : EntityBase
 {
@@ -18,6 +19,7 @@ public class Instance : EntityBase
     public string StateName { get; set; } = default!;
 
     public amorphie.core.Enums.StatusType BaseStatus { get; set; } = default!;
+    public NpgsqlTsVector? SearchVector { get; set; }
 }
 
 
