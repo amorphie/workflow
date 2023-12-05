@@ -443,21 +443,7 @@ public static class InstanceModule
             query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword)));
         }
         query = await query.Sort<Instance>(instanceSearch.SortColumn, instanceSearch.SortDirection);
-        // if (!string.IsNullOrEmpty(instanceSearch.SortColumn))
-        // {
-        //         var queryExpr = query.Expression;
-        //         var parameter=Expression.Parameter(typeof(Instance),"p");
-        //         var property=typeof(Instance).GetProperties().FirstOrDefault(p => string.Equals(p.Name, instanceSearch.SortColumn, StringComparison.OrdinalIgnoreCase));
-        //         if(property==null)
-        //         {
-        //             return  Results.NotFound("Property:"+instanceSearch.SortColumn+" not found");
-        //         }
-        //         var propertyAccess=Expression.MakeMemberAccess(parameter,property);
-        //         var expression=Expression.Lambda(propertyAccess,parameter);
-        //         queryExpr = Expression.Call(typeof(Queryable), instanceSearch.SortColumnType.ToString(), new Type[] { typeof(Instance), property.PropertyType}, queryExpr, Expression.Quote(expression));
-        //         query=query.Provider.CreateQuery<Instance>(queryExpr); 
 
-        // }
         var instances = query.Skip(instanceSearch.Page * instanceSearch.PageSize)
             .Take(instanceSearch.PageSize);
 
