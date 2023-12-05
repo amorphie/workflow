@@ -353,6 +353,7 @@ public static class InstanceModule
           [FromQuery] GetInstanceStatusType? status,
            [FromQuery] string? SortColumn,
            [FromQuery] SortDirectionEnum? SortDirection,
+           CancellationToken cancellationToken,
            [FromQuery][Range(0, 100)] int? page = 0,
         [FromQuery][Range(5, 100)] int? pageSize = 10,
          [FromHeader(Name = "Language")] string? language = "en-EN"
@@ -371,9 +372,9 @@ public static class InstanceModule
    ;
 
         query = await query.Sort<Instance>(SortColumn, SortDirection.GetValueOrDefault(0));
-        var instances = query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
-         .Take(pageSize.GetValueOrDefault(10)).OrderBy(o => o.CreatedAt)
-         .ToList();
+        var instances =await  query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
+         .Take(pageSize.GetValueOrDefault(10))
+         .ToListAsync(cancellationToken);
         return Results.Ok(
                 instances.Select(s => new GetInstanceResponse(
                    s.EntityName,
