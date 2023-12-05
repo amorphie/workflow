@@ -372,7 +372,7 @@ public static class InstanceModule
    ;
 
         query = await query.Sort<Instance>(SortColumn, SortDirection.GetValueOrDefault(0));
-        var instances =await  query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
+        var instances = await query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
          .Take(pageSize.GetValueOrDefault(10))
          .ToListAsync(cancellationToken);
         return Results.Ok(
