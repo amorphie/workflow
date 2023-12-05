@@ -369,7 +369,7 @@ public static class InstanceModule
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.HistoryForms)
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Page).ThenInclude(t => t.Pages).AsQueryable()
    ;
-        
+
         query = await query.Sort<Instance>(SortColumn, SortDirection.GetValueOrDefault(0));
         var instances = query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
          .Take(pageSize.GetValueOrDefault(10)).OrderBy(o => o.CreatedAt)
