@@ -79,8 +79,8 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<Workflow>().HasIndex(item => item.SearchVector).HasMethod("GIN");
         modelBuilder.Entity<Workflow>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new[] { "Name" }), true);
 
-         modelBuilder.Entity<Instance>().HasIndex(item => item.SearchVector).HasMethod("GIN");
-        modelBuilder.Entity<Instance>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new[] { "WorkflowName","ZeebeFlowName","EntityName","StateName"}), true);
+        modelBuilder.Entity<Instance>().HasIndex(item => item.SearchVector).HasMethod("GIN");
+        modelBuilder.Entity<Instance>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new[] { "WorkflowName", "ZeebeFlowName", "EntityName", "StateName" }), true);
 
 
 

@@ -35,21 +35,21 @@ public static class InstanceModule
 
                 return operation;
             });
-            app.MapGet("/workflow/instance/search", getAllInstanceWithFullTextSearch)
-            .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status204NoContent)
-            .WithOpenApi(operation =>
-            {
-                operation.Summary = "Return queried workflow instance(s)";
-                operation.Parameters[5].Description = "Enum :  OrderByDescending=>1,OrderBy=>0";
+        app.MapGet("/workflow/instance/search", getAllInstanceWithFullTextSearch)
+        .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status204NoContent)
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Return queried workflow instance(s)";
+            operation.Parameters[5].Description = "Enum :  OrderByDescending=>1,OrderBy=>0";
 
-                operation.Tags = new List<OpenApiTag> { new() { Name = "Instance" } };
+            operation.Tags = new List<OpenApiTag> { new() { Name = "Instance" } };
 
-                operation.Responses["200"].Description = "One or more instances found.";
-                operation.Responses["204"].Description = "No instance found.";
+            operation.Responses["200"].Description = "One or more instances found.";
+            operation.Responses["204"].Description = "No instance found.";
 
-                return operation;
-            });
+            return operation;
+        });
         app.MapGet("/workflow/{workflowName}/init", InitInstance)
             .Produces<GetRecordWorkflowInit>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status204NoContent)
@@ -118,7 +118,7 @@ public static class InstanceModule
                 operation.Responses["404"].Description = "No instance found.";
                 return operation;
             });
-            
+
         app.MapGet("/amorphie/instance/{instanceId}/transition", getTransitionByInstanceAsync
             )
             .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
@@ -416,19 +416,19 @@ public static class InstanceModule
               )
     {
         Guid guid;
-        bool isGuidSearch=false;
+        bool isGuidSearch = false;
         try
         {
 
-         isGuidSearch=Guid.TryParse(instanceSearch.Keyword, out guid);
-       
+            isGuidSearch = Guid.TryParse(instanceSearch.Keyword, out guid);
+
         }
-        catch(Exception)
+        catch (Exception)
         {
-            guid=Guid.NewGuid();
-            isGuidSearch=false;
+            guid = Guid.NewGuid();
+            isGuidSearch = false;
         }
-        var query = context!.Instances!.Where(w=>!isGuidSearch||(isGuidSearch&&(guid==w.Id||guid==w.RecordId)))
+        var query = context!.Instances!.Where(w => !isGuidSearch || (isGuidSearch && (guid == w.Id || guid == w.RecordId)))
           .Include(s => s.State).ThenInclude(s => s.Titles)
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
     .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
@@ -442,7 +442,7 @@ public static class InstanceModule
         {
             query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword)));
         }
- query=await query.Sort<Instance>(instanceSearch.SortColumn, instanceSearch.SortDirection);
+        query = await query.Sort<Instance>(instanceSearch.SortColumn, instanceSearch.SortDirection);
         // if (!string.IsNullOrEmpty(instanceSearch.SortColumn))
         // {
         //         var queryExpr = query.Expression;
@@ -456,7 +456,7 @@ public static class InstanceModule
         //         var expression=Expression.Lambda(propertyAccess,parameter);
         //         queryExpr = Expression.Call(typeof(Queryable), instanceSearch.SortColumnType.ToString(), new Type[] { typeof(Instance), property.PropertyType}, queryExpr, Expression.Quote(expression));
         //         query=query.Provider.CreateQuery<Instance>(queryExpr); 
-             
+
         // }
         var instances = query.Skip(instanceSearch.Page * instanceSearch.PageSize)
             .Take(instanceSearch.PageSize);
@@ -489,7 +489,7 @@ public static class InstanceModule
                         t.FlowName,
                         null,
                         t.Page == null ? null :
-                       new PostPageDefinitionRequest(t.Page.Operation, t.Page.Type, t.Page.Pages.Any() ? null : t.Page.Pages!.Select(s=>new amorphie.workflow.core.Dtos.MultilanguageText(s.Language,s.Label)).FirstOrDefault(), t.Page.Timeout)
+                       new PostPageDefinitionRequest(t.Page.Operation, t.Page.Type, t.Page.Pages.Any() ? null : t.Page.Pages!.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).FirstOrDefault(), t.Page.Timeout)
                        , t.HistoryForms.Any() ? t.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null
                        , t.TypeofUi, t.transitionButtonType
                     )).ToArray()

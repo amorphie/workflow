@@ -989,7 +989,7 @@ CancellationToken cancellationToken
         {
             query = query.AsNoTracking().Where(p => p.Entities.Any(t => t.Name == workflowSearch.WorkflowEntities));
         }
-        query=await query.Sort<Workflow>(workflowSearch.SortColumn, workflowSearch.SortDirection);
+        query = await query.Sort<Workflow>(workflowSearch.SortColumn, workflowSearch.SortDirection);
         // if (!string.IsNullOrEmpty(workflowSearch.SortColumn))
         // {
         //      string command = amorphie.workflow.core.Enums.SortColumnEnum.OrderBy.ToString();
