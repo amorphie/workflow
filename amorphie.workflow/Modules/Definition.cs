@@ -990,7 +990,7 @@ CancellationToken cancellationToken
             query = query.AsNoTracking().Where(p => p.Entities.Any(t => t.Name == workflowSearch.WorkflowEntities));
         }
         query = await query.Sort<Workflow>(workflowSearch.SortColumn, workflowSearch.SortDirection);
-    
+
         var workflows = query.Skip(workflowSearch.Page * workflowSearch.PageSize)
             .Take(workflowSearch.PageSize);
 
