@@ -990,28 +990,7 @@ CancellationToken cancellationToken
             query = query.AsNoTracking().Where(p => p.Entities.Any(t => t.Name == workflowSearch.WorkflowEntities));
         }
         query = await query.Sort<Workflow>(workflowSearch.SortColumn, workflowSearch.SortDirection);
-        // if (!string.IsNullOrEmpty(workflowSearch.SortColumn))
-        // {
-        //      string command = amorphie.workflow.core.Enums.SortColumnEnum.OrderBy.ToString();
-        //     if (workflowSearch.SortColumnType == amorphie.workflow.core.Enums.SortColumnEnum.OrderByDescending)
-        //     {
-        //         command =  amorphie.workflow.core.Enums.SortColumnEnum.OrderByDescending.ToString();
-        //     }
-
-        //     var queryExpr = query.Expression;
-        //     var parameter = Expression.Parameter(typeof(Workflow), "p");
-        //     var property=typeof(Workflow).GetProperties().FirstOrDefault(p => string.Equals(p.Name, workflowSearch.SortColumn, StringComparison.OrdinalIgnoreCase));
-        //     if(property==null)
-        //     {
-        //         return  Results.NotFound("Property:"+workflowSearch.SortColumn+" not found");
-        //     }
-        //     var propertyAccess = Expression.MakeMemberAccess(parameter, property);
-        //     var expression = Expression.Lambda(propertyAccess, parameter);
-
-        //     queryExpr = Expression.Call(typeof(Queryable), command, new Type[] { typeof(Workflow), property.PropertyType }, expression, Expression.Quote(expression));
-        //     query = query.Provider.CreateQuery<Workflow>(queryExpr);
-
-        // }
+    
         var workflows = query.Skip(workflowSearch.Page * workflowSearch.PageSize)
             .Take(workflowSearch.PageSize);
 
