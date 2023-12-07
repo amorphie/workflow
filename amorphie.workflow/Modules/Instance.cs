@@ -50,7 +50,7 @@ public static class InstanceModule
 
             return operation;
         });
-        app.MapGet("/workflow/{workflowName}/init", InitInstance)
+        app.MapGet("/workflow/instance/workflow/{workflowName}/init", InitInstance)
             .Produces<GetRecordWorkflowInit>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status204NoContent)
             .WithOpenApi(operation =>
@@ -63,7 +63,7 @@ public static class InstanceModule
 
                 return operation;
             });
-        app.MapGet("/amorphie/transition/{transitionName}/view", ViewTransition)
+        app.MapGet("/workflow/instance/transition/{transitionName}/view", ViewTransition)
            .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
            .Produces(StatusCodes.Status204NoContent)
            .WithOpenApi(operation =>
@@ -76,7 +76,7 @@ public static class InstanceModule
 
                return operation;
            });
-        app.MapGet("/amorphie/state/{stateName}/view", ViewState)
+        app.MapGet("/workflow/instance/state/{stateName}/view", ViewState)
         .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
@@ -89,7 +89,7 @@ public static class InstanceModule
 
             return operation;
         });
-        app.MapPost("/amorphie/instance/{instanceId}/transition/{transitionName}", TriggerFlow)
+        app.MapPost("/workflow/instance/{instanceId}/transition/{transitionName}", TriggerFlow)
         .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
@@ -119,7 +119,7 @@ public static class InstanceModule
                 return operation;
             });
 
-        app.MapGet("/amorphie/instance/{instanceId}/transition", getTransitionByInstanceAsync
+        app.MapGet("/workflow/instance/{instanceId}/transition", getTransitionByInstanceAsync
             )
             .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
@@ -134,7 +134,7 @@ public static class InstanceModule
                 operation.Responses["404"].Description = "No instance found.";
                 return operation;
             });
-        app.MapGet("/amorphie/instance/{instanceId}/data", getInstanceDataAsync
+        app.MapGet("/workflow/instance/{instanceId}/data", getInstanceDataAsync
          )
          .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
          .Produces(StatusCodes.Status404NotFound)
