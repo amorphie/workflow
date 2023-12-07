@@ -118,18 +118,18 @@ public static class InstanceModule
                 operation.Responses["404"].Description = "No instance found.";
                 return operation;
             });
-              app.MapGet("/workflow/uiform/updatedb", UiFormFill
-            )
-            .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound)
-            .WithOpenApi(operation =>
-            {
-               
+        app.MapGet("/workflow/uiform/updatedb", UiFormFill
+      )
+      .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
+      .Produces(StatusCodes.Status404NotFound)
+      .WithOpenApi(operation =>
+      {
 
-                operation.Tags = new List<OpenApiTag> { new() { Name = "UiForm" } };
 
-                return operation;
-            });
+          operation.Tags = new List<OpenApiTag> { new() { Name = "UiForm" } };
+
+          return operation;
+      });
 
         app.MapGet("/workflow/instance/{instanceId}/transition", getTransitionByInstanceAsync
             )
@@ -227,7 +227,7 @@ public static class InstanceModule
                             Label = s.Label
                         }).ToList(),
                         TransitionName = transition.Name,
-                        Navigation = transition.Page==null?NavigationType.PushReplacement: transition.Page.Type == PageType.Popup ? NavigationType.PopUp : NavigationType.PushReplacement,
+                        Navigation = transition.Page == null ? NavigationType.PushReplacement : transition.Page.Type == PageType.Popup ? NavigationType.PopUp : NavigationType.PushReplacement,
                         Id = Guid.NewGuid()
                     };
                     dbContext.UiForms.Add(uiFormAdd);
