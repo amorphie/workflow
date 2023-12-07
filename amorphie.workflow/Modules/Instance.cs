@@ -118,6 +118,18 @@ public static class InstanceModule
                 operation.Responses["404"].Description = "No instance found.";
                 return operation;
             });
+              app.MapGet("/workflow/uiform/updatedb", UiFormFill
+            )
+            .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound)
+            .WithOpenApi(operation =>
+            {
+               
+
+                operation.Tags = new List<OpenApiTag> { new() { Name = "UiForm" } };
+
+                return operation;
+            });
 
         app.MapGet("/workflow/instance/{instanceId}/transition", getTransitionByInstanceAsync
             )
@@ -191,6 +203,68 @@ public static class InstanceModule
 
         //           return operation;
         //       });
+    }
+    static async Task<IResult> UiFormFill(
+       [FromServices] WorkflowDBContext dbContext,
+        CancellationToken cancellationToken
+ )
+    {
+        bool change = false;
+        var transitions = await dbContext.Transitions.Where(s => !s.UiForms.Any()).Include(s => s.Page).Include(s => s.Forms).Include(s => s.UiForms).ThenInclude(t => t.Forms).ToListAsync(cancellationToken);
+        if (transitions.Any())
+        {
+            foreach (Transition transition in transitions)
+            {
+                if (!transition.UiForms.Any() && transition.Forms.Any())
+                {
+                    change = true;
+                    UiForm uiFormAdd = new UiForm()
+                    {
+                        TypeofUiEnum = transition.TypeofUi != null ? transition.TypeofUi : TypeofUiEnum.Formio,
+                        Forms = transition.Forms.Select(s => new Translation()
+                        {
+                            Language = s.Language,
+                            Label = s.Label
+                        }).ToList(),
+                        TransitionName = transition.Name,
+                        Navigation = transition.Page==null?NavigationType.PushReplacement: transition.Page.Type == PageType.Popup ? NavigationType.PopUp : NavigationType.PushReplacement,
+                        Id = Guid.NewGuid()
+                    };
+                    dbContext.UiForms.Add(uiFormAdd);
+
+                }
+            }
+        }
+
+        var states = await dbContext.States.Where(s => s.IsPublicForm == true && !s.UiForms.Any()).Include(s => s.PublicForms).Include(s => s.UiForms).ThenInclude(t => t.Forms).ToListAsync(cancellationToken);
+        if (states.Any())
+        {
+            foreach (State state in states)
+            {
+                if (!state.UiForms.Any() && state.PublicForms.Any())
+                {
+                    change = true;
+                    UiForm uiFormAdd = new UiForm()
+                    {
+                        TypeofUiEnum = TypeofUiEnum.FlutterWidget,
+                        Forms = state.PublicForms.Select(s => new Translation()
+                        {
+                            Language = s.Language,
+                            Label = s.Label
+                        }).ToList(),
+                        StateName = state.Name,
+                        Navigation = NavigationType.PushReplacement,
+                        Id = Guid.NewGuid()
+                    };
+                    dbContext.UiForms.Add(uiFormAdd);
+
+                }
+            }
+        }
+
+        if (change)
+            dbContext.SaveChanges();
+        return Results.Ok();
     }
     static async ValueTask<IResult> InitInstance(
    [FromServices] WorkflowDBContext context,
