@@ -21,7 +21,7 @@ namespace amorphie.workflow.core.Mapper
                Label = s.label,
                Language = s.language
            }).ToList(),
-           CreatedAt = DateTime.Now,
+           CreatedAt = DateTime.UtcNow,
            CreatedByBehalfOf = Guid.NewGuid(),
            Entities = new List<WorkflowEntity>()
 

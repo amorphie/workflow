@@ -99,7 +99,7 @@ public static class StateManagerModule
             && f.WorkflowName == instance.WorkflowName
             , cancellationToken);
             if (targetStateAsState == null)
-                return Results.BadRequest($"Target state is not provided ");
+                return Results.BadRequest($"Target state is {targetState} not provided ");
             error = true;
             IsTargetState = true;
             transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
