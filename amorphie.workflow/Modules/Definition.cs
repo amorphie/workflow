@@ -1185,24 +1185,24 @@ CancellationToken cancellationToken
                 CreatedByBehalfOf = Guid.NewGuid(),
                 Type = data.type,
                 IsPublicForm = data.ispublicForm,
-                // PublicForms = data.publicForms.Select(s => new Translation()
-                // {
+                PublicForms = data.ispublicForm == true && data.publicForms.Any() && data.publicForms.First().forms.Any() ? data.publicForms.FirstOrDefault().forms.Select(s => new Translation()
+                {
 
-                //     Language = s.L,
-                //     Label = s.label
-                // }).ToList(),
+                    Language = s.language,
+                    Label = s.label
+                }).ToList() : null,
                 UiForms = data.ispublicForm == true ? data.publicForms.Select(s => new amorphie.workflow.core.Models.UiForm()
                 {
                     StateName = data.name,
                     TypeofUiEnum = s.typeofUi,
                     Navigation = s.navigationType,
-                    Forms = s.forms.Select(s => new Translation()
+                    Forms = s.forms.Any() ? s.forms.Select(s => new Translation()
                     {
 
                         Language = s.language,
                         Label = s.label
-                    }).ToList()
-                }).ToList() : null,
+                    }).ToList() : new List<Translation>() { },
+                }).ToList() : new List<amorphie.workflow.core.Models.UiForm>() { },
                 Transitions = data!.transitions!.Select(x => new Transition
                 {
                     Name = x.name,
@@ -1220,7 +1220,7 @@ CancellationToken cancellationToken
                     {
                         Operation = x.page!.operation,
                         Type = x.page!.type,
-                        Pages = x.page.pageRoute == null ? null : new List<Translation>(){
+                        Pages = x.page.pageRoute == null ? new List<Translation>() { } : new List<Translation>(){
                             new Translation{
                              Language=x.page.pageRoute.language,
                              Label=x.page.pageRoute.label
@@ -1243,17 +1243,17 @@ CancellationToken cancellationToken
                              Label=x.form!.FirstOrDefault(f=>f.typeofUi==x.typeofUi).forms.FirstOrDefault().label
                             }
                         },
-                    UiForms = x.form.Select(s => new amorphie.workflow.core.Models.UiForm()
+                    UiForms = x.form == null ? new List<amorphie.workflow.core.Models.UiForm>() { } : x.form.Select(s => new amorphie.workflow.core.Models.UiForm()
                     {
                         TransitionName = x.name,
                         TypeofUiEnum = s.typeofUi,
                         Navigation = s.navigationType,
-                        Forms = s.forms.Select(s => new Translation()
+                        Forms = s.forms.Any() ? s.forms.Select(s => new Translation()
                         {
 
                             Language = s.language,
                             Label = s.label
-                        }).ToList()
+                        }).ToList() : new List<Translation>() { }
                     }).ToList(),
                     HistoryForms = x.historyForms == null ? new List<Translation>() { } : x.historyForms.Select(s => new Translation()
                     {
@@ -1266,12 +1266,12 @@ CancellationToken cancellationToken
                     //  Type = TransitionType.AutoTransition,
                     CreatedByBehalfOf = Guid.NewGuid(),
                 }).ToList(),
-                Titles = new List<Translation>(){
+                Titles = data.title != null ? new List<Translation>(){
                             new Translation{
                              Language=data.title.language,
                              Label=data.title.label
                             }
-                        }
+                        } : new List<Translation>() { }
             };
             context!.States!.Add(newRecord);
             // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
