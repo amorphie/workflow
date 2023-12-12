@@ -95,7 +95,7 @@ public static class StateManagerModule
         else
         {
             string transitionNameAsString = transitionName.ToString();
-            targetStateAsState = await dbContext.States.FirstOrDefaultAsync(f => f.Name==targetState
+            targetStateAsState = await dbContext.States.FirstOrDefaultAsync(f => f.Name == targetState
             && f.WorkflowName == instance.WorkflowName
             , cancellationToken);
             if (targetStateAsState == null)
