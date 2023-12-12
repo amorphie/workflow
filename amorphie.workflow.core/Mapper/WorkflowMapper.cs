@@ -26,6 +26,24 @@ namespace amorphie.workflow.core.Mapper
                 Entities=new List<WorkflowEntity>()
                 
           }); 
+          /*s.Name,
+                s.Titles.FirstOrDefault()!.Label,
+                s.Tags!,
+                s.Entities.Select(e => new GetWorkflowEntity(
+         e.Name, e.InclusiveWorkflows == null ? false : true, e.IsStateManager,
+         new StatusType[]{
+        e.AvailableInStatus
+         }
+    )).ToArray(),
+                s.RecordId == null ? string.Empty : s.RecordId.ToString()*/
+                CreateMap<Workflow, GetWorkflowDefinition>()
+          .ConstructUsing(x=> new GetWorkflowDefinition(x.Name,x.Titles.FirstOrDefault().Label,x.Tags,x.Entities.Select(e=>new GetWorkflowEntity(
+         e.Name, e.InclusiveWorkflows == null ? false : true, e.IsStateManager,
+         new amorphie.core.Enums.StatusType[]{
+        e.AvailableInStatus
+         }
+    )).ToArray(), x.RecordId == null ? string.Empty : x.RecordId.ToString())
+          ); 
         }
     }
 }
