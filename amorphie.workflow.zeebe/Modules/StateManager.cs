@@ -89,6 +89,8 @@ public static class StateManagerModule
         }
         bool error = false;
         Transition? transition = null;
+        State? targetStateAsState = null;
+        bool IsTargetState = false;
         if (targetState is null || targetState.ToLower() == "default")
         {
             transition = instance.State.Transitions.Where(t => t.Name == transitionName).FirstOrDefault();
@@ -105,7 +107,18 @@ public static class StateManagerModule
         }
         else
         {
-            throw new ZeebeBussinesException(errorMessage: $"Target state is not provided ");
+            string transitionNameAsString = transitionName.ToString();
+            targetStateAsState = await dbContext.States.FirstOrDefaultAsync(f => f.Name == targetState
+            && f.WorkflowName == instance.WorkflowName
+            , cancellationToken);
+            if (targetStateAsState == null)
+                throw new ZeebeBussinesException(errorMessage: $"Target state is not provided ");
+            error = true;
+            IsTargetState = true;
+            transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
+                .ThenInclude(t => t!.Entities).Where(t => t.Name == transitionNameAsString
+           && instance.WorkflowName == t.ToState!.WorkflowName).FirstOrDefaultAsync(cancellationToken);
+
         }
         //var transitionData = JsonSerializer.Deserialize<dynamic>(body.GetProperty("LastTransitionData").ToString());
         if (transition is null)
@@ -113,7 +126,7 @@ public static class StateManagerModule
             throw new ZeebeBussinesException(errorMessage: $"Transition not found with transition name : {transitionName} ");
         }
 
-        if (transition.ToStateName is null)
+        if (!IsTargetState && transition != null && transition.ToStateName is null)
         {
             throw new ZeebeBussinesException(errorMessage: $"Target state is not provided nor defined on transition");
         }
@@ -131,13 +144,16 @@ public static class StateManagerModule
                    new PostSignalRData(
                        newInstanceTransition.CreatedBy,
                        instance.RecordId,
-                      eventInfo,
+                       eventInfo,
                        instance.Id,
                        instance.EntityName,
-                     entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
+                     entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), IsTargetState && targetStateAsState != null ?
+                    targetStateAsState.Name : newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
               transition.Page == null ? null :
               new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-              transition.Page.Timeout), hubMessage, additionalDataDynamic, instance.WorkflowName
+              transition.Page.Timeout), hubMessage, additionalDataDynamic, instance.WorkflowName, transition.ToState.IsPublicForm == true ? "state" : "transition",
+              transition.requireData.GetValueOrDefault(false)
+              , transition.transitionButtonType == 0 ? amorphie.workflow.core.Enums.TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(amorphie.workflow.core.Enums.TransitionButtonType.Forward).ToString()
                    ), cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
     }
@@ -222,7 +238,10 @@ public static class StateManagerModule
                 {
                     entityDataDynamic = newInstanceTransition!.EntityData;
                 }
-                newInstanceTransition!.ToStateName = transition.ToStateName;
+                if (!IsTargetState || targetStateAsState == null)
+                    newInstanceTransition!.ToStateName = transition.ToStateName;
+                if (IsTargetState && targetStateAsState != null)
+                    newInstanceTransition!.ToStateName = targetStateAsState.Name;
 
                 newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX{updateName}").GetProperty("TriggeredBy").ToString());
                 newInstanceTransition!.CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX{updateName}").GetProperty("TriggeredByBehalfOf").ToString());
@@ -256,7 +275,10 @@ public static class StateManagerModule
             {
                 entityDataDynamic = newInstanceTransition!.EntityData;
             }
-            newInstanceTransition!.ToStateName = transition.ToStateName;
+            if (!IsTargetState || targetStateAsState == null)
+                newInstanceTransition!.ToStateName = transition.ToStateName;
+            if (IsTargetState && targetStateAsState != null)
+                newInstanceTransition!.ToStateName = targetStateAsState.Name;
 
             newInstanceTransition!.CreatedBy = Guid.Parse(body.GetProperty($"TRX{updateName}").GetProperty("TriggeredBy").ToString());
             newInstanceTransition!.CreatedByBehalfOf = Guid.Parse(body.GetProperty($"TRX{updateName}").GetProperty("TriggeredByBehalfOf").ToString());
@@ -276,7 +298,7 @@ public static class StateManagerModule
             SendTransitionInfoRequest sendTransitionInfoRequest = new SendTransitionInfoRequest()
             {
                 recordId = instance.RecordId,
-                newStatus = transition.ToStateName!,
+                newStatus = IsTargetState && targetStateAsState != null ? targetStateAsState.Name : transition.ToStateName!,
                 entityData = JsonSerializer.Deserialize<object>(newInstanceTransition.EntityData),
                 user = newInstanceTransition.CreatedBy,
                 behalfOfUser = newInstanceTransition.CreatedByBehalfOf,
@@ -291,7 +313,14 @@ public static class StateManagerModule
                 || response.StatusCode == System.Net.HttpStatusCode.NoContent)
                 {
                     instance.BaseStatus = transition.ToState!.BaseStatus;
-                    instance.StateName = transition.ToStateName;
+                    if (IsTargetState && targetStateAsState != null)
+                    {
+                        instance.StateName = targetStateAsState.Name;
+                    }
+                    if (!IsTargetState || targetStateAsState == null)
+                    {
+                        instance.StateName = transition.ToStateName;
+                    }
                     if (instance.WorkflowName != transition.ToState.WorkflowName)
                     {
                         instance.WorkflowName = transition.ToState!.WorkflowName!;
@@ -330,7 +359,15 @@ public static class StateManagerModule
         else
         {
             instance.BaseStatus = transition.ToState!.BaseStatus;
-            instance.StateName = transition.ToStateName;
+            if (IsTargetState && targetStateAsState != null)
+            {
+                instance.StateName = targetStateAsState.Name;
+            }
+            if (!IsTargetState || targetStateAsState == null)
+            {
+                instance.StateName = transition.ToStateName;
+            }
+
             if (instance.WorkflowName != transition.ToState.WorkflowName)
             {
                 instance.WorkflowName = transition.ToState!.WorkflowName!;
@@ -345,7 +382,32 @@ public static class StateManagerModule
         // dbContext.Add(newInstanceTransition);
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
         await dbContext.SaveChangesAsync(cancellationToken);
-        return (newInstanceTransition, additionalDataDynamic, entityDataDynamic, hubMessage, data, eventInfo);
+        return (newInstanceTransition, additionalDataDynamic, entityDataDynamic, hubMessage, data, eventInfo);     
+    }
+    private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
+    {
+
+    }
+    private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, dynamic _data)
+    {
+        dynamic variables = new Dictionary<string, dynamic>();
+
+        variables.Add("EntityName", instanceTransition.Instance.EntityName);
+        variables.Add("RecordId", instanceTransition.Instance.RecordId);
+        variables.Add("InstanceId", instanceTransition.InstanceId);
+        variables.Add("LastTransition", _transitionName);
+        dynamic targetObject = new System.Dynamic.ExpandoObject();
+        targetObject.Data = _data;
+        targetObject.TriggeredBy = instanceTransition.CreatedBy;
+        targetObject.TriggeredByBehalfOf = instanceTransition.CreatedByBehalfOf;
+        string updateName = deleteUnAllowedCharecters(_transitionName);
+        variables.Add($"TRX-{_transitionName}", targetObject);
+        variables.Add($"TRX{updateName}", targetObject);
+        return variables;
+    }
+    private static string deleteUnAllowedCharecters(string transitionName)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
     }
 
 }
