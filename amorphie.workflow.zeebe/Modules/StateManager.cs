@@ -382,7 +382,7 @@ public static class StateManagerModule
         // dbContext.Add(newInstanceTransition);
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
         await dbContext.SaveChangesAsync(cancellationToken);
-        return (newInstanceTransition, additionalDataDynamic, entityDataDynamic, hubMessage, data, eventInfo);     
+        return (newInstanceTransition, additionalDataDynamic, entityDataDynamic, hubMessage, data, eventInfo);
     }
     private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
     {
