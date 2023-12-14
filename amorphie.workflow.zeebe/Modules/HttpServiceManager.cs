@@ -5,8 +5,10 @@ using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using amorphie.workflow.core.Enums;
+using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 namespace amorphie.workflow.zeebe.Modules
@@ -32,10 +34,18 @@ namespace amorphie.workflow.zeebe.Modules
                HttpRequest request,
                HttpContext httpContext,
                [FromServices] DaprClient client,
+               [FromServices] IZeebeCommandService zeebeCommandService,
                 CancellationToken cancellationToken,
                 IConfiguration configuration
            )
         {
+            //For fetching gateway from db
+            // string workFlowName = body.GetProperty("EntityName").ToString();
+            // ZeebeMessage? zeebeMessage = await dbContext.ZeebeMessages.FirstOrDefaultAsync(p => p.Process == workFlowName);
+            // if (zeebeMessage is null)
+            // {
+            //     return Results.BadRequest("Workflow/Entity Name must be in variable list");
+            // }
             var instanceIdAsString = body.GetProperty("InstanceId").ToString();
             Guid instanceId;
             if (!Guid.TryParse(instanceIdAsString, out instanceId))
@@ -80,71 +90,66 @@ namespace amorphie.workflow.zeebe.Modules
             HttpResponseMessage response;
             string content = string.Empty;
             string requestBody = string.Empty;
+
+            //var httpClientDapr = DaprClient.CreateInvokeHttpClient();
+            var handler = new HttpClientHandler();
+            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            handler.ServerCertificateCustomValidationCallback =
+                (httpRequestMessage, cert, cetChain, policyErrors) =>
+            {
+                return true;
+            };
+            HttpClient httpClient = new HttpClient(handler);
+
             try
             {
-                //var httpClientDapr = DaprClient.CreateInvokeHttpClient();
-                var handler = new HttpClientHandler();
-                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-                handler.ServerCertificateCustomValidationCallback =
-                    (httpRequestMessage, cert, cetChain, policyErrors) =>
-                {
-                    return true;
-                };
-                HttpClient httpClient = new HttpClient(handler);
+                content = body.GetProperty("body").ToString();
+                requestBody = content.ToString();
 
-                try
-                {
-                    content = body.GetProperty("body").ToString();
-                    requestBody = content.ToString();
-
-
-                }
-                catch (Exception ex)
-                {
-
-                }
-
-                var serialized = new StringContent(content, System.Text.Encoding.UTF8, "application/json");
-                try
-                {
-                    var authorization = body.GetProperty("authorization").ToString();
-                    if (!string.IsNullOrEmpty(authorization))
-                        httpClient.DefaultRequestHeaders.Add("Authorization", authorization);
-                }
-                catch (Exception ex)
-                {
-                }
-                if (httpMethodEnum == HttpMethodEnum.post)
-                {
-                    response = await httpClient.PostAsync(url, serialized);
-                }
-                else if (httpMethodEnum == HttpMethodEnum.delete)
-                {
-                    response = await httpClient.DeleteAsync(url);
-                }
-                else if (httpMethodEnum == HttpMethodEnum.put)
-                {
-                    response = await httpClient.PutAsJsonAsync(new Uri(url), serialized);
-                }
-                else if (httpMethodEnum == HttpMethodEnum.patch)
-                {
-                    response = await httpClient.PatchAsJsonAsync(new Uri(url), serialized);
-                }
-                else
-                {
-                    response = await httpClient.GetAsync(url);
-                }
-                int statusCodeInt = (int)response!.StatusCode;
-                statusCode = statusCodeInt.ToString();
-                if (FailureCodesControl(failureCodes, statusCode))
-                    return Results.Problem("Fail Code" + statusCode);
-                responseBody = await response.Content.ReadAsStringAsync();
 
             }
             catch (Exception ex)
             {
-                return Results.Problem("Unexpected problem:" + ex.ToString());
+
             }
+
+            var serialized = new StringContent(content, System.Text.Encoding.UTF8, "application/json");
+            try
+            {
+                var authorization = body.GetProperty("authorization").ToString();
+                if (!string.IsNullOrEmpty(authorization))
+                    httpClient.DefaultRequestHeaders.Add("Authorization", authorization);
+            }
+            catch (Exception ex)
+            {
+            }
+            if (httpMethodEnum == HttpMethodEnum.post)
+            {
+                response = await httpClient.PostAsync(url, serialized);
+            }
+            else if (httpMethodEnum == HttpMethodEnum.delete)
+            {
+                response = await httpClient.DeleteAsync(url);
+            }
+            else if (httpMethodEnum == HttpMethodEnum.put)
+            {
+                response = await httpClient.PutAsJsonAsync(new Uri(url), serialized);
+            }
+            else if (httpMethodEnum == HttpMethodEnum.patch)
+            {
+                response = await httpClient.PatchAsJsonAsync(new Uri(url), serialized);
+            }
+            else
+            {
+                response = await httpClient.GetAsync(url);
+            }
+            int statusCodeInt = (int)response!.StatusCode;
+            statusCode = statusCodeInt.ToString();
+            if (FailureCodesControl(failureCodes, statusCode))
+            {
+                throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: failureCodes);
+            }
+            responseBody = await response.Content.ReadAsStringAsync();
 
 
             return Results.Ok(createMessageVariables(responseBody, statusCode, requestBody));

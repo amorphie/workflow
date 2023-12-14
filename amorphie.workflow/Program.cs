@@ -12,6 +12,7 @@ using FluentValidation;
 //using amorphie.workflow;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using amorphie.workflow.service.Zeebe;
 //using SecretExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -101,7 +102,6 @@ app.UseCors();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
 app.Logger.LogInformation("Registering Routes");
 
 app.MapDefinitionEndpoints();
