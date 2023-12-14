@@ -1,8 +1,10 @@
 using System.Dynamic;
 using System.Text.Json;
 using amorphie.workflow.core.Dtos;
+using amorphie.workflow.service.Zeebe;
 using AutoMapper.Configuration.Annotations;
 using Dapr.Client;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -31,6 +33,7 @@ public static class StateManagerModule
             HttpRequest request,
             HttpContext httpContext,
             [FromServices] DaprClient client,
+            [FromServices] IZeebeCommandService zbClient,
              CancellationToken cancellationToken,
              IConfiguration configuration
         )
@@ -39,7 +42,10 @@ public static class StateManagerModule
         dynamic additionalDataDynamic = default!;
         dynamic entityDataDynamic = default!;
         var targetState = request.Headers["TARGET_STATE"].ToString();
+        var jobKey = Convert.ToInt64(request.Headers["X-Zeebe-Job-Key"].ToString());
         var transitionName = body.GetProperty("LastTransition").ToString();
+        //entityName or Process
+        string workFlowName = body.GetProperty("EntityName").ToString();
         string hubMessage = string.Empty;
         try
         {
@@ -49,12 +55,19 @@ public static class StateManagerModule
         {
             hubMessage = string.Empty;
         }
+        //For fetching gateway from db
+        // ZeebeMessage? zeebeMessage = await dbContext.ZeebeMessages.FirstOrDefaultAsync(p => p.Process == workFlowName);
+        // if (zeebeMessage is null)
+        // {
+        //     return Results.BadRequest("Workflow/Entity Name must be in variable list");
+        // }
+
 
         var instanceIdAsString = body.GetProperty("InstanceId").ToString();
         Guid instanceId;
         if (!Guid.TryParse(instanceIdAsString, out instanceId))
         {
-            return Results.BadRequest("InstanceId not provided or not as a GUID");
+            throw new ZeebeBussinesException("500", "InstanceId not provided or not as a GUID");
         }
 
         Instance? instance = await dbContext.Instances
@@ -72,7 +85,7 @@ public static class StateManagerModule
 
         if (instance is null)
         {
-            return Results.NotFound($"Instance not found with instance id : {instanceId} ");
+            throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
         }
         bool error = false;
         Transition? transition = null;
@@ -99,23 +112,81 @@ public static class StateManagerModule
             && f.WorkflowName == instance.WorkflowName
             , cancellationToken);
             if (targetStateAsState == null)
-                return Results.BadRequest($"Target state is {targetState} not provided ");
+                throw new ZeebeBussinesException(errorMessage: $"Target state is not provided ");
             error = true;
             IsTargetState = true;
             transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
                 .ThenInclude(t => t!.Entities).Where(t => t.Name == transitionNameAsString
            && instance.WorkflowName == t.ToState!.WorkflowName).FirstOrDefaultAsync(cancellationToken);
+
         }
         //var transitionData = JsonSerializer.Deserialize<dynamic>(body.GetProperty("LastTransitionData").ToString());
         if (transition is null)
         {
-            return Results.NotFound($"Transition not found with transition name : {transitionName} ");
+            throw new ZeebeBussinesException(errorMessage: $"Transition not found with transition name : {transitionName} ");
         }
 
         if (!IsTargetState && transition != null && transition.ToStateName is null)
         {
-            return Results.BadRequest($"Target state is not provided nor defined on transition");
+            throw new ZeebeBussinesException(errorMessage: $"Target state is not provided nor defined on transition");
         }
+
+
+        InstanceTransition? newInstanceTransition;
+        (newInstanceTransition, additionalDataDynamic, entityDataDynamic, hubMessage, dynamic? data, string eventInfo) = ((InstanceTransition, dynamic, dynamic, string, dynamic?, string))await SetInstanceTransition(dbContext, transition, instance, transitionName, error, body, cancellationToken);
+        string hubUrl = configuration["hubUrl"]!.ToString();
+        Console.WriteLine(hubUrl);
+
+        var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
+                   HttpMethod.Post,
+                    hubUrl,
+                   "sendMessage",
+                   new PostSignalRData(
+                       newInstanceTransition.CreatedBy,
+                       instance.RecordId,
+                       eventInfo,
+                       instance.Id,
+                       instance.EntityName,
+                     entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), IsTargetState && targetStateAsState != null ?
+                    targetStateAsState.Name : newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
+              transition.Page == null ? null :
+              new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
+              transition.Page.Timeout), hubMessage, additionalDataDynamic, instance.WorkflowName, transition.ToState.IsPublicForm == true ? "state" : "transition",
+              transition.requireData.GetValueOrDefault(false)
+              , transition.transitionButtonType == 0 ? amorphie.workflow.core.Enums.TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(amorphie.workflow.core.Enums.TransitionButtonType.Forward).ToString()
+                   ), cancellationToken);
+        return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
+    }
+    private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
+    {
+
+    }
+    private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, dynamic _data)
+    {
+        dynamic variables = new Dictionary<string, dynamic>();
+
+        variables.Add("EntityName", instanceTransition.Instance.EntityName);
+        variables.Add("RecordId", instanceTransition.Instance.RecordId);
+        variables.Add("InstanceId", instanceTransition.InstanceId);
+        variables.Add("LastTransition", _transitionName);
+        dynamic targetObject = new System.Dynamic.ExpandoObject();
+        targetObject.Data = _data;
+        targetObject.TriggeredBy = instanceTransition.CreatedBy;
+        targetObject.TriggeredByBehalfOf = instanceTransition.CreatedByBehalfOf;
+        string updateName = deleteUnAllowedCharecters(_transitionName);
+        variables.Add($"TRX-{_transitionName}", targetObject);
+        variables.Add($"TRX{updateName}", targetObject);
+        return variables;
+    }
+    private static string deleteUnAllowedCharecters(string transitionName)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
+    }
+    private static async Task<(InstanceTransition, dynamic, dynamic, string, dynamic?, string)> SetInstanceTransition(WorkflowDBContext dbContext, Transition transition, Instance instance, string transitionName, bool error, dynamic body, CancellationToken cancellationToken)
+    {
+        dynamic additionalDataDynamic = default!;
+        dynamic entityDataDynamic = default!;
+        string hubMessage = string.Empty;
         InstanceTransition? newInstanceTransition;
         dynamic? data;
         bool transitionDataFound = true;
@@ -311,29 +382,7 @@ public static class StateManagerModule
         // dbContext.Add(newInstanceTransition);
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
         await dbContext.SaveChangesAsync(cancellationToken);
-
-        string hubUrl = configuration["hubUrl"]!.ToString();
-        Console.WriteLine(hubUrl);
-
-        var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
-                   HttpMethod.Post,
-                    hubUrl,
-                   "sendMessage",
-                   new PostSignalRData(
-                       newInstanceTransition.CreatedBy,
-                       instance.RecordId,
-                      eventInfo,
-                       instance.Id,
-                       instance.EntityName,
-                     entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), IsTargetState && targetStateAsState != null ?
-                    targetStateAsState.Name : newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
-              transition.Page == null ? null :
-              new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-              transition.Page.Timeout), hubMessage, additionalDataDynamic, instance.WorkflowName, transition.ToState.IsPublicForm == true ? "state" : "transition",
-              transition.requireData.GetValueOrDefault(false)
-              , transition.transitionButtonType == 0 ? amorphie.workflow.core.Enums.TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(amorphie.workflow.core.Enums.TransitionButtonType.Forward).ToString()
-                   ), cancellationToken);
-        return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
+        return (newInstanceTransition, additionalDataDynamic, entityDataDynamic, hubMessage, data, eventInfo);
     }
     private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
     {

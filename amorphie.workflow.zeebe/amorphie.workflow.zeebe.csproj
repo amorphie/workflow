@@ -20,9 +20,10 @@
     <PackageReference Include="Polly" Version="8.2.0"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj"/>
+    <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj"/>
+    <ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj" />
+    <ProjectReference Include="..\amorphie.workflow.service\amorphie.workflow.service.csproj" />
   </ItemGroup>
 </Project>

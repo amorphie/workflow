@@ -1,4 +1,5 @@
 using amorphie.core.security.Extensions;
+using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.zeebe.Modules;
 using Dapr.Client;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,7 @@ builder.Services.AddDaprClient();
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
 builder.Services.AddEndpointsApiExplorer();
-
+builder.Services.AddScoped<IZeebeCommandService, ZeebeCommandService>();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(
@@ -46,6 +47,8 @@ app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+
+app.AddZeebeWorkerMiddleware(zeebeGateway: "zeebe-local");
 app.MapStateManagerEndpoints();
 app.MapHttpServiceManagerEndpoints();
 app.MapAccountFlowManagerEndpoints();

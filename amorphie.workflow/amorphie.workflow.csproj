@@ -20,9 +20,10 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.13"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj"/>
+    <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj"/>
+    <ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj" />
+    <ProjectReference Include="..\amorphie.workflow.service\amorphie.workflow.service.csproj" />
   </ItemGroup>
 </Project>

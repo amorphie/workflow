@@ -62,6 +62,7 @@ public static class ConsumerModule
 
                 return operation;
             });
+
         app.MapGet("/workflow/consumer/transitionNameFix", transitionNameFix)
        .Produces<GetRecordHistoryDetailResponse>(StatusCodes.Status200OK)
        .WithOpenApi(operation =>
@@ -71,6 +72,17 @@ public static class ConsumerModule
 
            return operation;
        });
+
+        app.MapGet("/workflow/consumer/test", test)
+       .Produces<GetRecordHistoryDetailResponse>(StatusCodes.Status200OK)
+       .WithOpenApi(operation =>
+       {
+           operation.Summary = "For test purpose.";
+           operation.Tags = new List<OpenApiTag> { new() { Name = "Consumer BFF Test test" } };
+
+           return operation;
+       });
+
     }
     private static string TemplateEngineFormWithoutJson(string templateName, string entityData, string templateUrlFromVault, string? transitionName)
     {
@@ -518,6 +530,15 @@ public static class ConsumerModule
         }
         if (change)
             dbContext.SaveChanges();
+        return Results.Ok();
+    }
+    static IResult test(
+       [FromServices] WorkflowDBContext dbContext
+ )
+    {
+        var InstanceTransitions = dbContext.InstanceTransitions.Include(s => s.FromState).Where(w => w.FromStateName != null && w.ToStateName != null).ToList();
+
+
         return Results.Ok();
     }
 
