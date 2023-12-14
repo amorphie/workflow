@@ -15,538 +15,538 @@ using Microsoft.OpenApi.Models;
 
 
 
-    public interface IPostTransactionService
+public interface IPostTransactionService
+{
+    Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters);
+    Task<IResponse> InitWithoutEntity(Guid instanceId, string transitionName, Guid user, Guid behalfOfUser, dynamic data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken);
+    Task<IResponse> Execute();
+    Task<IResponse> ExecuteWithoutEntity();
+}
+
+
+public class PostTransactionService : IPostTransactionService
+{
+    private string _transitionName { get; set; }
+
+    private Transition _transition { get; set; }
+    private WorkflowDBContext _dbContext { get; set; }
+    private IZeebeCommandService _zeebeService { get; set; }
+
+    private Guid _user { get; set; }
+    private Guid _behalfOfUser { get; set; }
+
+    private string _entity { get; set; }
+    private Guid _recordId { get; set; }
+    private Guid _instanceId { get; set; }
+    private DaprClient _client { get; set; }
+
+    private ConsumerPostTransitionRequest _data { get; set; }
+
+    private List<Instance>? _activeInstances { get; set; }
+    private Instance? _activeInstance { get; set; }
+    private IConfiguration _configuration { get; set; }
+    private IHeaderDictionary? _headerParameters { get; set; }
+    private dynamic? headers { get; set; }
+
+    public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService, DaprClient client, IConfiguration configuration)
     {
-        Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters);
-        Task<IResponse> InitWithoutEntity(Guid instanceId, string transitionName, Guid user, Guid behalfOfUser, dynamic data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken);
-        Task<IResponse> Execute();
-        Task<IResponse> ExecuteWithoutEntity();
+        _dbContext = dbContext;
+        _zeebeService = zeebeService;
+        _client = client;
+        _transitionName = default!;
+        _user = default!;
+        _behalfOfUser = default!;
+        _entity = default!;
+        _recordId = default!;
+
+        _transition = default!;
+        _data = default!;
+        _configuration = configuration;
     }
 
-
-    public class PostTransactionService : IPostTransactionService
+    public async Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters)
     {
-        private string _transitionName { get; set; }
+        _entity = entity;
+        _recordId = recordId;
+        _transitionName = transitionName;
+        _user = user;
+        _behalfOfUser = behalfOfUser;
+        _data = data;
+        _headerParameters = headerParameters;
 
-        private Transition _transition { get; set; }
-        private WorkflowDBContext _dbContext { get; set; }
-        private IZeebeCommandService _zeebeService { get; set; }
-
-        private Guid _user { get; set; }
-        private Guid _behalfOfUser { get; set; }
-
-        private string _entity { get; set; }
-        private Guid _recordId { get; set; }
-        private Guid _instanceId { get; set; }
-        private DaprClient _client { get; set; }
-
-        private ConsumerPostTransitionRequest _data { get; set; }
-
-        private List<Instance>? _activeInstances { get; set; }
-        private Instance? _activeInstance { get; set; }
-        private IConfiguration _configuration { get; set; }
-        private IHeaderDictionary? _headerParameters { get; set; }
-        private dynamic? headers { get; set; }
-
-        public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService, DaprClient client, IConfiguration configuration)
+        // var transition = _dbContext.Transitions.Find(_transitionName);
+        var Control = await TransitionControl(_transitionName);
+        if (Control!.Result.Status == Status.Error.ToString())
         {
-            _dbContext = dbContext;
-            _zeebeService = zeebeService;
-            _client = client;
-            _transitionName = default!;
-            _user = default!;
-            _behalfOfUser = default!;
-            _entity = default!;
-            _recordId = default!;
 
-            _transition = default!;
-            _data = default!;
-            _configuration = configuration;
+            return Control;
         }
 
-        public async Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters)
+
+        // Load all running instances of record
+        _activeInstances = await _dbContext.Instances.Where(i => i.EntityName == entity
+        && i.RecordId == recordId
+        && i.BaseStatus != StatusType.Completed).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).ToListAsync();
+        Instance? lastInstance = _activeInstances.FirstOrDefault();
+        _instanceId = lastInstance != null ? lastInstance.Id : Guid.NewGuid();
+        return await InstanceControl(lastInstance, recordId);
+    }
+
+    public async Task<IResponse> InitWithoutEntity(Guid instanceId, string transitionName, Guid user, Guid behalfOfUser, dynamic data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken)
+    {
+        _transitionName = transitionName;
+        _user = user;
+        _behalfOfUser = behalfOfUser;
+        _headerParameters = headerParameters;
+        _instanceId = instanceId;
+        _recordId = instanceId;
+        ConsumerPostTransitionRequest request = new ConsumerPostTransitionRequest()
         {
-            _entity = entity;
-            _recordId = recordId;
-            _transitionName = transitionName;
-            _user = user;
-            _behalfOfUser = behalfOfUser;
-            _data = data;
-            _headerParameters = headerParameters;
+            EntityData = data,
+            AdditionalData = string.Empty,
+            GetSignalRHub = true
 
-            // var transition = _dbContext.Transitions.Find(_transitionName);
-            var Control = await TransitionControl(_transitionName);
-            if (Control!.Result.Status == Status.Error.ToString())
-            {
+        };
+        _data = request;
+        var Control = await TransitionControl(_transitionName);
+        if (Control!.Result.Status == Status.Error.ToString())
+        {
 
-                return Control;
-            }
-
-
-            // Load all running instances of record
-            _activeInstances = await _dbContext.Instances.Where(i => i.EntityName == entity
-            && i.RecordId == recordId
-            && i.BaseStatus != StatusType.Completed).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).ToListAsync();
-            Instance? lastInstance = _activeInstances.FirstOrDefault();
-            _instanceId = lastInstance != null ? lastInstance.Id : Guid.NewGuid();
-            return await InstanceControl(lastInstance, recordId);
+            return Control;
         }
+        //TODO Taner: Entity olmadan instance başlattı instance üzerinden devam etmeyip sonrasında consumer üzerinden(entity ile) devam ederse oluşacak hatayı gidermek amacıyla yapıldı.
+        //Bu durum ortadan kalktığında kaldırılacak
+        WorkflowEntity? entity = _transition.FromState.Workflow!.Entities.OrderByDescending(c => c.Name).FirstOrDefault();
+        _entity = entity != null ? entity.Name : string.Empty;
+        _activeInstance = await _dbContext.Instances.Where(i => i.Id == instanceId).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
+        _activeInstances = new List<Instance>();
+        if (_activeInstance != null)
+            _activeInstances.Add(_activeInstance);
 
-        public async Task<IResponse> InitWithoutEntity(Guid instanceId, string transitionName, Guid user, Guid behalfOfUser, dynamic data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken)
+        return await InstanceControl(_activeInstance, _instanceId);
+    }
+    private async Task<IResponse?> TransitionControl(string transitionName)
+    {
+        // _entity = entity;
+        // _recordId = recordId;
+        // _transitionName = transitionName;
+        // _user = user;
+        // _behalfOfUser = behalfOfUser;
+        // _data = data;
+        // _headerParameters = headerParameters;
+        // _instanceId=instanceId;
+        var transition = await _dbContext.Transitions.Where(w => w.Name == _transitionName).Include(t => t.Page).ThenInclude(t => t!.Pages)
+   .Include(s => s.FromState).ThenInclude(s => s.Workflow).ThenInclude(s => s!.Entities)
+    .Include(s => s.ToState).ThenInclude(s => s!.Workflow).ThenInclude(s => s!.Entities)
+   .FirstOrDefaultAsync();
+        if (transition == null)
         {
-            _transitionName = transitionName;
-            _user = user;
-            _behalfOfUser = behalfOfUser;
-            _headerParameters = headerParameters;
-            _instanceId = instanceId;
-            _recordId = instanceId;
-            ConsumerPostTransitionRequest request = new ConsumerPostTransitionRequest()
-            {
-                EntityData = data,
-                AdditionalData = string.Empty,
-                GetSignalRHub = true
 
-            };
-            _data = request;
-            var Control = await TransitionControl(_transitionName);
-            if (Control!.Result.Status == Status.Error.ToString())
-            {
-
-                return Control;
-            }
-            //TODO Taner: Entity olmadan instance başlattı instance üzerinden devam etmeyip sonrasında consumer üzerinden(entity ile) devam ederse oluşacak hatayı gidermek amacıyla yapıldı.
-            //Bu durum ortadan kalktığında kaldırılacak
-            WorkflowEntity? entity = _transition.FromState.Workflow!.Entities.OrderByDescending(c => c.Name).FirstOrDefault();
-            _entity = entity != null ? entity.Name : string.Empty;
-            _activeInstance = await _dbContext.Instances.Where(i => i.Id == instanceId).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
-            _activeInstances = new List<Instance>();
-            if (_activeInstance != null)
-                _activeInstances.Add(_activeInstance);
-
-            return await InstanceControl(_activeInstance, _instanceId);
-        }
-        private async Task<IResponse?> TransitionControl(string transitionName)
-        {
-            // _entity = entity;
-            // _recordId = recordId;
-            // _transitionName = transitionName;
-            // _user = user;
-            // _behalfOfUser = behalfOfUser;
-            // _data = data;
-            // _headerParameters = headerParameters;
-            // _instanceId=instanceId;
-            var transition = await _dbContext.Transitions.Where(w => w.Name == _transitionName).Include(t => t.Page).ThenInclude(t => t!.Pages)
-       .Include(s => s.FromState).ThenInclude(s => s.Workflow).ThenInclude(s => s!.Entities)
-        .Include(s => s.ToState).ThenInclude(s => s!.Workflow).ThenInclude(s => s!.Entities)
-       .FirstOrDefaultAsync();
-            if (transition == null)
-            {
-
-                return new Response
-                {
-                    Result = new Result(Status.Error, $"{_transitionName} is not found."),
-                };
-            }
-            if (transition != null)
-            {
-                _transition = transition;
-                return new Response
-                {
-                    Result = new Result(Status.Success, "Success"),
-                };
-            }
             return new Response
             {
-                Result = new Result(Status.Error, "Not Found transition"),
+                Result = new Result(Status.Error, $"{_transitionName} is not found."),
             };
-
         }
-        private async Task<IResponse> InstanceControl(Instance? lastInstance, Guid id)
+        if (transition != null)
         {
-            if (lastInstance != null && lastInstance.Workflow.WorkflowStatus == WorkflowStatus.Deactive)
-            {
-                return new Response
-                {
-                    Result = new Result(Status.Error, $"{lastInstance.WorkflowName} is deactive flow."),
-                };
-            }
-            if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName) && !(_activeInstances.Count == 0 && _transition.FromState.Type == StateType.Start))
-            {
-                if (_transition.FromState.Type == StateType.Start && _transition.FromState.Workflow!.Entities.Any(a => a.IsStateManager == false))
-                {
-
-                }
-                else
-                {
-                    return new Response
-                    {
-                        Result = new Result(Status.Error, $"There is an active workflow exists for {id} at different state."),
-                    };
-                }
-
-            }
-            InstanceTransition? lastTrans = null;
-            if (lastInstance != null)
-            {
-                lastTrans = await _dbContext.InstanceTransitions.Where(w => w.InstanceId == lastInstance.Id).OrderByDescending(c => c.CreatedAt).FirstOrDefaultAsync();
-            }
-            await SetHeaders(lastTrans);
+            _transition = transition;
             return new Response
             {
                 Result = new Result(Status.Success, "Success"),
             };
-
         }
-
-
-        public async Task<IResponse> Execute()
+        return new Response
         {
+            Result = new Result(Status.Error, "Not Found transition"),
+        };
 
-            var instanceAtState = _activeInstances?.Where(i => i.StateName == _transition.FromStateName).FirstOrDefault();
-            return await ExecuteWithInstance(instanceAtState, _recordId, ExecuteFlowMethod.RecordId);
-
-        }
-        public async Task<IResponse> ExecuteWithoutEntity()
+    }
+    private async Task<IResponse> InstanceControl(Instance? lastInstance, Guid id)
+    {
+        if (lastInstance != null && lastInstance.Workflow.WorkflowStatus == WorkflowStatus.Deactive)
         {
-
-            return await ExecuteWithInstance(_activeInstance, _instanceId, ExecuteFlowMethod.InstanceId);
-
-        }
-        private async Task<IResponse> ExecuteWithInstance(Instance? instanceAtState, Guid id, ExecuteFlowMethod executeMethod)
-        {
-            DateTime? started = DateTime.UtcNow;
-            if (instanceAtState == null)
+            return new Response
             {
-                _dbContext.Entry(_transition).Reference(t => t.FromState).Load();
+                Result = new Result(Status.Error, $"{lastInstance.WorkflowName} is deactive flow."),
+            };
+        }
+        if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName) && !(_activeInstances.Count == 0 && _transition.FromState.Type == StateType.Start))
+        {
+            if (_transition.FromState.Type == StateType.Start && _transition.FromState.Workflow!.Entities.Any(a => a.IsStateManager == false))
+            {
 
-                if (_transition.FromState.Type == StateType.Start)
+            }
+            else
+            {
+                return new Response
                 {
+                    Result = new Result(Status.Error, $"There is an active workflow exists for {id} at different state."),
+                };
+            }
 
-                    if (string.IsNullOrEmpty(_transition.FlowName))
-                    {
-                        return await noFlowNoInstance(started);
-                    }
-                    else
-                    {
-                        return hasFlowNoInstance();
-                    }
+        }
+        InstanceTransition? lastTrans = null;
+        if (lastInstance != null)
+        {
+            lastTrans = await _dbContext.InstanceTransitions.Where(w => w.InstanceId == lastInstance.Id).OrderByDescending(c => c.CreatedAt).FirstOrDefaultAsync();
+        }
+        await SetHeaders(lastTrans);
+        return new Response
+        {
+            Result = new Result(Status.Success, "Success"),
+        };
+
+    }
+
+
+    public async Task<IResponse> Execute()
+    {
+
+        var instanceAtState = _activeInstances?.Where(i => i.StateName == _transition.FromStateName).FirstOrDefault();
+        return await ExecuteWithInstance(instanceAtState, _recordId, ExecuteFlowMethod.RecordId);
+
+    }
+    public async Task<IResponse> ExecuteWithoutEntity()
+    {
+
+        return await ExecuteWithInstance(_activeInstance, _instanceId, ExecuteFlowMethod.InstanceId);
+
+    }
+    private async Task<IResponse> ExecuteWithInstance(Instance? instanceAtState, Guid id, ExecuteFlowMethod executeMethod)
+    {
+        DateTime? started = DateTime.UtcNow;
+        if (instanceAtState == null)
+        {
+            _dbContext.Entry(_transition).Reference(t => t.FromState).Load();
+
+            if (_transition.FromState.Type == StateType.Start)
+            {
+
+                if (string.IsNullOrEmpty(_transition.FlowName))
+                {
+                    return await noFlowNoInstance(started);
                 }
                 else
                 {
-                    return new Response
-                    {
-                        Result = new Result(Status.Error, _transition.ServiceName + $"There is no active workflow for {id} and also {_transition.Name} is not transition of any start state."),
-                    };
+                    return hasFlowNoInstance();
                 }
             }
             else
             {
-                if (string.IsNullOrEmpty(_transition.FlowName))
+                return new Response
                 {
-
-                    return await noFlowHasInstance(instanceAtState, started);
-                }
-                else
-                {
-                    return hasFlowHasInstance(instanceAtState);
-                }
+                    Result = new Result(Status.Error, _transition.ServiceName + $"There is no active workflow for {id} and also {_transition.Name} is not transition of any start state."),
+                };
             }
         }
-
-        private async Task<IResponse> noFlowNoInstance(DateTime? started)
+        else
         {
-
-            _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
-            //Create an instace for request.
-            var newInstance = new Instance
+            if (string.IsNullOrEmpty(_transition.FlowName))
             {
-                Id = _instanceId,
-                WorkflowName = _transition.FromState.WorkflowName!,
-                EntityName = _entity,
-                RecordId = _recordId,
-                StateName = _transition.ToStateName!,
-                BaseStatus = _transition.ToState!.BaseStatus,
-                CreatedBy = _user,
-                CreatedByBehalfOf = _behalfOfUser,
-            };
 
-            // _dbContext.Add(newInstance);
-
-            // addInstanceTansition(newInstance);
-            // _dbContext.SaveChanges();
-
-            return await ServiceKontrol(newInstance, false, started);
-            //return Results.Ok();
-        }
-
-        private async Task<IResponse> noFlowHasInstance(Instance instanceAtState, DateTime? started)
-        {
-
-            _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
-
-            return await ServiceKontrol(instanceAtState, true, started);
-
-
-        }
-
-        private IResponse hasFlowNoInstance()
-        {
-            DateTime started = DateTime.UtcNow;
-            _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
-
-            var newInstance = new Instance
+                return await noFlowHasInstance(instanceAtState, started);
+            }
+            else
             {
-                Id = _instanceId,
-                WorkflowName = _transition.FromState.WorkflowName!,
-                EntityName = _entity,
-                RecordId = _recordId,
-                StateName = _transition.FromStateName!,
-                BaseStatus = StatusType.LockedInFlow,
-                CreatedBy = _user,
-                ZeebeFlow = _transition.Flow,
-                ZeebeFlowName = _transition.FlowName,
-                CreatedByBehalfOf = _behalfOfUser,
-            };
+                return hasFlowHasInstance(instanceAtState);
+            }
+        }
+    }
 
-            dynamic variables = createMessageVariables(newInstance);
+    private async Task<IResponse> noFlowNoInstance(DateTime? started)
+    {
+
+        _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
+        //Create an instace for request.
+        var newInstance = new Instance
+        {
+            Id = _instanceId,
+            WorkflowName = _transition.FromState.WorkflowName!,
+            EntityName = _entity,
+            RecordId = _recordId,
+            StateName = _transition.ToStateName!,
+            BaseStatus = _transition.ToState!.BaseStatus,
+            CreatedBy = _user,
+            CreatedByBehalfOf = _behalfOfUser,
+        };
+
+        // _dbContext.Add(newInstance);
+
+        // addInstanceTansition(newInstance);
+        // _dbContext.SaveChanges();
+
+        return await ServiceKontrol(newInstance, false, started);
+        //return Results.Ok();
+    }
+
+    private async Task<IResponse> noFlowHasInstance(Instance instanceAtState, DateTime? started)
+    {
+
+        _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
+
+        return await ServiceKontrol(instanceAtState, true, started);
+
+
+    }
+
+    private IResponse hasFlowNoInstance()
+    {
+        DateTime started = DateTime.UtcNow;
+        _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
+
+        var newInstance = new Instance
+        {
+            Id = _instanceId,
+            WorkflowName = _transition.FromState.WorkflowName!,
+            EntityName = _entity,
+            RecordId = _recordId,
+            StateName = _transition.FromStateName!,
+            BaseStatus = StatusType.LockedInFlow,
+            CreatedBy = _user,
+            ZeebeFlow = _transition.Flow,
+            ZeebeFlowName = _transition.FlowName,
+            CreatedByBehalfOf = _behalfOfUser,
+        };
+
+        dynamic variables = createMessageVariables(newInstance);
 
 
 
-            _dbContext.Add(newInstance);
+        _dbContext.Add(newInstance);
 
-            addInstanceTansition(newInstance, started, null);
-            _dbContext.SaveChanges();
-            SendSignalRData(newInstance, "worker-started", string.Empty);
-            _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
-            return new Response
+        addInstanceTansition(newInstance, started, null);
+        _dbContext.SaveChanges();
+        SendSignalRData(newInstance, "worker-started", string.Empty);
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
+        return new Response
+        {
+            Result = new Result(Status.Success, "Instance Has been Created"),
+        };
+    }
+
+    private IResponse hasFlowHasInstance(Instance instanceAtState)
+    {
+        _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
+        _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
+        DateTime started = DateTime.UtcNow;
+        instanceAtState.StateName = _transition.FromStateName!;
+        instanceAtState.ModifiedBy = _user;
+        instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
+        instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+        instanceAtState.BaseStatus = StatusType.LockedInFlow;
+
+        dynamic variables = createMessageVariables(instanceAtState);
+
+
+
+        addInstanceTansition(instanceAtState, started, null);
+        _dbContext.SaveChanges();
+        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
+        SendSignalRData(instanceAtState, "worker-started", string.Empty);
+        //return Results.Ok();
+        return new Response
+        {
+            Result = new Result(Status.Success, "Instance Has been Updated"),
+        };
+    }
+
+    private dynamic createMessageVariables(Instance instanceAtState)
+    {
+        dynamic variables = new Dictionary<string, dynamic>();
+
+        variables.Add("EntityName", _entity);
+        variables.Add("RecordId", _recordId);
+        variables.Add("InstanceId", instanceAtState.Id);
+        variables.Add("LastTransition", _transitionName);
+
+        dynamic targetObject = new ExpandoObject();
+        targetObject.Data = _data;
+        targetObject.TriggeredBy = _user;
+        targetObject.TriggeredByBehalfOf = _behalfOfUser;
+
+        string updateName = deleteUnAllowedCharecters(_transitionName);
+        variables.Add($"TRX-{_transitionName}", targetObject);
+        variables.Add($"TRX{updateName}", targetObject);
+        variables.Add($"Headers", headers);
+        return variables;
+    }
+    private static string deleteUnAllowedCharecters(string transitionName)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
+    }
+    private void addInstanceTansition(Instance instance, DateTime? started, DateTime? finished)
+    {
+        var newInstanceTransition = new InstanceTransition
+        {
+            InstanceId = instance.Id,
+            FromStateName = _transition.FromStateName,
+            ToStateName = _transition.ToStateName!,
+            EntityData = Convert.ToString(_data.EntityData),
+            FormData = Convert.ToString(_data.FormData),
+            AdditionalData = Convert.ToString(_data.AdditionalData),
+            QueryData = Convert.ToString(_data.QueryData),
+            RouteData = Convert.ToString(_data.RouteData),
+            HeadersData = Convert.ToString(headers),
+            CreatedBy = _user,
+            CreatedByBehalfOf = _behalfOfUser,
+            TransitionName = _transition.Name,
+            StartedAt = started,
+            FinishedAt = finished
+        };
+
+        _dbContext.Add(newInstanceTransition);
+    }
+    private async Task<IResponse> ServiceKontrol(Instance instance, bool hasInstance, DateTime? started)
+    {
+        if (!string.IsNullOrEmpty(_transition.ServiceName))
+        {
+            ClientFactory _factory = new();
+            var clientFactory = _factory.CreateClient(_transition.ServiceName);
+            try
             {
-                Result = new Result(Status.Success, "Instance Has been Created"),
-            };
-        }
 
-        private IResponse hasFlowHasInstance(Instance instanceAtState)
-        {
-            _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
-            _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
-            DateTime started = DateTime.UtcNow;
-            instanceAtState.StateName = _transition.FromStateName!;
-            instanceAtState.ModifiedBy = _user;
-            instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
-            instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
-            instanceAtState.BaseStatus = StatusType.LockedInFlow;
-
-            dynamic variables = createMessageVariables(instanceAtState);
-
-
-
-            addInstanceTansition(instanceAtState, started, null);
-            _dbContext.SaveChanges();
-            _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
-            SendSignalRData(instanceAtState, "worker-started", string.Empty);
-            //return Results.Ok();
-            return new Response
-            {
-                Result = new Result(Status.Success, "Instance Has been Updated"),
-            };
-        }
-
-        private dynamic createMessageVariables(Instance instanceAtState)
-        {
-            dynamic variables = new Dictionary<string, dynamic>();
-
-            variables.Add("EntityName", _entity);
-            variables.Add("RecordId", _recordId);
-            variables.Add("InstanceId", instanceAtState.Id);
-            variables.Add("LastTransition", _transitionName);
-
-            dynamic targetObject = new ExpandoObject();
-            targetObject.Data = _data;
-            targetObject.TriggeredBy = _user;
-            targetObject.TriggeredByBehalfOf = _behalfOfUser;
-
-            string updateName = deleteUnAllowedCharecters(_transitionName);
-            variables.Add($"TRX-{_transitionName}", targetObject);
-            variables.Add($"TRX{updateName}", targetObject);
-            variables.Add($"Headers", headers);
-            return variables;
-        }
-        private static string deleteUnAllowedCharecters(string transitionName)
-        {
-            return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
-        }
-        private void addInstanceTansition(Instance instance, DateTime? started, DateTime? finished)
-        {
-            var newInstanceTransition = new InstanceTransition
-            {
-                InstanceId = instance.Id,
-                FromStateName = _transition.FromStateName,
-                ToStateName = _transition.ToStateName!,
-                EntityData = Convert.ToString(_data.EntityData),
-                FormData = Convert.ToString(_data.FormData),
-                AdditionalData = Convert.ToString(_data.AdditionalData),
-                QueryData = Convert.ToString(_data.QueryData),
-                RouteData = Convert.ToString(_data.RouteData),
-                HeadersData = Convert.ToString(headers),
-                CreatedBy = _user,
-                CreatedByBehalfOf = _behalfOfUser,
-                TransitionName = _transition.Name,
-                StartedAt = started,
-                FinishedAt = finished
-            };
-
-            _dbContext.Add(newInstanceTransition);
-        }
-        private async Task<IResponse> ServiceKontrol(Instance instance, bool hasInstance, DateTime? started)
-        {
-            if (!string.IsNullOrEmpty(_transition.ServiceName))
-            {
-                ClientFactory _factory = new();
-                var clientFactory = _factory.CreateClient(_transition.ServiceName);
+                SendTransitionInfoRequest request = new()
+                {
+                    recordId = instance.RecordId,
+                    newStatus = _transition.ToStateName!,
+                    entityData = _data.EntityData,
+                    user = _user,
+                    behalfOfUser = _behalfOfUser,
+                    workflowName = instance.WorkflowName
+                };
+                var response = await clientFactory.PostModel(request);
                 try
                 {
 
-                    SendTransitionInfoRequest request = new()
+
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK ||
+                          response.StatusCode == System.Net.HttpStatusCode.Created
+                           || response.StatusCode == System.Net.HttpStatusCode.NotModified
+                        )
                     {
-                        recordId = instance.RecordId,
-                        newStatus = _transition.ToStateName!,
-                        entityData = _data.EntityData,
-                        user = _user,
-                        behalfOfUser = _behalfOfUser,
-                        workflowName = instance.WorkflowName
-                    };
-                    var response = await clientFactory.PostModel(request);
-                    try
-                    {
-
-
-                        if (response.StatusCode == System.Net.HttpStatusCode.OK ||
-                              response.StatusCode == System.Net.HttpStatusCode.Created
-                               || response.StatusCode == System.Net.HttpStatusCode.NotModified
-                            )
-                        {
-                            return UpdateInstance(instance, hasInstance, started);
-                        }
-                        else
-                        {
-                            string hubMessage = string.Empty;
-                            try
-                            {
-                                var problem = Newtonsoft.Json.JsonConvert.DeserializeObject<Refit.ProblemDetails>(response.Error!.Content!);
-                                hubMessage += problem!.Detail;
-                            }
-                            catch (Exception ex)
-                            {
-                                hubMessage += response.ReasonPhrase;
-                            }
-
-                            SendSignalRData(instance, "transition-completed-with-error", hubMessage);
-                            return new Response
-                            {
-                                Result = new Result(Status.Error, ""),
-                            };
-                        }
-
+                        return UpdateInstance(instance, hasInstance, started);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        SendSignalRData(instance, "transition-completed-with-error", string.Empty);
+                        string hubMessage = string.Empty;
+                        try
+                        {
+                            var problem = Newtonsoft.Json.JsonConvert.DeserializeObject<Refit.ProblemDetails>(response.Error!.Content!);
+                            hubMessage += problem!.Detail;
+                        }
+                        catch (Exception ex)
+                        {
+                            hubMessage += response.ReasonPhrase;
+                        }
+
+                        SendSignalRData(instance, "transition-completed-with-error", hubMessage);
                         return new Response
                         {
                             Result = new Result(Status.Error, ""),
                         };
                     }
 
-
                 }
                 catch (Exception ex)
                 {
-                    SendSignalRData(instance, "transition-completed-with-error", "unexpected error");
+                    SendSignalRData(instance, "transition-completed-with-error", string.Empty);
                     return new Response
                     {
-                        Result = new Result(Status.Error, "unexpected error:" + ex.ToString()),
+                        Result = new Result(Status.Error, ""),
                     };
                 }
-            }
-            else
-            {
-                return UpdateInstance(instance, hasInstance, started);
-            }
-        }
 
-        private IResponse UpdateInstance(Instance instance, bool hasInstance, DateTime? started)
-        {
-            if (hasInstance)
-            {
-                instance.StateName = _transition.ToStateName!;
-                instance.ModifiedBy = _user;
-                instance.ModifiedByBehalfOf = _behalfOfUser;
-                instance.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
-                instance.BaseStatus = _transition.ToState!.BaseStatus;
-                if (instance.WorkflowName != _transition.ToState.WorkflowName)
-                {
-                    instance.WorkflowName = _transition.ToState!.WorkflowName!;
-                    if (_transition.ToState.Workflow!.Entities.All(a => a.Name != instance.EntityName))
-                    {
-                        instance.EntityName = _transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
-                    }
-                }
-            }
-            else
-            {
-                _dbContext.Add(instance);
-            }
 
-            addInstanceTansition(instance, started, DateTime.UtcNow);
-            _dbContext.SaveChanges();
-            SendSignalRData(instance, "transition-completed", string.Empty);
-            return new Response
-            {
-                Result = new Result(Status.Success, "Instance has been updated"),
-            };
-        }
-        private void SendSignalRData(Instance instance, string eventInfo, string message)
-        {
-            try
-            {
-                string hubUrl = _configuration["hubUrl"]!.ToString();
-                var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
-                          HttpMethod.Post,
-                          hubUrl,
-                          "sendMessage",
-                          new PostSignalRData(
-                              _user,
-                              instance.RecordId,
-                             eventInfo,
-                              instance.Id,
-                              instance.EntityName,
-                            _data.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), instance.StateName, _transitionName, instance.BaseStatus,
-                            _transition.Page == null ? null : eventInfo == "worker-started" ? null :
-                            new PostPageSignalRData(_transition.Page.Operation.ToString(), _transition.Page.Type.ToString(), _transition.Page.Pages == null || _transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language, _transition.Page.Pages!.FirstOrDefault()!.Label),
-                            _transition.Page.Timeout), message, _data.AdditionalData, instance.WorkflowName
-
-                          ));
             }
             catch (Exception ex)
             {
-
-
+                SendSignalRData(instance, "transition-completed-with-error", "unexpected error");
+                return new Response
+                {
+                    Result = new Result(Status.Error, "unexpected error:" + ex.ToString()),
+                };
             }
-
         }
-        private async ValueTask<bool> SetHeaders(InstanceTransition? lastTransition)
+        else
         {
-            List<string> listFlowHeaders = await _dbContext.FlowHeaders.Select(s => s.Key.Replace("-", string.Empty).ToLower()).ToListAsync();
-            Dictionary<string, string> headerDict
-             = _headerParameters.Where(w => listFlowHeaders.Contains(w.Key.Replace("-", string.Empty).ToLower())).ToDictionary(a => a.Key.Replace("-", string.Empty).ToLower(), a => string.Join(";", a.Value));
-            if (lastTransition != null)
-            {
-                Dictionary<string, string> lastTrDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(lastTransition.HeadersData);
-
-                headerDict = headerDict.Concat(lastTrDict.Where(x => !headerDict.Keys.Contains(x.Key.Replace("-", string.Empty).ToLower()))).ToDictionary(x => x.Key.Replace("-", string.Empty).ToLower(), x => x.Value);
-            }
-            var serialize = System.Text.Json.JsonSerializer.Serialize(headerDict.ToDictionary(x => x.Key.Replace("-", string.Empty), x => x.Value));
-            headers = System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
-            return true;
+            return UpdateInstance(instance, hasInstance, started);
         }
     }
+
+    private IResponse UpdateInstance(Instance instance, bool hasInstance, DateTime? started)
+    {
+        if (hasInstance)
+        {
+            instance.StateName = _transition.ToStateName!;
+            instance.ModifiedBy = _user;
+            instance.ModifiedByBehalfOf = _behalfOfUser;
+            instance.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+            instance.BaseStatus = _transition.ToState!.BaseStatus;
+            if (instance.WorkflowName != _transition.ToState.WorkflowName)
+            {
+                instance.WorkflowName = _transition.ToState!.WorkflowName!;
+                if (_transition.ToState.Workflow!.Entities.All(a => a.Name != instance.EntityName))
+                {
+                    instance.EntityName = _transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
+                }
+            }
+        }
+        else
+        {
+            _dbContext.Add(instance);
+        }
+
+        addInstanceTansition(instance, started, DateTime.UtcNow);
+        _dbContext.SaveChanges();
+        SendSignalRData(instance, "transition-completed", string.Empty);
+        return new Response
+        {
+            Result = new Result(Status.Success, "Instance has been updated"),
+        };
+    }
+    private void SendSignalRData(Instance instance, string eventInfo, string message)
+    {
+        try
+        {
+            string hubUrl = _configuration["hubUrl"]!.ToString();
+            var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
+                      HttpMethod.Post,
+                      hubUrl,
+                      "sendMessage",
+                      new PostSignalRData(
+                          _user,
+                          instance.RecordId,
+                         eventInfo,
+                          instance.Id,
+                          instance.EntityName,
+                        _data.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), instance.StateName, _transitionName, instance.BaseStatus,
+                        _transition.Page == null ? null : eventInfo == "worker-started" ? null :
+                        new PostPageSignalRData(_transition.Page.Operation.ToString(), _transition.Page.Type.ToString(), _transition.Page.Pages == null || _transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language, _transition.Page.Pages!.FirstOrDefault()!.Label),
+                        _transition.Page.Timeout), message, _data.AdditionalData, instance.WorkflowName
+
+                      ));
+        }
+        catch (Exception ex)
+        {
+
+
+        }
+
+    }
+    private async ValueTask<bool> SetHeaders(InstanceTransition? lastTransition)
+    {
+        List<string> listFlowHeaders = await _dbContext.FlowHeaders.Select(s => s.Key.Replace("-", string.Empty).ToLower()).ToListAsync();
+        Dictionary<string, string> headerDict
+         = _headerParameters.Where(w => listFlowHeaders.Contains(w.Key.Replace("-", string.Empty).ToLower())).ToDictionary(a => a.Key.Replace("-", string.Empty).ToLower(), a => string.Join(";", a.Value));
+        if (lastTransition != null)
+        {
+            Dictionary<string, string> lastTrDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(lastTransition.HeadersData);
+
+            headerDict = headerDict.Concat(lastTrDict.Where(x => !headerDict.Keys.Contains(x.Key.Replace("-", string.Empty).ToLower()))).ToDictionary(x => x.Key.Replace("-", string.Empty).ToLower(), x => x.Value);
+        }
+        var serialize = System.Text.Json.JsonSerializer.Serialize(headerDict.ToDictionary(x => x.Key.Replace("-", string.Empty), x => x.Value));
+        headers = System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
+        return true;
+    }
+}
 

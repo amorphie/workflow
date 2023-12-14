@@ -532,9 +532,9 @@ public static class ConsumerModule
             dbContext.SaveChanges();
         return Results.Ok();
     }
-        static IResult test(
-           [FromServices] WorkflowDBContext dbContext
-     )
+    static IResult test(
+       [FromServices] WorkflowDBContext dbContext
+ )
     {
         var InstanceTransitions = dbContext.InstanceTransitions.Include(s => s.FromState).Where(w => w.FromStateName != null && w.ToStateName != null).ToList();
 

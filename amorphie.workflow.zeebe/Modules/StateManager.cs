@@ -110,7 +110,7 @@ public static class StateManagerModule
         //var transitionData = JsonSerializer.Deserialize<dynamic>(body.GetProperty("LastTransitionData").ToString());
         if (transition is null)
         {
-            throw new ZeebeBussinesException(errorMessage:  $"Transition not found with transition name : {transitionName} ");
+            throw new ZeebeBussinesException(errorMessage: $"Transition not found with transition name : {transitionName} ");
         }
 
         if (transition.ToStateName is null)
