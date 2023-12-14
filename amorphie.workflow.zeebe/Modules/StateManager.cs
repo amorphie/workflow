@@ -133,7 +133,7 @@ public static class StateManagerModule
 
 
         InstanceTransition? newInstanceTransition;
-        (newInstanceTransition, additionalDataDynamic, entityDataDynamic, hubMessage, dynamic? data, string eventInfo) = ((InstanceTransition, dynamic, dynamic, string, dynamic?, string))await SetInstanceTransition(dbContext, transition, instance, transitionName, error, body, cancellationToken);
+        (newInstanceTransition, additionalDataDynamic, entityDataDynamic, hubMessage, dynamic? data, string eventInfo) = ((InstanceTransition, dynamic, dynamic, string, dynamic?, string))await SetInstanceTransition(dbContext, transition, instance, transitionName, error, body, IsTargetState, targetStateAsState, cancellationToken);
         string hubUrl = configuration["hubUrl"]!.ToString();
         Console.WriteLine(hubUrl);
 
@@ -182,7 +182,7 @@ public static class StateManagerModule
     {
         return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
     }
-    private static async Task<(InstanceTransition, dynamic, dynamic, string, dynamic?, string)> SetInstanceTransition(WorkflowDBContext dbContext, Transition transition, Instance instance, string transitionName, bool error, dynamic body, CancellationToken cancellationToken)
+    private static async Task<(InstanceTransition, dynamic, dynamic, string, dynamic?, string)> SetInstanceTransition(WorkflowDBContext dbContext, Transition transition, Instance instance, string transitionName, bool error, dynamic body, bool IsTargetState, State? targetStateAsState, CancellationToken cancellationToken)
     {
         dynamic additionalDataDynamic = default!;
         dynamic entityDataDynamic = default!;
@@ -383,31 +383,6 @@ public static class StateManagerModule
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
         await dbContext.SaveChangesAsync(cancellationToken);
         return (newInstanceTransition, additionalDataDynamic, entityDataDynamic, hubMessage, data, eventInfo);
-    }
-    private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
-    {
-
-    }
-    private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, dynamic _data)
-    {
-        dynamic variables = new Dictionary<string, dynamic>();
-
-        variables.Add("EntityName", instanceTransition.Instance.EntityName);
-        variables.Add("RecordId", instanceTransition.Instance.RecordId);
-        variables.Add("InstanceId", instanceTransition.InstanceId);
-        variables.Add("LastTransition", _transitionName);
-        dynamic targetObject = new System.Dynamic.ExpandoObject();
-        targetObject.Data = _data;
-        targetObject.TriggeredBy = instanceTransition.CreatedBy;
-        targetObject.TriggeredByBehalfOf = instanceTransition.CreatedByBehalfOf;
-        string updateName = deleteUnAllowedCharecters(_transitionName);
-        variables.Add($"TRX-{_transitionName}", targetObject);
-        variables.Add($"TRX{updateName}", targetObject);
-        return variables;
-    }
-    private static string deleteUnAllowedCharecters(string transitionName)
-    {
-        return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
     }
 
 }
