@@ -96,7 +96,7 @@ public static class StateManagerModule
         if (!Guid.TryParse(instanceIdAsString, out instanceId))
         {
 
-           return Results.Problem("InstanceId not provided or not as a GUID");
+            return Results.Problem("InstanceId not provided or not as a GUID");
             //throw new ZeebeBussinesException("500", "InstanceId not provided or not as a GUID");
         }
 
@@ -144,10 +144,10 @@ public static class StateManagerModule
             , cancellationToken);
             if (targetStateAsState == null)
             {
-                  return Results.Problem($"Target state is not provided ");
-//throw new ZeebeBussinesException(errorMessage: $"Target state is not provided ");
+                return Results.Problem($"Target state is not provided ");
+                //throw new ZeebeBussinesException(errorMessage: $"Target state is not provided ");
             }
-                
+
             error = true;
             IsTargetState = true;
             transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
