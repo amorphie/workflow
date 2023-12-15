@@ -7,12 +7,12 @@ using AutoMapper;
 
 namespace amorphie.workflow.core.Mapper
 {
-    public class SignalrMapper: Profile
+    public class SignalrMapper : Profile
     {
-          public SignalrMapper()
-    {
-       CreateMap<SignalRRequest, SignalRResponsePrivate>().ReverseMap();
-       CreateMap<SignalRRequest, SignalRResponsePublic>().ReverseMap();
-    }
+        public SignalrMapper()
+        {
+            CreateMap<SignalRRequest, SignalRResponsePrivate>().ReverseMap();
+            CreateMap<SignalRRequest, SignalRResponsePublic>().ReverseMap();
+        }
     }
 }

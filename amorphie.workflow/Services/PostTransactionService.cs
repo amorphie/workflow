@@ -47,7 +47,7 @@ public class PostTransactionService : IPostTransactionService
     private IConfiguration _configuration { get; set; }
     private IHeaderDictionary? _headerParameters { get; set; }
     private dynamic? headers { get; set; }
-    private dynamic? mfaType { get; set; }=MFATypeEnum.Public.ToString();
+    private dynamic? mfaType { get; set; } = MFATypeEnum.Public.ToString();
 
     private Dictionary<string, string> _headerDict { get; set; }
 
@@ -227,12 +227,12 @@ public class PostTransactionService : IPostTransactionService
 
                 if (string.IsNullOrEmpty(_transition.FlowName))
                 {
-                    mfaType=_transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
+                    mfaType = _transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
                     return await noFlowNoInstance(started);
                 }
                 else
                 {
-                    mfaType=_transition.FromState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
+                    mfaType = _transition.FromState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
                     return hasFlowNoInstance();
                 }
             }
@@ -248,12 +248,12 @@ public class PostTransactionService : IPostTransactionService
         {
             if (string.IsNullOrEmpty(_transition.FlowName))
             {
-                 mfaType=_transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
+                mfaType = _transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
                 return await noFlowHasInstance(instanceAtState, started);
             }
             else
             {
-                mfaType=_transition.FromState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
+                mfaType = _transition.FromState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
                 return hasFlowHasInstance(instanceAtState);
             }
         }
@@ -511,7 +511,7 @@ public class PostTransactionService : IPostTransactionService
     {
         try
         {
-             string hubUrl = _configuration["hubUrl"]!.ToString();
+            string hubUrl = _configuration["hubUrl"]!.ToString();
             var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
                       HttpMethod.Post,
                       hubUrl,
@@ -531,9 +531,10 @@ public class PostTransactionService : IPostTransactionService
             var responseSignalRMFAtype = _client.CreateInvokeMethodRequest<SignalRRequest>(
                       HttpMethod.Post,
                       hubUrl,
-                      "sendMessage/"+mfaType,
-                      new SignalRRequest(){
-                        data=new PostSignalRData(
+                      "sendMessage/" + mfaType,
+                      new SignalRRequest()
+                      {
+                          data = new PostSignalRData(
                             _user,
                           instance.RecordId,
                          eventInfo,
@@ -545,31 +546,31 @@ public class PostTransactionService : IPostTransactionService
                         _transition.Page.Timeout), message, _data.AdditionalData, instance.WorkflowName, _transition.ToState.IsPublicForm == true ? "state" : "transition", _transition.requireData.GetValueOrDefault(false), _transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : _transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
 
                       ),
-                      source="workflow",
-                      type="workflow",
-                      subject=eventInfo,
-                      id=instance.Id.ToString()
+                          source = "workflow",
+                          type = "workflow",
+                          subject = eventInfo,
+                          id = instance.Id.ToString()
 
 
                       }
                           );
-                          string deviceID=string.Empty;
-                          string tokenID=string.Empty;
-                        string customer=string.Empty;
+            string deviceID = string.Empty;
+            string tokenID = string.Empty;
+            string customer = string.Empty;
 
 
-                             if(_headerDict.TryGetValue("xdeviceid",out deviceID))
-                             responseSignalRMFAtype.Headers.Add("X-Device-Id",deviceID);
-                             if(_headerDict.TryGetValue("xtokenid",out tokenID))
-                             responseSignalRMFAtype.Headers.Add("X-Token-Id",deviceID);
-                             if(_headerDict.TryGetValue("acustomer",out customer))
-                             responseSignalRMFAtype.Headers.Add("A-Customer",customer);
+            if (_headerDict.TryGetValue("xdeviceid", out deviceID))
+                responseSignalRMFAtype.Headers.Add("X-Device-Id", deviceID);
+            if (_headerDict.TryGetValue("xtokenid", out tokenID))
+                responseSignalRMFAtype.Headers.Add("X-Token-Id", deviceID);
+            if (_headerDict.TryGetValue("acustomer", out customer))
+                responseSignalRMFAtype.Headers.Add("A-Customer", customer);
 
-                          
-                         var generarlSignalR=   _client.InvokeMethodAsync<string>(responseSignalRMFAtype);
-                          
 
-                        
+            var generarlSignalR = _client.InvokeMethodAsync<string>(responseSignalRMFAtype);
+
+
+
         }
         catch (Exception ex)
         {
@@ -591,7 +592,7 @@ public class PostTransactionService : IPostTransactionService
         }
         var serialize = System.Text.Json.JsonSerializer.Serialize(headerDict.ToDictionary(x => x.Key.Replace("-", string.Empty), x => x.Value));
         headers = System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
-        _headerDict=headerDict;
+        _headerDict = headerDict;
         return true;
     }
 }

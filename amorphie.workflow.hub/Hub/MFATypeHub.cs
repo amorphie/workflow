@@ -19,37 +19,37 @@ namespace amorphie.workflow.hub
         {
             _logger.LogInformation($"Client Connected: {Context.ConnectionId}, user id : {Context?.User?.Identity?.Name}, user ident: {this.Context?.UserIdentifier}");
             var httpCtx = Context.GetHttpContext();
-            string HeaderUser =string.Empty;
+            string HeaderUser = string.Empty;
             try
             {
-                 HeaderUser = httpCtx.Request.Headers["A-Customer"].ToString();
-                 
+                HeaderUser = httpCtx.Request.Headers["A-Customer"].ToString();
+
             }
-            catch(Exception)
+            catch (Exception)
             {
 
             }
-              string HeaderDeviceID =string.Empty;
+            string HeaderDeviceID = string.Empty;
             try
             {
-                 HeaderDeviceID = httpCtx.Request.Headers["X-Device-Id"].ToString();
+                HeaderDeviceID = httpCtx.Request.Headers["X-Device-Id"].ToString();
             }
-            catch(Exception)
+            catch (Exception)
             {
 
             }
-             string HeaderToken =string.Empty;
-             try
+            string HeaderToken = string.Empty;
+            try
             {
-                 HeaderToken = httpCtx.Request.Headers["X-Token-Id"].ToString();
+                HeaderToken = httpCtx.Request.Headers["X-Token-Id"].ToString();
             }
-            catch(Exception)
+            catch (Exception)
             {
 
             }
-            string GroupName=HeaderDeviceID+HeaderUser+HeaderToken;
-              
-            Groups.AddToGroupAsync(Context.ConnectionId,GroupName);
+            string GroupName = HeaderDeviceID + HeaderUser + HeaderToken;
+
+            Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
             Clients.Group(HeaderUser).SendAsync("ClientConnected", "Client Connected");
             return base.OnConnectedAsync();
         }

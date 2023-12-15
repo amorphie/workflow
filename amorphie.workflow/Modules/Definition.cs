@@ -1172,7 +1172,7 @@ CancellationToken cancellationToken
     {
         // data.transitions[0].
         var existingRecord = context.States!.Include(s => s.Titles).Include(s => s.Transitions).Include(s => s.PublicForms)
-        .Include(s => s.UiForms).ThenInclude(s=>s.Forms)
+        .Include(s => s.UiForms).ThenInclude(s => s.Forms)
                .FirstOrDefault(w => w.WorkflowName == definition && w.Name == data.name)
                ;
         if (existingRecord == null)
@@ -1186,7 +1186,7 @@ CancellationToken cancellationToken
                 CreatedByBehalfOf = Guid.NewGuid(),
                 Type = data.type,
                 IsPublicForm = data.ispublicForm,
-                MFAType=data.mfaType,
+                MFAType = data.mfaType,
                 PublicForms = data.ispublicForm == true && data.publicForms.Any() && data.publicForms.First().forms.Any() ? data.publicForms.FirstOrDefault().forms.Select(s => new Translation()
                 {
 
@@ -1305,7 +1305,7 @@ CancellationToken cancellationToken
                     hasChanges = true;
                 }
             }
-            if (data.mfaType != null&&data.mfaType!=existingRecord.MFAType)
+            if (data.mfaType != null && data.mfaType != existingRecord.MFAType)
             {
                 existingRecord.MFAType = data.mfaType;
                 hasChanges = true;
@@ -1390,7 +1390,7 @@ CancellationToken cancellationToken
             {
                 Transition? existingTransition = context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
                 .Include(s => s.Page).ThenInclude(t => t.Pages)
-                  .Include(s => s.UiForms).ThenInclude(s=>s.Forms)
+                  .Include(s => s.UiForms).ThenInclude(s => s.Forms)
                 .FirstOrDefault(db => db.Name == req.name && db.FromStateName == existingRecord.Name);
                 //Kayıdı olmayan Transition ların eklenmesi
                 if (existingTransition == null)
