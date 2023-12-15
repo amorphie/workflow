@@ -1,6 +1,7 @@
 using System.Dynamic;
 using System.Text.Json;
 using amorphie.workflow.core.Dtos;
+using amorphie.workflow.core.Enums;
 using amorphie.workflow.service.Zeebe;
 using AutoMapper.Configuration.Annotations;
 using Dapr.Client;
@@ -47,6 +48,9 @@ public static class StateManagerModule
         //entityName or Process
         string workFlowName = body.GetProperty("EntityName").ToString();
         string hubMessage = string.Empty;
+        string tokenid = string.Empty;
+        string customerid = string.Empty;
+        string deviceid = string.Empty;
         try
         {
             hubMessage = body.GetProperty("message").ToString();
@@ -54,6 +58,30 @@ public static class StateManagerModule
         catch (Exception ex)
         {
             hubMessage = string.Empty;
+        }
+        try
+        {
+            tokenid = body.GetProperty("Headers").GetProperty("xtokenid").ToString();
+        }
+        catch (Exception ex)
+        {
+            tokenid = string.Empty;
+        }
+        try
+        {
+            customerid = body.GetProperty("Headers").GetProperty("acustomer").ToString();
+        }
+        catch (Exception ex)
+        {
+            customerid = string.Empty;
+        }
+        try
+        {
+            deviceid = body.GetProperty("Headers").GetProperty("xdeviceid").ToString();
+        }
+        catch (Exception ex)
+        {
+            deviceid = string.Empty;
         }
         //For fetching gateway from db
         // ZeebeMessage? zeebeMessage = await dbContext.ZeebeMessages.FirstOrDefaultAsync(p => p.Process == workFlowName);
@@ -155,6 +183,59 @@ public static class StateManagerModule
               transition.requireData.GetValueOrDefault(false)
               , transition.transitionButtonType == 0 ? amorphie.workflow.core.Enums.TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(amorphie.workflow.core.Enums.TransitionButtonType.Forward).ToString()
                    ), cancellationToken);
+
+
+
+        var responseSignalRMFAType = client.CreateInvokeMethodRequest<SignalRRequest>(
+                       HttpMethod.Post,
+                        hubUrl,
+                       "sendMessage" + transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower(), new SignalRRequest()
+                       {
+                           data = new PostSignalRData(
+                           newInstanceTransition.CreatedBy,
+                           instance.RecordId,
+                           eventInfo,
+                           instance.Id,
+                           instance.EntityName,
+                         entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), IsTargetState && targetStateAsState != null ?
+                        targetStateAsState.Name : newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
+                  transition.Page == null ? null :
+                  new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
+                  transition.Page.Timeout), hubMessage, additionalDataDynamic, instance.WorkflowName, transition.ToState.IsPublicForm == true ? "state" : "transition",
+                  transition.requireData.GetValueOrDefault(false)
+                  , transition.transitionButtonType == 0 ? amorphie.workflow.core.Enums.TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(amorphie.workflow.core.Enums.TransitionButtonType.Forward).ToString()
+                       ),
+                           source = "workflow",
+                           type = "workflow",
+                           subject = eventInfo,
+                           id = instance.Id.ToString()
+                       }
+                       );
+        try
+        {
+            responseSignalRMFAType.Headers.Add("X-Device-Id", deviceid);
+        }
+        catch (Exception)
+        {
+
+        }
+        try
+        {
+            responseSignalRMFAType.Headers.Add("X-Token-Id", tokenid);
+        }
+        catch (Exception)
+        {
+
+        }
+        try
+        {
+            responseSignalRMFAType.Headers.Add("A-Customer", customerid);
+        }
+        catch (Exception)
+        {
+
+        }
+        await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
     }
     private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)

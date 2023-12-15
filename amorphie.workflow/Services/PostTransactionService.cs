@@ -47,6 +47,9 @@ public class PostTransactionService : IPostTransactionService
     private IConfiguration _configuration { get; set; }
     private IHeaderDictionary? _headerParameters { get; set; }
     private dynamic? headers { get; set; }
+    private dynamic? mfaType { get; set; } = MFATypeEnum.Public.ToString();
+
+    private Dictionary<string, string> _headerDict { get; set; }
 
     public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService, DaprClient client, IConfiguration configuration)
     {
@@ -224,10 +227,12 @@ public class PostTransactionService : IPostTransactionService
 
                 if (string.IsNullOrEmpty(_transition.FlowName))
                 {
+                    mfaType = _transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
                     return await noFlowNoInstance(started);
                 }
                 else
                 {
+                    mfaType = _transition.FromState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
                     return hasFlowNoInstance();
                 }
             }
@@ -243,11 +248,12 @@ public class PostTransactionService : IPostTransactionService
         {
             if (string.IsNullOrEmpty(_transition.FlowName))
             {
-
+                mfaType = _transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
                 return await noFlowHasInstance(instanceAtState, started);
             }
             else
             {
+                mfaType = _transition.FromState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
                 return hasFlowHasInstance(instanceAtState);
             }
         }
@@ -269,7 +275,6 @@ public class PostTransactionService : IPostTransactionService
             CreatedBy = _user,
             CreatedByBehalfOf = _behalfOfUser,
         };
-
         // _dbContext.Add(newInstance);
 
         // addInstanceTansition(newInstance);
@@ -283,7 +288,6 @@ public class PostTransactionService : IPostTransactionService
     {
 
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
-
         return await ServiceKontrol(instanceAtState, true, started);
 
 
@@ -307,7 +311,6 @@ public class PostTransactionService : IPostTransactionService
             ZeebeFlowName = _transition.FlowName,
             CreatedByBehalfOf = _behalfOfUser,
         };
-
         dynamic variables = createMessageVariables(newInstance);
 
 
@@ -525,6 +528,49 @@ public class PostTransactionService : IPostTransactionService
                         _transition.Page.Timeout), message, _data.AdditionalData, instance.WorkflowName, _transition.ToState.IsPublicForm == true ? "state" : "transition", _transition.requireData.GetValueOrDefault(false), _transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : _transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
 
                       ));
+            var responseSignalRMFAtype = _client.CreateInvokeMethodRequest<SignalRRequest>(
+                      HttpMethod.Post,
+                      hubUrl,
+                      "sendMessage/" + mfaType,
+                      new SignalRRequest()
+                      {
+                          data = new PostSignalRData(
+                            _user,
+                          instance.RecordId,
+                         eventInfo,
+                          instance.Id,
+                          instance.EntityName,
+                        _data.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), instance.StateName, _transitionName, instance.BaseStatus,
+                        _transition.Page == null ? null : eventInfo == "worker-started" ? null :
+                        new PostPageSignalRData(_transition.Page.Operation.ToString(), _transition.Page.Type.ToString(), _transition.Page.Pages == null || _transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language, _transition.Page.Pages!.FirstOrDefault()!.Label),
+                        _transition.Page.Timeout), message, _data.AdditionalData, instance.WorkflowName, _transition.ToState.IsPublicForm == true ? "state" : "transition", _transition.requireData.GetValueOrDefault(false), _transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : _transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
+
+                      ),
+                          source = "workflow",
+                          type = "workflow",
+                          subject = eventInfo,
+                          id = instance.Id.ToString()
+
+
+                      }
+                          );
+            string deviceID = string.Empty;
+            string tokenID = string.Empty;
+            string customer = string.Empty;
+
+
+            if (_headerDict.TryGetValue("xdeviceid", out deviceID))
+                responseSignalRMFAtype.Headers.Add("X-Device-Id", deviceID);
+            if (_headerDict.TryGetValue("xtokenid", out tokenID))
+                responseSignalRMFAtype.Headers.Add("X-Token-Id", deviceID);
+            if (_headerDict.TryGetValue("acustomer", out customer))
+                responseSignalRMFAtype.Headers.Add("A-Customer", customer);
+
+
+            var generarlSignalR = _client.InvokeMethodAsync<string>(responseSignalRMFAtype);
+
+
+
         }
         catch (Exception ex)
         {
@@ -546,6 +592,7 @@ public class PostTransactionService : IPostTransactionService
         }
         var serialize = System.Text.Json.JsonSerializer.Serialize(headerDict.ToDictionary(x => x.Key.Replace("-", string.Empty), x => x.Value));
         headers = System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
+        _headerDict = headerDict;
         return true;
     }
 }

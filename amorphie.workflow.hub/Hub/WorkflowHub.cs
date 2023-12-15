@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 namespace amorphie.workflow.hub
 {
@@ -17,6 +18,7 @@ namespace amorphie.workflow.hub
         public override Task OnConnectedAsync()
         {
             _logger.LogInformation($"Client Connected: {Context.ConnectionId}, user id : {Context?.User?.Identity?.Name}, user ident: {this.Context?.UserIdentifier}");
+
             Clients.All.SendAsync("ClientConnected", "Client Connected");
             return base.OnConnectedAsync();
         }

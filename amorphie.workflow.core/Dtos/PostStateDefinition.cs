@@ -3,18 +3,18 @@ using amorphie.workflow.core.Dtos;
 using amorphie.core.Enums;
 using amorphie.workflow.core.Enums;
 
-public record PostStateDefinitionRequest(string name, MultilanguageText title, StatusType baseStatus, StateType type, PostTransitionDefinitionRequest[] transitions, bool? ispublicForm, UiFormDto[]? publicForms);
+public record PostStateDefinitionRequest(string name, MultilanguageText title, StatusType baseStatus, StateType type, PostTransitionDefinitionRequest[] transitions, bool? ispublicForm, UiFormDto[]? publicForms, MFATypeEnum? mfaType);
 
 
 public record PostStartStateDefinitionRequest(string name, MultilanguageText title, StatusType baseStatus, PostTransitionDefinitionRequest[] transitions,
-bool? ispublicForm, UiFormDto[]? publicForms) :
-    PostStateDefinitionRequest(name, title, baseStatus, StateType.Start, transitions, ispublicForm, publicForms);
+bool? ispublicForm, UiFormDto[]? publicForms, MFATypeEnum? mfaType) :
+    PostStateDefinitionRequest(name, title, baseStatus, StateType.Start, transitions, ispublicForm, publicForms, mfaType);
 public record PostFinishStateDefinitionRequest(string name, MultilanguageText title, StatusType baseStatus, PostTransitionDefinitionRequest[] transitions,
- bool? ispublicForm, UiFormDto[]? publicForms) :
-    PostStateDefinitionRequest(name, title, baseStatus, StateType.Finish, transitions, ispublicForm, publicForms);
+ bool? ispublicForm, UiFormDto[]? publicForms, MFATypeEnum? mfaType) :
+    PostStateDefinitionRequest(name, title, baseStatus, StateType.Finish, transitions, ispublicForm, publicForms, mfaType);
 public record PostAutoTransitStateDefinitionRequest(string name, MultilanguageText title, StatusType baseStatus, PostTransitionDefinitionRequest[] transitions,
- long ExecuteInMinutes, bool? ispublicForm, UiFormDto[]? publicForms) :
-    PostStateDefinitionRequest(name, title, baseStatus, StateType.Standart, transitions, ispublicForm, publicForms);
+ long ExecuteInMinutes, bool? ispublicForm, UiFormDto[]? publicForms, MFATypeEnum? mfaType) :
+    PostStateDefinitionRequest(name, title, baseStatus, StateType.Standart, transitions, ispublicForm, publicForms, mfaType);
 
 
 public record PostTransitionDefinitionRequest(string name, MultilanguageText title, string toState, UiFormDto[]? form, string fromState, string? serviceName, string? message, string? gateway, PostPageDefinitionRequest? page, MultilanguageText[]? historyForms, TypeofUiEnum? typeofUi, TransitionButtonType? buttonType);
