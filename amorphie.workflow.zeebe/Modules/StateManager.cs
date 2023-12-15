@@ -95,7 +95,9 @@ public static class StateManagerModule
         Guid instanceId;
         if (!Guid.TryParse(instanceIdAsString, out instanceId))
         {
-            throw new ZeebeBussinesException("500", "InstanceId not provided or not as a GUID");
+
+            return Results.Problem("InstanceId not provided or not as a GUID");
+            //throw new ZeebeBussinesException("500", "InstanceId not provided or not as a GUID");
         }
 
         Instance? instance = await dbContext.Instances
@@ -113,7 +115,8 @@ public static class StateManagerModule
 
         if (instance is null)
         {
-            throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
+            return Results.Problem($"Instance not found with instance id : {instanceId} ");
+            //throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
         }
         bool error = false;
         Transition? transition = null;
@@ -140,7 +143,11 @@ public static class StateManagerModule
             && f.WorkflowName == instance.WorkflowName
             , cancellationToken);
             if (targetStateAsState == null)
-                throw new ZeebeBussinesException(errorMessage: $"Target state is not provided ");
+            {
+                return Results.Problem($"Target state is not provided ");
+                //throw new ZeebeBussinesException(errorMessage: $"Target state is not provided ");
+            }
+
             error = true;
             IsTargetState = true;
             transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
@@ -151,12 +158,14 @@ public static class StateManagerModule
         //var transitionData = JsonSerializer.Deserialize<dynamic>(body.GetProperty("LastTransitionData").ToString());
         if (transition is null)
         {
-            throw new ZeebeBussinesException(errorMessage: $"Transition not found with transition name : {transitionName} ");
+            return Results.Problem($"Transition not found with transition name : {transitionName} ");
+            //throw new ZeebeBussinesException(errorMessage: $"Transition not found with transition name : {transitionName} ");
         }
 
         if (!IsTargetState && transition != null && transition.ToStateName is null)
         {
-            throw new ZeebeBussinesException(errorMessage: $"Target state is not provided nor defined on transition");
+            return Results.Problem($"Target state is not provided nor defined on transition");
+            //throw new ZeebeBussinesException(errorMessage: $"Target state is not provided nor defined on transition");
         }
 
 
