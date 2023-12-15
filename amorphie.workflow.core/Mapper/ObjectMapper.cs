@@ -9,6 +9,7 @@ public class ObjectMapper
     {
         cfg.AddProfile<amorphie.workflow.core.Mapper.WorkflowMapper>();
         cfg.AddProfile<amorphie.workflow.core.Mapper.PageComponentMapper>();
+          cfg.AddProfile<amorphie.workflow.core.Mapper.SignalrMapper>();
     });
 
     return config.CreateMapper();

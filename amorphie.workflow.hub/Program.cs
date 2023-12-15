@@ -2,7 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
+using amorphie.workflow.core.Dtos;
 using amorphie.workflow.hub;
+using amorphie.workflow.hub.Module;
 using Dapr.Client;
 using IdentityModel.AspNetCore.OAuth2Introspection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -81,16 +83,18 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapHub<WorkflowHub>("/hubs/workflow");
+app.MapHub<MFATypeHub>("/hubs/genericHub");
+app.MapSignalrEndpoints();
+// app.MapPost("/sendMessage",
 
-app.MapPost("/sendMessage",
+// async Task<IResult> (IHubContext <WorkflowHub> hubContext,PostSignalRData data) =>
+// {
+//     Console.WriteLine("Hub veri gönderildi:"+data.eventInfo+" " +DateTime.Now);
+//       string jsonString = JsonSerializer.Serialize(data);
+//      await hubContext.Clients.Group(data.UserId.ToString()).SendAsync("SendMessage", jsonString);
+//    // await hubContext.Clients.All.SendAsync("SendMessage", jsonString);
+//     return Results.Ok("");
+// });
 
-async Task<IResult> (IHubContext <WorkflowHub> hubContext,PostSignalRData data) =>
-{
-    Console.WriteLine("Hub veri gönderildi:"+data.eventInfo+" " +DateTime.Now);
-      string jsonString = JsonSerializer.Serialize(data);
-    //  await hubContext.Clients.User(data.UserId.ToString()).SendAsync("SendMessage", jsonString);
-    await hubContext.Clients.All.SendAsync("SendMessage", jsonString);
-    return Results.Ok("");
-});
 
 app.Run();
