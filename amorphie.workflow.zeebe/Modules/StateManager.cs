@@ -51,6 +51,35 @@ public static class StateManagerModule
         string tokenid = string.Empty;
         string customerid = string.Empty;
         string deviceid = string.Empty;
+        string pageUrl = request.Headers["PAGE_URL"].ToString();
+        string pageOperationTypeString = request.Headers["PAGE_OPERATION_TYPE"].ToString();
+        string pageTypeString = request.Headers["PAGE_TYPE"].ToString();
+        string timeoutString = request.Headers["PAGE_TIMEOUT"].ToString();
+        int timeout = 0;
+        string pageLanguage = request.Headers["PAGE_LANGUAGE"].ToString();
+        if (!string.IsNullOrEmpty(pageUrl) && string.IsNullOrEmpty(pageOperationTypeString))
+        {
+            pageOperationTypeString = PageOperationType.Open.ToString();
+        }
+        if (!string.IsNullOrEmpty(pageUrl) && string.IsNullOrEmpty(pageTypeString))
+        {
+            pageTypeString = PageType.Normal.ToString();
+        }
+        if (!string.IsNullOrEmpty(pageUrl) && !string.IsNullOrEmpty(timeoutString))
+        {
+            try
+            {
+                timeout = Convert.ToInt32(timeoutString);
+            }
+            catch (Exception)
+            {
+                timeout = 0;
+            }
+        }
+        if (!string.IsNullOrEmpty(pageUrl) && string.IsNullOrEmpty(pageLanguage))
+        {
+            pageLanguage = "en-EN";
+        }
         try
         {
             hubMessage = body.GetProperty("message").ToString();
@@ -83,6 +112,7 @@ public static class StateManagerModule
         {
             deviceid = string.Empty;
         }
+
         //For fetching gateway from db
         // ZeebeMessage? zeebeMessage = await dbContext.ZeebeMessages.FirstOrDefaultAsync(p => p.Process == workFlowName);
         // if (zeebeMessage is null)
@@ -186,6 +216,7 @@ public static class StateManagerModule
                        instance.EntityName,
                      entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), IsTargetState && targetStateAsState != null ?
                     targetStateAsState.Name : newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
+             !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new amorphie.workflow.core.Dtos.MultilanguageText(pageLanguage, pageUrl), timeout) :
               transition.Page == null ? null :
               new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
               transition.Page.Timeout), hubMessage, additionalDataDynamic, instance.WorkflowName, transition.ToState.IsPublicForm == true ? "state" : "transition",
@@ -198,7 +229,7 @@ public static class StateManagerModule
         var responseSignalRMFAType = client.CreateInvokeMethodRequest<SignalRRequest>(
                        HttpMethod.Post,
                         hubUrl,
-                       "sendMessage" + transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower(), new SignalRRequest()
+                       "sendMessage/" + transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower(), new SignalRRequest()
                        {
                            data = new PostSignalRData(
                            newInstanceTransition.CreatedBy,
@@ -208,6 +239,7 @@ public static class StateManagerModule
                            instance.EntityName,
                          entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), IsTargetState && targetStateAsState != null ?
                         targetStateAsState.Name : newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
+                         !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new amorphie.workflow.core.Dtos.MultilanguageText(pageLanguage, pageUrl), timeout) :
                   transition.Page == null ? null :
                   new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
                   transition.Page.Timeout), hubMessage, additionalDataDynamic, instance.WorkflowName, transition.ToState.IsPublicForm == true ? "state" : "transition",
@@ -246,10 +278,6 @@ public static class StateManagerModule
         }
         await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, transitionName.ToString(), data));
-    }
-    private static void SendSignalRData(InstanceTransition instanceTransition, string eventInfo, DaprClient _client, Instance instance)
-    {
-
     }
     private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, dynamic _data)
     {
