@@ -20,9 +20,14 @@ namespace amorphie.workflow.hub
             _logger.LogInformation($"Client Connected: {Context.ConnectionId}, user id : {Context?.User?.Identity?.Name}, user ident: {this.Context?.UserIdentifier}");
             var httpCtx = Context.GetHttpContext();
             string HeaderUser = string.Empty;
+            string GroupName = string.Empty;
             try
             {
                 HeaderUser = httpCtx.Request.Headers["A-Customer"].ToString();
+                if (string.IsNullOrEmpty(HeaderUser))
+                {
+                    HeaderUser = httpCtx.Request.Headers["a-customer"].ToString();
+                }
 
             }
             catch (Exception)
@@ -33,24 +38,37 @@ namespace amorphie.workflow.hub
             try
             {
                 HeaderDeviceID = httpCtx.Request.Headers["X-Device-Id"].ToString();
+                if (string.IsNullOrEmpty(HeaderDeviceID))
+                {
+                    HeaderDeviceID = httpCtx.Request.Headers["x-device-id"].ToString();
+                }
             }
             catch (Exception)
             {
 
             }
+            GroupName = HeaderDeviceID + HeaderUser;
+            if (!string.IsNullOrEmpty(GroupName))
+                Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
             string HeaderToken = string.Empty;
             try
             {
                 HeaderToken = httpCtx.Request.Headers["X-Token-Id"].ToString();
+                if (string.IsNullOrEmpty(HeaderDeviceID))
+                {
+                    HeaderToken = httpCtx.Request.Headers["x-token-id"].ToString();
+                }
+                if (!string.IsNullOrEmpty(HeaderToken))
+                {
+                    GroupName = HeaderDeviceID + HeaderUser + HeaderToken;
+                    Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
+                }
+
             }
             catch (Exception)
             {
 
             }
-            string GroupName = HeaderDeviceID + HeaderUser + HeaderToken;
-
-            Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
-            Clients.Group(HeaderUser).SendAsync("ClientConnected", "Client Connected");
             return base.OnConnectedAsync();
         }
         public override Task OnDisconnectedAsync(Exception? exception)
