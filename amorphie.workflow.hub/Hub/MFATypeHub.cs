@@ -51,10 +51,10 @@ namespace amorphie.workflow.hub
             GroupName = HeaderDeviceID + HeaderUser;
             if (!string.IsNullOrEmpty(GroupName))
             {
-                    Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
-                      _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
+                Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
+                _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
             }
-            
+
             string HeaderToken = string.Empty;
             try
             {
@@ -67,7 +67,7 @@ namespace amorphie.workflow.hub
                 {
                     GroupName = HeaderDeviceID + HeaderUser + HeaderToken;
                     Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
-                      _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
+                    _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
                 }
 
             }
