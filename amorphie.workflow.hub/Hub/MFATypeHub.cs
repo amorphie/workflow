@@ -17,7 +17,7 @@ namespace amorphie.workflow.hub
         }
         public override Task OnConnectedAsync()
         {
-            _logger.LogInformation($"Client Connected: {Context.ConnectionId}, user id : {Context?.User?.Identity?.Name}, user ident: {this.Context?.UserIdentifier}");
+            _logger.LogInformation($"Client try to  Connect: {Context.ConnectionId}");
             var httpCtx = Context.GetHttpContext();
             string HeaderUser = string.Empty;
             string GroupName = string.Empty;
@@ -41,6 +41,7 @@ namespace amorphie.workflow.hub
                 if (string.IsNullOrEmpty(HeaderDeviceID))
                 {
                     HeaderDeviceID = httpCtx.Request.Headers["x-device-id"].ToString();
+
                 }
             }
             catch (Exception)
@@ -49,7 +50,11 @@ namespace amorphie.workflow.hub
             }
             GroupName = HeaderDeviceID + HeaderUser;
             if (!string.IsNullOrEmpty(GroupName))
-                Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
+            {
+                    Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
+                      _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
+            }
+            
             string HeaderToken = string.Empty;
             try
             {
@@ -62,6 +67,7 @@ namespace amorphie.workflow.hub
                 {
                     GroupName = HeaderDeviceID + HeaderUser + HeaderToken;
                     Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
+                      _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
                 }
 
             }
