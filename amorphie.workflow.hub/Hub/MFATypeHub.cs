@@ -23,11 +23,11 @@ namespace amorphie.workflow.hub
             string GroupName = string.Empty;
             Console.WriteLine("Header----------");
             Console.WriteLine(httpCtx.Request.QueryString.Value);
-            // foreach (var item in httpCtx.Request.QueryString.Value)
-            // {
+            foreach (var item in httpCtx.Request.Query)
+            {
 
-            //     Console.WriteLine(item.Key + ":" + item.Value);
-            // }
+                Console.WriteLine(item.Key + ":" + item.Value);
+            }
             Console.WriteLine("---------------");
             try
             {
@@ -45,6 +45,7 @@ namespace amorphie.workflow.hub
             string HeaderDeviceID = string.Empty;
             try
             {
+                Console.WriteLine(httpCtx.Request.Query["X-Device-Id"].ToString());
                 HeaderDeviceID = httpCtx.Request.Query["X-Device-Id"].ToString();
                 if (string.IsNullOrEmpty(HeaderDeviceID))
                 {
