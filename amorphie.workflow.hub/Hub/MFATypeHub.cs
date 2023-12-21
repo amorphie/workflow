@@ -23,7 +23,7 @@ namespace amorphie.workflow.hub
             string GroupName = string.Empty;
             foreach (var item in httpCtx.Request.Headers)
             {
-                _logger.LogInformation($"{item.Key}:{item.Value}");
+                _logger.LogInformation($"Header-{item.Key}:{item.Value}");
             }
             try
             {
