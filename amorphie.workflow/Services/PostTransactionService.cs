@@ -562,7 +562,7 @@ public class PostTransactionService : IPostTransactionService
             if (_headerDict.TryGetValue("xdeviceid", out deviceID))
                 responseSignalRMFAtype.Headers.Add("X-Device-Id", deviceID);
             if (_headerDict.TryGetValue("xtokenid", out tokenID))
-                responseSignalRMFAtype.Headers.Add("X-Token-Id", deviceID);
+                responseSignalRMFAtype.Headers.Add("X-Token-Id", tokenID);
             if (_headerDict.TryGetValue("acustomer", out customer))
                 responseSignalRMFAtype.Headers.Add("A-Customer", customer);
 
