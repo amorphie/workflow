@@ -28,19 +28,15 @@ public static class SendSignalrModule
     static async Task<IResult> SendMessagePublic(
      IHubContext<MFATypeHub> hubContext,
      SignalRRequest data,
-     [FromHeader(Name = "A-Customer")] string? customer,
-      [FromHeader(Name = "X-Device-Id")] string? deviceId
+      [FromHeader(Name = "X-Device-Id")] string? deviceId,
+         [FromHeader(Name = "X-Token-Id")] string? tokenId
       )
     {
-        Console.WriteLine("Public hub veri geldi:" + data.source + " device:" + deviceId + " " + DateTime.Now);
+        Console.WriteLine("Public hub veri geldi:" + data.source + " device:" + deviceId + " " + "token:"+tokenId);
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
-        response.deviceId = deviceId;
         string jsonString = JsonSerializer.Serialize(data);
-        if (string.IsNullOrEmpty(customer))
-            await hubContext.Clients.Group(deviceId).SendAsync("SendMessage", jsonString);
-        if (!string.IsNullOrEmpty(customer))
-            await hubContext.Clients.Group(deviceId + customer).SendAsync("SendMessage", jsonString);
+        await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
         return Results.Ok("");
     }
     static async Task<IResult> SendMessagePrivate(IHubContext<MFATypeHub> hubContext,
@@ -49,15 +45,13 @@ public static class SendSignalrModule
       [FromHeader(Name = "X-Device-Id")] string? deviceId,
       [FromHeader(Name = "X-Token-Id")] string? tokenId)
     {
-        Console.WriteLine("Private hub veri geldi:" + data.source + " device:" + deviceId + " " + DateTime.Now);
+        Console.WriteLine("Private hub veri geldi:" + data.source + " device:" + deviceId  + " token:"
+         + tokenId+ " " + " customer:" + customer + DateTime.Now);
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
         response.deviceId = deviceId;
         string jsonString = JsonSerializer.Serialize(data);
-        if (string.IsNullOrEmpty(customer))
-            await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
-        if (!string.IsNullOrEmpty(customer))
-            await hubContext.Clients.Group(deviceId + customer + tokenId).SendAsync("SendMessage", jsonString);
+            await hubContext.Clients.Group(deviceId  + tokenId+customer).SendAsync("SendMessage", jsonString);
         return Results.Ok("");
     }
 
