@@ -96,5 +96,14 @@ app.MapSignalrEndpoints();
 //     return Results.Ok("");
 // });
 
+app.Use((context, next) => {   
+     Console.WriteLine("Middleware Header----------");
+            foreach (var item in context.Request.Headers)
+            {
+               
+                Console.WriteLine(item.Key+":"+item.Value);
+            }
+            Console.WriteLine("---------------------");
+      return next(context); });
 
 app.Run();
