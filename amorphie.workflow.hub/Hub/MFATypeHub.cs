@@ -22,68 +22,39 @@ namespace amorphie.workflow.hub
             string HeaderUser = string.Empty;
             string GroupName = string.Empty;
             Console.WriteLine("Header----------");
-            Console.WriteLine(httpCtx.Request.QueryString.Value);
             foreach (var item in httpCtx.Request.Query)
             {
 
                 Console.WriteLine(item.Key + ":" + item.Value);
             }
             Console.WriteLine("---------------");
-            try
-            {
-                HeaderUser = httpCtx.Request.Query["A-Customer"].ToString();
-                if (string.IsNullOrEmpty(HeaderUser))
-                {
-                    HeaderUser = httpCtx.Request.Query["a-customer"].ToString();
-                }
 
-            }
-            catch (Exception)
-            {
-
-            }
             string HeaderDeviceID = string.Empty;
-            try
+            HeaderDeviceID = httpCtx.Request.Query["X-Device-Id"].ToString();
+            if (string.IsNullOrEmpty(HeaderDeviceID))
             {
-                Console.WriteLine(httpCtx.Request.Query["X-Device-Id"].ToString());
-                HeaderDeviceID = httpCtx.Request.Query["X-Device-Id"].ToString();
-                if (string.IsNullOrEmpty(HeaderDeviceID))
-                {
-                    HeaderDeviceID = httpCtx.Request.Query["x-device-id"].ToString();
-
-                }
-            }
-            catch (Exception)
-            {
+                HeaderDeviceID = httpCtx.Request.Query["x-device-id"].ToString();
 
             }
-            GroupName = HeaderDeviceID + HeaderUser;
-            if (!string.IsNullOrEmpty(GroupName))
+            if (string.IsNullOrEmpty(HeaderDeviceID))
             {
-                Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
-                _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
+                throw new Exception("X-Device-Id can not be null");
             }
-
             string HeaderToken = string.Empty;
-            try
+            HeaderToken = httpCtx.Request.Query["X-Token-Id"].ToString();
+            if (string.IsNullOrEmpty(HeaderDeviceID))
             {
-                HeaderToken = httpCtx.Request.Query["X-Token-Id"].ToString();
-                if (string.IsNullOrEmpty(HeaderDeviceID))
-                {
-                    HeaderToken = httpCtx.Request.Query["x-token-id"].ToString();
-                }
-                if (!string.IsNullOrEmpty(HeaderToken))
-                {
-                    GroupName = HeaderDeviceID + HeaderUser + HeaderToken;
-                    Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
-                    _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
-                }
-
+                HeaderToken = httpCtx.Request.Query["x-token-id"].ToString();
             }
-            catch (Exception)
+            if (string.IsNullOrEmpty(HeaderToken))
             {
-
+                throw new Exception("X-Token-Id can not be null");
             }
+
+            GroupName = HeaderDeviceID + HeaderToken;
+
+            Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
+            _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
             return base.OnConnectedAsync();
         }
         public override Task OnDisconnectedAsync(Exception? exception)
