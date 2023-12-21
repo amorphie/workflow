@@ -22,11 +22,12 @@ namespace amorphie.workflow.hub
             string HeaderUser = string.Empty;
             string GroupName = string.Empty;
             Console.WriteLine("Header----------");
-            foreach (var item in httpCtx.Request.Headers)
-            {
+            Console.WriteLine(httpCtx.Request.QueryString.Value);
+            // foreach (var item in httpCtx.Request.QueryString.Value)
+            // {
 
-                Console.WriteLine(item.Key + ":" + item.Value);
-            }
+            //     Console.WriteLine(item.Key + ":" + item.Value);
+            // }
             Console.WriteLine("---------------");
             try
             {
