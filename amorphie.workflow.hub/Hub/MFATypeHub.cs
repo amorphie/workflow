@@ -21,10 +21,13 @@ namespace amorphie.workflow.hub
             var httpCtx = Context.GetHttpContext();
             string HeaderUser = string.Empty;
             string GroupName = string.Empty;
+            Console.WriteLine("Header----------");
             foreach (var item in httpCtx.Request.Headers)
             {
-                _logger.LogInformation($"Header-{item.Key}:{item.Value}");
+
+                Console.WriteLine(item.Key + ":" + item.Value);
             }
+            Console.WriteLine("---------------");
             try
             {
                 HeaderUser = httpCtx.Request.Headers["A-Customer"].ToString();
