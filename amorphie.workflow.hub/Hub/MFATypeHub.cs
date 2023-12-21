@@ -21,9 +21,9 @@ namespace amorphie.workflow.hub
             var httpCtx = Context.GetHttpContext();
             string HeaderUser = string.Empty;
             string GroupName = string.Empty;
-             foreach(var item in httpCtx.Request.Headers)
+            foreach (var item in httpCtx.Request.Headers)
             {
-                 _logger.LogInformation($"{item.Key}:{item.Value}");
+                _logger.LogInformation($"{item.Key}:{item.Value}");
             }
             try
             {
