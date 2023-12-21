@@ -24,8 +24,8 @@ namespace amorphie.workflow.hub
             Console.WriteLine("Header----------");
             foreach (var item in httpCtx.Request.Headers)
             {
-               
-                Console.WriteLine(item.Key+":"+item.Value);
+
+                Console.WriteLine(item.Key + ":" + item.Value);
             }
             Console.WriteLine("---------------");
             try
