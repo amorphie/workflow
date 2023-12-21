@@ -31,10 +31,10 @@ namespace amorphie.workflow.hub
             Console.WriteLine("---------------");
             try
             {
-                HeaderUser = httpCtx.Request.Headers["A-Customer"].ToString();
+                HeaderUser = httpCtx.Request.Query["A-Customer"].ToString();
                 if (string.IsNullOrEmpty(HeaderUser))
                 {
-                    HeaderUser = httpCtx.Request.Headers["a-customer"].ToString();
+                    HeaderUser = httpCtx.Request.Query["a-customer"].ToString();
                 }
 
             }
@@ -45,10 +45,10 @@ namespace amorphie.workflow.hub
             string HeaderDeviceID = string.Empty;
             try
             {
-                HeaderDeviceID = httpCtx.Request.Headers["X-Device-Id"].ToString();
+                HeaderDeviceID = httpCtx.Request.Query["X-Device-Id"].ToString();
                 if (string.IsNullOrEmpty(HeaderDeviceID))
                 {
-                    HeaderDeviceID = httpCtx.Request.Headers["x-device-id"].ToString();
+                    HeaderDeviceID = httpCtx.Request.Query["x-device-id"].ToString();
 
                 }
             }
@@ -66,10 +66,10 @@ namespace amorphie.workflow.hub
             string HeaderToken = string.Empty;
             try
             {
-                HeaderToken = httpCtx.Request.Headers["X-Token-Id"].ToString();
+                HeaderToken = httpCtx.Request.Query["X-Token-Id"].ToString();
                 if (string.IsNullOrEmpty(HeaderDeviceID))
                 {
-                    HeaderToken = httpCtx.Request.Headers["x-token-id"].ToString();
+                    HeaderToken = httpCtx.Request.Query["x-token-id"].ToString();
                 }
                 if (!string.IsNullOrEmpty(HeaderToken))
                 {
