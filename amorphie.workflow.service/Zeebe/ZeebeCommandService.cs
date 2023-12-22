@@ -52,7 +52,7 @@ namespace amorphie.workflow.service.Zeebe
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine("ThrowError Exception" + ex.ToString());
             }
 
         }
