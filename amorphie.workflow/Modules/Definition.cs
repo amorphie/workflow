@@ -1123,9 +1123,11 @@ CancellationToken cancellationToken
         var existingRecord = context.States!.Include(w => w.Titles)
         .Include(w => w.Descriptions)
          .Include(w => w.PublicForms)
+          .Include(w => w.UiForms).ThenInclude(s => s.Forms)
         .Include(w => w.Transitions).ThenInclude(s => s.Titles)
         .Include(w => w.Transitions).ThenInclude(s => s.Pages)
         .Include(w => w.Transitions).ThenInclude(s => s.Forms)
+        .Include(w => w.Transitions).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms)
        .FirstOrDefault(w => w.WorkflowName == definition && w.Name == state)
        ;
 
@@ -1210,14 +1212,14 @@ CancellationToken cancellationToken
                     Name = x.name,
                     ServiceName = x.serviceName,
                     TypeofUi = x.typeofUi,
-                    Flow = x.message == null ? null : new ZeebeMessage()
+                    Flow = string.IsNullOrEmpty(x.message) ? null :context.ZeebeMessages.FirstOrDefault(f=>x.message==f.Message)==null? new ZeebeMessage()
                     {
                         Name = x.message,
                         Message = x.message,
                         Gateway = x.gateway!,
                         CreatedAt = DateTime.UtcNow,
                         Process = definition,
-                    },
+                    }:context.ZeebeMessages.FirstOrDefault(f=>x.message==f.Message),
                     Page = x.page == null ? null : new Page()
                     {
                         Operation = x.page!.operation,
@@ -1401,7 +1403,15 @@ CancellationToken cancellationToken
                         ToStateName = context!.States!.FirstOrDefault(f => f.Name == req.toState) != null ? req.toState : string.Empty,
                         ToState = context!.States!.FirstOrDefault(f => f.Name == req.toState),
                         ServiceName = req.serviceName,
-
+                        FlowName=string.IsNullOrEmpty(req.message)?null:req.message,
+                        Flow = string.IsNullOrEmpty(req.message) ? null :context.ZeebeMessages.FirstOrDefault(f=>req.message==f.Message)==null? new ZeebeMessage()
+                    {
+                        Name = req.message,
+                        Message = req.message,
+                        Gateway = req.gateway!,
+                        CreatedAt = DateTime.UtcNow,
+                        Process = definition
+                    }:context.ZeebeMessages.FirstOrDefault(f=>req.message==f.Message),
                         Titles = new List<Translation>(){
                             new Translation(){
                                 Label=req.title.label,
