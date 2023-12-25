@@ -280,6 +280,7 @@ public static class InstanceModule
             viewSource = s.IsPublicForm == true ? "state" : "transition",
             transition = s.Transitions.Select(t => new InitTransition()
             {
+                type = t.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
                 requireData = t.requireData,
                 transition = t.Name,
                 hasViewVariant = t.UiForms.Any() && t.UiForms.Count() > 1 ? true : false
