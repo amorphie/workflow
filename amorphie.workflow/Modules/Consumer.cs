@@ -366,18 +366,6 @@ public static class ConsumerModule
             result = await service.Execute();
         }
 
-        // var response = client.InvokeMethodAsync<PostPublishStatusRequest, string>(
-        //     HttpMethod.Post,
-        //     "amorphie-workflow-hub.test-amorphie-workflow-hub",
-        //     "workflow/publish-status",
-        //     new PostPublishStatusRequest(
-        //         recordId,
-        //         "SendOtp",
-        //         "SendOtp",
-        //         "SendOtp"
-        //     ));
-
-
         return result;
     }
 

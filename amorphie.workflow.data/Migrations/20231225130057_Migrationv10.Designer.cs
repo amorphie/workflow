@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -11,9 +12,11 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20231225130057_Migrationv10")]
+    partial class Migrationv10
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -206,106 +209,6 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("InstanceTransitions");
                 });
 
-            modelBuilder.Entity("MessageSubscription", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("BpmnProcessId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("BrokerVersion")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CorrelationKey")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("Deadline")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ElementId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Intent")
-                        .HasColumnType("text");
-
-                    b.Property<long>("Key")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("MessageKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("MessageName")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("ProcessDefinitionKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ProcessInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("RecordType")
-                        .HasColumnType("text");
-
-                    b.Property<int>("RecordVersion")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RedisId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RejectionReason")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RejectionType")
-                        .HasColumnType("text");
-
-                    b.Property<int>("SourceRecordPosition")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TenantId")
-                        .HasColumnType("text");
-
-                    b.Property<long>("Timestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ValueType")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Variables")
-                        .HasColumnType("jsonb");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("MessageSubscriptions");
-                });
-
             modelBuilder.Entity("Page", b =>
                 {
                     b.Property<Guid>("Id")
@@ -422,116 +325,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PageComponentUiModels");
-                });
-
-            modelBuilder.Entity("ProcessInstance", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("BpmnElementType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("BpmnEventType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("BpmnProcessId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("BrokerVersion")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ElementId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("FlowScopeKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("InstanceId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Intent")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("Key")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("ParentElementInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ParentProcessInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("PartitionId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("ProcessDefinitionKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ProcessInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("RecordType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RedisId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RejectionReason")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RejectionType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("SourceRecordPosition")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("Timestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ValueType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ProcessInstances");
                 });
 
             modelBuilder.Entity("State", b =>

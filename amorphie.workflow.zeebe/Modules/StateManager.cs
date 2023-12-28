@@ -2,6 +2,7 @@ using System.Dynamic;
 using System.Text.Json;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
+using amorphie.workflow.core.Helper;
 using amorphie.workflow.service.Zeebe;
 using AutoMapper.Configuration.Annotations;
 using Dapr.Client;
@@ -64,7 +65,7 @@ public static class StateManagerModule
         }
         if (!string.IsNullOrEmpty(pageUrl) && string.IsNullOrEmpty(pageTypeString))
         {
-            pageTypeString = PageType.Normal.ToString();
+            pageTypeString = EnumHelper.GetDescription<NavigationType>(NavigationType.PushReplacement);
         }
         if (!string.IsNullOrEmpty(pageUrl) && !string.IsNullOrEmpty(timeoutString))
         {
@@ -212,7 +213,17 @@ public static class StateManagerModule
         (newInstanceTransition, additionalDataDynamic, entityDataDynamic, hubMessage, dynamic? data, string eventInfo) = ((InstanceTransition, dynamic, dynamic, string, dynamic?, string))await SetInstanceTransition(dbContext, transition, instance, transitionName, error, body, IsTargetState, targetStateAsState, cancellationToken);
         string hubUrl = configuration["hubUrl"]!.ToString();
         Console.WriteLine(hubUrl);
+        string pageTypeStringBYTransition = string.Empty;
+        if (transition.Page != null)
+            try
+            {
 
+                pageTypeStringBYTransition = EnumHelper.GetDescription<NavigationType>(((NavigationType)transition.Page.Type));
+            }
+            catch (Exception)
+            {
+                pageTypeStringBYTransition = string.Empty;
+            }
         var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
                    HttpMethod.Post,
                     hubUrl,
@@ -227,7 +238,7 @@ public static class StateManagerModule
                     targetStateAsState.Name : newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
              !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new amorphie.workflow.core.Dtos.MultilanguageText(pageLanguage, pageUrl), timeout) :
               transition.Page == null ? null :
-              new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
+              new PostPageSignalRData(transition.Page.Operation.ToString(), pageTypeStringBYTransition, transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
               transition.Page.Timeout), hubMessage, hubErrorCode, additionalDataDynamic, instance.WorkflowName, transition.ToState.IsPublicForm == true ? "state" : "transition",
               transition.requireData.GetValueOrDefault(false)
               , transition.transitionButtonType == 0 ? amorphie.workflow.core.Enums.TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(amorphie.workflow.core.Enums.TransitionButtonType.Forward).ToString()
@@ -250,7 +261,7 @@ public static class StateManagerModule
                         targetStateAsState.Name : newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
                          !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new amorphie.workflow.core.Dtos.MultilanguageText(pageLanguage, pageUrl), timeout) :
                   transition.Page == null ? null :
-                  new PostPageSignalRData(transition.Page.Operation.ToString(), transition.Page.Type.ToString(), transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
+                  new PostPageSignalRData(transition.Page.Operation.ToString(), pageTypeStringBYTransition, transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
                   transition.Page.Timeout), hubMessage, hubErrorCode, additionalDataDynamic, instance.WorkflowName, transition.ToState.IsPublicForm == true ? "state" : "transition",
                   transition.requireData.GetValueOrDefault(false)
                   , transition.transitionButtonType == 0 ? amorphie.workflow.core.Enums.TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(amorphie.workflow.core.Enums.TransitionButtonType.Forward).ToString()
