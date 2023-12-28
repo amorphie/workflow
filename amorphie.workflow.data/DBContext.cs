@@ -31,6 +31,10 @@ public class WorkflowDBContext : DbContext
     public DbSet<PageComponentUiModel> PageComponentUiModels { get; set; } = default!;
     public DbSet<UiForm> UiForms { get; set; } = default!;
     public DbSet<FlowHeader> FlowHeaders { get; set; } = default!;
+    #region Data received from ZeebeGateway
+    public DbSet<ProcessInstance> ProcessInstances { get; set; } = default!;
+    public DbSet<MessageSubscription> MessageSubscriptions { get; set; } = default!;
+    #endregion
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -170,5 +174,15 @@ public class WorkflowDBContext : DbContext
         // modelBuilder.SeedUserLifecycle();
 
         //modelBuilder.SeedRetailLoanWorkflow();
+
+        
+        modelBuilder.Entity<ProcessInstance>()
+        .HasKey(p => p.Id);
+
+        modelBuilder.Entity<MessageSubscription>()
+        .HasKey(p => p.Id);
+        modelBuilder.Entity<MessageSubscription>()
+        .Property(p=>p.Variables)
+        .HasColumnType("jsonb");
     }
 }

@@ -1,0 +1,3 @@
+-- Database migration an apply command
+    dotnet-ef migrations add [Give a MigrationName]
+    dotnet-ef database update
