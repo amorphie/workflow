@@ -51,8 +51,12 @@ public class WorkflowDBContext : DbContext
             .WithMany(w => w.Entities);
 
         modelBuilder.Entity<State>()
-           .HasKey(s => s.Name);
-
+           .HasKey(s => s.Name)
+           ;
+   modelBuilder.Entity<State>()
+          .HasOne(w => w.Workflow)
+            .WithMany(w => w.States);
+           ;
         modelBuilder.Entity<Transition>()
            .HasKey(s => s.Name);
 

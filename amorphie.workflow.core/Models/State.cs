@@ -22,6 +22,9 @@ public class State : EntityBaseWithOutId
     public StatusType BaseStatus { get; set; }
     public StateType Type { get; set; }
     public amorphie.workflow.core.Enums.MFATypeEnum? MFAType { get; set; }
+
+    public Workflow? SubWorkflow { get; set; }
+    public string? SubWorkflowName { get; set; }
 }
 
 

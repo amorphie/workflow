@@ -175,7 +175,11 @@ public class PostTransactionService : IPostTransactionService
         }
         if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName) && !(_activeInstances.Count == 0 && _transition.FromState.Type == StateType.Start))
         {
-            if (_transition.FromState.Type == StateType.Start && _transition.FromState.Workflow!.Entities.Any(a => a.IsStateManager == false))
+            if (_transition.FromState.Type == StateType.Start &&
+            (
+                (_transition.FromState.Workflow!.Entities.Any(a => a.IsStateManager == false))
+            || (lastInstance.State.Type == StateType.SubWorkflow)
+            ))
             {
 
             }
@@ -511,6 +515,17 @@ public class PostTransactionService : IPostTransactionService
     {
         try
         {
+            string pageTypeStringBYTransition = string.Empty;
+            if (_transition.Page != null)
+                try
+                {
+
+                    pageTypeStringBYTransition = amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(((NavigationType)_transition.Page.Type));
+                }
+                catch (Exception)
+                {
+                    pageTypeStringBYTransition = string.Empty;
+                }
             string hubUrl = _configuration["hubUrl"]!.ToString();
             var responseSignalR = _client.InvokeMethodAsync<PostSignalRData, string>(
                       HttpMethod.Post,
@@ -524,8 +539,8 @@ public class PostTransactionService : IPostTransactionService
                           instance.EntityName,
                         _data.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), instance.StateName, _transitionName, instance.BaseStatus,
                         _transition.Page == null ? null : eventInfo == "worker-started" ? null :
-                        new PostPageSignalRData(_transition.Page.Operation.ToString(), _transition.Page.Type.ToString(), _transition.Page.Pages == null || _transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language, _transition.Page.Pages!.FirstOrDefault()!.Label),
-                        _transition.Page.Timeout), message,string.Empty, _data.AdditionalData, instance.WorkflowName, _transition.ToState.IsPublicForm == true ? "state" : "transition", _transition.requireData.GetValueOrDefault(false), _transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : _transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
+                        new PostPageSignalRData(_transition.Page.Operation.ToString(),pageTypeStringBYTransition, _transition.Page.Pages == null || _transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language, _transition.Page.Pages!.FirstOrDefault()!.Label),
+                        _transition.Page.Timeout), message, string.Empty, _data.AdditionalData, instance.WorkflowName, _transition.ToState.IsPublicForm == true ? "state" : "transition", _transition.requireData.GetValueOrDefault(false), _transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : _transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
 
                       ));
             var responseSignalRMFAtype = _client.CreateInvokeMethodRequest<SignalRRequest>(
@@ -542,8 +557,8 @@ public class PostTransactionService : IPostTransactionService
                           instance.EntityName,
                         _data.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), instance.StateName, _transitionName, instance.BaseStatus,
                         _transition.Page == null ? null : eventInfo == "worker-started" ? null :
-                        new PostPageSignalRData(_transition.Page.Operation.ToString(), _transition.Page.Type.ToString(), _transition.Page.Pages == null || _transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language, _transition.Page.Pages!.FirstOrDefault()!.Label),
-                        _transition.Page.Timeout), message,string.Empty, _data.AdditionalData, instance.WorkflowName, _transition.ToState.IsPublicForm == true ? "state" : "transition", _transition.requireData.GetValueOrDefault(false), _transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : _transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
+                        new PostPageSignalRData(_transition.Page.Operation.ToString(), pageTypeStringBYTransition, _transition.Page.Pages == null || _transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language, _transition.Page.Pages!.FirstOrDefault()!.Label),
+                        _transition.Page.Timeout), message, string.Empty, _data.AdditionalData, instance.WorkflowName, _transition.ToState.IsPublicForm == true ? "state" : "transition", _transition.requireData.GetValueOrDefault(false), _transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : _transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
 
                       ),
                           source = "workflow",
