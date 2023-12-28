@@ -90,7 +90,7 @@ public static class StateManagerModule
         {
             hubMessage = string.Empty;
         }
-          try
+        try
         {
             hubErrorCode = body.GetProperty("errorCode").ToString();
         }
