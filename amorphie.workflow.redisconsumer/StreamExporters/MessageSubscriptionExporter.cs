@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters
 {
-    internal class MessageSubscriptionExporter :IExporter
+    internal class MessageSubscriptionExporter : IExporter
     {
         public async Task Attach(IDatabase redisDb, CancellationToken cancellationToken)
         {
-            
+
             if (!await redisDb.KeyExistsAsync(ZeebeStreamKeys.MESSAGE_SUBSCRIPTION) || (await redisDb.StreamGroupInfoAsync(ZeebeStreamKeys.MESSAGE_SUBSCRIPTION)).All(x => x.Name != ZeebeStreamKeys.MESSAGE_SUBSCRIPTION_GROUP))
             {
                 await redisDb.StreamCreateConsumerGroupAsync(ZeebeStreamKeys.MESSAGE_SUBSCRIPTION, ZeebeStreamKeys.MESSAGE_SUBSCRIPTION_GROUP, "0-0", true);

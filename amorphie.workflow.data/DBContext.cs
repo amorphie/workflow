@@ -175,14 +175,14 @@ public class WorkflowDBContext : DbContext
 
         //modelBuilder.SeedRetailLoanWorkflow();
 
-        
+
         modelBuilder.Entity<ProcessInstance>()
         .HasKey(p => p.Id);
 
         modelBuilder.Entity<MessageSubscription>()
         .HasKey(p => p.Id);
         modelBuilder.Entity<MessageSubscription>()
-        .Property(p=>p.Variables)
+        .Property(p => p.Variables)
         .HasColumnType("jsonb");
     }
 }
