@@ -33,13 +33,15 @@ services:
       - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_BULK_SIZE=1
       - ZEEBE_LOG_LEVEL=debug
       - ZEEBE_REDIS_REMOTE_ADDRESS=redis://redis:6379
-      - ZEEBE_REDIS_TIME_TO_LIVE_IN_SECONDS=900
+      - ZEEBE_REDIS_CLEANUP_CYCLE_IN_SECONDS=0
+      - ZEEBE_REDIS_MIN_TIME_TO_LIVE_IN_SECONDS=0
+      - ZEEBE_REDIS_MAX_TIME_TO_LIVE_IN_SECONDS=0
     ports:
       - "26500:26500"
       - "9600:9600"
     volumes:
       - ./application.yaml:/usr/local/zeebe/config/application.yaml
-      - ./zeebe-exporters/zeebe-redis-exporter-0.9.2-jar-with-dependencie.jar:/usr/local/zeebe/exporters/zeebe-redis-exporter-jar-with-dependencies.jar
+      - ./zeebe-exporters/zeebe-redis-exporter-0.9.9-jar-with-dependencies.jar:/usr/local/zeebe/exporters/zeebe-redis-exporter-jar-with-dependencies.jar
     networks:
       - bbt-development
 
