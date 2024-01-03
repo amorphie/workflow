@@ -1188,7 +1188,7 @@ CancellationToken cancellationToken
                 CreatedByBehalfOf = Guid.NewGuid(),
                 Type = data.type,
                 IsPublicForm = data.ispublicForm,
-                SubWorkflowName=string.IsNullOrEmpty(data.subWorkflowName)?null:data.subWorkflowName,
+                SubWorkflowName = string.IsNullOrEmpty(data.subWorkflowName) ? null : data.subWorkflowName,
                 MFAType = data.mfaType,
                 InitPageName=data.type==StateType.Start?data.initPageName:string.Empty,
                 PublicForms = data.ispublicForm == true && data.publicForms.Any() && data.publicForms.First().forms.Any() ? data.publicForms.FirstOrDefault().forms.Select(s => new Translation()
@@ -1300,9 +1300,9 @@ CancellationToken cancellationToken
                 existingRecord.Type = data.type;
 
             }
-             if (!string.IsNullOrEmpty(data.subWorkflowName)&&
-             data.type==StateType.SubWorkflow&&
-             existingRecord.SubWorkflowName != data.subWorkflowName )
+            if (!string.IsNullOrEmpty(data.subWorkflowName) &&
+            data.type == StateType.SubWorkflow &&
+            existingRecord.SubWorkflowName != data.subWorkflowName)
             {
                 hasChanges = true;
                 existingRecord.SubWorkflowName = data.subWorkflowName;
