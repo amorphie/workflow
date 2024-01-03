@@ -176,12 +176,12 @@ public class PostTransactionService : IPostTransactionService
         }
         if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName) && !(_activeInstances.Count == 0 && _transition.FromState.Type == StateType.Start))
         {
-            if (_transition.FromState.Type == StateType.Start &&
+            if ((_transition.FromState.Type == StateType.Start &&
             (
                 (_transition.FromState.Workflow!.Entities.Any(a => a.IsStateManager == false))
             || (lastInstance.State.Type == StateType.SubWorkflow)
-            || (_transition.transitionButtonType == TransitionButtonType.Back)
-            ))
+           
+            )) || (_transition.transitionButtonType == TransitionButtonType.Back))
             {
 
             }
