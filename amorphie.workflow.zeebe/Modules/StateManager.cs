@@ -337,10 +337,11 @@ public static class StateManagerModule
             data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
         }
         else
-        {
-            newInstanceTransition = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
+         {
+          InstanceTransition?  newInstanceTransitionForName = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
             .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.Transition!.FromStateName == transition.FromStateName, cancellationToken);
-
+           newInstanceTransition = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
+            .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.Transition!.FromStateName == transition.FromStateName, cancellationToken);
 
             try
             {
@@ -349,13 +350,13 @@ public static class StateManagerModule
             catch
             {
                 transitionDataFound = false;
-                updateName = deleteUnAllowedCharecters(newInstanceTransition.TransitionName);
+                updateName = deleteUnAllowedCharecters(newInstanceTransitionForName!.TransitionName);
                 data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
 
                 newInstanceTransition!.AdditionalData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData").ToString();
                 try
                 {
-                    if (!string.IsNullOrEmpty(newInstanceTransition!.AdditionalData))
+                    if (!string.IsNullOrEmpty(newInstanceTransitionForName!.AdditionalData))
                         additionalDataDynamic = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData");
                     else
                     {

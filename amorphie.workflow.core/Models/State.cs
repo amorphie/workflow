@@ -25,6 +25,7 @@ public class State : EntityBaseWithOutId
 
     public Workflow? SubWorkflow { get; set; }
     public string? SubWorkflowName { get; set; }
+    public string? InitPageName { get; set; }
 }
 
 

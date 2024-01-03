@@ -11,6 +11,9 @@ public class GetRecordWorkflowInit
     [JsonPropertyName("view-source")]
     public string? viewSource { get; set; }
     public List<InitTransition>? transition { get; set; }
+   [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("init-page-name")]
+    public string? initPageName { get; set; }
 }
 public class InstanceStateTransitions : GetRecordWorkflowInit
 {

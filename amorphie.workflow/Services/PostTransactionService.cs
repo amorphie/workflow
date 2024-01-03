@@ -121,7 +121,8 @@ public class PostTransactionService : IPostTransactionService
         //Bu durum ortadan kalktığında kaldırılacak
         WorkflowEntity? entity = _transition.FromState.Workflow!.Entities.OrderByDescending(c => c.Name).FirstOrDefault();
         _entity = entity != null ? entity.Name : string.Empty;
-        _activeInstance = await _dbContext.Instances.Where(i => i.Id == instanceId).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
+        _activeInstance = await _dbContext.Instances.Where(i => i.Id == instanceId)
+        .Include(s=>s.State).Include(w => w.Workflow).OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
         _activeInstances = new List<Instance>();
         if (_activeInstance != null)
             _activeInstances.Add(_activeInstance);
@@ -179,6 +180,7 @@ public class PostTransactionService : IPostTransactionService
             (
                 (_transition.FromState.Workflow!.Entities.Any(a => a.IsStateManager == false))
             || (lastInstance.State.Type == StateType.SubWorkflow)
+            ||(_transition.transitionButtonType==TransitionButtonType.Back)
             ))
             {
 

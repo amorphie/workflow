@@ -278,11 +278,13 @@ public static class InstanceModule
         {
             state = s.Name,
             viewSource = s.IsPublicForm == true ? "state" : "transition",
+            initPageName=s.InitPageName,
             transition = s.Transitions.Select(t => new InitTransition()
             {
                 type = t.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
                 requireData = t.requireData,
                 transition = t.Name,
+                
                 hasViewVariant = t.UiForms.Any() && t.UiForms.Count() > 1 ? true : false
             }).ToList(),
         }).FirstOrDefaultAsync(cancellationToken);
@@ -637,6 +639,7 @@ public static class InstanceModule
   )
     {
         var instance = await context.Instances!.Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(s => s.UiForms)
+        .Include(s => s.State).ThenInclude(s => s.SubWorkflow).ThenInclude(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.UiForms)
    .FirstOrDefaultAsync(w => w.Id == instanceId, cancellationToken)
    ;
         if (instance == null)
@@ -651,13 +654,22 @@ public static class InstanceModule
                               state = instance.StateName,
                               baseState = instance.BaseStatus.ToString(),
                               viewSource = instance.State.IsPublicForm == true ? "state" : "transition",
-                              transition = instance.State.Transitions.Select(t => new InitTransition()
+                                transition =instance.State.Type!=StateType.SubWorkflow? instance.State.Transitions.Select(t => new InitTransition()
+                              {
+                                  requireData = t.requireData,
+                                  transition = t.Name,
+                                  type = t.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
+                                  hasViewVariant = t.UiForms.Any() && t.UiForms.Count() > 1 ? true : false
+                              }).ToList():
+                              instance.State.SubWorkflow?.States.Where(w =>  w.Type == StateType.Start)
+                              .FirstOrDefault()?.Transitions.Select(t => new InitTransition()
                               {
                                   requireData = t.requireData,
                                   transition = t.Name,
                                   type = t.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
                                   hasViewVariant = t.UiForms.Any() && t.UiForms.Count() > 1 ? true : false
                               }).ToList()
+							  
 
                           }
                           );

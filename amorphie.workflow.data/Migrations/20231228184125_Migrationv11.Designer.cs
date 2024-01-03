@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -11,9 +12,11 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20231228184125_Migrationv11")]
+    partial class Migrationv11
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
