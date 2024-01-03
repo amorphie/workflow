@@ -1190,7 +1190,7 @@ CancellationToken cancellationToken
                 IsPublicForm = data.ispublicForm,
                 SubWorkflowName = string.IsNullOrEmpty(data.subWorkflowName) ? null : data.subWorkflowName,
                 MFAType = data.mfaType,
-                InitPageName=data.type==StateType.Start?data.initPageName:string.Empty,
+                InitPageName = data.type == StateType.Start ? data.initPageName : string.Empty,
                 PublicForms = data.ispublicForm == true && data.publicForms.Any() && data.publicForms.First().forms.Any() ? data.publicForms.FirstOrDefault().forms.Select(s => new Translation()
                 {
 
@@ -1308,9 +1308,9 @@ CancellationToken cancellationToken
                 existingRecord.SubWorkflowName = data.subWorkflowName;
 
             }
-             if (!string.IsNullOrEmpty(data.initPageName)&&
-             data.type==StateType.Start&&
-             existingRecord.InitPageName != data.initPageName )
+            if (!string.IsNullOrEmpty(data.initPageName) &&
+            data.type == StateType.Start &&
+            existingRecord.InitPageName != data.initPageName)
             {
                 hasChanges = true;
                 existingRecord.InitPageName = data.initPageName;
