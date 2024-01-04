@@ -180,7 +180,7 @@ public class PostTransactionService : IPostTransactionService
             (
                 (_transition.FromState.Workflow!.Entities.Any(a => a.IsStateManager == false))
             || (lastInstance.State.Type == StateType.SubWorkflow)
-           
+
             )) || (_transition.transitionButtonType == TransitionButtonType.Back))
             {
 
