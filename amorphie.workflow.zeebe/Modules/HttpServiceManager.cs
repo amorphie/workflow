@@ -150,7 +150,7 @@ namespace amorphie.workflow.zeebe.Modules
                 throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: failureCodes);
             }
             responseBody = await response.Content.ReadAsStringAsync();
-
+            
 
             return Results.Ok(createMessageVariables(responseBody, statusCode, requestBody));
         }
@@ -164,12 +164,24 @@ namespace amorphie.workflow.zeebe.Modules
         private static dynamic createMessageVariables(string body, string statuscode, string requestBody)
         {
             dynamic variables = new Dictionary<string, dynamic>();
-
-            variables.Add("bodyHttpWorker", body);
+            try
+            {
+                variables.Add("bodyHttpWorker", System.Text.Json.JsonSerializer.Deserialize<dynamic>(body));
+            }
+            catch(Exception)
+            {
+                 variables.Add("bodyHttpWorker", body);
+            }
+            
             variables.Add("statuscode", statuscode);
-            variables.Add("requestBody", requestBody);
-
-
+             try
+            {
+                variables.Add("requestBody", System.Text.Json.JsonSerializer.Deserialize<dynamic>(requestBody));
+            }
+            catch(Exception)
+            {
+                 variables.Add("requestBody", requestBody);
+            }
             return variables;
         }
     }
