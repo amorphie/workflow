@@ -150,7 +150,7 @@ namespace amorphie.workflow.zeebe.Modules
                 throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: failureCodes);
             }
             responseBody = await response.Content.ReadAsStringAsync();
-            
+
 
             return Results.Ok(createMessageVariables(responseBody, statusCode, requestBody));
         }
@@ -168,19 +168,19 @@ namespace amorphie.workflow.zeebe.Modules
             {
                 variables.Add("bodyHttpWorker", System.Text.Json.JsonSerializer.Deserialize<dynamic>(body));
             }
-            catch(Exception)
+            catch (Exception)
             {
-                 variables.Add("bodyHttpWorker", body);
+                variables.Add("bodyHttpWorker", body);
             }
-            
+
             variables.Add("statuscode", statuscode);
-             try
+            try
             {
                 variables.Add("requestBody", System.Text.Json.JsonSerializer.Deserialize<dynamic>(requestBody));
             }
-            catch(Exception)
+            catch (Exception)
             {
-                 variables.Add("requestBody", requestBody);
+                variables.Add("requestBody", requestBody);
             }
             return variables;
         }

@@ -341,7 +341,7 @@ public static class StateManagerModule
             InstanceTransition? newInstanceTransitionForName = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
               .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.Transition!.FromStateName == transition.FromStateName, cancellationToken);
             newInstanceTransition = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
-             .FirstOrDefaultAsync(f => f.InstanceId == instance.Id , cancellationToken);
+             .FirstOrDefaultAsync(f => f.InstanceId == instance.Id, cancellationToken);
 
             try
             {
@@ -353,15 +353,15 @@ public static class StateManagerModule
                 try
                 {
                     updateName = deleteUnAllowedCharecters(newInstanceTransition!.TransitionName);
-                      data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
+                    data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     updateName = deleteUnAllowedCharecters(newInstanceTransitionForName!.TransitionName);
-                      data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
+                    data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
                 }
-                
-              
+
+
 
                 newInstanceTransition!.AdditionalData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData").ToString();
                 try

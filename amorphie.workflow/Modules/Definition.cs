@@ -1442,7 +1442,7 @@ CancellationToken cancellationToken
                              Label=req.form!.FirstOrDefault(f=>f.typeofUi==req.typeofUi).forms.FirstOrDefault().label
                             }
                         },
-                        UiForms =req.form == null ? new List<amorphie.workflow.core.Models.UiForm>() { } : req.form.Select(s => new amorphie.workflow.core.Models.UiForm()
+                        UiForms = req.form == null ? new List<amorphie.workflow.core.Models.UiForm>() { } : req.form.Select(s => new amorphie.workflow.core.Models.UiForm()
                         {
                             TransitionName = req.name,
                             TypeofUiEnum = s.typeofUi,
