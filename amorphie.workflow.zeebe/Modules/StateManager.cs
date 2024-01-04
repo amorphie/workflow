@@ -341,7 +341,7 @@ public static class StateManagerModule
             InstanceTransition? newInstanceTransitionForName = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
               .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.Transition!.FromStateName == transition.FromStateName, cancellationToken);
             newInstanceTransition = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
-             .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.Transition!.FromStateName == transition.FromStateName, cancellationToken);
+             .FirstOrDefaultAsync(f => f.InstanceId == instance.Id, cancellationToken);
 
             try
             {
@@ -350,13 +350,23 @@ public static class StateManagerModule
             catch
             {
                 transitionDataFound = false;
-                updateName = deleteUnAllowedCharecters(newInstanceTransitionForName!.TransitionName);
-                data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
+                try
+                {
+                    updateName = deleteUnAllowedCharecters(newInstanceTransition!.TransitionName);
+                    data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
+                }
+                catch (Exception)
+                {
+                    updateName = deleteUnAllowedCharecters(newInstanceTransitionForName!.TransitionName);
+                    data = body.GetProperty($"TRX{updateName}").GetProperty("Data");
+                }
+
+
 
                 newInstanceTransition!.AdditionalData = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData").ToString();
                 try
                 {
-                    if (!string.IsNullOrEmpty(newInstanceTransitionForName!.AdditionalData))
+                    if (!string.IsNullOrEmpty(newInstanceTransition!.AdditionalData))
                         additionalDataDynamic = body.GetProperty($"TRX{updateName}").GetProperty("Data").GetProperty("additionalData");
                     else
                     {

@@ -165,12 +165,24 @@ namespace amorphie.workflow.zeebe.Modules
         private static dynamic createMessageVariables(string body, string statuscode, string requestBody)
         {
             dynamic variables = new Dictionary<string, dynamic>();
+            try
+            {
+                variables.Add("bodyHttpWorker", System.Text.Json.JsonSerializer.Deserialize<dynamic>(body));
+            }
+            catch (Exception)
+            {
+                variables.Add("bodyHttpWorker", body);
+            }
 
-            variables.Add("bodyHttpWorker", body);
             variables.Add("statuscode", statuscode);
-            variables.Add("requestBody", requestBody);
-
-
+            try
+            {
+                variables.Add("requestBody", System.Text.Json.JsonSerializer.Deserialize<dynamic>(requestBody));
+            }
+            catch (Exception)
+            {
+                variables.Add("requestBody", requestBody);
+            }
             return variables;
         }
     }
