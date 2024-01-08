@@ -31,6 +31,7 @@ public class WorkflowDBContext : DbContext
     public DbSet<PageComponentUiModel> PageComponentUiModels { get; set; } = default!;
     public DbSet<UiForm> UiForms { get; set; } = default!;
     public DbSet<FlowHeader> FlowHeaders { get; set; } = default!;
+    public DbSet<TransitionRole> TransitionRoles { get; set; } = default!;
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -64,6 +65,8 @@ public class WorkflowDBContext : DbContext
           .HasKey(s => s.Id);
         modelBuilder.Entity<UiForm>()
           .HasKey(s => s.Id);
+        modelBuilder.Entity<TransitionRole>()
+        .HasKey(s => s.Id);
 
         modelBuilder.Entity<Instance>()
            .HasKey(s => s.Id);
