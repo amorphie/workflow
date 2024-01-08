@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using amorphie.core.Base;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
@@ -35,6 +36,7 @@ namespace amorphie.workflow.zeebe.Modules
                HttpContext httpContext,
                [FromServices] DaprClient client,
                [FromServices] IZeebeCommandService zeebeCommandService,
+               [FromServices] IHttpClientFactory httpClientFactory,
                 CancellationToken cancellationToken,
                 IConfiguration configuration
            )
@@ -59,13 +61,13 @@ namespace amorphie.workflow.zeebe.Modules
                 throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Header parameter 'url' is mandatory");
             }
 
-            HttpMethodEnum httpMethodEnum = HttpMethodEnum.get;
+            string httpMethodName;
+            //Note: Exception never occurs
             try
             {
-                var method = request.Headers["method"].ToString();
-                if (!string.IsNullOrEmpty(method))
-                    Enum.TryParse(method, out httpMethodEnum);
-
+                httpMethodName = request.Headers["method"].ToString();
+                if (string.IsNullOrEmpty(httpMethodName))
+                    httpMethodName = "GET";
             }
             catch (Exception ex)
             {
@@ -86,28 +88,11 @@ namespace amorphie.workflow.zeebe.Modules
             {
 
             }
-            string responseBody = string.Empty;
-            string statusCode = string.Empty;
-            HttpResponseMessage response;
+
             string content = string.Empty;
-            string requestBody = string.Empty;
-
-            //var httpClientDapr = DaprClient.CreateInvokeHttpClient();
-            var handler = new HttpClientHandler();
-            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-            handler.ServerCertificateCustomValidationCallback =
-                (httpRequestMessage, cert, cetChain, policyErrors) =>
-            {
-                return true;
-            };
-            HttpClient httpClient = new HttpClient(handler);
-
             try
             {
                 content = body.GetProperty("body").ToString();
-                requestBody = content.ToString();
-
-
             }
             catch (Exception ex)
             {
@@ -115,45 +100,24 @@ namespace amorphie.workflow.zeebe.Modules
             }
 
             var serialized = new StringContent(content, System.Text.Encoding.UTF8, "application/json");
+            string authorizationHeader = string.Empty;
             try
             {
-                var authorization = body.GetProperty("authorization").ToString();
-                if (!string.IsNullOrEmpty(authorization))
-                    httpClient.DefaultRequestHeaders.Add("Authorization", authorization);
+                authorizationHeader = body.GetProperty("authorization").ToString();
             }
             catch (Exception ex)
             {
             }
-            if (httpMethodEnum == HttpMethodEnum.post)
-            {
-                response = await httpClient.PostAsync(url, serialized);
-            }
-            else if (httpMethodEnum == HttpMethodEnum.delete)
-            {
-                response = await httpClient.DeleteAsync(url);
-            }
-            else if (httpMethodEnum == HttpMethodEnum.put)
-            {
-                response = await httpClient.PutAsJsonAsync(new Uri(url), serialized);
-            }
-            else if (httpMethodEnum == HttpMethodEnum.patch)
-            {
-                response = await httpClient.PatchAsJsonAsync(new Uri(url), serialized);
-            }
-            else
-            {
-                response = await httpClient.GetAsync(url);
-            }
+            HttpResponseMessage response = await HttpClientSendAsync(httpClientFactory, httpMethodName, url, serialized, authorizationHeader);
             int statusCodeInt = (int)response!.StatusCode;
-            statusCode = statusCodeInt.ToString();
+            var statusCode = statusCodeInt.ToString();
             if (FailureCodesControl(failureCodes, statusCode))
             {
                 throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: failureCodes);
             }
-            responseBody = await response.Content.ReadAsStringAsync();
+            var responseBody = await response.Content.ReadAsStringAsync();
 
-
-            return Results.Ok(createMessageVariables(responseBody, statusCode, requestBody));
+            return Results.Ok(createMessageVariables(responseBody, statusCode, content));
         }
         private static bool FailureCodesControl(string failureCodes, string statusCode)
         {
@@ -184,6 +148,19 @@ namespace amorphie.workflow.zeebe.Modules
                 variables.Add("requestBody", requestBody);
             }
             return variables;
+        }
+        private static async Task<HttpResponseMessage> HttpClientSendAsync(IHttpClientFactory httpClientFactory, string httpMethod, string url, HttpContent? serialized, string? authorizationHeader = null)
+        {
+            var client = httpClientFactory.CreateClient("httpWorkerService");
+            if (!string.IsNullOrEmpty(authorizationHeader))
+                client.DefaultRequestHeaders.Add("Authorization", authorizationHeader);
+
+            var httpRequestMessage = new HttpRequestMessage(new HttpMethod(httpMethod), url);
+            if (httpRequestMessage.Method != HttpMethod.Get && serialized != null)
+            {
+                httpRequestMessage.Content = serialized;
+            }
+            return await client.SendAsync(httpRequestMessage);
         }
     }
 
