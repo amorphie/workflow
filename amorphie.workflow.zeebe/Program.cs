@@ -48,7 +48,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 
-//app.AddZeebeWorkerMiddleware(zeebeGateway: "workflow-zeebe-command");
+app.AddZeebeWorkerMiddleware(zeebeGateway: "workflow-zeebe-command");
 app.MapStateManagerEndpoints();
 app.MapHttpServiceManagerEndpoints();
 app.MapAccountFlowManagerEndpoints();

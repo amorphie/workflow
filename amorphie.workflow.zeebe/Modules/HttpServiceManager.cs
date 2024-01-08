@@ -55,7 +55,8 @@ namespace amorphie.workflow.zeebe.Modules
             var url = body.GetProperty("url").ToString();
             if (string.IsNullOrEmpty(url))
             {
-                return Results.BadRequest("Header parameter 'url' is mandatory");
+                //return Results.BadRequest("Header parameter 'url' is mandatory");
+                throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Header parameter 'url' is mandatory");
             }
 
             HttpMethodEnum httpMethodEnum = HttpMethodEnum.get;
