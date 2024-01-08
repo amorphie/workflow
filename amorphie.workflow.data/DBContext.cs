@@ -31,10 +31,11 @@ public class WorkflowDBContext : DbContext
     public DbSet<PageComponentUiModel> PageComponentUiModels { get; set; } = default!;
     public DbSet<UiForm> UiForms { get; set; } = default!;
     public DbSet<FlowHeader> FlowHeaders { get; set; } = default!;
-    #region Data received from ZeebeGateway
+
+    public DbSet<TransitionRole> TransitionRoles { get; set; } = default!;
+
     public DbSet<ProcessInstance> ProcessInstances { get; set; } = default!;
     public DbSet<MessageSubscription> MessageSubscriptions { get; set; } = default!;
-    #endregion
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -68,6 +69,8 @@ public class WorkflowDBContext : DbContext
           .HasKey(s => s.Id);
         modelBuilder.Entity<UiForm>()
           .HasKey(s => s.Id);
+        modelBuilder.Entity<TransitionRole>()
+        .HasKey(s => s.Id);
 
         modelBuilder.Entity<Instance>()
            .HasKey(s => s.Id);

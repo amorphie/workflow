@@ -13,6 +13,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using amorphie.workflow.service.Zeebe;
+using amorphie.workflow.Modules;
 //using SecretExtensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -107,7 +108,7 @@ app.Logger.LogInformation("Registering Routes");
 app.MapDefinitionEndpoints();
 app.MapInstanceEndpoints();
 app.MapConsumerEndpoints();
-
+app.MapAuthorizeEndpoints();
 try
 {
     app.Logger.LogInformation("Starting application...");
