@@ -7,7 +7,7 @@ namespace amorphie.workflow.core.Models;
 
 public class TransitionRole : amorphie.core.Base.EntityBase
 {
-    public string? TransitionName {get;set;}
-    public Transition? Transition {get;set;}
-    public string? Role {get;set;}
+    public string? TransitionName { get; set; }
+    public Transition? Transition { get; set; }
+    public string? Role { get; set; }
 }

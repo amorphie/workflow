@@ -269,14 +269,14 @@ public class PostTransactionService : IPostTransactionService
     {
 
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
-        string UserReference=string.Empty;
+        string UserReference = string.Empty;
         try
         {
-            UserReference=headers.user_reference;
+            UserReference = headers.user_reference;
         }
-        catch(Exception)
+        catch (Exception)
         {
-            UserReference=string.Empty;
+            UserReference = string.Empty;
         }
         //Create an instace for request.
         var newInstance = new Instance
@@ -288,7 +288,7 @@ public class PostTransactionService : IPostTransactionService
             StateName = _transition.ToStateName!,
             BaseStatus = _transition.ToState!.BaseStatus,
             CreatedBy = _user,
-            UserReference=UserReference,
+            UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
         };
         // _dbContext.Add(newInstance);
@@ -313,14 +313,14 @@ public class PostTransactionService : IPostTransactionService
     {
         DateTime started = DateTime.UtcNow;
         _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
-        string UserReference=string.Empty;
+        string UserReference = string.Empty;
         try
         {
-            UserReference=headers.user_reference;
+            UserReference = headers.user_reference;
         }
-        catch(Exception)
+        catch (Exception)
         {
-            UserReference=string.Empty;
+            UserReference = string.Empty;
         }
         var newInstance = new Instance
         {
@@ -333,7 +333,7 @@ public class PostTransactionService : IPostTransactionService
             CreatedBy = _user,
             ZeebeFlow = _transition.Flow,
             ZeebeFlowName = _transition.FlowName,
-            UserReference=UserReference,
+            UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
         };
         dynamic variables = createMessageVariables(newInstance);

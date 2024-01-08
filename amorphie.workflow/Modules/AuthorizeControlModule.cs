@@ -14,7 +14,7 @@ public static class AuthorizeControlModule
     public static void MapAuthorizeEndpoints(this WebApplication app)
     {
         app.MapGet("/workflow/check/instance/{instanceId}/tckn", CheckAuthWithoutTransition)
-         
+
           .WithOpenApi(operation =>
           {
               operation.Summary = "Check Authentication With Instance Id";
@@ -122,7 +122,7 @@ public static class AuthorizeControlModule
 
      )
     {
-        List<string> ExcludeFlows= new List<string>(){
+        List<string> ExcludeFlows = new List<string>(){
             "OpenBanking-Register",
             "user-register",
             "login",
@@ -130,15 +130,15 @@ public static class AuthorizeControlModule
             "amorphie-mobile-login",
             "Amorphie Mobile Login"
         };
-        bool isUpdate=false;
-        List<State> statesForUpdate=await dbContext.States.Where(w=>!ExcludeFlows.Contains(w.WorkflowName)&&w.MFAType==null).ToListAsync(cancellationToken);
-        foreach(State stateForUpdate in statesForUpdate)
+        bool isUpdate = false;
+        List<State> statesForUpdate = await dbContext.States.Where(w => !ExcludeFlows.Contains(w.WorkflowName) && w.MFAType == null).ToListAsync(cancellationToken);
+        foreach (State stateForUpdate in statesForUpdate)
         {
-            stateForUpdate.MFAType=core.Enums.MFATypeEnum.Private;
-isUpdate=true;
+            stateForUpdate.MFAType = core.Enums.MFATypeEnum.Private;
+            isUpdate = true;
         }
-        if(isUpdate)
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (isUpdate)
+            await dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.Ok(isUpdate);
     }
