@@ -732,7 +732,7 @@ public static class InstanceModule
                 }
                 try
                 {
-                   return Results.Ok(System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData));
+                    return Results.Ok(System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData));
                 }
                 catch (Exception)
                 {
@@ -783,7 +783,7 @@ public static class InstanceModule
                 }
                 try
                 {
-                   return Results.Ok(System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData));
+                    return Results.Ok(System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData));
                 }
                 catch (Exception)
                 {
