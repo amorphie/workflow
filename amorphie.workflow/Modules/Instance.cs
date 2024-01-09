@@ -702,7 +702,7 @@ public static class InstanceModule
         {
             latest = true;
         }
-        if (latest.GetValueOrDefault(false))
+        if (latest.HasValue && latest.Value)
         {
             instanceTransition = await context.InstanceTransitions.Where(w => w.InstanceId == instanceId).OrderByDescending(c => c.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
@@ -720,7 +720,7 @@ public static class InstanceModule
             }
             return Results.Ok(instanceTransition.EntityData);
         }
-        if (latestPayload.GetValueOrDefault(false))
+        if (latestPayload.HasValue && latestPayload.Value)
         {
             try
             {
@@ -730,21 +730,24 @@ public static class InstanceModule
                 {
                     return Results.NotFound("Instance does not have last transition");
                 }
-                var serializeResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData);
-                if (serializeResponse != null)
-                    return Results.Ok(serializeResponse);
-                if (serializeResponse == null)
+                try
                 {
-                    //if data can not deserialize return entitydata without deserialize
+                    var serializeResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData);
+                    return serializeResponse;
+                }
+                catch (Exception)
+                {
+
                     return Results.Ok(instanceTransition.EntityData);
                 }
+
             }
             catch (Exception ex)
             {
                 return Results.Problem("Try latest instead of latest-payload");
             }
         }
-        if (firstPayload.GetValueOrDefault(false))
+        if (firstPayload.HasValue && firstPayload.Value)
         {
             try
             {
@@ -754,12 +757,14 @@ public static class InstanceModule
                 {
                     return Results.NotFound("Instance does not have a transition");
                 }
-                var serializeResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData);
-                if (serializeResponse != null)
-                    return Results.Ok(serializeResponse);
-                if (serializeResponse == null)
+                try
                 {
-                    //if data can not deserialize return entitydata without deserialize
+                    var serializeResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData);
+                    return serializeResponse;
+                }
+                catch (Exception)
+                {
+
                     return Results.Ok(instanceTransition.EntityData);
                 }
             }
@@ -778,12 +783,14 @@ public static class InstanceModule
                 {
                     return Results.NotFound("Transition " + transitionName + " is not found");
                 }
-                var serializeResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData);
-                if (serializeResponse != null)
-                    return Results.Ok(serializeResponse);
-                if (serializeResponse == null)
+                try
                 {
-                    //if data can not deserialize return entitydata without deserialize
+                    var serializeResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData);
+                    return serializeResponse;
+                }
+                catch (Exception)
+                {
+
                     return Results.Ok(instanceTransition.EntityData);
                 }
             }
