@@ -1,6 +1,7 @@
 using amorphie.core.security.Extensions;
 using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.zeebe.Modules;
+using amorphie.workflow.service.SchemaValidation;
 using Dapr.Client;
 using Microsoft.EntityFrameworkCore;
 
@@ -45,7 +46,8 @@ builder.Services.AddHttpClient("httpWorkerService")
              }
      }
    );
-
+//Schema validation service injection
+//builder.AddSchemaValidationService();
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 using var scope = app.Services.CreateScope();
@@ -60,6 +62,9 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.MapHealthChecks("/health");
 app.AddZeebeWorkerMiddleware(zeebeGateway: "workflow-zeebe-command");
+//Schema validation middleware definition
+//app.UseSchemaValidationMiddleware();
+
 app.MapStateManagerEndpoints();
 app.MapHttpServiceManagerEndpoints();
 app.MapAccountFlowManagerEndpoints();

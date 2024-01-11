@@ -9,7 +9,7 @@ using amorphie.core.Swagger;
 using FluentValidation;
 
 
-//using amorphie.workflow;
+using amorphie.workflow;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using amorphie.workflow.service.Zeebe;
@@ -110,6 +110,7 @@ app.MapDefinitionEndpoints();
 app.MapInstanceEndpoints();
 app.MapConsumerEndpoints();
 app.MapAuthorizeEndpoints();
+app.MapSchemaValidatorEndpoints();
 try
 {
     app.Logger.LogInformation("Starting application...");

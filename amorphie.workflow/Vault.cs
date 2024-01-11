@@ -8,7 +8,7 @@ namespace amorphie.workflow
 {
    public static class Vault
     {
-        public static async Task AddVaultSecrets(this IConfigurationBuilder builder, string? secretStoreName, string[] secretPaths)
+        public static async Task AddVaultSecretsLocal(this IConfigurationBuilder builder, string? secretStoreName, string[] secretPaths)
         {
             if(string.IsNullOrWhiteSpace(secretStoreName))
             {

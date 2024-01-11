@@ -1,6 +1,4 @@
-﻿
-namespace amorphie.workflow.service.Zeebe
-{
+﻿namespace amorphie.workflow.service.Zeebe;
     public class ZeebeBussinesException : Exception
     {
         public ZeebeBussinesException(string errorMessage) : this("GeneralBusiness", errorMessage)
@@ -15,4 +13,4 @@ namespace amorphie.workflow.service.Zeebe
         public string ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
     }
-}
+

@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Http;
-
-namespace amorphie.workflow.service.Zeebe
-{
-    public class ZeebeWorkerMiddleware
+namespace amorphie.workflow.service.Zeebe;
+    public class ZeebeExceptionMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly string bindingGateway;
-        public ZeebeWorkerMiddleware(RequestDelegate next, string gateway)
+        public ZeebeExceptionMiddleware(RequestDelegate next, string gateway)
         {
             _next = next;
             bindingGateway = gateway;
@@ -37,4 +35,3 @@ namespace amorphie.workflow.service.Zeebe
             await _next(httpContext);
         }
     }
-}

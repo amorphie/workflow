@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Builder;
-
-namespace amorphie.workflow.service.Zeebe
-{
+namespace amorphie.workflow.service.Zeebe;
     public static class ZeebeBusinessExceptionExtension
     {
         public static void AddZeebeWorkerMiddleware(this IApplicationBuilder app, string zeebeGateway)
         {
-            app.UseMiddleware<ZeebeWorkerMiddleware>(zeebeGateway);
+            app.UseMiddleware<ZeebeExceptionMiddleware>(zeebeGateway);
         }
     }
-}

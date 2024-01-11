@@ -1,8 +1,7 @@
 using System.Dynamic;
 using amorphie.workflow.core.Constants;
 using Dapr.Client;
-namespace amorphie.workflow.service.Zeebe
-{
+namespace amorphie.workflow.service.Zeebe;
     public interface IZeebeCommandService
     {
         Task<long> PublishMessage(string message, dynamic variables, string? correlationKey, string? gateway);
@@ -57,4 +56,3 @@ namespace amorphie.workflow.service.Zeebe
         private record publishMessageRequest(string MessageName, string CorrelationKey, string MessageId, string TimeToLive, dynamic Variables);
         private record ThrowErrorRequest(long JobKey, string ErrorCode, string ErrorMessage);
     }
-}

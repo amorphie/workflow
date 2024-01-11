@@ -36,6 +36,7 @@ public class WorkflowDBContext : DbContext
 
     public DbSet<ProcessInstance> ProcessInstances { get; set; } = default!;
     public DbSet<MessageSubscription> MessageSubscriptions { get; set; } = default!;
+    public DbSet<JsonSchema> JsonSchemas { get; set; } = default!;
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -191,5 +192,8 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<MessageSubscription>()
         .Property(p => p.Variables)
         .HasColumnType("jsonb");
+
+        modelBuilder.Entity<JsonSchema>()
+        .HasKey(p => p.Id);
     }
 }
