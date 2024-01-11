@@ -4,11 +4,11 @@ using StackExchange.Redis;
 using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
-internal class MessageSubscriptionExporter : IExporter
+internal class MessageExporter : IExporter
     {
         private readonly WorkflowDBContext dbContext;
         private readonly string consumerName;
-        public MessageSubscriptionExporter(WorkflowDBContext dbContext, string consumerName)
+        public MessageExporter(WorkflowDBContext dbContext, string consumerName)
         {
             this.dbContext = dbContext;
             this.consumerName = consumerName;
@@ -39,23 +39,18 @@ internal class MessageSubscriptionExporter : IExporter
                         foreach (var process in result)
                         {
                             var value = process.Values[0].Value.ToString();
-                            var stream = JsonSerializer.Deserialize<MessageSubscriptionStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                            var stream = JsonSerializer.Deserialize<MessageStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                             if (stream == null)
                             {
                                 //ihtimal mi??
                                 continue;
                             }
 
-                            //DELETE ...
-                            //CORRELATING
-                            //CORRELATE
-                            //CORRELATED
-
-                            //Bu stream için aşağıdaki 2sine bakacaz
-                            //CREATE
-                            //CREATED
-                            //bir event tamamlandığında yukarıdaki herbir aşama için kayıt oluşuyor. bizim için sonuncu yeterli
-                            if (stream.Intent == "CORRELATED")
+                            //PUBLISHING,
+                            //PUBLISHED
+                            //DELETED
+                            //bir event tamamlandığında yukarıdaki herbir aşama için kayıt oluşuyor.
+                            if (stream.Intent == "PUBLISHED")
                             {
                                 var entity = StreamToEntity(stream);
                                 entity.RedisId = process.Id;
@@ -88,15 +83,13 @@ internal class MessageSubscriptionExporter : IExporter
                             }
 
                         }
-                        var deletedItemsCount = await redisDb.StreamDeleteAsync(ZeebeStreamKeys.MESSAGE_SUBSCRIPTION, messageToBeDeleted.ToArray());
-
                     }
                     await Task.Delay(1000);
                 }
             });
             await readTask;
         }
-        private MessageSubscription StreamToEntity(MessageSubscriptionStream stream)
+        private MessageSubscription StreamToEntity(MessageStream stream)
         {
             return new MessageSubscription
             {

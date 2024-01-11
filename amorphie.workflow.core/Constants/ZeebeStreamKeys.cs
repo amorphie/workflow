@@ -14,11 +14,13 @@ namespace amorphie.workflow.core.Constants
 
         public static string MESSAGE_START_EVENT_SUBSCRIPTION => $"{GateWayPrefix}MESSAGE_START_EVENT_SUBSCRIPTION";
         public static string MESSAGE_SUBSCRIPTION => $"{GateWayPrefix}MESSAGE_SUBSCRIPTION";
+        public static string MESSAGE => $"{GateWayPrefix}MESSAGE";
 
         #region Groups
         public const string PROCESS_INSTANCE_GROUP = "PROCESS_INSTANCE_GROUP";
         public const string MESSAGE_START_EVENT_SUBSCRIPTION_GROUP = "MESSAGE_START_EVENT_SUBSCRIPTION_GROUP";
         public const string MESSAGE_SUBSCRIPTION_GROUP = "MESSAGE_SUBSCRIPTION_GROUP";
+        public const string MESSAGE_GROUP = "MESSAGE_GROUP";
 
         #endregion
 
