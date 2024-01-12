@@ -21,13 +21,6 @@ namespace amorphie.workflow.hub
             var httpCtx = Context.GetHttpContext();
             string HeaderUser = string.Empty;
             string GroupName = string.Empty;
-            Console.WriteLine("Header----------");
-            foreach (var item in httpCtx.Request.Query)
-            {
-
-                Console.WriteLine(item.Key + ":" + item.Value);
-            }
-            Console.WriteLine("---------------");
 
             string HeaderDeviceID = string.Empty;
             HeaderDeviceID = httpCtx.Request.Query["X-Device-Id"].ToString();
