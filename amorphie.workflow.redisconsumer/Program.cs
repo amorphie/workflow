@@ -30,7 +30,6 @@ internal class Program
         var messageStartEventExporter = new MessageStartEventSubscriptionExporter(dbContext, consumerName);
         await messageStartEventExporter.Attach(redisDb, cancellationToken);
 
-        Console.ReadLine();
 
 
 

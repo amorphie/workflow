@@ -34,10 +34,8 @@ namespace amorphie.workflow.service.Zeebe
                 var messageResult = await _daprClient.InvokeBindingAsync<dynamic, dynamic>(gateway, "publish-message", messageData);
                 return messageResult;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                var test = ex.ToString();
-                Console.WriteLine(ex.ToString());
                 return 0;
             }
         }
@@ -52,7 +50,6 @@ namespace amorphie.workflow.service.Zeebe
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ThrowError Exception" + ex.ToString());
             }
 
         }

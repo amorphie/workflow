@@ -19,7 +19,6 @@ public static class SendSignalrModule
     }
     static async Task<IResult> SendMessage(IHubContext<WorkflowHub> hubContext, PostSignalRData data)
     {
-        Console.WriteLine("Hub veri gönderildi:" + data.eventInfo + " " + DateTime.Now);
         string jsonString = JsonSerializer.Serialize(data);
         // await hubContext.Clients.Group(data.UserId.ToString()).SendAsync("SendMessage", jsonString);
         await hubContext.Clients.All.SendAsync("SendMessage", jsonString);
@@ -32,7 +31,6 @@ public static class SendSignalrModule
          [FromHeader(Name = "X-Token-Id")] string? tokenId
       )
     {
-        Console.WriteLine("Public hub veri geldi:" + data.source + " device:" + deviceId + " " + "token:" + tokenId);
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
         string jsonString = JsonSerializer.Serialize(data);
@@ -45,8 +43,6 @@ public static class SendSignalrModule
       [FromHeader(Name = "X-Device-Id")] string? deviceId,
       [FromHeader(Name = "X-Token-Id")] string? tokenId)
     {
-        Console.WriteLine("Private hub veri geldi:" + data.source + " device:" + deviceId + " token:"
-         + tokenId + " " + " customer:" + customer + DateTime.Now);
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
         response.deviceId = deviceId;
