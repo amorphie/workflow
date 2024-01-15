@@ -7,9 +7,9 @@ public static class SchemaValidationExtension
     public static void AddSchemaValidationService(this WebApplicationBuilder builder)
     {
         var clientBasePath = builder.Configuration.GetSection("HttpClient")["SchemaValidationService"];
-        if(clientBasePath is null)
+        if (clientBasePath is null)
             throw new Exception("SchemaValidationService api path not found under the HttpClient section");
-  
+
         builder.Services.AddHttpClient("schemaValidationService", conf =>
         {
             conf.BaseAddress = new Uri(clientBasePath);
