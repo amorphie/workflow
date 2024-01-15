@@ -87,7 +87,7 @@ public static class AuthorizeControlModule
             var transition = await dbContext.Transitions!.Include(s => s.TransitionRoles).FirstOrDefaultAsync(w => w.Name == transitionName, cancellationToken);
             if (transition == null)
             {
-                return  Results.Unauthorized();
+                return Results.Unauthorized();
             }
             if (transition.TransitionRoles.Any())
             {
@@ -98,7 +98,7 @@ public static class AuthorizeControlModule
                 }
                 else
                 {
-                    return   Results.Unauthorized();
+                    return Results.Unauthorized();
                 }
             }
             if (!transition.TransitionRoles.Any())
@@ -108,7 +108,7 @@ public static class AuthorizeControlModule
         }
         catch (Exception ex)
         {
-            return   Results.Unauthorized();
+            return Results.Unauthorized();
         }
         return Results.Unauthorized();
 
