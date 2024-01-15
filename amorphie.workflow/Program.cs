@@ -40,6 +40,7 @@ builder.Services.AddScoped<IZeebeCommandService, ZeebeCommandService>();
 //     });
 
 builder.Logging.ClearProviders();
+builder.Services.AddHealthChecks();
 builder.Logging.AddJsonConsole();
 builder.Services.AddScoped<IBBTIdentity, FakeIdentity>();
 builder.Services.AddDaprClient();
@@ -94,7 +95,7 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
 db.Database.Migrate();
-
+app.MapHealthChecks("/health");
 
 app.UseCloudEvents();
 app.UseRouting();

@@ -32,7 +32,7 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod();
         });
 });
-
+builder.Services.AddHealthChecks();
 builder.Services.AddSignalR();
 builder.Services.AddMvc();
 var app = builder.Build();
@@ -47,8 +47,8 @@ app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
 app.UseSwagger();
+app.MapHealthChecks("/health");
 app.UseSwaggerUI();
-
 app.MapHub<WorkflowHub>("/hubs/workflow");
 app.MapHub<MFATypeHub>("/hubs/genericHub");
 app.MapSignalrEndpoints();
