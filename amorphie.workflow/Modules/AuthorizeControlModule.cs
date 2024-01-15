@@ -13,7 +13,7 @@ public static class AuthorizeControlModule
 {
     public static void MapAuthorizeEndpoints(this WebApplication app)
     {
-        app.MapGet("/workflow/check/instance/{instanceId}/tckn", CheckAuthWithoutTransition)
+        app.MapGet("/workflow/check/instance/{instanceId}/tckn/{tckn}", CheckAuthWithoutTransition)
 
           .WithOpenApi(operation =>
           {
@@ -45,7 +45,7 @@ public static class AuthorizeControlModule
          [FromServices] WorkflowDBContext dbContext,
           [FromRoute(Name = "instanceId")] Guid instanceId,
             CancellationToken cancellationToken,
-            [FromHeader(Name = "user_reference")] string userReference
+            [FromRoute(Name = "tckn")] string tckn
 
      )
     {
@@ -58,11 +58,11 @@ public static class AuthorizeControlModule
         {
             if (instance.State.MFAType.GetValueOrDefault(core.Enums.MFATypeEnum.Public) == core.Enums.MFATypeEnum.Private)
             {
-                if (instance.UserReference == userReference)
+                if (instance.UserReference == tckn)
                     return Results.Ok();
-                if (instance.UserReference != userReference)
+                if (instance.UserReference != tckn)
                 {
-                    return Results.Problem("This instance can not be continued  by " + userReference);
+                    return Results.Problem("This instance can not be continued  by " + tckn);
                 }
             }
             if (instance.State.MFAType.GetValueOrDefault(core.Enums.MFATypeEnum.Public) != core.Enums.MFATypeEnum.Private)

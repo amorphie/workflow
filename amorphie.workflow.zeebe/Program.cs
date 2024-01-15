@@ -33,7 +33,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
-
+builder.Services.AddHealthChecks();
 builder.Services.AddHttpClient("httpWorkerService")
 .ConfigurePrimaryHttpMessageHandler((c) =>
      new HttpClientHandler()
@@ -58,8 +58,7 @@ app.MapSubscribeHandler();
 app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
-
-
+app.MapHealthChecks("/health");
 app.AddZeebeWorkerMiddleware(zeebeGateway: "workflow-zeebe-command");
 app.MapStateManagerEndpoints();
 app.MapHttpServiceManagerEndpoints();
