@@ -62,7 +62,7 @@ public static class AuthorizeControlModule
                     return Results.Ok();
                 if (instance.UserReference != tckn)
                 {
-                    return Results.Problem("This instance can not be continued  by " + tckn);
+                    return Results.Unauthorized();
                 }
             }
             if (instance.State.MFAType.GetValueOrDefault(core.Enums.MFATypeEnum.Public) != core.Enums.MFATypeEnum.Private)
@@ -71,8 +71,7 @@ public static class AuthorizeControlModule
             }
 
         }
-        return Results.Problem("Unexpected error");
-
+        return Results.Unauthorized();
     }
     static async Task<IResult> CheckAuthWithTransition(
      [FromServices] WorkflowDBContext dbContext,
@@ -88,7 +87,7 @@ public static class AuthorizeControlModule
             var transition = await dbContext.Transitions!.Include(s => s.TransitionRoles).FirstOrDefaultAsync(w => w.Name == transitionName, cancellationToken);
             if (transition == null)
             {
-                return Results.Problem("Transition " + transitionName + " does not exist");
+                return  Results.Unauthorized();
             }
             if (transition.TransitionRoles.Any())
             {
@@ -99,7 +98,7 @@ public static class AuthorizeControlModule
                 }
                 else
                 {
-                    return Results.Problem("Transition " + transitionName + " has no authority in role " + role);
+                    return   Results.Unauthorized();
                 }
             }
             if (!transition.TransitionRoles.Any())
@@ -109,9 +108,9 @@ public static class AuthorizeControlModule
         }
         catch (Exception ex)
         {
-            return Results.Problem("Unexpected error:" + ex.ToString());
+            return   Results.Unauthorized();
         }
-        return Results.Problem("Unexpected error:");
+        return Results.Unauthorized();
 
     }
 
