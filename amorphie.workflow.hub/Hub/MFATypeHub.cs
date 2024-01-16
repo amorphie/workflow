@@ -37,7 +37,7 @@ ClientRepo.ClientList.Add(GroupName,Context.ConnectionId);
         {
             string GroupName = await GetGroupName();
 
-            ClientRepo.ClientList.Add(GroupName,Context.ConnectionId);
+            ClientRepo.ClientList.Remove(GroupName);
             
             _logger.LogInformation($"Client Disconnected: " + DateTime.UtcNow);
             _logger.LogInformation(exception?.ToString());
