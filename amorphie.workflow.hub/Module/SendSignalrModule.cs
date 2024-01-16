@@ -35,7 +35,7 @@ public static class SendSignalrModule
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
         string jsonString = JsonSerializer.Serialize(data);
-        string client = ClientRepo.ClientList[deviceId + tokenId+requestId];
+        string client = ClientRepo.ClientList[deviceId + tokenId + requestId];
 
 
         await hubContext.Clients.Client(client).SendAsync("SendMessage", jsonString);
