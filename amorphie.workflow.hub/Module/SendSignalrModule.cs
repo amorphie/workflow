@@ -34,7 +34,11 @@ public static class SendSignalrModule
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
         string jsonString = JsonSerializer.Serialize(data);
-        await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
+        string client = ClientRepo.ClientList[deviceId + tokenId];
+
+
+        await hubContext.Clients.Client(client).SendAsync("SendMessage", jsonString);
+        
         return Results.Ok("");
     }
     static async Task<IResult> SendMessagePrivate(IHubContext<MFATypeHub> hubContext,
@@ -47,6 +51,7 @@ public static class SendSignalrModule
         response.time = DateTime.UtcNow;
         response.deviceId = deviceId;
         string jsonString = JsonSerializer.Serialize(data);
+
         await hubContext.Clients.Group(deviceId + tokenId + customer).SendAsync("SendMessage", jsonString);
         return Results.Ok("");
     }
