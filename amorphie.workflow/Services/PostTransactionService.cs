@@ -106,7 +106,7 @@ public class PostTransactionService : IPostTransactionService
         ConsumerPostTransitionRequest request = new ConsumerPostTransitionRequest()
         {
             EntityData = data,
-            AdditionalData = new {},
+            AdditionalData = new { },
             GetSignalRHub = true
 
         };
