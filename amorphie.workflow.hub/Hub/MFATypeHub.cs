@@ -38,7 +38,7 @@ ClientRepo.ClientList.Add(GroupName,Context.ConnectionId);
             string GroupName = await GetGroupName();
 
             ClientRepo.ClientList.Remove(GroupName);
-            
+
             _logger.LogInformation($"Client Disconnected: " + DateTime.UtcNow);
             _logger.LogInformation(exception?.ToString());
 
@@ -64,7 +64,7 @@ private async Task<string> GetGroupName()
             }
             string HeaderToken = string.Empty;
             HeaderToken = httpCtx.Request.Query["X-Token-Id"].ToString();
-            if (string.IsNullOrEmpty(HeaderDeviceID))
+            if (string.IsNullOrEmpty(HeaderToken))
             {
                 HeaderToken = httpCtx.Request.Query["x-token-id"].ToString();
             }
@@ -73,7 +73,19 @@ private async Task<string> GetGroupName()
                 throw new Exception("X-Token-Id can not be null");
             }
 
-            return HeaderDeviceID + HeaderToken;
+            string requestId = string.Empty;
+            requestId = httpCtx.Request.Query["X-Request-Id"].ToString();
+            if (string.IsNullOrEmpty(requestId))
+            {
+                requestId = httpCtx.Request.Query["x-request-id"].ToString();
+            }
+            if (string.IsNullOrEmpty(requestId))
+            {
+                throw new Exception("X-Request-Id can not be null");
+            }
+
+
+            return HeaderDeviceID + HeaderToken + requestId;
 } 
     }
 

@@ -28,17 +28,18 @@ public static class SendSignalrModule
      IHubContext<MFATypeHub> hubContext,
      SignalRRequest data,
       [FromHeader(Name = "X-Device-Id")] string? deviceId,
-         [FromHeader(Name = "X-Token-Id")] string? tokenId
+         [FromHeader(Name = "X-Token-Id")] string? tokenId,
+         [FromHeader(Name = "X-Request-Id")] string? requestId
       )
     {
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
         string jsonString = JsonSerializer.Serialize(data);
-        string client = ClientRepo.ClientList[deviceId + tokenId];
+        string client = ClientRepo.ClientList[deviceId + tokenId+requestId];
 
 
         await hubContext.Clients.Client(client).SendAsync("SendMessage", jsonString);
-        
+
         return Results.Ok("");
     }
     static async Task<IResult> SendMessagePrivate(IHubContext<MFATypeHub> hubContext,
