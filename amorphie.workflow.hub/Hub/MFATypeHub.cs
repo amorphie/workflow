@@ -29,7 +29,7 @@ string GroupName = await GetGroupName();
 
 ClientRepo.ClientList.Add(GroupName,Context.ConnectionId);
 
-            await Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
+            // await Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
             _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
             return base.OnConnectedAsync();
         }
