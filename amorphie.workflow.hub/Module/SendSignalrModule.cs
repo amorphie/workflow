@@ -38,7 +38,7 @@ public static class SendSignalrModule
 
 
         await hubContext.Clients.Client(client).SendAsync("SendMessage", jsonString);
-        
+
         return Results.Ok("");
     }
     static async Task<IResult> SendMessagePrivate(IHubContext<MFATypeHub> hubContext,
