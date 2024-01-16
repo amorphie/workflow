@@ -15,7 +15,7 @@ namespace amorphie.workflow.hub
         {
             _logger = logger;
         }
-        public override Task OnConnectedAsync()
+        public async  override Task<Task> OnConnectedAsync()
         {
             _logger.LogInformation($"Client try to  Connect: {Context.ConnectionId}");
             var httpCtx = Context.GetHttpContext();
@@ -46,9 +46,9 @@ namespace amorphie.workflow.hub
 
             GroupName = HeaderDeviceID + HeaderToken;
 
-            Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
+           await Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
             _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
-            return base.OnConnectedAsync();
+            return   base.OnConnectedAsync();
         }
         public override Task OnDisconnectedAsync(Exception? exception)
         {
