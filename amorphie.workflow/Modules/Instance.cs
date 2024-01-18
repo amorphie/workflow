@@ -374,8 +374,8 @@ public static class InstanceModule
             {
                 return Results.NotFound(typeofTable + " does not have " + type + " type");
             }
-            if(string.IsNullOrEmpty(language))
-            language="en-EN";
+            if (string.IsNullOrEmpty(language))
+                language = "en-EN";
             Translation? form = uiForm.Forms.FirstOrDefault(f => f.Language == language);
             if (form == null)
             {
