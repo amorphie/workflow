@@ -383,6 +383,10 @@ public static class InstanceModule
                 if(form == null)
                 return Results.NotFound(name + " " + typeofTable + ", type " + type + " does not exist " + language + " body. Check the Accept-Language header.");
             }
+            if(form == null&&language=="en-EN")
+            {
+                 return Results.NotFound(name + " " + typeofTable + ", type " + type + " does not exist " + language + " body. Check the Accept-Language header.");
+            }
             var templateURL = configuration["templateEngineUrl"]!.ToString();
 
             return Results.Ok(new ViewTransitionModel()
