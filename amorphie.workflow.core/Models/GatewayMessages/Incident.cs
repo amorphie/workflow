@@ -1,22 +1,22 @@
-using amorphie.core.Base;
-using NpgsqlTypes;
+namespace amorphie.workflow.core.Models.GatewayMessages;
 
-public class Incident : EntityBase
+public class Incident
 {
 
-    /// <summary>
-    /// Probably not needed
-    /// </summary>
-    public string RedisId { get; set; } = default!;
-    public string? InstanceId { get; set; }
+    public long Key { get; set; }
+
     public string? BpmnProcessId { get; set; }
+     public long ProcessInstanceKey { get; set; }
+    public long ProcessDefinitionKey { get; set; }
+    /// <summary>
+    /// Incident occured element
+    /// </summary>
+     public long ElementInstanceKey { get; set; }
     public string? ElementId { get; set; }
 
-    public long Key { get; set; }
     public long Timestamp { get; set; }
-    public int Retries { get; set; }
     public string? RejectionReason { get; set; }
 
-    public string? ErrorMessageName { get; set; }
-    public string? JobType { get; set; }
+    public string? ErrorMessage { get; set; }
+    public string? ErrorType { get; set; }
 }

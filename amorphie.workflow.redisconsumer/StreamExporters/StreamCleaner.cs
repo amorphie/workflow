@@ -17,36 +17,20 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
     /// </summary>
     internal class StreamCleaner
     {
-        public async Task AttachToClean(ConnectionMultiplexer connectionMultiplexer, int timeToLive, CancellationToken cancellationToken)
+        public async Task TrimNotAttachedStream(ConnectionMultiplexer connectionMultiplexer, int timeToLive, CancellationToken cancellationToken)
         {
 
-
-            var readTask = Task.Run(async () =>
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
-                {
-                    var redisServers = connectionMultiplexer.GetServers();
-                    var redisDb = connectionMultiplexer.GetDatabase();
-                    foreach (var server in redisServers)
-                    {
-                        var allKeys = server.KeysAsync(pattern: "zeebe:");
-                        await foreach (var key in allKeys)
-                        {
-                            //these keys handled in another way
-                            if (key == ZeebeStreamKeys.PROCESS_INSTANCE || key == ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION || key == ZeebeStreamKeys.MESSAGE_SUBSCRIPTION)
-                            {
-                                continue;
-                            }
+                var redisDb = connectionMultiplexer.GetDatabase();
+                await redisDb.StreamTrimAsync(ZeebeStreamKeys.PROCESS_EVENT, 10);
+                await redisDb.StreamTrimAsync(ZeebeStreamKeys.VARIABLE_DOCUMENT, 10);
+                await redisDb.StreamTrimAsync(ZeebeStreamKeys.JOB, 10);
+                await redisDb.StreamTrimAsync(ZeebeStreamKeys.JOB_BATCH, 10);
 
-                            await redisDb.StreamTrimAsync(key, 10);
+                await Task.Delay(timeToLive * 1000);
+            }
 
-                        }
-
-                    }
-                    await Task.Delay(timeToLive * 1000);
-                }
-            });
-            await readTask;
         }
     }
 }

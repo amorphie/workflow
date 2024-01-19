@@ -1,94 +1,86 @@
 ﻿using amorphie.workflow.core.Constants;
+using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using StackExchange.Redis;
 using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 
-internal class MessageStartEventSubscriptionExporter : IExporter
+internal class MessageStartEventSubscriptionExporter : BaseExporter, IExporter
 {
-    private readonly WorkflowDBContext dbContext;
-    private readonly string consumerName;
-    public MessageStartEventSubscriptionExporter(WorkflowDBContext dbContext, string consumerName)
+
+    public MessageStartEventSubscriptionExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
     {
-        this.dbContext = dbContext;
-        this.consumerName = consumerName;
+        this.streamName = ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION;
+        this.groupName = ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION_GROUP;
+        ConfigureGroup().Wait();
     }
 
-
-    public async Task Attach(IDatabase redisDb, CancellationToken cancellationToken)
+    public async Task Attach(CancellationToken cancellationToken)
     {
-
-        if (!await redisDb.KeyExistsAsync(ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION) || (await redisDb.StreamGroupInfoAsync(ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION)).All(x => x.Name != ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION_GROUP))
+        var result = await redisDb.StreamReadGroupAsync(streamName, groupName, this.consumerName, this.readingStrategy);
+        if (result.Any())
         {
-            await redisDb.StreamCreateConsumerGroupAsync(ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION, ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION_GROUP, "0-0", true);
-        }
-
-        string lastReadId = "-";
-        var readTask = Task.Run(async () =>
-        {
-            while (!cancellationToken.IsCancellationRequested)
+            var messageToBeDeleted = new List<RedisValue>();
+            foreach (var process in result)
             {
-                var result = await redisDb.StreamReadGroupAsync(ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION, ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION_GROUP, this.consumerName, ">");
-                if (result.Any())
+                var value = process.Values[0].Value.ToString();
+                var stream = JsonSerializer.Deserialize<MessageStartEventSubscriptionStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (stream == null)
                 {
-                    var messageToBeDeleted = new List<RedisValue>();
-                    lastReadId = result.Last().Id;
-                    //messageToBeDeleted = result.Select(p => p.Id).ToList();
-                    foreach (var process in result)
-                    {
-                        var value = process.Values[0].Value.ToString();
-                        var stream = JsonSerializer.Deserialize<MessageStartEventSubscriptionStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        if (stream == null)
-                        {
-                            //ihtimal mi??
-                            continue;
-                        }
-
-                        //DELETE ...
-                        //CORRELATING
-                        //CORRELATE
-                        //CORRELATED
-                        //bir event tamamlandığında yukarıdaki herbir aşama için kayıt oluşuyor. bizim için sonuncu yeterli !
-                        if (stream.Intent == "CORRELATED")
-                        {
-                            var entity = StreamToEntity(stream);
-                            entity.RedisId = process.Id;
-
-                            if (stream.Value.Variables != null)
-                            {
-                                var variables = stream.Value.Variables;
-                                var targetObject = stream.Value.Variables[$"TRX-{entity.MessageName}"];
-                                if (targetObject != null)
-                                {
-                                    entity.CreatedBy = new Guid(targetObject[ZeebeVariableKeys.TriggeredBy]?.ToString() ?? "");
-                                    entity.CreatedByBehalfOf = new Guid(targetObject[ZeebeVariableKeys.TriggeredByBehalfOf]?.ToString() ?? "");
-                                }
-                                entity.InstanceId = variables[ZeebeVariableKeys.TriggeredBy]?.ToString() ?? "";
-
-
-                            }
-                            dbContext.MessageSubscriptions.Add(entity);
-                            var savingResult = await dbContext.SaveChangesAsync();
-                            if (savingResult > 0)
-                            {
-                                messageToBeDeleted.Add(entity.RedisId);
-                            }
-
-                        }
-                        else {
-                            //delete the messages which have other Intent's
-                            messageToBeDeleted.Add(process.Id);
-                        }
-
-                    }
-                    var deletedItemsCount = await redisDb.StreamDeleteAsync(ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION, messageToBeDeleted.ToArray());
+                    //ihtimal mi??
+                    continue;
                 }
 
-                await Task.Delay(1000);
+                //DELETE ...
+                //CORRELATING
+                //CORRELATE
+                //CORRELATED
+                //bir event tamamlandığında yukarıdaki herbir aşama için kayıt oluşuyor. bizim için sonuncu yeterli !
+                //processInstanceKey => Zeebes process key
+                //Variable-> InstanceId => amorphies id
+                if (stream.Intent == "CORRELATED" || stream.Intent == "CREATED")
+                {
+                    var entity = dbContext.MessageSubscriptions.FirstOrDefault(s => s.ProcessInstanceKey == stream.Value.ProcessInstanceKey);
+
+                    if (entity != null)
+                    {
+                        entity.Intent = stream.Intent;
+                        entity.ModifiedAt = DateTime.UtcNow;
+                        dbContext.MessageSubscriptions.Update(entity);
+                    }
+                    else
+                    {
+                        entity = StreamToEntity(stream);
+                        if (stream.Value.Variables != null)
+                        {
+                            var variables = stream.Value.Variables;
+                            var targetObject = stream.Value.Variables[$"TRX-{entity.MessageName}"];
+                            if (targetObject != null)
+                            {
+                                entity.CreatedBy = new Guid(targetObject[ZeebeVariableKeys.TriggeredBy]?.ToString() ?? "");
+                                entity.CreatedByBehalfOf = new Guid(targetObject[ZeebeVariableKeys.TriggeredByBehalfOf]?.ToString() ?? "");
+                            }
+                            entity.InstanceId = variables[ZeebeVariableKeys.InstanceId]?.ToString() ?? "";
+                        }
+                        dbContext.MessageSubscriptions.Add(entity);
+                    }
+                    var savingResult = await dbContext.SaveChangesAsync();
+                    if (savingResult > 0)
+                    {
+                        messageToBeDeleted.Add(process.Id);
+                    }
+
+                }
+                else
+                {
+                    //delete the messages which have other Intent's
+                    messageToBeDeleted.Add(process.Id);
+                }
+
             }
-        });
-        await readTask;
+            var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+        }
     }
 
     private MessageSubscription StreamToEntity(MessageStartEventSubscriptionStream stream)
@@ -96,8 +88,8 @@ internal class MessageStartEventSubscriptionExporter : IExporter
         return new MessageSubscription
         {
             BpmnProcessId = stream.Value.BpmnProcessId,
-            Key = stream.Key, //Element specific
-            Timestamp = stream.Timestamp,//Event created time in long format
+            Key = stream.Key,
+            Timestamp = stream.Timestamp,
             ValueType = stream.ValueType,
             BrokerVersion = stream.BrokerVersion,
             SourceRecordPosition = stream.SourceRecordPosition,

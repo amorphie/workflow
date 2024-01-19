@@ -1,6 +1,5 @@
 using amorphie.core.Base;
-using NpgsqlTypes;
-
+namespace amorphie.workflow.core.Models.GatewayMessages;
 public class Process : EntityBase
 {
 

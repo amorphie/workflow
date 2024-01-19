@@ -1,44 +1,6 @@
 {
     "version": "2.0.0",
     "tasks": [
-                {
-                    "label": "(EF) Install Entity Framework Cli",
-                    "command": "dotnet",
-                    "type": "process",
-                    "args": [
-                        "tool",
-                        "install",
-                        "dotnet-ef",
-                        "-g"
-                    ]
-                },
-                {
-                    "label": "(EF) Update Entity Framework Cli",
-                    "command": "dotnet",
-                    "type": "process",
-                    "args": [
-                        "tool",
-                        "update",
-                        "dotnet-ef",
-                        "-g"
-                    ],
-                },
-                {
-                    "label": "(EF) Apply Project Database Migrations",
-                    "dependsOn": "update-ef",
-                    "command": "dotnet",
-                    "type": "process",
-                    "args": [
-                        "ef",
-                        "database",
-                        "update",
-                        "--project",
-                        "${workspaceFolder}/amorphie.workflow.data/amorphie.workflow.data.csproj"
-                    ],
-                    "runOptions": {
-                        "runOn": "folderOpen"
-                    }
-                },
         {
             "label": "workflow-build",
             "command": "dotnet",

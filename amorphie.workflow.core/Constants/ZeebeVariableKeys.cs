@@ -10,6 +10,7 @@ namespace amorphie.workflow.core.Constants
     {
         public const string TriggeredBy = "TriggeredBy";
         public const string TriggeredByBehalfOf = "TriggeredByBehalfOf";
+        public const string InstanceId = "InstanceId";
 
     }
 }

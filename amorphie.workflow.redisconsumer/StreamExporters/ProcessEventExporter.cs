@@ -1,4 +1,5 @@
-﻿using amorphie.workflow.redisconsumer.StreamObjects;
+﻿using amorphie.workflow.core.Constants;
+using amorphie.workflow.redisconsumer.StreamObjects;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -9,38 +10,37 @@ using System.Threading.Tasks;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters
 {
-    internal class ProcessEventExporter : IExporter
+    internal class ProcessEventExporter :BaseExporter, IExporter
     {
-        public async Task Attach(IDatabase redisDb, CancellationToken cancellationToken)
-        {
-            const string PROCESS_EVENT = "zeebe:PROCESS_EVENT";
-            const string PROCESS_EVENT_GROUP = "PROCESS_EVENT_GROUP";
-            if (!(await redisDb.KeyExistsAsync(PROCESS_EVENT)) ||
-                (await redisDb.StreamGroupInfoAsync(PROCESS_EVENT)).All(x => x.Name != PROCESS_EVENT_GROUP))
-            {
-                await redisDb.StreamCreateConsumerGroupAsync(PROCESS_EVENT, PROCESS_EVENT_GROUP, "0-0", true);
-            }
 
-            string lastReadId = "-";
+        public ProcessEventExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy):base(dbContext, redisDb, consumerName, readingStrategy) 
+        {
+            this.streamName = ZeebeStreamKeys.PROCESS_EVENT;
+            this.groupName = ZeebeStreamKeys.PROCESS_EVENT_GROUP;
+            ConfigureGroup().Wait();
+        }
+        public async Task Attach(CancellationToken cancellationToken)
+        {
+
+            if (!(await redisDb.KeyExistsAsync(streamName)) ||
+                (await redisDb.StreamGroupInfoAsync(streamName)).All(x => x.Name != groupName))
+            {
+                await redisDb.StreamCreateConsumerGroupAsync(streamName, groupName, "0-0", true);
+            }
             var readTask = Task.Run(async () =>
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    //var result = await redisDb.StreamRangeAsync(PROCESS_INSTANCE, lastReadId, "+", 1, Order.Ascending);
-                    var result = await redisDb.StreamRangeAsync(PROCESS_EVENT, lastReadId, "+");
-
-                    //var result = await redisDb.StreamReadGroupAsync(PROCESS_INSTANCE, groupName, "avg-1", ">");
+                    var result = await redisDb.StreamReadGroupAsync(streamName, groupName, consumerName, ">");
 
                     if (result.Any())
                     {
-                        lastReadId = result.Last().Id;
                         foreach (var process in result)
                         {
                             var value = process.Values[0].Value.ToString();
                             var entity = JsonSerializer.Deserialize<ProcessEventStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                             if (entity == null)
                             {
-                                //ihtimal mi??
                                 continue;
                             }
                             //TRIGGERING

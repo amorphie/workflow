@@ -1,29 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Nodes;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Nodes;
 
 namespace amorphie.workflow.redisconsumer.StreamObjects
 {
-    public class MessageStream
+    public class MessageStream : BaseStream
     {
-        public string Id { get; set; }
-        public int PartitionId { get; set; }
         public MessageValue Value { get; set; }
         public long Deadline { get; set; }
-        public long Key { get; set; }
-        public long Timestamp { get; set; }
         public int Position { get; set; }
-        public string ValueType { get; set; }
         public int SourceRecordPosition { get; set; }
-        public string Intent { get; set; }
         public string RejectionType { get; set; }
         public string RejectionReason { get; set; }
         public JsonObject Authorizations { get; set; }
         public int RecordVersion { get; set; }
-        public string BrokerVersion { get; set; }
         public string RecordType { get; set; }
     }
     public class MessageValue

@@ -1,13 +1,8 @@
 using amorphie.core.Base;
-using NpgsqlTypes;
-
+namespace amorphie.workflow.core.Models.GatewayMessages;
 public class MessageSubscription : EntityBase
 {
 
-    /// <summary>
-    /// Probably not needed
-    /// </summary>
-    public string RedisId { get; set; } = default!;
     public string? InstanceId { get; set; }
 
     public long Deadline { get; set; }

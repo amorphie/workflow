@@ -1,5 +1,5 @@
 using amorphie.core.Base;
-using NpgsqlTypes;
+namespace amorphie.workflow.core.Models.GatewayMessages;
 
 public class Message : EntityBase
 {
@@ -24,10 +24,7 @@ public class Message : EntityBase
     public string? BrokerVersion { get; set; }
     public string? RecordType { get; set; }
 
-    public string? TenantId { get; set; }
-
     public string? Variables { get; set; }
-    public string BpmnProcessId { get; set; } = default!;
 
     public long ProcessInstanceKey { get; set; }
     public long ProcessDefinitionKey { get; set; }
