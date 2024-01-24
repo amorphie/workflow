@@ -64,7 +64,7 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
                     }
                 }
 
-                var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+                //var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
             }
         }
         private ProcessInstance StreamToEntity(ProcessInstanceStream stream)

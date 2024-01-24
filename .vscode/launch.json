@@ -71,13 +71,6 @@
                 "DAPR_STATE_STORE_NAME": "amorphie-cache"
             },
             "postDebugTask": "daprd-down-amorphie-workflow-redisconsumer"
-        },
-        {
-            "name": "C#: amorphie.workflow.redisconsumer",
-            "type": "dotnet",
-            "request": "launch",
-            "projectPath": "${workspaceFolder}\\amorphie.workflow.redisconsumer\\amorphie.workflow.redisconsumer.csproj",
-            "launchConfigurationId": "TargetFramework=;amorphie.workflow.redisconsumer"
         }
     ],
     "compounds": [

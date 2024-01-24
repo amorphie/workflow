@@ -3,56 +3,68 @@ using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using StackExchange.Redis;
+using System.Security.Principal;
 using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
-public class IncidentExporter : BaseExporter, IExporter
+
+internal class JobExporter : BaseExporter, IExporter
 {
-    public IncidentExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
+
+    public JobExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
     {
-        this.streamName = ZeebeStreamKeys.INCIDENT;
-        this.groupName = ZeebeStreamKeys.INCIDENT_GROUP;
+        this.streamName = ZeebeStreamKeys.JOB;
+        this.groupName = ZeebeStreamKeys.JOB_GROUP;
         ConfigureGroup().Wait();
     }
+
     public async Task Attach(CancellationToken cancellationToken)
     {
+        // var result = await redisDb.StreamReadGroupAsync(streamName, groupName, this.consumerName, this.readingStrategy);
         var result = await ReadStreamEntryAsync(cancellationToken);
+
         if (result.Any())
         {
             var messageToBeDeleted = new List<RedisValue>();
             foreach (var process in result)
             {
                 var value = process.Values[0].Value.ToString();
-                var stream = JsonSerializer.Deserialize<IncidentStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var stream = JsonSerializer.Deserialize<JobStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 if (stream == null)
                 {
                     continue;
                 }
 
-                var entity = dbContext.Incidents.FirstOrDefault(p => p.Key == stream.Key);
-                if (entity != null)
+                if (stream.Intent == "COMPLETED" || stream.Intent == "CREATED")
                 {
-                    entity.ErrorMessage = stream.Value.ErrorMessage;
-                    entity.ErrorType = stream.Value.ErrorType;
-                    entity.Timestamp = stream.Timestamp;
-                    dbContext.Incidents.Update(entity);
-                }
-                else
-                {
-                    entity = StreamToEntity(stream);
-                    dbContext.Incidents.Add(entity);
-                }
+                    var entity = dbContext.Jobs.FirstOrDefault(s => s.Key == stream.Value.ElementInstanceKey);
 
-                var savingResult = await dbContext.SaveChangesAsync();
-                if (savingResult > 0)
-                {
-                    messageToBeDeleted.Add(process.Id);
-                    if(stream.Value.ElementId=="NO_CATCH_EVENT_FOUND")
+                    if (entity != null)
                     {
-                        var hubData = new PostSignalRData(
+                        //entity.Intent = stream.Intent;
+                        //entity.ModifiedAt = DateTime.UtcNow;
+                        dbContext.Jobs.Update(entity);
+                    }
+                    else
+                    {
+                        //Start event triggered for the first time
+                        entity = StreamToEntity(stream);
+                        entity.RedisId = process.Id;
+                        dbContext.Jobs.Add(entity);
+                    }
+
+                    var savingResult = await dbContext.SaveChangesAsync();
+                    if (savingResult > 0)
+                    {
+                        messageToBeDeleted.Add(process.Id);
+                        Boolean.TryParse(stream.Value.CustomHeaders["notifyClient"]?.ToString(), out bool notifyClient);
+                        var elementType = stream.Value.Type;
+                        if (notifyClient && elementType == ZeebeVariableKeys.AmorphieHttpWorker)
+                        {
+                            var hubData = new PostSignalRData(
                                 Guid.Empty,
                                 Guid.Empty,
-                                "message of exporter notifies about error " + stream.Value.ErrorType,
+                                "message of exporter",
                                 Guid.Empty,
                                 stream.Value.ElementId ?? "",
                                 "",
@@ -61,7 +73,7 @@ public class IncidentExporter : BaseExporter, IExporter
                                 "",
                                 amorphie.core.Enums.StatusType.New,
                                 new PostPageSignalRData("", "", new MultilanguageText("", ""), 1000),
-                                message: stream.Value.ErrorMessage,
+                                message: elementType,
                                 "",
                                 "",
                                 workflowName: stream.Value.BpmnProcessId ?? "",
@@ -78,27 +90,28 @@ public class IncidentExporter : BaseExporter, IExporter
                                 bodyHeaders.ACustomer,
                                 cancellationToken);
                             }
+                        }
+
                     }
                 }
-                messageToBeDeleted.Add(process.Id);
+                else
+                {
+                    //delete the messages which have other Intent's
+                    messageToBeDeleted.Add(process.Id);
+                }
+
             }
             var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
         }
     }
-    private Incident StreamToEntity(IncidentStream stream)
+
+    private Job StreamToEntity(JobStream stream)
     {
-        return new Incident
+        return new Job
         {
-            BpmnProcessId = stream.Value.BpmnProcessId,
-            Key = stream.Key,
+            //BpmnProcessId = stream.Value.BpmnProcessId,
+            Key = stream.Value.ElementInstanceKey,
             Timestamp = stream.Timestamp,
-            ErrorMessage = stream.Value.ErrorMessage,
-            ErrorType = stream.Value.ErrorType,
-            ElementId = stream.Value.ElementId,
-            ElementInstanceKey = stream.Value.ElementInstanceKey,
-            ProcessDefinitionKey = stream.Value.ProcessDefinitionKey,
-            ProcessInstanceKey= stream.Value.ProcessInstanceKey,
         };
     }
 }
-
