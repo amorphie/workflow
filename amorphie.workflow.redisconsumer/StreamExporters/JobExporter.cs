@@ -35,7 +35,7 @@ internal class JobExporter : BaseExporter, IExporter
                     continue;
                 }
 
-                if (stream.Intent == "COMPLETED" || stream.Intent == "CREATED")
+                if (stream.Intent == ZeebeEventKeys.COMPLETED || stream.Intent == ZeebeEventKeys.CREATED)
                 {
                     var entity = dbContext.Jobs.FirstOrDefault(s => s.Key == stream.Value.ElementInstanceKey);
 
@@ -43,13 +43,14 @@ internal class JobExporter : BaseExporter, IExporter
                     {
                         //entity.Intent = stream.Intent;
                         //entity.ModifiedAt = DateTime.UtcNow;
+                        entity.EndTimestamp = stream.Timestamp;
+                        entity.Intent = stream.Intent;
                         dbContext.Jobs.Update(entity);
                     }
                     else
                     {
                         //Start event triggered for the first time
                         entity = StreamToEntity(stream);
-                        entity.RedisId = process.Id;
                         dbContext.Jobs.Add(entity);
                     }
 
@@ -59,7 +60,7 @@ internal class JobExporter : BaseExporter, IExporter
                         messageToBeDeleted.Add(process.Id);
                         Boolean.TryParse(stream.Value.CustomHeaders["notifyClient"]?.ToString(), out bool notifyClient);
                         var elementType = stream.Value.Type;
-                        if (notifyClient && elementType == ZeebeVariableKeys.AmorphieHttpWorker)
+                        if (notifyClient)
                         {
                             var hubData = new PostSignalRData(
                                 Guid.Empty,
@@ -109,9 +110,12 @@ internal class JobExporter : BaseExporter, IExporter
     {
         return new Job
         {
-            //BpmnProcessId = stream.Value.BpmnProcessId,
+            BpmnProcessId = stream.Value.BpmnProcessId,
             Key = stream.Value.ElementInstanceKey,
             Timestamp = stream.Timestamp,
+            ElementType = stream.Value.Type,
+            Intent = stream.Intent,
+            ProcessInstanceKey = stream.Value.ProcessInstanceKey
         };
     }
 }

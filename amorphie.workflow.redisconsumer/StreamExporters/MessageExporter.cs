@@ -17,7 +17,7 @@ internal class MessageExporter : BaseExporter, IExporter
     }
     public async Task Attach(CancellationToken cancellationToken)
     {
-        var result = await redisDb.StreamReadGroupAsync(streamName, groupName, consumerName, readingStrategy);
+        var result = await ReadStreamEntryAsync(cancellationToken);
 
         if (result.Any())
         {
@@ -38,7 +38,7 @@ internal class MessageExporter : BaseExporter, IExporter
                 //PUBLISHED
                 //DELETED
                 //bir event tamamlandığında yukarıdaki herbir aşama için kayıt oluşuyor.
-                if (stream.Intent == "PUBLISHED")
+                if (stream.Intent == ZeebeEventKeys.PUBLISHED)
                 {
                     var entity = StreamToEntity(stream);
                     entity.RedisId = process.Id;
@@ -60,7 +60,7 @@ internal class MessageExporter : BaseExporter, IExporter
                     var savingResult = await dbContext.SaveChangesAsync();
                     if (savingResult > 0)
                     {
-                        messageToBeDeleted.Add(entity.RedisId);
+                        messageToBeDeleted.Add(process.Id);
                     }
 
                 }

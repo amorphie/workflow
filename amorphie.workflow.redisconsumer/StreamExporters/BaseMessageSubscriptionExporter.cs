@@ -35,7 +35,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                 //bir event tamamlandığında yukarıdaki herbir aşama için kayıt oluşuyor. bizim için sonuncu yeterli !
                 //processInstanceKey => Zeebes process key
                 //Variable-> InstanceId => amorphies id
-                if (stream.Intent == "CORRELATED" || stream.Intent == "CREATED")
+                if (stream.Intent == ZeebeEventKeys.CORRELATED || stream.Intent == ZeebeEventKeys.CREATED)
                 {
                     var entity = dbContext.MessageSubscriptions.FirstOrDefault(s => s.ProcessInstanceKey == stream.Value.ProcessInstanceKey);
                     WorkerBody? workerBody = null;

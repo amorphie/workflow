@@ -17,15 +17,14 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
     /// </summary>
     internal class StreamCleaner
     {
-        public async Task TrimNotAttachedStream(ConnectionMultiplexer connectionMultiplexer, int timeToLive, CancellationToken cancellationToken)
+        public async Task TrimNotAttachedStream(IDatabase redisDb, int timeToLive, CancellationToken cancellationToken)
         {
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var redisDb = connectionMultiplexer.GetDatabase();
                 await redisDb.StreamTrimAsync(ZeebeStreamKeys.PROCESS_EVENT, 10);
                 await redisDb.StreamTrimAsync(ZeebeStreamKeys.VARIABLE_DOCUMENT, 10);
-                await redisDb.StreamTrimAsync(ZeebeStreamKeys.JOB, 10);
+                //await redisDb.StreamTrimAsync(ZeebeStreamKeys.JOB, 10);
                 await redisDb.StreamTrimAsync(ZeebeStreamKeys.JOB_BATCH, 10);
 
                 await Task.Delay(timeToLive * 1000);

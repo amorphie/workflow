@@ -4,15 +4,13 @@ public class Job
 {
 
     public long Key { get; set; }
-    /// <summary>
-    /// Probably not needed
-    /// </summary>
-    public string RedisId { get; set; } = default!;
-    public string? InstanceId { get; set; }
-
     public long Timestamp { get; set; }
+    public long EndTimestamp { get; set; }
+
     public int Retries { get; set; }
 
-    public string? ErrorMessageName { get; set; }
-    public string? JobType { get; set; }
+    public string? BpmnProcessId { get; set; }
+    public string? ElementType { get; set; }
+    public string? Intent { get; set; }
+    public long ProcessInstanceKey { get; set; }
 }

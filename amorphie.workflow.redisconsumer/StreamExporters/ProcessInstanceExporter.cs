@@ -24,7 +24,7 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
         public async Task Attach(CancellationToken cancellationToken)
         {
 
-            var result = await redisDb.StreamReadGroupAsync(streamName, groupName, consumerName, readingStrategy);
+            var result = await ReadStreamEntryAsync(cancellationToken);
             if (result.Any())
             {
                 var messageToBeDeleted = new List<RedisValue>();
@@ -36,7 +36,6 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
                     var stream = JsonSerializer.Deserialize<ProcessInstanceStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     if (stream == null)
                     {
-                        //ihtimal mi??
                         continue;
                     }
 
@@ -53,18 +52,13 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
                         entity.RedisId = process.Id;
                         dbContext.ProcessInstances.Add(entity);
                     }
-                    if (true)
-                    {
-
-                    }
                     var savingResult = await dbContext.SaveChangesAsync();
                     if (savingResult > 0)
                     {
-                        messageToBeDeleted.Add(entity.RedisId);
+                        messageToBeDeleted.Add(process.Id);
                     }
                 }
-
-                //var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+                var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
             }
         }
         private ProcessInstance StreamToEntity(ProcessInstanceStream stream)

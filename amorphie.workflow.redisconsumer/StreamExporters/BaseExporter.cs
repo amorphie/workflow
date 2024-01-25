@@ -22,11 +22,11 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
         }
         protected async Task ConfigureGroup()
         {
-            if (!await redisDb.KeyExistsAsync(streamName) ||
-                (await redisDb.StreamGroupInfoAsync(streamName)).All(x => x.Name != groupName))
-            {
-                await redisDb.StreamCreateConsumerGroupAsync(streamName, groupName, "0-0", true);
-            }
+            // if (!await redisDb.KeyExistsAsync(streamName) ||
+            //     (await redisDb.StreamGroupInfoAsync(streamName)).All(x => x.Name != groupName))
+            // {
+            //     await redisDb.StreamCreateConsumerGroupAsync(streamName, groupName, "0-0", true);
+            // }
         }
         protected async Task<StreamEntry[]> ReadStreamEntryAsync(CancellationToken cancellationToken)
         {

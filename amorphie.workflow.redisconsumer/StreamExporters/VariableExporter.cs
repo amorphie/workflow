@@ -15,7 +15,7 @@ public class VariableExporter : BaseExporter, IExporter
     }
     public async Task Attach(CancellationToken cancellationToken)
     {
-        var result = await redisDb.StreamReadGroupAsync(streamName, groupName, this.consumerName, this.readingStrategy);
+        var result = await ReadStreamEntryAsync(cancellationToken);
         if (result.Any())
         {
             var messageToBeDeleted = new List<RedisValue>();

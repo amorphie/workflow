@@ -31,7 +31,7 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    var result = await redisDb.StreamReadGroupAsync(streamName, groupName, consumerName, ">");
+                    var result = await ReadStreamEntryAsync(cancellationToken);
 
                     if (result.Any())
                     {

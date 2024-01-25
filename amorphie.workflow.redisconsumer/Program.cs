@@ -7,14 +7,13 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using StackExchange.Redis;
 using System.Threading;
 using System.Threading.Tasks;
 
 internal class Program
 {
-    private static string hubUrl;
-    private static DaprClient daprClient;
     private static async Task Main(string[] args)
     {
         //ConfigurationBuilder setup
@@ -26,12 +25,12 @@ internal class Program
         StateHelper.HubUrl = conf.GetValue<string>("hubUrl");
 
         //DI setup
-        IServiceCollection services = new ServiceCollection();
-        services.AddDbContext<WorkflowDBContext>(options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
-        var serviceProvider = services.BuildServiceProvider();
+        //IServiceCollection services = new ServiceCollection();
+        //services.AddDbContext<WorkflowDBContext>(options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
+        //var serviceProvider = services.BuildServiceProvider();
 
 
-        var dbContext = serviceProvider.GetRequiredService<WorkflowDBContext>();
+        //var dbContext = serviceProvider.GetRequiredService<WorkflowDBContext>();
 
         var configurationOptions = new ConfigurationOptions
         {
@@ -40,43 +39,53 @@ internal class Program
                 redisEndPoint
             }
         };
-        var connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(configurationOptions);
-        var redisDb = connectionMultiplexer.GetDatabase();
+        //var connectionMultiplexer = await ConnectionMultiplexer.ConnectAsync(configurationOptions);
+        //var redisDb = connectionMultiplexer.GetDatabase();
         var tokenSource = new CancellationTokenSource();
         var cancellationToken = tokenSource.Token;
 
-        string readingStrategy = ">";
-        var consumerName = Environment.MachineName + "1"; //it is needed for consumer group, 
 
-        //await StateHelper.CallStateManager("","default",cancellationToken);
-
-
-
-        var streamCleaner = new StreamCleaner();
-        var tasks = new List<Task>
+        IHost host = Host.CreateDefaultBuilder(args)
+        .ConfigureServices(services =>
         {
+            services.AddDaprClient();
+            services.AddScoped<IDatabase>(cfg =>
+            {
+                IConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(configurationOptions);
+                return multiplexer.GetDatabase();
+            });
+            services.AddDbContext<WorkflowDBContext>(options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
+            services.AddHostedService<ExporterWorker>();
+            services.AddHostedService<StreamCleanerWorker>();
+        })
+        .Build();
 
-            Task.Run(() => ActivateExporters(dbContext, redisDb, consumerName, readingStrategy, cancellationToken)),
-            Task.Run(()=>streamCleaner.TrimNotAttachedStream(connectionMultiplexer, 100, cancellationToken)),
+        host.Run();
+        // var streamCleaner = new StreamCleaner();
+        // var tasks = new List<Task>
+        // {
 
-        };
-        Task tasksResult;
-        try
-        {
-            tasksResult = await Task.WhenAny(tasks);
+        //     Task.Run(() => ActivateExporters(dbContext, redisDb, consumerName, readingStrategy, cancellationToken)),
+        //     Task.Run(()=>streamCleaner.TrimNotAttachedStream(redisDb, 100, cancellationToken)),
 
-        }
-        catch (System.Exception)
-        {
+        // };
+        // Task tasksResult;
+        // try
+        // {
+        //     tasksResult = await Task.WhenAny(tasks);
 
-            throw;
-        }
-        Console.WriteLine(tasksResult?.Exception?.Message);
-        Console.WriteLine(tasksResult?.Exception?.InnerException?.Message);
+        // }
+        // catch (System.Exception)
+        // {
 
-        //await ActivateExporters(dbContext, redisDb, consumerName, readingStrategy, cancellationToken);
+        //     throw;
+        // }
+        // Console.WriteLine(tasksResult?.Exception?.Message);
+        // Console.WriteLine(tasksResult?.Exception?.InnerException?.Message);
 
-        tokenSource.Cancel();
+        // //await ActivateExporters(dbContext, redisDb, consumerName, readingStrategy, cancellationToken);
+
+        // tokenSource.Cancel();
 
 
     }
