@@ -47,7 +47,7 @@ public class IncidentExporter : BaseExporter, IExporter
                 if (savingResult > 0)
                 {
                     messageToBeDeleted.Add(process.Id);
-                    if(stream.Value.ElementId=="NO_CATCH_EVENT_FOUND")
+                    if (stream.Value.ElementId == "NO_CATCH_EVENT_FOUND")
                     {
                         var hubData = new PostSignalRData(
                                 Guid.Empty,
@@ -69,15 +69,15 @@ public class IncidentExporter : BaseExporter, IExporter
                                 false,
                                 buttonType: ""
                             );
-                            if (RegisteredClients.ClientList.TryGetValue(stream.Value.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
-                            {
+                        if (RegisteredClients.ClientList.TryGetValue(stream.Value.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
+                        {
 
-                                await StateHelper.SendHubMessage(hubData, "eventInfo", "",
-                                bodyHeaders.XDeviceId,
-                                bodyHeaders.XTokenId,
-                                bodyHeaders.ACustomer,
-                                cancellationToken);
-                            }
+                            await StateHelper.SendHubMessage(hubData, "eventInfo", "",
+                            bodyHeaders.XDeviceId,
+                            bodyHeaders.XTokenId,
+                            bodyHeaders.ACustomer,
+                            cancellationToken);
+                        }
                     }
                 }
                 messageToBeDeleted.Add(process.Id);
@@ -97,7 +97,7 @@ public class IncidentExporter : BaseExporter, IExporter
             ElementId = stream.Value.ElementId,
             ElementInstanceKey = stream.Value.ElementInstanceKey,
             ProcessDefinitionKey = stream.Value.ProcessDefinitionKey,
-            ProcessInstanceKey= stream.Value.ProcessInstanceKey,
+            ProcessInstanceKey = stream.Value.ProcessInstanceKey,
         };
     }
 }

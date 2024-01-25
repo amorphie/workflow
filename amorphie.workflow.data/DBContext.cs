@@ -34,8 +34,8 @@ public class WorkflowDBContext : DbContext
     public DbSet<FlowHeader> FlowHeaders { get; set; } = default!;
 
     public DbSet<TransitionRole> TransitionRoles { get; set; } = default!;
-    
-    
+
+
     //Zeebe Exporter DbSets
 
     public DbSet<Deployment> Deployments { get; set; } = default!;
@@ -199,7 +199,7 @@ public class WorkflowDBContext : DbContext
 
         modelBuilder.Entity<Deployment>().ToTable("Deployments", "exporter")
         .HasKey(p => p.Key);
-        
+
         modelBuilder.Entity<Incident>().ToTable("Incidents", "exporter")
         .HasKey(p => p.Key);
 

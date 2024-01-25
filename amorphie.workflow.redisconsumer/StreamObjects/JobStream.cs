@@ -16,7 +16,7 @@ namespace amorphie.workflow.redisconsumer.StreamObjects
         public string? Type { get; set; }
         public long ElementInstanceKey { get; set; }
         public long ProcessInstanceKey { get; set; }
-        public JsonObject CustomHeaders { get; set; } =default!;
+        public JsonObject CustomHeaders { get; set; } = default!;
 
     }
 }

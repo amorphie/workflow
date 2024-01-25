@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters
 {
-    internal class ProcessEventExporter :BaseExporter, IExporter
+    internal class ProcessEventExporter : BaseExporter, IExporter
     {
 
-        public ProcessEventExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy):base(dbContext, redisDb, consumerName, readingStrategy) 
+        public ProcessEventExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
         {
             this.streamName = ZeebeStreamKeys.PROCESS_EVENT;
             this.groupName = ZeebeStreamKeys.PROCESS_EVENT_GROUP;

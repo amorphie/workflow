@@ -60,7 +60,7 @@ public class VariableExporter : BaseExporter, IExporter
             ProcessInstanceKey = stream.Value.ProcessInstanceKey,
             ProcessDefinitionKey = stream.Value.ProcessDefinitionKey,
             ScopeKey = stream.Value.ScopeKey,
-            Name=stream.Value.Name,
+            Name = stream.Value.Name,
             Value = stream.Value.Value,
         };
     }

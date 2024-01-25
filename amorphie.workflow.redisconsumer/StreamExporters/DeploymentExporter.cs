@@ -57,9 +57,9 @@ public class DeploymentExporter : BaseExporter, IExporter
             BpmnProcessId = stream.Value.BpmnProcessId,
             Key = stream.Key,
             Intent = stream.Intent,
-            Duplicate=stream.Value.Duplicate,
-            ResourceName=stream.Value.ResourceName,
-            Version=stream.Value.Version,
+            Duplicate = stream.Value.Duplicate,
+            ResourceName = stream.Value.ResourceName,
+            Version = stream.Value.Version,
         };
     }
 }
