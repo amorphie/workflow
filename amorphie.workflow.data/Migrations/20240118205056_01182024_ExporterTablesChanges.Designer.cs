@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -11,9 +12,11 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240118205056_01182024_ExporterTablesChanges")]
+    partial class _01182024_ExporterTablesChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -801,20 +804,18 @@ namespace amorphie.workflow.data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
 
-                    b.Property<string>("BpmnProcessId")
+                    b.Property<string>("ErrorMessageName")
                         .HasColumnType("text");
 
-                    b.Property<string>("ElementType")
+                    b.Property<string>("InstanceId")
                         .HasColumnType("text");
 
-                    b.Property<long>("EndTimestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Intent")
+                    b.Property<string>("JobType")
                         .HasColumnType("text");
 
-                    b.Property<long>("ProcessInstanceKey")
-                        .HasColumnType("bigint");
+                    b.Property<string>("RedisId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("Retries")
                         .HasColumnType("integer");

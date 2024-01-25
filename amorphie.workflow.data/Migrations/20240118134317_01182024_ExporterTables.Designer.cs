@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -11,9 +12,11 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240118134317_01182024_ExporterTables")]
+    partial class _01182024_ExporterTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,70 @@ namespace amorphie.workflow.data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Deployment", b =>
+                {
+                    b.Property<long>("Key")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
+
+                    b.Property<string>("BpmnProcessId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Duplicate")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Intent")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResourceName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("Deployments", "exporter");
+                });
+
+            modelBuilder.Entity("Incident", b =>
+                {
+                    b.Property<long>("Key")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
+
+                    b.Property<string>("BpmnProcessId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ElementId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ErrorMessageName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("JobType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Retries")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Timestamp")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("Incidents", "exporter");
+                });
 
             modelBuilder.Entity("Instance", b =>
                 {
@@ -209,6 +276,231 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("InstanceTransitions");
                 });
 
+            modelBuilder.Entity("Job", b =>
+                {
+                    b.Property<long>("Key")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
+
+                    b.Property<string>("ErrorMessageName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("JobType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RedisId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Retries")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Timestamp")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("Jobs", "exporter");
+                });
+
+            modelBuilder.Entity("Message", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BrokerVersion")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CorrelationKey")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("Deadline")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ElementId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Intent")
+                        .HasColumnType("text");
+
+                    b.Property<long>("Key")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MessageKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("MessageName")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ModifiedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("ProcessDefinitionKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProcessInstanceKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RecordType")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RecordVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RedisId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionType")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SourceRecordPosition")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Timestamp")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ValueType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Variables")
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Messages", "exporter");
+                });
+
+            modelBuilder.Entity("MessageSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BpmnProcessId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BrokerVersion")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CorrelationKey")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("Deadline")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ElementId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Intent")
+                        .HasColumnType("text");
+
+                    b.Property<long>("Key")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MessageKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("MessageName")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ModifiedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("ProcessDefinitionKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProcessInstanceKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RecordType")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RecordVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RedisId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionType")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SourceRecordPosition")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TenantId")
+                        .HasColumnType("text");
+
+                    b.Property<long>("Timestamp")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ValueType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Variables")
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MessageSubscriptions", "exporter");
+                });
+
             modelBuilder.Entity("Page", b =>
                 {
                     b.Property<Guid>("Id")
@@ -325,6 +617,149 @@ namespace amorphie.workflow.data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PageComponentUiModels");
+                });
+
+            modelBuilder.Entity("Process", b =>
+                {
+                    b.Property<long>("Key")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
+
+                    b.Property<string>("BpmnProcessId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("InstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ModifiedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RedisId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResourceName")
+                        .HasColumnType("text");
+
+                    b.Property<long>("Timestamp")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("Process", "exporter");
+                });
+
+            modelBuilder.Entity("ProcessInstance", b =>
+                {
+                    b.Property<long>("Key")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
+
+                    b.Property<string>("BpmnElementType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BpmnEventType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BpmnProcessId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BrokerVersion")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ElementId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("EndTimestamp")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FlowScopeKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Intent")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("ParentElementInstanceKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ParentProcessInstanceKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("PartitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("ProcessDefinitionKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProcessInstanceKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RecordType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RedisId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionReason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SourceRecordPosition")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Timestamp")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ValueType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("ProcessInstances", "exporter");
                 });
 
             modelBuilder.Entity("State", b =>
@@ -449,6 +884,40 @@ namespace amorphie.workflow.data.Migrations
                     b.HasIndex("ToStateName");
 
                     b.ToTable("Transitions");
+                });
+
+            modelBuilder.Entity("Variable", b =>
+                {
+                    b.Property<long>("Key")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
+
+                    b.Property<string>("BpmnProcessId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<long>("ProcessDefinitionKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProcessInstanceKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ScopeKey")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Timestamp")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("Variables", "exporter");
                 });
 
             modelBuilder.Entity("Workflow", b =>
@@ -721,476 +1190,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasKey("Key");
 
                     b.ToTable("FlowHeaders");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Deployment", b =>
-                {
-                    b.Property<long>("Key")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
-
-                    b.Property<string>("BpmnProcessId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("Duplicate")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Intent")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ResourceName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("Version")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Key");
-
-                    b.ToTable("Deployments", "exporter");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Incident", b =>
-                {
-                    b.Property<long>("Key")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
-
-                    b.Property<string>("BpmnProcessId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ElementId")
-                        .HasColumnType("text");
-
-                    b.Property<long>("ElementInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ErrorType")
-                        .HasColumnType("text");
-
-                    b.Property<long>("ProcessDefinitionKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ProcessInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("RejectionReason")
-                        .HasColumnType("text");
-
-                    b.Property<long>("Timestamp")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Key");
-
-                    b.ToTable("Incidents", "exporter");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Job", b =>
-                {
-                    b.Property<long>("Key")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
-
-                    b.Property<string>("BpmnProcessId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ElementType")
-                        .HasColumnType("text");
-
-                    b.Property<long>("EndTimestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Intent")
-                        .HasColumnType("text");
-
-                    b.Property<long>("ProcessInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Retries")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("Timestamp")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Key");
-
-                    b.ToTable("Jobs", "exporter");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Message", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("BrokerVersion")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CorrelationKey")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("Deadline")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ElementId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Intent")
-                        .HasColumnType("text");
-
-                    b.Property<long>("Key")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("MessageKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("MessageName")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("ProcessDefinitionKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ProcessInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("RecordType")
-                        .HasColumnType("text");
-
-                    b.Property<int>("RecordVersion")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RedisId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RejectionReason")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RejectionType")
-                        .HasColumnType("text");
-
-                    b.Property<int>("SourceRecordPosition")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("Timestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ValueType")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Variables")
-                        .HasColumnType("jsonb");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Messages", "exporter");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.MessageSubscription", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("BpmnProcessId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("BrokerVersion")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CorrelationKey")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("Deadline")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ElementId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("InstanceId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Intent")
-                        .HasColumnType("text");
-
-                    b.Property<long>("Key")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("MessageKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("MessageName")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("ProcessDefinitionKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ProcessInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("RecordType")
-                        .HasColumnType("text");
-
-                    b.Property<int>("RecordVersion")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RejectionReason")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RejectionType")
-                        .HasColumnType("text");
-
-                    b.Property<int>("SourceRecordPosition")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TenantId")
-                        .HasColumnType("text");
-
-                    b.Property<long>("Timestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ValueType")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Variables")
-                        .HasColumnType("jsonb");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("MessageSubscriptions", "exporter");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Process", b =>
-                {
-                    b.Property<long>("Key")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
-
-                    b.Property<string>("BpmnProcessId")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("InstanceId")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("RedisId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ResourceName")
-                        .HasColumnType("text");
-
-                    b.Property<long>("Timestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Key");
-
-                    b.ToTable("Process", "exporter");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.ProcessInstance", b =>
-                {
-                    b.Property<long>("Key")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
-
-                    b.Property<string>("BpmnElementType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("BpmnEventType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("BpmnProcessId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("BrokerVersion")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ElementId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("EndTimestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("FlowScopeKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Intent")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("ParentElementInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ParentProcessInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("PartitionId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("ProcessDefinitionKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ProcessInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("RecordType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RedisId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RejectionReason")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RejectionType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("SourceRecordPosition")
-                        .HasColumnType("integer");
-
-                    b.Property<long>("Timestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ValueType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Key");
-
-                    b.ToTable("ProcessInstances", "exporter");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Variable", b =>
-                {
-                    b.Property<long>("Key")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Key"));
-
-                    b.Property<string>("BpmnProcessId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<long>("ProcessDefinitionKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ProcessInstanceKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ScopeKey")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("Timestamp")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("text");
-
-                    b.HasKey("Key");
-
-                    b.ToTable("Variables", "exporter");
                 });
 
             modelBuilder.Entity("amorphie.workflow.core.Models.TransitionRole", b =>

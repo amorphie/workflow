@@ -582,6 +582,7 @@ public record ConsumerPostTransitionRequest
     public bool GetSignalRHub { get; set; }
     public dynamic? RouteData { get; set; }
     public dynamic? QueryData { get; set; }
+    public string? SetStateVia { get; set; }
 }
 
 public record ConsumerPostTransitionResponse(

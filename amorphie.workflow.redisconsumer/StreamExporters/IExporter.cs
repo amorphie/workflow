@@ -9,6 +9,6 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
 {
     public interface IExporter
     {
-        Task Attach(IDatabase redisDb, CancellationToken cancellationToken);
+        Task Attach(CancellationToken cancellationToken);
     }
 }

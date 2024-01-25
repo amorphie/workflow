@@ -2,9 +2,9 @@
 
 namespace amorphie.workflow.redisconsumer.StreamObjects
 {
-    public class MessageSubscriptionStream : BaseStream
+    public class MessageStream : BaseStream
     {
-        public MessageSubscriptionValue Value { get; set; }
+        public MessageValue Value { get; set; }
         public long Deadline { get; set; }
         public int Position { get; set; }
         public int SourceRecordPosition { get; set; }
@@ -14,7 +14,7 @@ namespace amorphie.workflow.redisconsumer.StreamObjects
         public int RecordVersion { get; set; }
         public string RecordType { get; set; }
     }
-    public class MessageSubscriptionValue
+    public class MessageValue
     {
         public string TenantId { get; set; }
         public JsonObject Variables { get; set; }
@@ -22,6 +22,7 @@ namespace amorphie.workflow.redisconsumer.StreamObjects
 
         public long ProcessInstanceKey { get; set; }
         public long ProcessDefinitionKey { get; set; }
+
         public string ElementId { get; set; }
         public string MessageName { get; set; }
         public long MessageKey { get; set; }

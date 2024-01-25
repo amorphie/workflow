@@ -1,8 +1,13 @@
 using amorphie.core.Base;
 namespace amorphie.workflow.core.Models.GatewayMessages;
-public class MessageSubscription : EntityBase
+
+public class Message : EntityBase
 {
 
+    /// <summary>
+    /// Probably not needed
+    /// </summary>
+    public string RedisId { get; set; } = default!;
     public string? InstanceId { get; set; }
 
     public long Deadline { get; set; }
@@ -19,10 +24,7 @@ public class MessageSubscription : EntityBase
     public string? BrokerVersion { get; set; }
     public string? RecordType { get; set; }
 
-    public string? TenantId { get; set; }
-
     public string? Variables { get; set; }
-    public string BpmnProcessId { get; set; } = default!;
 
     public long ProcessInstanceKey { get; set; }
     public long ProcessDefinitionKey { get; set; }

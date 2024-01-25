@@ -1,5 +1,6 @@
 ﻿using amorphie.core.Base;
 using amorphie.workflow.core.Models;
+using amorphie.workflow.core.Models.GatewayMessages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -34,8 +35,18 @@ public class WorkflowDBContext : DbContext
 
     public DbSet<TransitionRole> TransitionRoles { get; set; } = default!;
 
-    public DbSet<ProcessInstance> ProcessInstances { get; set; } = default!;
+
+    //Zeebe Exporter DbSets
+
+    public DbSet<Deployment> Deployments { get; set; } = default!;
+    public DbSet<Incident> Incidents { get; set; } = default!;
+    public DbSet<Job> Jobs { get; set; } = default!;
+    public DbSet<Message> Messages { get; set; } = default!;
     public DbSet<MessageSubscription> MessageSubscriptions { get; set; } = default!;
+    public DbSet<ProcessInstance> ProcessInstances { get; set; } = default!;
+    public DbSet<Variable> Variables { get; set; } = default!;
+
+
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -183,13 +194,40 @@ public class WorkflowDBContext : DbContext
         //modelBuilder.SeedRetailLoanWorkflow();
 
 
-        modelBuilder.Entity<ProcessInstance>()
+
+        //Zeebe Exporter Tables
+
+        modelBuilder.Entity<Deployment>().ToTable("Deployments", "exporter")
+        .HasKey(p => p.Key);
+
+        modelBuilder.Entity<Incident>().ToTable("Incidents", "exporter")
+        .HasKey(p => p.Key);
+
+        modelBuilder.Entity<Job>().ToTable("Jobs", "exporter")
+        .HasKey(p => p.Key);
+
+        modelBuilder.Entity<Message>().ToTable("Messages", "exporter")
+        .HasKey(p => p.Id);
+        modelBuilder.Entity<Message>()
+        .Property(p => p.Variables)
+        .HasColumnType("jsonb");
+
+        modelBuilder.Entity<MessageSubscription>().ToTable("MessageSubscriptions", "exporter")
         .HasKey(p => p.Id);
 
         modelBuilder.Entity<MessageSubscription>()
-        .HasKey(p => p.Id);
-        modelBuilder.Entity<MessageSubscription>()
         .Property(p => p.Variables)
         .HasColumnType("jsonb");
+
+        modelBuilder.Entity<Process>().ToTable("Process", "exporter")
+        .HasKey(p => p.Key);
+
+        modelBuilder.Entity<ProcessInstance>().ToTable("ProcessInstances", "exporter")
+        .HasKey(p => p.Key);
+
+
+        modelBuilder.Entity<Variable>().ToTable("Variables", "exporter")
+            .HasKey(p => p.Key);
+
     }
 }

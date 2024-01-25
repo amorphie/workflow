@@ -59,8 +59,12 @@ app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapHealthChecks("/health");
-app.AddZeebeWorkerMiddleware(zeebeGateway: "workflow-zeebe-command");
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/amorphie-workflow"), appBuilder =>
+{
+    app.AddZeebeWorkerMiddleware(zeebeGateway: "workflow-zeebe-command");
+});
 app.MapStateManagerEndpoints();
 app.MapHttpServiceManagerEndpoints();
 app.MapAccountFlowManagerEndpoints();
+app.MapExporterStateManagerEndpoints();
 app.Run();
