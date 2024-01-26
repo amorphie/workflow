@@ -20,7 +20,7 @@ public static class InstanceModule
 
     public static void MapInstanceEndpoints(this WebApplication app)
     {
-        app.MapGet("/workflow/instance", getAllInstance)
+        app.MapGet("/workflow/instance/get", getAllInstance)
             .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status204NoContent)
             .WithOpenApi(operation =>
