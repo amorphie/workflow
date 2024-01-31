@@ -2,10 +2,10 @@
 namespace amorphie.workflow.core.Dtos;
 public class WorkerBody
 {
-    public string? LastTransition { get; set; }
+    public string LastTransition { get; set; } = default!;
     public string? HubMessage { get; set; }
     public string? HubErrorCode { get; set; }
-    public string? InstanceId { get; set; }
+    public Guid InstanceId { get; set; } = default!;
 
     public WorkerBodyHeaders? BodyHeaders { get; set; } = new();
     public Dictionary<string, WorkerBodyTrxDatas>? WorkerBodyTrxDataList { get; set; } = new();
@@ -22,8 +22,8 @@ public class WorkerBodyHeaders
 public class WorkerBodyTrxDatas
 {
     public WorkerBodyTrxInnerDatas? Data { get; set; }
-    public string? TriggeredBy { get; set; }
-    public string? TriggeredByBehalfOf { get; set; }
+    public Guid TriggeredBy { get; set; }
+    public Guid TriggeredByBehalfOf { get; set; }
 }
 public class WorkerBodyTrxInnerDatas
 {

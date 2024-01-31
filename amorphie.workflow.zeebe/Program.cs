@@ -2,6 +2,8 @@ using amorphie.core.security.Extensions;
 using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.zeebe.Modules;
 using Dapr.Client;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,6 +47,11 @@ builder.Services.AddHttpClient("httpWorkerService")
              }
      }
    );
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+    {
+        options.SuppressModelStateInvalidFilter = true;
+    });
+builder.Services.AddValidatorsFromAssemblyContaining<WorkerBodyValidator>(includeInternalTypes: true);
 
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);

@@ -7,8 +7,6 @@ using System.Text.Json;
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class MessageExporter : BaseExporter, IExporter
 {
-
-    string lastReadId;
     public MessageExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
     {
         this.streamName = ZeebeStreamKeys.MESSAGE;
@@ -22,8 +20,6 @@ internal class MessageExporter : BaseExporter, IExporter
         if (result.Any())
         {
             var messageToBeDeleted = new List<RedisValue>();
-
-            lastReadId = result.Last().Id;
             foreach (var process in result)
             {
                 var value = process.Values[0].Value.ToString();
@@ -37,13 +33,10 @@ internal class MessageExporter : BaseExporter, IExporter
                 //PUBLISHING,
                 //PUBLISHED
                 //DELETED
-                //bir event tamamlandığında yukarıdaki herbir aşama için kayıt oluşuyor.
                 if (stream.Intent == ZeebeEventKeys.PUBLISHED)
                 {
                     var entity = StreamToEntity(stream);
-                    entity.RedisId = process.Id;
-
-                    if (stream.Value.Variables != null)
+                     if (stream.Value.Variables != null)
                     {
                         var variables = stream.Value.Variables;
                         var targetObject = stream.Value.Variables[$"TRX-{entity.MessageName}"];
@@ -53,8 +46,6 @@ internal class MessageExporter : BaseExporter, IExporter
                             entity.CreatedByBehalfOf = new Guid(targetObject[ZeebeVariableKeys.TriggeredByBehalfOf]?.ToString() ?? "");
                         }
                         entity.InstanceId = variables[ZeebeVariableKeys.InstanceId]?.ToString() ?? "";
-
-
                     }
                     dbContext.Messages.Add(entity);
                     var savingResult = await dbContext.SaveChangesAsync();
@@ -62,7 +53,6 @@ internal class MessageExporter : BaseExporter, IExporter
                     {
                         messageToBeDeleted.Add(process.Id);
                     }
-
                 }
                 else
                 {

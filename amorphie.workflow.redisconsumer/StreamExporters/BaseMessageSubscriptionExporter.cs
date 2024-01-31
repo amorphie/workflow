@@ -59,7 +59,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                                 entity.CreatedBy = new Guid(targetObject[ZeebeVariableKeys.TriggeredBy]?.ToString() ?? "");
                                 entity.CreatedByBehalfOf = new Guid(targetObject[ZeebeVariableKeys.TriggeredByBehalfOf]?.ToString() ?? "");
                             }
-                            entity.InstanceId = variables[ZeebeVariableKeys.InstanceId]?.ToString() ?? "";
+                            entity.InstanceId = Guid.Parse(variables[ZeebeVariableKeys.InstanceId]?.ToString() ?? "");
 
 
                             workerBody = SetWrokerBody(entity, stream);

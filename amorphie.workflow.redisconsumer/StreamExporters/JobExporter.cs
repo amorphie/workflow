@@ -3,7 +3,6 @@ using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using StackExchange.Redis;
-using System.Security.Principal;
 using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
