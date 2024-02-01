@@ -11,10 +11,7 @@ public class MFATypeHub : Hub
     {
         _logger.LogInformation($"Client try to  Connect: {Context.ConnectionId}");
         var httpCtx = Context.GetHttpContext();
-        string HeaderUser = string.Empty;
-        string GroupName = string.Empty;
-        string HeaderDeviceID = string.Empty;
-        HeaderDeviceID = httpCtx.Request.Query["X-Device-Id"].ToString();
+        string HeaderDeviceID = httpCtx.Request.Query["X-Device-Id"].ToString();
         if (string.IsNullOrEmpty(HeaderDeviceID))
         {
             HeaderDeviceID = httpCtx.Request.Query["x-device-id"].ToString();
@@ -23,8 +20,7 @@ public class MFATypeHub : Hub
         {
             throw new Exception("X-Device-Id can not be null");
         }
-        string HeaderToken = string.Empty;
-        HeaderToken = httpCtx.Request.Query["X-Token-Id"].ToString();
+        string HeaderToken = httpCtx.Request.Query["X-Token-Id"].ToString();
         if (string.IsNullOrEmpty(HeaderToken))
         {
             HeaderToken = httpCtx.Request.Query["x-token-id"].ToString();
@@ -34,13 +30,13 @@ public class MFATypeHub : Hub
             throw new Exception("X-Token-Id can not be null");
         }
 
-        GroupName = HeaderDeviceID + HeaderToken;
+        string GroupName = HeaderDeviceID + HeaderToken;
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
         return base.OnConnectedAsync();
     }
     public override Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.LogInformation($"Client Disconnected: " + DateTime.UtcNow);
+        _logger.LogInformation($"Client Disconnected: {Context.ConnectionId}, disconnect time: {DateTime.UtcNow}");
         _logger.LogInformation(exception?.ToString());
         return base.OnDisconnectedAsync(exception);
     }
