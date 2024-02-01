@@ -41,7 +41,7 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
                     entity = StreamToEntity(stream);
                     dbContext.ProcessInstances.Add(entity);
                 }
-                if (stream.Value.BpmnElementType == ZeebeElementTypeKeys.INTERMEDIATE_CATCH_EVENT && stream.Intent ==)
+                if (stream.Value.BpmnElementType == ZeebeElementTypeKeys.INTERMEDIATE_CATCH_EVENT && stream.Intent =="")
                 {
 
                 }
