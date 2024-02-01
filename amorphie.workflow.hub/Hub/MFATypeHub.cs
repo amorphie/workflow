@@ -1,92 +1,47 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
-namespace amorphie.workflow.hub
+namespace amorphie.workflow.hub;
+public class MFATypeHub : Hub
 {
-    public static class ClientRepo
+    ILogger<WorkflowHub> _logger;
+    public MFATypeHub(ILogger<WorkflowHub> logger)
     {
-public static Dictionary<string,string> ClientList = new Dictionary<string, string>();
+        _logger = logger;
     }
-    public class MFATypeHub : Hub
+    public async override Task<Task> OnConnectedAsync()
     {
-        ILogger<WorkflowHub> _logger;
-
-
-
-        public MFATypeHub(ILogger<WorkflowHub> logger)
+        _logger.LogInformation($"Client try to  Connect: {Context.ConnectionId}");
+        var httpCtx = Context.GetHttpContext();
+        string HeaderUser = string.Empty;
+        string GroupName = string.Empty;
+        string HeaderDeviceID = string.Empty;
+        HeaderDeviceID = httpCtx.Request.Query["X-Device-Id"].ToString();
+        if (string.IsNullOrEmpty(HeaderDeviceID))
         {
-            _logger = logger;
+            HeaderDeviceID = httpCtx.Request.Query["x-device-id"].ToString();
         }
-        
-        public async override Task<Task> OnConnectedAsync()
+        if (string.IsNullOrEmpty(HeaderDeviceID))
         {
-            _logger.LogInformation($"Client try to  Connect: {Context.ConnectionId}");
-
-string GroupName = await GetGroupName();
-
-ClientRepo.ClientList.Add(GroupName,Context.ConnectionId);
-
-            // await Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
-            _logger.LogInformation($"Client Connected: {Context.ConnectionId},GroupName : {GroupName}");
-            return base.OnConnectedAsync();
+            throw new Exception("X-Device-Id can not be null");
         }
-        public async override Task OnDisconnectedAsync(Exception? exception)
+        string HeaderToken = string.Empty;
+        HeaderToken = httpCtx.Request.Query["X-Token-Id"].ToString();
+        if (string.IsNullOrEmpty(HeaderToken))
         {
-            string GroupName = await GetGroupName();
-
-            ClientRepo.ClientList.Remove(GroupName);
-
-            _logger.LogInformation($"Client Disconnected: " + DateTime.UtcNow);
-            _logger.LogInformation(exception?.ToString());
-
-            await base.OnDisconnectedAsync(exception);
+            HeaderToken = httpCtx.Request.Query["x-token-id"].ToString();
+        }
+        if (string.IsNullOrEmpty(HeaderToken))
+        {
+            throw new Exception("X-Token-Id can not be null");
         }
 
-private async Task<string> GetGroupName()
-{
-            var httpCtx = Context.GetHttpContext();
-            string HeaderUser = string.Empty;
-            string GroupName = string.Empty;
-
-            string HeaderDeviceID = string.Empty;
-            HeaderDeviceID = httpCtx.Request.Query["X-Device-Id"].ToString();
-            if (string.IsNullOrEmpty(HeaderDeviceID))
-            {
-                HeaderDeviceID = httpCtx.Request.Query["x-device-id"].ToString();
-
-            }
-            if (string.IsNullOrEmpty(HeaderDeviceID))
-            {
-                throw new Exception("X-Device-Id can not be null");
-            }
-            string HeaderToken = string.Empty;
-            HeaderToken = httpCtx.Request.Query["X-Token-Id"].ToString();
-            if (string.IsNullOrEmpty(HeaderToken))
-            {
-                HeaderToken = httpCtx.Request.Query["x-token-id"].ToString();
-            }
-            if (string.IsNullOrEmpty(HeaderToken))
-            {
-                throw new Exception("X-Token-Id can not be null");
-            }
-
-            string requestId = string.Empty;
-            requestId = httpCtx.Request.Query["X-Request-Id"].ToString();
-            if (string.IsNullOrEmpty(requestId))
-            {
-                requestId = httpCtx.Request.Query["x-request-id"].ToString();
-            }
-            if (string.IsNullOrEmpty(requestId))
-            {
-                throw new Exception("X-Request-Id can not be null");
-            }
-
-
-            return HeaderDeviceID + HeaderToken + requestId;
-} 
+        GroupName = HeaderDeviceID + HeaderToken;
+        await Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
+        return base.OnConnectedAsync();
     }
-
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        _logger.LogInformation($"Client Disconnected: " + DateTime.UtcNow);
+        _logger.LogInformation(exception?.ToString());
+        return base.OnDisconnectedAsync(exception);
+    }
 }

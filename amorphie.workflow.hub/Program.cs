@@ -1,19 +1,18 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Principal;
-using System.Text;
-using System.Text.Json;
-using amorphie.workflow.core.Dtos;
+
+using amorphie.core.Extension;
 using amorphie.workflow.hub;
 using amorphie.workflow.hub.Module;
 using Dapr.Client;
-using IdentityModel.AspNetCore.OAuth2Introspection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.HttpLogging;
+using Serilog;
+
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", false, true);
+
 var daprClient = new DaprClientBuilder().Build();
+await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
+
 
 builder.Services.AddControllers();
 builder.Services.AddDaprClient();
@@ -32,10 +31,27 @@ builder.Services.AddCors(options =>
                 .AllowAnyMethod();
         });
 });
-builder.Services.AddHealthChecks();
+
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders | HttpLoggingFields.ResponsePropertiesAndHeaders;
+    logging.RequestHeaders.Add("sec-ch-ua");
+    logging.MediaTypeOptions.AddText("application/javascript");
+    logging.RequestBodyLogLimit = 4096;
+    logging.ResponseBodyLogLimit = 4096;
+    logging.CombineLogs = true;
+});
 builder.Services.AddSignalR();
+
+builder.Services.AddHealthChecks();
 builder.Services.AddMvc();
+
+builder.AddSeriLog();
+
 var app = builder.Build();
+app.UseHttpLogging();
+Log.Information("Amorphie Workflow Hub Starting");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

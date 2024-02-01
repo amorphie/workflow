@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
-namespace amorphie.workflow.hub
-{
+namespace amorphie.workflow.hub;
     public class WorkflowHub : Hub
     {
         ILogger<WorkflowHub> _logger;
@@ -30,5 +24,3 @@ namespace amorphie.workflow.hub
         }
 
     }
-
-}

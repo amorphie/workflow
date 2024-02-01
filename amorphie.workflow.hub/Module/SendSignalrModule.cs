@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using amorphie.workflow.core.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -35,10 +31,7 @@ public static class SendSignalrModule
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
         string jsonString = JsonSerializer.Serialize(data);
-        string client = ClientRepo.ClientList[deviceId + tokenId+requestId];
-
-
-        await hubContext.Clients.Client(client).SendAsync("SendMessage", jsonString);
+        await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
 
         return Results.Ok("");
     }
@@ -59,5 +52,3 @@ public static class SendSignalrModule
 
 
 }
-
-
