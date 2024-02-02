@@ -180,8 +180,8 @@ public static class StateManagerModule
         {
             string transitionNameAsString = transitionName.ToString();
             targetStateAsState = await dbContext.States.FirstOrDefaultAsync(f => f.Name == targetState
-            &&( f.WorkflowName == instance.WorkflowName||(instance.State.Type==StateType.SubWorkflow&&
-            instance.State.SubWorkflowName==f.WorkflowName ))
+            && (f.WorkflowName == instance.WorkflowName || (instance.State.Type == StateType.SubWorkflow &&
+            instance.State.SubWorkflowName == f.WorkflowName))
             , cancellationToken);
             if (targetStateAsState == null)
             {
