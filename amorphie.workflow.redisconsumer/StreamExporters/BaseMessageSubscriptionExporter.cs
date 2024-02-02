@@ -8,7 +8,7 @@ using System.Text.Json;
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
 {
-    public BaseMessageSubscriptionExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
+    public BaseMessageSubscriptionExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
     }
     public async Task Attach(CancellationToken cancellationToken)
@@ -59,7 +59,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                                 entity.CreatedBy = new Guid(targetObject[ZeebeVariableKeys.TriggeredBy]?.ToString() ?? "");
                                 entity.CreatedByBehalfOf = new Guid(targetObject[ZeebeVariableKeys.TriggeredByBehalfOf]?.ToString() ?? "");
                             }
-                            entity.InstanceId = variables[ZeebeVariableKeys.InstanceId]?.ToString() ?? "";
+                            entity.InstanceId = Guid.Parse(variables[ZeebeVariableKeys.InstanceId]?.ToString() ?? "");
 
 
                             workerBody = SetWrokerBody(entity, stream);
@@ -100,7 +100,10 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
         var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         //Register user at start
         if (stream.ValueType != null && ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION.Contains(stream.ValueType))
+        {
             RegisteredClients.ClientList.Add(entity.ProcessInstanceKey, workerBodyHeaders);
+            RegisteredClients.ActiveInstanceList.Add(entity.ProcessInstanceKey, workerBody.InstanceId);
+        }
 
         var workerBodyTrxDatas = targetObject.Deserialize<WorkerBodyTrxDatas>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         if (workerBodyTrxDatas?.Data?.SetStateVia != "exporter")

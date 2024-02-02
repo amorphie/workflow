@@ -2,13 +2,14 @@
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.redisconsumer.StreamObjects;
+using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 public class IncidentExporter : BaseExporter, IExporter
 {
-    public IncidentExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
+    public IncidentExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.INCIDENT;
         this.groupName = ZeebeStreamKeys.INCIDENT_GROUP;
@@ -71,12 +72,16 @@ public class IncidentExporter : BaseExporter, IExporter
                             );
                         if (RegisteredClients.ClientList.TryGetValue(stream.Value.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
                         {
-
                             await StateHelper.SendHubMessage(hubData, "eventInfo", "",
                             bodyHeaders.XDeviceId,
                             bodyHeaders.XTokenId,
                             bodyHeaders.ACustomer,
                             cancellationToken);
+                        }
+                        if (RegisteredClients.ActiveInstanceList.TryGetValue(stream.Value.ProcessInstanceKey, out Guid instanceId) && instanceId != Guid.Empty)
+                        {
+                            await UpdateInstanceBaseStatusToErrorAsync(instanceId);
+
                         }
                     }
                 }
@@ -99,6 +104,16 @@ public class IncidentExporter : BaseExporter, IExporter
             ProcessDefinitionKey = stream.Value.ProcessDefinitionKey,
             ProcessInstanceKey = stream.Value.ProcessInstanceKey,
         };
+    }
+
+    private async Task UpdateInstanceBaseStatusToErrorAsync(Guid instanceId)
+    {
+        Instance? instance = await dbContext.Instances.Where(i => i.Id == instanceId).FirstOrDefaultAsync();
+        if (instance != null)
+        {
+            instance.BaseStatus = amorphie.core.Enums.StatusType.Error;
+            await dbContext.SaveChangesAsync();
+        }
     }
 }
 

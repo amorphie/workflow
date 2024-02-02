@@ -1,4 +1,5 @@
-﻿using StackExchange.Redis;
+﻿using Serilog;
+using StackExchange.Redis;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters
 {
@@ -12,13 +13,12 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
         protected string groupName;
         protected readonly string readingStrategy;
 
-        public BaseExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy)
+        public BaseExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName)
         {
             this.dbContext = dbContext;
             this.redisDb = redisDb;
             this.consumerName = consumerName;
-            this.readingStrategy = readingStrategy;
-
+            Log.Information($"{this.GetType().Name} is constructed");
         }
         protected async Task ConfigureGroup()
         {
@@ -32,6 +32,7 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
         {
             return await redisDb.StreamRangeAsync(streamName, 0, "+", 100, Order.Ascending);
         }
+        
 
 
     }

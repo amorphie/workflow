@@ -198,7 +198,7 @@ public class WorkflowDBContext : DbContext
         //Zeebe Exporter Tables
 
         modelBuilder.Entity<Deployment>().ToTable("Deployments", "exporter")
-        .HasKey(p => p.Key);
+        .HasKey(p => p.ResourceName);
 
         modelBuilder.Entity<Incident>().ToTable("Incidents", "exporter")
         .HasKey(p => p.Key);

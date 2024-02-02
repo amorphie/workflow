@@ -3,7 +3,7 @@ namespace amorphie.workflow.core.Models.GatewayMessages;
 public class MessageSubscription : EntityBase
 {
 
-    public string? InstanceId { get; set; }
+    public Guid InstanceId { get; set; }
 
     public long Deadline { get; set; }
     public long Key { get; set; }

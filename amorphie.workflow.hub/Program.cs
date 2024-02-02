@@ -8,7 +8,7 @@ using Serilog;
 
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", false, true);
+//builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", false, true);
 
 var daprClient = new DaprClientBuilder().Build();
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
@@ -45,7 +45,14 @@ builder.Services.AddSignalR();
 
 builder.Services.AddHealthChecks();
 builder.Services.AddMvc();
+// var conf = builder.Configuration as IConfigurationRoot;
+// Log.Logger = new LoggerConfiguration()
+// .ReadFrom.Configuration(conf)
+// .CreateLogger();
 
+// //builder.Logging.ClearProviders();
+
+// builder.Host.UseSerilog(Log.Logger, true);
 builder.AddSeriLog();
 
 var app = builder.Build();

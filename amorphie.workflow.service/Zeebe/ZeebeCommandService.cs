@@ -1,12 +1,15 @@
 using System.Dynamic;
+using amorphie.core.Base;
+using amorphie.core.Enums;
 using amorphie.workflow.core.Constants;
 using Dapr.Client;
+using Microsoft.AspNetCore.Http;
 namespace amorphie.workflow.service.Zeebe
 {
     public interface IZeebeCommandService
     {
         Task<long> PublishMessage(string message, dynamic variables, string? correlationKey, string? gateway);
-        Task ThrowError(string gateway, long jobKey, string errorCode = "500", string errorMessage = "Bussines Error");
+        Task<Result> ThrowError(string gateway, long jobKey, string errorCode = "500", string errorMessage = "Bussines Error");
 
     }
 
@@ -40,16 +43,18 @@ namespace amorphie.workflow.service.Zeebe
             }
         }
 
-        public async Task ThrowError(string gateway, long jobKey, string errorCode, string errorMessage = "Bussines Error")
+        public async Task<Result> ThrowError(string gateway, long jobKey, string errorCode, string errorMessage = "Bussines Error")
         {
 
             ThrowErrorRequest messageData = new(jobKey, errorCode, errorMessage);
             try
             {
                 await _daprClient.InvokeBindingAsync(gateway, ZeebeCommands.ThrowError, messageData);
+                return new Result(Status.Success, "", "");
             }
             catch (Exception ex)
             {
+                return new Result(Status.Error, $"Problem occurred while thowing the zeebe error. Original error: {errorCode} {errorMessage} -- ThrowError Exception: {ex.Message}");
             }
 
         }

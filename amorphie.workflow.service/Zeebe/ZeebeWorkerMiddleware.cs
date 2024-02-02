@@ -1,3 +1,5 @@
+using System.Net;
+using amorphie.core.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace amorphie.workflow.service.Zeebe
@@ -26,15 +28,31 @@ namespace amorphie.workflow.service.Zeebe
         private async Task HandleExceptionAsync(HttpContext httpContext, IZeebeCommandService zeebeCommandService, Exception ex)
         {
             var jobKey = Convert.ToInt64(httpContext.Request.Headers["X-Zeebe-Job-Key"]);
+            string errorCode, errorMessage;
             if (ex is ZeebeBussinesException bussinesException)
             {
-                await zeebeCommandService.ThrowError(bindingGateway, jobKey, bussinesException.ErrorCode, bussinesException.ErrorMessage);
+                errorCode = bussinesException.ErrorCode;
+                errorMessage = bussinesException.ErrorMessage;
             }
             else
             {
-                await zeebeCommandService.ThrowError(bindingGateway, jobKey, "NonBusinessError", ex.Message);
+                errorCode = "NonBusinessError";
+                errorMessage = ex.Message + " " + ex.InnerException?.Message;
             }
-            await _next(httpContext);
+
+            var throwResult = await zeebeCommandService.ThrowError(bindingGateway, jobKey, errorCode, errorMessage);
+            if (throwResult.Status == Status.Success.ToString())
+            {
+                await _next(httpContext);
+            }
+            else
+            {
+                httpContext.Response.ContentType = "application/json";
+                httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                //var now = DateTime.UtcNow;
+                //Log.Error($"{now.ToString("HH:mm:ss")} : {ex}");
+                await httpContext.Response.WriteAsync(throwResult?.Message.ToString() ?? "");
+            }
         }
     }
 }
