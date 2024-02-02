@@ -1,13 +1,14 @@
 ﻿using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.redisconsumer.StreamObjects;
+using Serilog;
 using StackExchange.Redis;
 using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 public class DeploymentExporter : BaseExporter, IExporter
 {
-    public DeploymentExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
+    public DeploymentExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.DEPLOYMENT;
         this.groupName = ZeebeStreamKeys.DEPLOYMENT_GROUP;
@@ -27,11 +28,14 @@ public class DeploymentExporter : BaseExporter, IExporter
                 {
                     continue;
                 }
+                var resourceName = stream.Value.Resources.FirstOrDefault()?.ResourceName ?? stream.Value.ProcessesMetadata.FirstOrDefault()?.ResourceName;
 
-                var entity = dbContext.Deployments.FirstOrDefault(p => p.Key == stream.Key);
+                var entity = dbContext.Deployments.FirstOrDefault(p => p.ResourceName == resourceName);
                 if (entity != null)
                 {
                     entity.Intent = stream.Intent;
+                    entity.Version = stream.RecordVersion;
+                    entity.BpmnProcessId = stream.Value.ProcessesMetadata.FirstOrDefault()?.BpmnProcessId ?? "";
                     dbContext.Deployments.Update(entity);
                 }
                 else
@@ -52,15 +56,18 @@ public class DeploymentExporter : BaseExporter, IExporter
     }
     private Deployment StreamToEntity(DeploymentStream stream)
     {
-        return new Deployment
+        var deployment = new Deployment
         {
-            BpmnProcessId = stream.Value.BpmnProcessId,
-            Key = stream.Key,
+            BpmnProcessId = "",
             Intent = stream.Intent,
             Duplicate = stream.Value.Duplicate,
-            ResourceName = stream.Value.ResourceName,
             Version = stream.Value.Version,
         };
+        var resource = stream.Value.Resources.FirstOrDefault();
+        deployment.Resource = resource?.Resource ?? "";
+        deployment.ResourceName = resource?.ResourceName ?? "";
+        return deployment;
+
     }
 }
 

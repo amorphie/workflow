@@ -33,10 +33,21 @@ public static class ExporterStateManagerModule
             HttpContext httpContext,
             [FromServices] DaprClient client,
             [FromServices] IZeebeCommandService zbClient,
+            [FromServices] FluentValidation.IValidator<WorkerBody> validator,
              CancellationToken cancellationToken,
              IConfiguration configuration
+
         )
     {
+        FluentValidation.Results.ValidationResult validationResult =
+            await validator.ValidateAsync(body);
+
+        if (!validationResult.IsValid)
+        {
+            return Results.ValidationProblem(validationResult.ToDictionary());
+        }
+
+
         var targetState = request.Headers["TARGET_STATE"].ToString();
         //var jobKey = Convert.ToInt64(request.Headers["X-Zeebe-Job-Key"].ToString());
 
@@ -70,14 +81,9 @@ public static class ExporterStateManagerModule
             pageLanguage = "en-EN";
         }
 
-        Guid instanceId;
-        if (!Guid.TryParse(body.InstanceId, out instanceId))
-        {
-            return Results.Problem("InstanceId not provided or not as a GUID");
-        }
 
         Instance? instance = await dbContext.Instances
-            .Where(i => i.Id == instanceId)
+            .Where(i => i.Id == body.InstanceId)
             .Include(i => i.State)
                 .ThenInclude(s => s.Transitions)
                 .ThenInclude(t => t.ToState)
@@ -91,7 +97,7 @@ public static class ExporterStateManagerModule
 
         if (instance is null)
         {
-            return Results.Problem($"Instance not found with instance id : {instanceId} ");
+            return Results.Problem($"Instance not found with instance id : {body.InstanceId} ");
             //throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
         }
         bool error = false;
@@ -267,95 +273,26 @@ public static class ExporterStateManagerModule
 
         string eventInfo = "state-updated-by-exporter";
 
-        if (!string.IsNullOrEmpty(transition.ServiceName))
+
+        instance.BaseStatus = transition.ToState!.BaseStatus;
+        if (IsTargetState && targetStateAsState != null)
         {
-            // var userAPI = RestService.For<ITodoAPI>(transition.ServiceName);
-            ClientFactory _factory = new ClientFactory();
-            var clientFactory = _factory.CreateClient(transition.ServiceName);
-            // TODO : Use refit rather than httpclient and consider resiliency.
-            SendTransitionInfoRequest sendTransitionInfoRequest = new SendTransitionInfoRequest()
+            instance.StateName = targetStateAsState.Name;
+        }
+        if (!IsTargetState || targetStateAsState == null)
+        {
+            instance.StateName = transition.ToStateName;
+        }
+
+        if (instance.WorkflowName != transition.ToState.WorkflowName)
+        {
+            instance.WorkflowName = transition.ToState!.WorkflowName!;
+            if (!transition.ToState.Workflow!.Entities.Any(a => a.Name == instance.EntityName))
             {
-                recordId = instance.RecordId,
-                newStatus = IsTargetState && targetStateAsState != null ? targetStateAsState.Name : transition.ToStateName!,
-                entityData = JsonSerializer.Deserialize<object>(newInstanceTransition.EntityData),
-                user = newInstanceTransition.CreatedBy,
-                behalfOfUser = newInstanceTransition.CreatedByBehalfOf,
-                workflowName = instance.WorkflowName
-            };
-            try
-            {
-                var response = await clientFactory.PostModel(sendTransitionInfoRequest);
-
-                if (response.StatusCode == System.Net.HttpStatusCode.OK
-                || response.StatusCode == System.Net.HttpStatusCode.Created
-                || response.StatusCode == System.Net.HttpStatusCode.NoContent)
-                {
-                    instance.BaseStatus = transition.ToState!.BaseStatus;
-                    if (IsTargetState && targetStateAsState != null)
-                    {
-                        instance.StateName = targetStateAsState.Name;
-                    }
-                    if (!IsTargetState || targetStateAsState == null)
-                    {
-                        instance.StateName = transition.ToStateName;
-                    }
-                    if (instance.WorkflowName != transition.ToState.WorkflowName)
-                    {
-                        instance.WorkflowName = transition.ToState!.WorkflowName!;
-                        if (!transition.ToState.Workflow!.Entities.Any(a => a.Name == instance.EntityName))
-                        {
-                            instance.EntityName = transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
-                        }
-                    }
-                }
-
-                else
-                {
-
-                    try
-                    {
-
-                        var problem = Newtonsoft.Json.JsonConvert.DeserializeObject<Refit.ProblemDetails>(response.Error!.Content!);
-                        hubMessage += problem!.Detail;
-                    }
-                    catch (Exception ex)
-                    {
-                        hubMessage += response.ReasonPhrase;
-                    }
-                    instance.BaseStatus = transition.FromState!.BaseStatus;
-                    eventInfo = "worker-error-with-service-" + transition.ServiceName;
-                }
-            }
-            catch (Exception ex)
-            {
-
-                instance.BaseStatus = transition.FromState!.BaseStatus;
-                eventInfo = "worker-error-with-service-" + transition.ServiceName;
-
+                instance.EntityName = transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
             }
         }
-        else
-        {
-            instance.BaseStatus = transition.ToState!.BaseStatus;
-            if (IsTargetState && targetStateAsState != null)
-            {
-                instance.StateName = targetStateAsState.Name;
-            }
-            if (!IsTargetState || targetStateAsState == null)
-            {
-                instance.StateName = transition.ToStateName;
-            }
 
-            if (instance.WorkflowName != transition.ToState.WorkflowName)
-            {
-                instance.WorkflowName = transition.ToState!.WorkflowName!;
-                if (!transition.ToState.Workflow!.Entities.Any(a => a.Name == instance.EntityName))
-                {
-                    instance.EntityName = transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
-                }
-            }
-
-        }
         newInstanceTransition!.FinishedAt = DateTime.Now;
         // dbContext.Add(newInstanceTransition);
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.

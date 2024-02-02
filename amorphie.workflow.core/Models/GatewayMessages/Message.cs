@@ -3,13 +3,7 @@ namespace amorphie.workflow.core.Models.GatewayMessages;
 
 public class Message : EntityBase
 {
-
-    /// <summary>
-    /// Probably not needed
-    /// </summary>
-    public string RedisId { get; set; } = default!;
     public string? InstanceId { get; set; }
-
     public long Deadline { get; set; }
     public long Key { get; set; }
     public long Timestamp { get; set; }
@@ -19,7 +13,6 @@ public class Message : EntityBase
     public string? Intent { get; set; }
     public string? RejectionType { get; set; }
     public string? RejectionReason { get; set; }
-    //public string Authorizations { get; set; } //json
     public int RecordVersion { get; set; }
     public string? BrokerVersion { get; set; }
     public string? RecordType { get; set; }

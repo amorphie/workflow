@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.Modules;
+using amorphie.workflow.core.Models.Options;
 //using SecretExtensions;
 
 var builder = WebApplication.CreateBuilder(args);

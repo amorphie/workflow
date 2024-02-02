@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 public class VariableExporter : BaseExporter, IExporter
 {
-    public VariableExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
+    public VariableExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.VARIABLE;
         this.groupName = ZeebeStreamKeys.VARIABLE_GROUP;

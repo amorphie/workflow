@@ -3,7 +3,6 @@ using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using StackExchange.Redis;
-using System.Security.Principal;
 using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
@@ -11,7 +10,7 @@ namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class JobExporter : BaseExporter, IExporter
 {
 
-    public JobExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
+    public JobExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.JOB;
         this.groupName = ZeebeStreamKeys.JOB_GROUP;

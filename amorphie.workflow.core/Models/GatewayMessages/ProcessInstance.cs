@@ -2,12 +2,7 @@ namespace amorphie.workflow.core.Models.GatewayMessages;
 
 public class ProcessInstance
 {
-
     public long Key { get; set; }
-    /// <summary>
-    /// Probably not needed
-    /// </summary>
-    public string RedisId { get; set; } = default!;
     public int PartitionId { get; set; }
     public int Version { get; set; }
     public string BpmnProcessId { get; set; } = default!;

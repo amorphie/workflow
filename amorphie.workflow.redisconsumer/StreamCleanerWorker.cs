@@ -23,9 +23,7 @@ public class StreamCleanerWorker : BackgroundService
         {
             await redisDb.StreamTrimAsync(ZeebeStreamKeys.PROCESS_EVENT, 10);
             await redisDb.StreamTrimAsync(ZeebeStreamKeys.VARIABLE_DOCUMENT, 10);
-            //await redisDb.StreamTrimAsync(ZeebeStreamKeys.JOB, 10);
             await redisDb.StreamTrimAsync(ZeebeStreamKeys.JOB_BATCH, 10);
-
             await Task.Delay(timeToLive * 1000);
         }
     }
