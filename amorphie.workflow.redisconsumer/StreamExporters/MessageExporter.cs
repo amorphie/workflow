@@ -36,7 +36,7 @@ internal class MessageExporter : BaseExporter, IExporter
                 if (stream.Intent == ZeebeEventKeys.PUBLISHED)
                 {
                     var entity = StreamToEntity(stream);
-                     if (stream.Value.Variables != null)
+                    if (stream.Value.Variables != null)
                     {
                         var variables = stream.Value.Variables;
                         var targetObject = stream.Value.Variables[$"TRX-{entity.MessageName}"];
