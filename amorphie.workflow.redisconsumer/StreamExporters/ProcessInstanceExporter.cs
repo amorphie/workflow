@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class ProcessInstanceExporter : BaseExporter, IExporter
 {
-    public ProcessInstanceExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
+    public ProcessInstanceExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.PROCESS_INSTANCE;
         this.groupName = ZeebeStreamKeys.PROCESS_INSTANCE_GROUP;
@@ -41,8 +41,16 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
                     entity = StreamToEntity(stream);
                     dbContext.ProcessInstances.Add(entity);
                 }
-                if (stream.Value.BpmnElementType == ZeebeElementTypeKeys.INTERMEDIATE_CATCH_EVENT && stream.Intent =="")
+                //if workflow is at edge of the TRANSITION (amorphie definition represented with INTERMEDIATE_CATCH_EVENT in zeebe) and not called yet
+                if (stream.Value.BpmnElementType == ZeebeElementTypeKeys.INTERMEDIATE_CATCH_EVENT && stream.Intent == ZeebeEventKeys.ELEMENT_ACTIVATED)
                 {
+
+                }
+                //if workflow is done
+                if (stream.Value.BpmnElementType == ZeebeElementTypeKeys.END_EVENT && stream.Intent == ZeebeEventKeys.ELEMENT_COMPLETED)
+                {
+                    RegisteredClients.ClientList.Remove(entity.ProcessInstanceKey);
+                    RegisteredClients.ActiveInstanceList.Remove(entity.ProcessInstanceKey);
 
                 }
                 var savingResult = await dbContext.SaveChangesAsync();

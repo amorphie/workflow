@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class MessageExporter : BaseExporter, IExporter
 {
-    public MessageExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
+    public MessageExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.MESSAGE;
         this.groupName = ZeebeStreamKeys.MESSAGE_GROUP;

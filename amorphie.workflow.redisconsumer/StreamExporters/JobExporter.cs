@@ -10,7 +10,7 @@ namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class JobExporter : BaseExporter, IExporter
 {
 
-    public JobExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, string readingStrategy) : base(dbContext, redisDb, consumerName, readingStrategy)
+    public JobExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.JOB;
         this.groupName = ZeebeStreamKeys.JOB_GROUP;
