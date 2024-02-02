@@ -32,7 +32,7 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
         {
             return await redisDb.StreamRangeAsync(streamName, 0, "+", 100, Order.Ascending);
         }
-        
+
 
 
     }
