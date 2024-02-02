@@ -273,7 +273,7 @@ public class PostTransactionService : IPostTransactionService
         try
         {
             if (!_headerDict.TryGetValue("user_reference", out UserReference))
-             UserReference = string.Empty;
+                UserReference = string.Empty;
         }
         catch (Exception)
         {
@@ -318,7 +318,7 @@ public class PostTransactionService : IPostTransactionService
         try
         {
             if (!_headerDict.TryGetValue("user_reference", out UserReference))
-             UserReference = string.Empty;
+                UserReference = string.Empty;
         }
         catch (Exception ex)
         {
