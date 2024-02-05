@@ -12,9 +12,10 @@ public record GetInstanceResponse(
     string RecordId,
     Guid Id,
     string WorkflowName,
-    GetStateDefinition State,
+    GetStateDefinition? State,
     DateTime CreatedAt,
-    DateTime LastTransitionAt
+    DateTime? LastTransitionAt,
+    dynamic? data
     );
 
 

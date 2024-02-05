@@ -59,7 +59,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                                 entity.CreatedBy = new Guid(targetObject[ZeebeVariableKeys.TriggeredBy]?.ToString() ?? "");
                                 entity.CreatedByBehalfOf = new Guid(targetObject[ZeebeVariableKeys.TriggeredByBehalfOf]?.ToString() ?? "");
                             }
-                            entity.InstanceId = Guid.Parse(variables[ZeebeVariableKeys.InstanceId]?.ToString() ?? "");
+                            entity.InstanceId = Guid.Parse(variables[ZeebeVariableKeys.InstanceId]?.ToString() ?? "").ToString();
 
 
                             workerBody = SetWrokerBody(entity, stream);
@@ -91,7 +91,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
         var targetObject = stream.Value.Variables[$"TRX-{entity.MessageName}"];
         var workerBody = new WorkerBody
         {
-            InstanceId = entity.InstanceId,
+            InstanceId = Guid.Parse(entity.InstanceId),
             LastTransition = variables[ZeebeVariableKeys.LastTransition]?.ToString()
 
 

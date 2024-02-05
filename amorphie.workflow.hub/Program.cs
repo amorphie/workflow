@@ -4,6 +4,7 @@ using amorphie.workflow.hub;
 using amorphie.workflow.hub.Module;
 using Dapr.Client;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 
@@ -12,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var daprClient = new DaprClientBuilder().Build();
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
-
+var postgreSql = builder.Configuration["workflowdb"];
 
 builder.Services.AddControllers();
 builder.Services.AddDaprClient();
@@ -41,7 +42,11 @@ builder.Services.AddHttpLogging(logging =>
     logging.ResponseBodyLogLimit = 4096;
     logging.CombineLogs = true;
 });
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options=>
+{
+options.MaximumParallelInvocationsPerClient =50;
+ 
+});
 
 builder.Services.AddHealthChecks();
 builder.Services.AddMvc();
@@ -54,7 +59,8 @@ builder.Services.AddMvc();
 
 // builder.Host.UseSerilog(Log.Logger, true);
 builder.AddSeriLog();
-
+builder.Services.AddDbContext<WorkflowDBContext>
+    (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
 var app = builder.Build();
 app.UseHttpLogging();
 Log.Information("Amorphie Workflow Hub Starting");
@@ -75,5 +81,5 @@ app.UseSwaggerUI();
 app.MapHub<WorkflowHub>("/hubs/workflow");
 app.MapHub<MFATypeHub>("/hubs/genericHub");
 app.MapSignalrEndpoints();
-
+app.MapLongPoolingEndpoints();
 app.Run();

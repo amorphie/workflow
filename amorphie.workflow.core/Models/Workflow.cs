@@ -15,6 +15,7 @@ public class Workflow : EntityBaseWithOutId
     public ICollection<Translation> HistoryForms { get; set; } = default!;
     public NpgsqlTsVector? SearchVector { get; set; }
     public Guid? RecordId { get; set; }
+    public bool? IsForbiddenData { get; set; }
 
 }
 
