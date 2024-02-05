@@ -1,5 +1,43 @@
 
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using amorphie.workflow.core.Constants;
+
 namespace amorphie.workflow.core.Dtos;
+
+public class JsonObjectConverter
+{
+    public static WorkerBody JsonToWorkerBody(JsonObject body)
+    {
+        string transitionName = body[ZeebeVariableKeys.LastTransition]!.ToString();
+        var workerBody = new WorkerBody
+        {
+            InstanceId = new Guid(body[ZeebeVariableKeys.InstanceId]?.ToString() ?? ""),
+            LastTransition = transitionName
+
+
+        };
+        var bodyHeaders = body["Headers"];
+        var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        //TODO:  variable with (TRX-) will be deleted
+        var workerBodyTrxDatasDyna = body[$"TRX-{transitionName}"];
+        var workerBodyTrxDatas = workerBodyTrxDatasDyna.Deserialize<WorkerBodyTrxDatas>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        workerBody.WorkerBodyTrxDataList.Add($"TRX-{transitionName}", workerBodyTrxDatas);
+
+
+        transitionName = transitionName.DeleteUnAllowedCharecters();
+
+        var workerBodyTrxDatasDynamic2 = body[$"TRX{transitionName}"];
+        var workerBodyTrxDatas2 = workerBodyTrxDatasDynamic2.Deserialize<WorkerBodyTrxDatas>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        workerBody.WorkerBodyTrxDataList.Add($"TRX{transitionName}", workerBodyTrxDatas2);
+
+
+        workerBody.Headers = workerBodyHeaders;
+        return workerBody;
+    }
+
+}
 public class WorkerBody
 {
     public string LastTransition { get; set; } = default!;
@@ -7,7 +45,7 @@ public class WorkerBody
     public string? HubErrorCode { get; set; }
     public Guid InstanceId { get; set; } = default!;
 
-    public WorkerBodyHeaders? BodyHeaders { get; set; } = new();
+    public WorkerBodyHeaders? Headers { get; set; } = new();
     public Dictionary<string, WorkerBodyTrxDatas>? WorkerBodyTrxDataList { get; set; } = new();
 }
 
