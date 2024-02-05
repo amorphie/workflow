@@ -311,6 +311,7 @@ public static class DefinitionModule
                     Label = s.label,
                     Language = s.language
                 }).ToList(),
+                IsForbiddenData=data.IsForbiddenData,
                 Entities = entityList,
                 RecordId = recordIdNull ? null : recordId,
                 CreatedAt = DateTime.UtcNow,
@@ -346,6 +347,12 @@ public static class DefinitionModule
                 hasChanges = true;
                 existingRecord.ModifiedAt = DateTime.UtcNow;
                 existingRecord.RecordId = recordId;
+            }
+            if (data.IsForbiddenData!=null&&data.IsForbiddenData!=existingRecord.IsForbiddenData)
+            {
+                hasChanges = true;
+                existingRecord.IsForbiddenData =data.IsForbiddenData;
+                existingRecord.ModifiedAt = DateTime.UtcNow;
             }
             if ((existingRecord.HistoryForms == null || existingRecord.HistoryForms.Count == 0) && (data.historyForms != null && data.historyForms.Count() > 0))
             {
@@ -1071,6 +1078,7 @@ CancellationToken cancellationToken
             return Results.Ok(workflow);
         }
     }
+
     static IResult getState(
            [FromServices] WorkflowDBContext context,
            [FromRoute(Name = "definition-name")] string definition,

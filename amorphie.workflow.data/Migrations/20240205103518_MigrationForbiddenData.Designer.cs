@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -11,9 +12,11 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240205103518_MigrationForbiddenData")]
+    partial class MigrationForbiddenData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -947,9 +950,8 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<string>("ElementId")
                         .HasColumnType("text");
 
-                    b.Property<string>("InstanceId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("InstanceId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Intent")
                         .HasColumnType("text");
@@ -1180,74 +1182,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasKey("Key");
 
                     b.ToTable("Variables", "exporter");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.SignalR.SignalRData", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("InstanceId")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("data")
-                        .HasColumnType("text");
-
-                    b.Property<string>("datacontenttype")
-                        .HasColumnType("text");
-
-                    b.Property<string>("deviceId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("mfatype")
-                        .HasColumnType("text");
-
-                    b.Property<string>("requestId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("source")
-                        .HasColumnType("text");
-
-                    b.Property<string>("specversion")
-                        .HasColumnType("text");
-
-                    b.Property<string>("subject")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("time")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("tokenId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("type")
-                        .HasColumnType("text");
-
-                    b.Property<string>("userId")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SignalRResponses", "signalrdata");
                 });
 
             modelBuilder.Entity("amorphie.workflow.core.Models.TransitionRole", b =>

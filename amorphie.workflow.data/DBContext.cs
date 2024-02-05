@@ -1,6 +1,7 @@
 ﻿using amorphie.core.Base;
 using amorphie.workflow.core.Models;
 using amorphie.workflow.core.Models.GatewayMessages;
+using amorphie.workflow.core.Models.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -34,8 +35,8 @@ public class WorkflowDBContext : DbContext
     public DbSet<FlowHeader> FlowHeaders { get; set; } = default!;
 
     public DbSet<TransitionRole> TransitionRoles { get; set; } = default!;
-
-
+    //Hub Data
+    public DbSet<SignalRData> SignalRResponses { get; set; } = default!;
     //Zeebe Exporter DbSets
 
     public DbSet<Deployment> Deployments { get; set; } = default!;
@@ -228,6 +229,9 @@ public class WorkflowDBContext : DbContext
 
         modelBuilder.Entity<Variable>().ToTable("Variables", "exporter")
             .HasKey(p => p.Key);
+            //Hub Data
+        modelBuilder.Entity<SignalRData>().ToTable("SignalRResponses", "signalrdata")
+            .HasKey(p => p.Id);
 
     }
 }
