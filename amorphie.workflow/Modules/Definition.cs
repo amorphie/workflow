@@ -311,7 +311,7 @@ public static class DefinitionModule
                     Label = s.label,
                     Language = s.language
                 }).ToList(),
-                IsForbiddenData=data.IsForbiddenData,
+                IsForbiddenData = data.IsForbiddenData,
                 Entities = entityList,
                 RecordId = recordIdNull ? null : recordId,
                 CreatedAt = DateTime.UtcNow,
@@ -348,10 +348,10 @@ public static class DefinitionModule
                 existingRecord.ModifiedAt = DateTime.UtcNow;
                 existingRecord.RecordId = recordId;
             }
-            if (data.IsForbiddenData!=null&&data.IsForbiddenData!=existingRecord.IsForbiddenData)
+            if (data.IsForbiddenData != null && data.IsForbiddenData != existingRecord.IsForbiddenData)
             {
                 hasChanges = true;
-                existingRecord.IsForbiddenData =data.IsForbiddenData;
+                existingRecord.IsForbiddenData = data.IsForbiddenData;
                 existingRecord.ModifiedAt = DateTime.UtcNow;
             }
             if ((existingRecord.HistoryForms == null || existingRecord.HistoryForms.Count == 0) && (data.historyForms != null && data.historyForms.Count() > 0))

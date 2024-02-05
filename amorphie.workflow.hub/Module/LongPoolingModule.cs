@@ -13,8 +13,8 @@ namespace amorphie.workflow.hub
     {
         public static void MapLongPoolingEndpoints(this WebApplication app)
         {
-            app.MapPost("/longpooling/{instanceId}", LongPoolingGetLastData);
-           
+            app.MapGet("/longpooling/{instanceId}", LongPoolingGetLastData);
+
 
         }
         static async Task<IResult> LongPoolingGetLastData(
@@ -26,9 +26,9 @@ namespace amorphie.workflow.hub
 
          )
         {
-            SignalRData? data=await dbContext.SignalRResponses.Where(w=>w.InstanceId==instanceId&&w.tokenId==tokenId&&w.deviceId==deviceId)
-            .OrderByDescending(o=>o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
-            if(data==null)
+            SignalRData? data = await dbContext.SignalRResponses.Where(w => w.InstanceId == instanceId && w.tokenId == tokenId && w.deviceId == deviceId)
+            .OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
+            if (data == null)
             {
                 return Results.NotFound();
             }

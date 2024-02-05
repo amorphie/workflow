@@ -42,10 +42,10 @@ builder.Services.AddHttpLogging(logging =>
     logging.ResponseBodyLogLimit = 4096;
     logging.CombineLogs = true;
 });
-builder.Services.AddSignalR(options=>
+builder.Services.AddSignalR(options =>
 {
-options.MaximumParallelInvocationsPerClient =50;
- 
+    options.MaximumParallelInvocationsPerClient = 50;
+
 });
 
 builder.Services.AddHealthChecks();
