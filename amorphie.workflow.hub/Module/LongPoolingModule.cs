@@ -13,7 +13,7 @@ namespace amorphie.workflow.hub
     {
         public static void MapLongPoolingEndpoints(this WebApplication app)
         {
-            app.MapPost("/longpooling/{instanceId}", LongPoolingGetLastData);
+            app.MapGet("/longpooling/{instanceId}", LongPoolingGetLastData);
 
 
         }
