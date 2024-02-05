@@ -229,7 +229,7 @@ public class WorkflowDBContext : DbContext
 
         modelBuilder.Entity<Variable>().ToTable("Variables", "exporter")
             .HasKey(p => p.Key);
-            //Hub Data
+        //Hub Data
         modelBuilder.Entity<SignalRData>().ToTable("SignalRResponses", "signalrdata")
             .HasKey(p => p.Id);
 
