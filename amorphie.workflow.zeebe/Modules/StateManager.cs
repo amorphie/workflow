@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Helper;
@@ -23,7 +24,7 @@ public static class StateManagerModule
     }
 
     static async ValueTask<IResult> postWorkflowCompleted(
-            [FromBody] WorkerBody body,
+            [FromBody] JsonObject jsonBody,
             [FromServices] WorkflowDBContext dbContext,
             HttpRequest request,
             HttpContext httpContext,
@@ -33,9 +34,8 @@ public static class StateManagerModule
              IConfiguration configuration
         )
     {
-        // TODO : Include a parameter for the cancelation token and add cancelation token to FirstOrDefault
-        dynamic additionalDataDynamic = default!;
-        dynamic entityDataDynamic = default!;
+        WorkerBody body = JsonObjectConverter.JsonToWorkerBody(jsonBody);
+
         var targetState = request.Headers["TARGET_STATE"].ToString();
         string hubErrorCode = string.Empty;
         string pageUrl = request.Headers["PAGE_URL"].ToString();
@@ -125,7 +125,8 @@ public static class StateManagerModule
             IsTargetState = true;
             transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
                 .ThenInclude(t => t!.Entities).Where(t => t.Name == body.LastTransition
-           && instance.WorkflowName == t.ToState!.WorkflowName).FirstOrDefaultAsync(cancellationToken);
+           && (instance.WorkflowName == t.ToState!.WorkflowName || (instance.State.Type == StateType.SubWorkflow &&
+            instance.State.SubWorkflowName == t.ToState.WorkflowName))).FirstOrDefaultAsync(cancellationToken);
 
         }
         //var transitionData = JsonSerializer.Deserialize<dynamic>(body.GetProperty("LastTransitionData").ToString());
@@ -196,7 +197,7 @@ public static class StateManagerModule
                            eventInfo,
                            instance.Id,
                            instance.EntityName,
-                         entityDataDynamic,
+                         newInstanceTransition.EntityData,
                          DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
                          IsTargetState && targetStateAsState != null ? targetStateAsState.Name : newInstanceTransition.ToStateName,
                          transition.Name,
@@ -207,7 +208,7 @@ public static class StateManagerModule
                   transition.Page.Timeout),
                   message: "",
                   errorCode: hubErrorCode,
-                  additionalDataDynamic,
+                  newInstanceTransition.AdditionalData,
                   instance.WorkflowName,
                   transition.ToState.IsPublicForm == true ? "state" : "transition",
                   transition.requireData.GetValueOrDefault(false),
@@ -219,9 +220,9 @@ public static class StateManagerModule
                            id = instance.Id.ToString()
                        }
                        );
-        responseSignalRMFAType.Headers.Add("X-Device-Id", body.BodyHeaders.XDeviceId);
-        responseSignalRMFAType.Headers.Add("X-Token-Id", body.BodyHeaders.XTokenId);
-        responseSignalRMFAType.Headers.Add("A-Customer", body.BodyHeaders.ACustomer);
+        responseSignalRMFAType.Headers.Add("X-Device-Id", body.Headers.XDeviceId);
+        responseSignalRMFAType.Headers.Add("X-Token-Id", body.Headers.XTokenId);
+        responseSignalRMFAType.Headers.Add("A-Customer", body.Headers.ACustomer);
 
         await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, body.LastTransition, data));
@@ -238,48 +239,56 @@ public static class StateManagerModule
         targetObject.Data = _data;
         targetObject.TriggeredBy = instanceTransition.CreatedBy;
         targetObject.TriggeredByBehalfOf = instanceTransition.CreatedByBehalfOf;
-        string updateName = deleteUnAllowedCharecters(_transitionName);
+        string updateName = _transitionName.DeleteUnAllowedCharecters();
         variables.Add($"TRX-{_transitionName}", targetObject);
         variables.Add($"TRX{updateName}", targetObject);
         return variables;
     }
-    private static string deleteUnAllowedCharecters(string transitionName)
-    {
-        return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
-    }
+    // private static string deleteUnAllowedCharecters(string transitionName)
+    // {
+    //     return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
+    // }
     private static async Task<(InstanceTransition, WorkerBodyTrxDatas?, string)> SetInstanceTransition(WorkflowDBContext dbContext, Transition transition, Instance instance, bool error, WorkerBody body, bool IsTargetState, State? targetStateAsState, CancellationToken cancellationToken)
     {
 
         InstanceTransition? newInstanceTransition;
-        string updateName = deleteUnAllowedCharecters(body.LastTransition);
+        string updateName = body.LastTransition.DeleteUnAllowedCharecters();
         WorkerBodyTrxDatas? data = body.WorkerBodyTrxDataList?.GetValueOrDefault($"TRX{updateName}");
         if (!error)
         {
             newInstanceTransition = await dbContext.InstanceTransitions.OrderByDescending(o => o.StartedAt)
             .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.TransitionName == transition.Name, cancellationToken);
         }
+        //TODO : new instace tran null ise forname nesnesi ile birleştir else yi kaldır
         else
         {
             InstanceTransition? newInstanceTransitionForName = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
               .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.Transition!.FromStateName == transition.FromStateName, cancellationToken);
             newInstanceTransition = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
              .FirstOrDefaultAsync(f => f.InstanceId == instance.Id, cancellationToken);
+
             if (data == null)
             {
-                updateName = deleteUnAllowedCharecters(newInstanceTransition!.TransitionName);
+                updateName = newInstanceTransition!.TransitionName.DeleteUnAllowedCharecters();
                 data = body.WorkerBodyTrxDataList?.GetValueOrDefault($"TRX{updateName}");
-
             }
             if (data == null)
             {
-                updateName = deleteUnAllowedCharecters(newInstanceTransitionForName!.TransitionName);
+                updateName = newInstanceTransitionForName!.TransitionName.DeleteUnAllowedCharecters();
                 data = body.WorkerBodyTrxDataList?.GetValueOrDefault($"TRX{updateName}");
-
             }
-
-            newInstanceTransition!.AdditionalData = data.Data.AdditionalData.ToString();
-            newInstanceTransition!.EntityData = data.Data.EntityData.ToString();
-
+        }
+        if (data == null)
+        {
+            throw new ZeebeBussinesException(errorMessage: $"Data cannot fetched from body with the given LastTransitionName {updateName}");
+        }
+        else
+        {
+            if (data.Data != null)
+            {
+                newInstanceTransition!.AdditionalData = data.Data.AdditionalData?.ToString();
+                newInstanceTransition!.EntityData = data.Data.EntityData?.ToString() ?? "";
+            }
 
             if (!IsTargetState || targetStateAsState == null)
                 newInstanceTransition!.ToStateName = transition.ToStateName;
@@ -288,37 +297,38 @@ public static class StateManagerModule
 
             newInstanceTransition!.CreatedBy = data.TriggeredBy;
             newInstanceTransition!.CreatedByBehalfOf = data.TriggeredByBehalfOf;
-        }
-        newInstanceTransition!.TransitionName = transition.Name;
-        newInstanceTransition!.Transition = transition;
 
-        string eventInfo = "worker-completed";
+            newInstanceTransition!.TransitionName = transition.Name;
+            newInstanceTransition!.Transition = transition;
+
+            string eventInfo = "worker-completed";
 
 
-        instance.BaseStatus = transition.ToState!.BaseStatus;
-        if (IsTargetState && targetStateAsState != null)
-        {
-            instance.StateName = targetStateAsState.Name;
-        }
-        if (!IsTargetState || targetStateAsState == null)
-        {
-            instance.StateName = transition.ToStateName;
-        }
-
-        if (instance.WorkflowName != transition.ToState.WorkflowName)
-        {
-            instance.WorkflowName = transition.ToState!.WorkflowName!;
-            if (!transition.ToState.Workflow!.Entities.Any(a => a.Name == instance.EntityName))
+            instance.BaseStatus = transition.ToState!.BaseStatus;
+            if (IsTargetState && targetStateAsState != null)
             {
-                instance.EntityName = transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
+                instance.StateName = targetStateAsState.Name;
             }
-        }
+            if (!IsTargetState || targetStateAsState == null)
+            {
+                instance.StateName = transition.ToStateName;
+            }
 
-        newInstanceTransition!.FinishedAt = DateTime.Now;
-        // dbContext.Add(newInstanceTransition);
-        // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return (newInstanceTransition, data, eventInfo);
+            if (instance.WorkflowName != transition.ToState.WorkflowName)
+            {
+                instance.WorkflowName = transition.ToState!.WorkflowName!;
+                if (!transition.ToState.Workflow!.Entities.Any(a => a.Name == instance.EntityName))
+                {
+                    instance.EntityName = transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
+                }
+            }
+
+            newInstanceTransition!.FinishedAt = DateTime.Now;
+            // dbContext.Add(newInstanceTransition);
+            // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return (newInstanceTransition, data, eventInfo);
+        }
     }
 
 }

@@ -113,7 +113,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
         //Set users headers in order to claim at job notification stage
 
         workerBody.WorkerBodyTrxDataList.Add($"TRX{entity.MessageName}", workerBodyTrxDatas);
-        workerBody.BodyHeaders = workerBodyHeaders;
+        workerBody.Headers = workerBodyHeaders;
         return workerBody;
     }
 

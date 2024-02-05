@@ -7,7 +7,7 @@ public sealed class WorkerBodyValidator : AbstractValidator<WorkerBody>
     {
         RuleFor(x => x.LastTransition).NotNull().NotEmpty();
         RuleFor(x => x.InstanceId).NotNull().NotEmpty();
-        RuleFor(x => x.BodyHeaders).Cascade(CascadeMode.Stop).NotNull().SetValidator(new WorkerBodyHeadersValidator());
+        RuleFor(x => x.Headers).Cascade(CascadeMode.Stop).NotNull().SetValidator(new WorkerBodyHeadersValidator());
         //RuleFor(x => x.BodyHeaders).SetValidator(new WorkerBodyHeadersValidator());
         //RuleFor(x => x.BodyHeaders.XTokenId).NotNull().NotEmpty();
         //RuleFor(x => x.BodyHeaders.XDeviceId).NotNull().NotEmpty();
