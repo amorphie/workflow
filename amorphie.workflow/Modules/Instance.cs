@@ -389,10 +389,10 @@ public static class InstanceModule
     )
     {
         // TODO : Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
-        var query = context.Instances!.Include(s=>s.Workflow)
+        var query = context.Instances!.Include(s => s.Workflow)
    .Where(w => (string.IsNullOrEmpty(entity) || w.EntityName == entity) && (!recordId.HasValue || w.RecordId == recordId) &&
    (string.IsNullOrEmpty(workflowName) || w.WorkflowName == workflowName)
-    &&!w.Workflow.IsForbiddenData!=true)
+    && !w.Workflow.IsForbiddenData != true)
     .Include(s => s.State).ThenInclude(s => s.Titles)
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
     .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
@@ -402,12 +402,12 @@ public static class InstanceModule
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Page).ThenInclude(t => t.Pages).AsQueryable()
    ;
 
-        if(!string.IsNullOrEmpty(SortColumn))
-        query = await query.Sort<Instance>(SortColumn, SortDirection.GetValueOrDefault(0));
+        if (!string.IsNullOrEmpty(SortColumn))
+            query = await query.Sort<Instance>(SortColumn, SortDirection.GetValueOrDefault(0));
         var instances = await query.Skip(page.GetValueOrDefault(0) * pageSize.GetValueOrDefault(10))
          .Take(pageSize.GetValueOrDefault(10))
          .ToListAsync(cancellationToken);
-         var instanceTransitionsList=await context.InstanceTransitions.Where(s=>query.Any(q=>q.Id==s.InstanceId)).ToListAsync(cancellationToken);
+        var instanceTransitionsList = await context.InstanceTransitions.Where(s => query.Any(q => q.Id == s.InstanceId)).ToListAsync(cancellationToken);
         return Results.Ok(
                 instances.Select(s => new GetInstanceResponse(
                    s.EntityName,
@@ -423,7 +423,7 @@ public static class InstanceModule
                         new amorphie.workflow.core.Dtos.MultilanguageText(
                             language!, t.Titles.FirstOrDefault(f => f.Language == language)!.Label),
                         t.ToStateName!,
-                        t.UiForms!=null&&t.UiForms.Count()>0 ? null : t.UiForms.Select(st => new amorphie.workflow.core.Dtos.UiFormDto()
+                        t.UiForms != null && t.UiForms.Count() > 0 ? null : t.UiForms.Select(st => new amorphie.workflow.core.Dtos.UiFormDto()
                         {
                             typeofUi = st.TypeofUiEnum,
                             navigationType = st.Navigation,
@@ -441,12 +441,12 @@ public static class InstanceModule
                     )).ToArray()
                     ),
                    s.CreatedAt,
-                    
-                      instanceTransitionsList!.Any(w=>w.InstanceId==s.Id)?
-                      instanceTransitionsList.Where(w=>w.InstanceId==s.Id).OrderByDescending(s=>s.CreatedAt).FirstOrDefault()!.CreatedAt:
+
+                      instanceTransitionsList!.Any(w => w.InstanceId == s.Id) ?
+                      instanceTransitionsList.Where(w => w.InstanceId == s.Id).OrderByDescending(s => s.CreatedAt).FirstOrDefault()!.CreatedAt :
                       DateTime.UtcNow,
-                    instanceTransitionsList.Any(w=>w.InstanceId==s.Id)?
-                    System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransitionsList.Where(w=>w.InstanceId==s.Id).OrderByDescending(s=>s.CreatedAt).FirstOrDefault()!.EntityData) :
+                    instanceTransitionsList.Any(w => w.InstanceId == s.Id) ?
+                    System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransitionsList.Where(w => w.InstanceId == s.Id).OrderByDescending(s => s.CreatedAt).FirstOrDefault()!.EntityData) :
                     null
                     )
                 ).ToArray());
@@ -472,9 +472,9 @@ public static class InstanceModule
             isGuidSearch = false;
         }
 
-        var query = context!.Instances!.Include(s=>s.Workflow).Where(w =>( !isGuidSearch || (isGuidSearch && (guid == w.Id || guid == w.RecordId)))
-        &&(string.IsNullOrEmpty(workflowName)||(!string.IsNullOrEmpty(workflowName)&&workflowName==w.WorkflowName))
-    &&w.Workflow.IsForbiddenData!=true)
+        var query = context!.Instances!.Include(s => s.Workflow).Where(w => (!isGuidSearch || (isGuidSearch && (guid == w.Id || guid == w.RecordId)))
+          && (string.IsNullOrEmpty(workflowName) || (!string.IsNullOrEmpty(workflowName) && workflowName == w.WorkflowName))
+      && w.Workflow.IsForbiddenData != true)
           .Include(s => s.State).ThenInclude(s => s.Titles)
    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
     .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
@@ -490,10 +490,10 @@ public static class InstanceModule
         }
         query = await query.Sort<Instance>(instanceSearch.SortColumn, instanceSearch.SortDirection);
 
-        var instances =await query.Skip(instanceSearch.Page * instanceSearch.PageSize)
+        var instances = await query.Skip(instanceSearch.Page * instanceSearch.PageSize)
             .Take(instanceSearch.PageSize).ToListAsync(cancellationToken);
-         var instanceTransitionsList=await context.InstanceTransitions.Where(s=>query.Any(q=>q.Id==s.InstanceId)).ToListAsync(cancellationToken);
-        if ( instances.Count > 0)
+        var instanceTransitionsList = await context.InstanceTransitions.Where(s => query.Any(q => q.Id == s.InstanceId)).ToListAsync(cancellationToken);
+        if (instances.Count > 0)
         {
             var response = instances.Select(s => new GetInstanceResponse(
                    s.EntityName,
@@ -527,11 +527,11 @@ public static class InstanceModule
                     )).ToArray()
                     ),
                    s.CreatedAt,
-                      instanceTransitionsList.Any(w=>w.InstanceId==s.Id)?
-                      instanceTransitionsList.Where(w=>w.InstanceId==s.Id).OrderByDescending(s=>s.CreatedAt).FirstOrDefault()!.CreatedAt:
+                      instanceTransitionsList.Any(w => w.InstanceId == s.Id) ?
+                      instanceTransitionsList.Where(w => w.InstanceId == s.Id).OrderByDescending(s => s.CreatedAt).FirstOrDefault()!.CreatedAt :
                       DateTime.UtcNow,
-                    instanceTransitionsList.Any(w=>w.InstanceId==s.Id)?
-                    System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransitionsList.Where(w=>w.InstanceId==s.Id).OrderByDescending(s=>s.CreatedAt).FirstOrDefault()!.EntityData) :
+                    instanceTransitionsList.Any(w => w.InstanceId == s.Id) ?
+                    System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransitionsList.Where(w => w.InstanceId == s.Id).OrderByDescending(s => s.CreatedAt).FirstOrDefault()!.EntityData) :
                     null
 
                     )
@@ -544,12 +544,12 @@ public static class InstanceModule
         return Results.NoContent();
     }
 
- static async Task<IResult> getTransitionByInstanceAsync(
-      [FromServices] WorkflowDBContext context,
-      [FromRoute(Name = "instanceId")] Guid instanceId,
-      CancellationToken cancellationToken,
-         [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
-  )
+    static async Task<IResult> getTransitionByInstanceAsync(
+         [FromServices] WorkflowDBContext context,
+         [FromRoute(Name = "instanceId")] Guid instanceId,
+         CancellationToken cancellationToken,
+            [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
+     )
     {
         var instance = await context.Instances!.Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(s => s.UiForms)
         .Include(s => s.State).ThenInclude(s => s.SubWorkflow).ThenInclude(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.UiForms)
@@ -602,8 +602,8 @@ public static class InstanceModule
 
   )
     {
-        var instance = await context.Instances!.Include(s=>s.Workflow).Include(s => s.State).ThenInclude(s => s.Transitions).Where(s=>s.WorkflowName!=null)
-   .FirstOrDefaultAsync(w => w.Id == instanceId&&w.Workflow!.IsForbiddenData!=true, cancellationToken)
+        var instance = await context.Instances!.Include(s => s.Workflow).Include(s => s.State).ThenInclude(s => s.Transitions).Where(s => s.WorkflowName != null)
+   .FirstOrDefaultAsync(w => w.Id == instanceId && w.Workflow!.IsForbiddenData != true, cancellationToken)
    ;
         InstanceTransition? instanceTransition;
         if (instance == null)

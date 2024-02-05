@@ -7,12 +7,12 @@ namespace amorphie.workflow.core.Dtos
 {
     public class HierarchyState
     {
-        public string StateName {get;set;}=string.Empty;
-        public IQueryable<HierarchyTransition>? Transitions { get;set;}
+        public string StateName { get; set; } = string.Empty;
+        public IQueryable<HierarchyTransition>? Transitions { get; set; }
     }
-    public class HierarchyTransition 
+    public class HierarchyTransition
     {
-        public string TransitionName {get;set;}=string.Empty;
-        public HierarchyState? ToState {get;set;} 
+        public string TransitionName { get; set; } = string.Empty;
+        public HierarchyState? ToState { get; set; }
     }
 }

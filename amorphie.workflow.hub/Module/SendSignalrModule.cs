@@ -33,12 +33,12 @@ public static class SendSignalrModule
     {
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
-        response.deviceId=deviceId;
+        response.deviceId = deviceId;
         SignalRData dbData = ObjectMapper.Mapper.Map<SignalRData>(response);
-        dbData.tokenId=tokenId;
+        dbData.tokenId = tokenId;
         string jsonString = JsonSerializer.Serialize(data);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
-        SaveSignalRData(dbData,cancellationToken,dbContext);
+        SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
     }
     static async Task<IResult> SendMessagePrivate(IHubContext<MFATypeHub> hubContext,
@@ -52,19 +52,19 @@ public static class SendSignalrModule
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
         response.deviceId = deviceId;
-        
+
         SignalRData dbData = ObjectMapper.Mapper.Map<SignalRData>(response);
-        dbData.tokenId=tokenId;
+        dbData.tokenId = tokenId;
         string jsonString = JsonSerializer.Serialize(data);
 
         await hubContext.Clients.Group(deviceId + tokenId + customer).SendAsync("SendMessage", jsonString);
-        SaveSignalRData(dbData,cancellationToken,dbContext);
+        SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
     }
-    private static async Task SaveSignalRData(SignalRData data,CancellationToken cancellationToken,WorkflowDBContext dbContext)
+    private static async Task SaveSignalRData(SignalRData data, CancellationToken cancellationToken, WorkflowDBContext dbContext)
     {
-      await dbContext.SignalRResponses.AddAsync(data,cancellationToken);
-      await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SignalRResponses.AddAsync(data, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
 
