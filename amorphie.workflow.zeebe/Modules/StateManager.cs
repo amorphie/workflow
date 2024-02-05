@@ -227,7 +227,7 @@ public static class StateManagerModule
         await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, body.LastTransition, data));
     }
-    private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, dynamic _data)
+    private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, WorkerBodyTrxDatas _data)
     {
         dynamic variables = new Dictionary<string, dynamic>();
 
@@ -236,7 +236,7 @@ public static class StateManagerModule
         variables.Add("InstanceId", instanceTransition.InstanceId);
         variables.Add("LastTransition", _transitionName);
         dynamic targetObject = new System.Dynamic.ExpandoObject();
-        targetObject.Data = _data;
+        targetObject.Data = _data.Data;
         targetObject.TriggeredBy = instanceTransition.CreatedBy;
         targetObject.TriggeredByBehalfOf = instanceTransition.CreatedByBehalfOf;
         string updateName = _transitionName.DeleteUnAllowedCharecters();
