@@ -126,8 +126,8 @@ public static class StateManagerModule
             IsTargetState = true;
             transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
                 .ThenInclude(t => t!.Entities).Where(t => t.Name == body.LastTransition
-        //    && (instance.WorkflowName == t.ToState!.WorkflowName || (instance.State.Type == StateType.SubWorkflow &&
-        //     instance.State.SubWorkflowName == t.ToState.WorkflowName))
+            //    && (instance.WorkflowName == t.ToState!.WorkflowName || (instance.State.Type == StateType.SubWorkflow &&
+            //     instance.State.SubWorkflowName == t.ToState.WorkflowName))
             ).FirstOrDefaultAsync(cancellationToken);
 
         }
