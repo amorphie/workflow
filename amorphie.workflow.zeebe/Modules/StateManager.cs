@@ -112,7 +112,7 @@ public static class StateManagerModule
         else
         {
             targetStateAsState = await dbContext.States.FirstOrDefaultAsync(f => f.Name == targetState
-            
+
             // && (f.WorkflowName == instance.WorkflowName || (instance.State.Type == StateType.SubWorkflow &&
             // instance.State.SubWorkflowName == f.WorkflowName))
             , cancellationToken);
