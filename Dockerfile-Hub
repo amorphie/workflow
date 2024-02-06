@@ -1,10 +1,10 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM test-nexusapi-amorphie.apps.nonprod.ebt.bank/repository/amorphie/mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 
 RUN adduser -u 5679 --disabled-password --gecos "" amorphie-workflow-hubuser && chown -R amorphie-workflow-hubuser:amorphie-workflow-hubuser /app
 USER amorphie-workflow-hubuser
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM test-nexusapi-amorphie.apps.nonprod.ebt.bank/repository/amorphie/mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["./amorphie.workflow.hub/amorphie.workflow.hub.csproj", "."]
 RUN dotnet restore "./amorphie.workflow.hub.csproj"
