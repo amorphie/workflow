@@ -31,56 +31,58 @@ namespace amorphie.workflow.hub
          )
         {
             SignalRData? data = await dbContext.SignalRResponses.Where(w => w.InstanceId == instanceId && w.tokenId == tokenId && w.deviceId == deviceId
-            &&(w.subject=="worker-completed"||w.subject=="transition-completed"))
+            && (w.subject == "worker-completed" || w.subject == "transition-completed"))
             .OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
-            SignalRResponsePublic dbData =new SignalRResponsePublic();
+
+            SignalRResponsePublic dbData = new SignalRResponsePublic();
             if (data == null)
             {
-               State? state= await dbContext.States.Include(s=>s.Workflow).ThenInclude(s=>s.Entities)
-               .Where(s=>s.WorkflowName==workflowName&&s.Type==StateType.Start).FirstOrDefaultAsync(cancellationToken);
+                State? state = await dbContext.States.Include(s => s.Workflow).ThenInclude(s => s.Entities)
+                .Where(s => s.WorkflowName == workflowName && s.Type == StateType.Start).FirstOrDefaultAsync(cancellationToken);
 
-               if(state==null)
-               return Results.NotFound();
-               if(string.IsNullOrEmpty(state.InitPageName))
-               {
-                    state.InitPageName=state.Name;
-               }
-               string eventInfo="worker-completed";
-               PostSignalRData postSignalRData=new PostSignalRData(
-                            Guid.Empty,
-                          Guid.Empty,
-                         eventInfo,
-                          Guid.Empty,
-                          state.Workflow.Entities.FirstOrDefault()!.Name,
-                        new{}, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-                         state.Name, string.Empty, state.BaseStatus,
-                        new PostPageSignalRData(
-                             amorphie.workflow.core.Helper.EnumHelper.GetDescription<PageOperationType>(PageOperationType.Open),
-                         amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.Push),
-                          new MultilanguageText(language,state.InitPageName),0),
-                           string.Empty,
+                if (state == null)
+                    return Results.NotFound();
+                if (string.IsNullOrEmpty(state.InitPageName))
+                {
+                    state.InitPageName = state.Name;
+                }
+                string eventInfo = "worker-completed";
+                PostSignalRData postSignalRData = new PostSignalRData(
+                             Guid.Empty,
+                           Guid.Empty,
+                          eventInfo,
+                           Guid.Empty,
+                           state.Workflow.Entities.FirstOrDefault()!.Name,
+                         new { }, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
+                          state.Name, string.Empty, state.BaseStatus,
+                         new PostPageSignalRData(
+                              amorphie.workflow.core.Helper.EnumHelper.GetDescription<PageOperationType>(PageOperationType.Open),
+                          amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.Push),
+                           new MultilanguageText(language, state.InitPageName), 0),
                             string.Empty,
-                            new{},
-                            workflowName, state.IsPublicForm == true ? "state" : "transition",
-                             false,
-                              TransitionButtonType.Forward.ToString()
+                             string.Empty,
+                             new { },
+                             workflowName, state.IsPublicForm == true ? "state" : "transition",
+                              false,
+                               TransitionButtonType.Forward.ToString()
 
-                      );
-                        data=new SignalRData(){
-                    
-                          source = "workflow",
-                          type = "workflow",
-                          subject = eventInfo,
-                          InstanceId =string.Empty
+                       );
+                data = new SignalRData()
+                {
+
+                    source = "workflow",
+                    type = "workflow",
+                    subject = eventInfo,
+                    InstanceId = string.Empty
 
 
-                      };
-                       dbData = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
-                       dbData.data=postSignalRData;
-                       return Results.Ok(dbData);
+                };
+                dbData = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
+                dbData.data = postSignalRData;
+                return Results.Ok(dbData);
             }
             dbData = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
-            dbData.data= System.Text.Json.JsonSerializer.Deserialize<dynamic>(dbData.data);
+            dbData.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(dbData.data);
             return Results.Ok(dbData);
         }
     }
