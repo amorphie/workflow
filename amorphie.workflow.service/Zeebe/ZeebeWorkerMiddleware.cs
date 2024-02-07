@@ -1,6 +1,10 @@
 using System.Net;
+using System.Reflection;
+using System.Text.Json.Serialization;
 using amorphie.core.Enums;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
+using Serilog;
 
 namespace amorphie.workflow.service.Zeebe
 {
@@ -8,6 +12,8 @@ namespace amorphie.workflow.service.Zeebe
     {
         private readonly RequestDelegate _next;
         private readonly string bindingGateway;
+        private static readonly ILogger Logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType);
+
         public ZeebeWorkerMiddleware(RequestDelegate next, string gateway)
         {
             _next = next;
@@ -29,6 +35,7 @@ namespace amorphie.workflow.service.Zeebe
         {
             var jobKey = Convert.ToInt64(httpContext.Request.Headers["X-Zeebe-Job-Key"]);
             string errorCode, errorMessage;
+
             if (ex is ZeebeBussinesException bussinesException)
             {
                 errorCode = bussinesException.ErrorCode;
@@ -39,18 +46,20 @@ namespace amorphie.workflow.service.Zeebe
                 errorCode = "NonBusinessError";
                 errorMessage = ex.Message + " " + ex.InnerException?.Message;
             }
+            Logger.Error($"{errorCode} : {errorMessage}");
+
 
             var throwResult = await zeebeCommandService.ThrowError(bindingGateway, jobKey, errorCode, errorMessage);
             if (throwResult.Status == Status.Success.ToString())
             {
-                await _next(httpContext);
+                httpContext.Response.ContentType = "application/json";
+                httpContext.Response.StatusCode = (int)HttpStatusCode.AlreadyReported;
+                await httpContext.Response.WriteAsync("Worker throwed Zeebe Error");
             }
             else
             {
                 httpContext.Response.ContentType = "application/json";
                 httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                //var now = DateTime.UtcNow;
-                //Log.Error($"{now.ToString("HH:mm:ss")} : {ex}");
                 await httpContext.Response.WriteAsync(throwResult?.Message.ToString() ?? "");
             }
         }

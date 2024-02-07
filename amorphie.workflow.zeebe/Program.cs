@@ -1,4 +1,5 @@
 using amorphie.core.security.Extensions;
+using amorphie.workflow.core.ExceptionHandler;
 using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.zeebe.Modules;
 using Dapr.Client;
@@ -10,11 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 var daprClient = new DaprClientBuilder().Build();
 
-// builder.Services.AddDbContext<WorkflowDBContext>
-//     ((options) =>
-//     {
-//         options.UseNpgsql("Host=localhost:5432;Database=workflow;Username=postgres;Password=postgres");
-//     });
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
 builder.Services.AddDaprClient();
@@ -52,6 +48,16 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
         options.SuppressModelStateInvalidFilter = true;
     });
 builder.Services.AddValidatorsFromAssemblyContaining<WorkerBodyValidator>(includeInternalTypes: true);
+////Request and Response logging purpose
+
+var headersToBeLogged = new List<string>
+{
+    "Content-Type",
+    "Host",
+    "xdeviceid",
+    "X-Zeebe-Job-Key"
+};
+builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>(headersToBeLogged);
 
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
