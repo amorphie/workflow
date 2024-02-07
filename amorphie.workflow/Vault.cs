@@ -8,7 +8,7 @@ namespace amorphie.workflow
 {
    public static class Vault
     {
-        public static async Task AddVaultSecrets(this IConfigurationBuilder builder, string? secretStoreName, string[] secretPaths)
+        public static async Task AddVaultSecrets(this IConfigurationBuilder builder, string? secretStoreName, string[] secretPaths, DaprClient daprClient)
         {
             if(string.IsNullOrWhiteSpace(secretStoreName))
             {
@@ -16,7 +16,6 @@ namespace amorphie.workflow
             }
             try
             {
-                var daprClient = new DaprClientBuilder().Build();
                 foreach(var secretPath in secretPaths)
                 {
                     var secret = await daprClient.GetSecretAsync(secretStoreName,secretPath);

@@ -1,44 +1,23 @@
-
 using System.Text.Json.Serialization;
 using amorphie.workflow.core.Mapper;
 using System.Reflection;
 using amorphie.core.Extension;
 using amorphie.core.Identity;
-using amorphie.core.security;
-using amorphie.core.Swagger;
 using FluentValidation;
-
-
-//using amorphie.workflow;
+using amorphie.workflow.core.ExceptionHandler;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.Modules;
-using amorphie.workflow.core.Models.Options;
-//using SecretExtensions;
+using amorphie.workflow;
 
 var builder = WebApplication.CreateBuilder(args);
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
+
 var postgreSql = builder.Configuration["workflowdb"];
 
 
 builder.Services.AddScoped<IPostTransactionService, PostTransactionService>();
 builder.Services.AddScoped<IZeebeCommandService, ZeebeCommandService>();
-//await builder.Configuration.AddVaultSecrets("user-secretstore", "user-secretstore");
-//await builder.Configuration.AddVaultSecrets("user-secretstore", new string[] { "user-secretstore" });
-
-
-//await builder.Configuration.AddVaultSecrets("workflow-secretstore", new string[] { "DatabaseConnections" });  
-
-//var postgreSql = builder.Configuration["PostgreSql"];
-
-
-// builder.Services.AddDbContext<WorkflowDBContext>
-//     ((options) =>
-//     {
-//         //options.UseLazyLoadingProxies();
-//         options.UseNpgsql("Host=localhost:5432;Database=workflow;Username=postgres;Password=postgres");
-//     });
 
 builder.Logging.ClearProviders();
 builder.Services.AddHealthChecks();
@@ -91,21 +70,37 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
 
+////Request and Response logging purpose
+
+var headersToBeLogged = new List<string>
+{
+    "sec-ch-ua",
+    "Content-Type",
+    "Host",
+    "xdeviceid",
+};
+builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>(headersToBeLogged);
+
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
 db.Database.Migrate();
 app.MapHealthChecks("/health");
+app.UseExceptionMiddleware();
 
 app.UseCloudEvents();
 app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
 
+//Configure the HTTP request pipeline.
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpLogging();
+}
 app.UseSwagger();
 app.UseSwaggerUI();
-app.Logger.LogInformation("Registering Routes");
 
 app.MapDefinitionEndpoints();
 app.MapInstanceEndpoints();
@@ -113,7 +108,7 @@ app.MapConsumerEndpoints();
 app.MapAuthorizeEndpoints();
 try
 {
-    app.Logger.LogInformation("Starting application...");
+    app.Logger.LogInformation("Starting Amorphie Workflow application...");
     app.AddRoutes();
     app.Run();
 }
