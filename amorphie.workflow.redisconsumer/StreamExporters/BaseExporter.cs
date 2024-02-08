@@ -32,6 +32,12 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
         {
             return await redisDb.StreamRangeAsync(streamName, 0, "+", 100, Order.Ascending);
         }
+        protected async Task<long> DeleteMessagesAsync(List<RedisValue> messageToBeDeleted, CancellationToken cancellationToken)
+        {
+            if(messageToBeDeleted.Any())
+                return await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+            return 0;
+        }
 
 
 

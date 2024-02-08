@@ -36,15 +36,23 @@ public class ExporterWorker : BackgroundService
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            await deploymentExporter.Attach(cancellationToken);
-            await incidentExporter.Attach(cancellationToken);
-            await messageStartEventExporter.Attach(cancellationToken);
-            await messageSubscriptionExporter.Attach(cancellationToken);
-            await messageExporter.Attach(cancellationToken);
-            await processInstanceExporter.Attach(cancellationToken);
-            await variableExporter.Attach(cancellationToken);
-            await jobExporter.Attach(cancellationToken);
-            await Task.Delay(1000, cancellationToken);
+            try
+            {
+                await deploymentExporter.Attach(cancellationToken);
+                await incidentExporter.Attach(cancellationToken);
+                await messageStartEventExporter.Attach(cancellationToken);
+                await messageSubscriptionExporter.Attach(cancellationToken);
+                await messageExporter.Attach(cancellationToken);
+                await processInstanceExporter.Attach(cancellationToken);
+                await variableExporter.Attach(cancellationToken);
+                await jobExporter.Attach(cancellationToken);
+                await Task.Delay(1000, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogCritical($"An unhandled exception occured while running attachers: {ex}");
+            }
 
         }
     }

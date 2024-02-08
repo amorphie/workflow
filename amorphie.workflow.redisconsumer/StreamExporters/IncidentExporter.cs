@@ -48,46 +48,45 @@ public class IncidentExporter : BaseExporter, IExporter
                 if (savingResult > 0)
                 {
                     messageToBeDeleted.Add(process.Id);
-                    if (stream.Value.ElementId == "NO_CATCH_EVENT_FOUND")
+                    var message = stream.Value.ElementId == "NO_CATCH_EVENT_FOUND" ? "Wf has thrown error but there is not proper error event in wf " : " " + stream.Value.ErrorMessage;
+                    var instanceGuid = RegisteredClients.ActiveInstanceList.TryGetValue(stream.Value.ProcessInstanceKey, out Guid instanceId) ? instanceId : Guid.Empty;
+                    var hubData = new PostSignalRData(
+                            Guid.Empty,
+                            instanceGuid,
+                            "exporter notifies about error " + stream.Value.ErrorType,
+                            Guid.Empty,
+                            stream.Value.ElementId ?? "",
+                            "",
+                            DateTime.Now,
+                            stream.Intent,
+                            "",
+                            amorphie.core.Enums.StatusType.New,
+                            new PostPageSignalRData("", "", new MultilanguageText("", ""), 1000),
+                            message: message,
+                            "",
+                            "",
+                            workflowName: stream.Value.BpmnProcessId ?? "",
+                            "",
+                            false,
+                            buttonType: ""
+                        );
+                    if (RegisteredClients.ClientList.TryGetValue(stream.Value.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
                     {
-                        var hubData = new PostSignalRData(
-                                Guid.Empty,
-                                Guid.Empty,
-                                "message of exporter notifies about error " + stream.Value.ErrorType,
-                                Guid.Empty,
-                                stream.Value.ElementId ?? "",
-                                "",
-                                DateTime.Now,
-                                stream.Intent,
-                                "",
-                                amorphie.core.Enums.StatusType.New,
-                                new PostPageSignalRData("", "", new MultilanguageText("", ""), 1000),
-                                message: stream.Value.ErrorMessage,
-                                "",
-                                "",
-                                workflowName: stream.Value.BpmnProcessId ?? "",
-                                "",
-                                false,
-                                buttonType: ""
-                            );
-                        if (RegisteredClients.ClientList.TryGetValue(stream.Value.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
-                        {
-                            await StateHelper.SendHubMessage(hubData, "eventInfo", "",
-                            bodyHeaders.XDeviceId,
-                            bodyHeaders.XTokenId,
-                            bodyHeaders.ACustomer,
-                            cancellationToken);
-                        }
-                        if (RegisteredClients.ActiveInstanceList.TryGetValue(stream.Value.ProcessInstanceKey, out Guid instanceId) && instanceId != Guid.Empty)
-                        {
-                            await UpdateInstanceBaseStatusToErrorAsync(instanceId);
+                        await StateHelper.SendHubMessage(hubData, "eventInfo", "",
+                        bodyHeaders.XDeviceId,
+                        bodyHeaders.XTokenId,
+                        bodyHeaders.ACustomer,
+                        cancellationToken);
+                    }
+                    if (instanceId != Guid.Empty)
+                    {
+                        await UpdateInstanceBaseStatusToErrorAsync(instanceId);
 
-                        }
                     }
                 }
                 messageToBeDeleted.Add(process.Id);
             }
-            var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
         }
     }
     private Incident StreamToEntity(IncidentStream stream)

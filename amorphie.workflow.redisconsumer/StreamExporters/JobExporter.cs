@@ -61,11 +61,12 @@ internal class JobExporter : BaseExporter, IExporter
                         var elementType = stream.Value.Type;
                         if (notifyClient)
                         {
+                            var instanceGuid = RegisteredClients.ActiveInstanceList.TryGetValue(stream.Value.ProcessInstanceKey, out Guid instanceId) ? instanceId : Guid.Empty;
                             var hubData = new PostSignalRData(
                                 Guid.Empty,
-                                Guid.Empty,
-                                "message of exporter",
-                                Guid.Empty,
+                                instanceGuid,
+                                "message from exporter",
+                                instanceGuid,
                                 stream.Value.ElementId ?? "",
                                 "",
                                 DateTime.Now,
@@ -81,6 +82,7 @@ internal class JobExporter : BaseExporter, IExporter
                                 false,
                                 buttonType: ""
                             );
+
                             if (RegisteredClients.ClientList.TryGetValue(stream.Value.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
                             {
 
@@ -101,7 +103,7 @@ internal class JobExporter : BaseExporter, IExporter
                 }
 
             }
-            var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
         }
     }
 
