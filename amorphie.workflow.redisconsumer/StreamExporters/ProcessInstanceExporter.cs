@@ -66,7 +66,7 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
                     messageToBeDeleted.Add(process.Id);
                 }
             }
-           var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
         }
     }
     private ProcessInstance StreamToEntity(ProcessInstanceStream stream)
