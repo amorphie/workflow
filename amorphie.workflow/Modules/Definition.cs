@@ -178,6 +178,17 @@ public static class DefinitionModule
                   };
                   return operation;
               });
+        app.MapGet("/workflow/definition/{workflowName}/hyerarchy", getWorkflowHierarchy)
+      .WithOpenApi(operation =>
+      {
+
+          operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
+
+          operation.Responses = new OpenApiResponses
+          {
+          };
+          return operation;
+      });
 
     }
 
@@ -1707,6 +1718,67 @@ CancellationToken cancellationToken
         }
 
         return Results.NotFound();
+    }
+    static async ValueTask<IResult> getWorkflowHierarchy(
+   [FromServices] WorkflowDBContext context,
+   [FromRoute(Name = "workflowName")] string workflowName,
+   CancellationToken cancellationToken
+   )
+    {
+
+
+        var startStates = await context.States.Where(s => s.Type == StateType.Start && s.WorkflowName == workflowName)
+        .Include(s => s.Transitions).ThenInclude(s => s.ToState)
+        .ToListAsync(cancellationToken);
+        List<HierarchyState> hierarchyStates = new List<HierarchyState>();
+        List<string> AllWorkflowStates = new List<string>();
+        foreach (State startState in startStates)
+        {
+            WorkflowStates = new List<string>();
+            hierarchyStates.Add(ChangeToHyerArchy(context, startState, cancellationToken));
+            AllWorkflowStates.AddRange(WorkflowStates);
+        }
+        var excludeStates = await context.States.Where(s => !AllWorkflowStates.Any(a => a == s.Name) && s.WorkflowName == workflowName)
+        .Include(s => s.Transitions).ThenInclude(s => s.ToState)
+        .ToListAsync(cancellationToken);
+        foreach (State startState in excludeStates)
+        {
+            WorkflowStates = new List<string>();
+            hierarchyStates.Add(ChangeToHyerArchy(context, startState, cancellationToken));
+            AllWorkflowStates.AddRange(WorkflowStates);
+        }
+        return Results.Ok(hierarchyStates);
+    }
+    private static List<string> WorkflowStates = new List<string>();
+    private static HierarchyState ChangeToHyerArchy(WorkflowDBContext context, State state, CancellationToken cancellationToken)
+    {
+        HierarchyState hierarchyState = new HierarchyState();
+        try
+        {
+            if (state == null)
+                return null;
+            List<Transition> transitions = context.Transitions.Include(s => s.ToState).Where(w => w.FromStateName == state.Name).ToList();
+            WorkflowStates.Add(state.Name);
+
+            hierarchyState.StateName = state.Name;
+            hierarchyState.Transitions = new List<HierarchyTransition>();
+            if (transitions.Any())
+            {
+                hierarchyState.Transitions = transitions.Select(s => new HierarchyTransition
+                {
+                    TransitionName = s.Name,
+                    ToStateName = s.ToStateName,
+                    ToState = string.IsNullOrEmpty(s.ToStateName) ? null : !WorkflowStates.Any(a => a == s.ToStateName) ? ChangeToHyerArchy(context, s.ToState, cancellationToken) : null
+                }).ToList();
+            }
+
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        return hierarchyState;
     }
 }
 
