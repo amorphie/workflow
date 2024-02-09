@@ -11,13 +11,13 @@ namespace amorphie.workflow.data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<Guid>(
-                name: "InstanceId",
-                schema: "exporter",
-                table: "MessageSubscriptions",
-                type: "uuid",
-                nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+            // migrationBuilder.AddColumn<Guid>(
+            //     name: "InstanceId",
+            //     schema: "exporter",
+            //     table: "MessageSubscriptions",
+            //     type: "uuid",
+            //     nullable: false,
+            //     defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
         }
 
         /// <inheritdoc />
