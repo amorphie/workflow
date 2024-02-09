@@ -566,6 +566,15 @@ public class PostTransactionService : IPostTransactionService
             //             _transition.Page.Timeout), message, string.Empty, _data.AdditionalData, instance.WorkflowName, _transition.ToState.IsPublicForm == true ? "state" : "transition", _transition.requireData.GetValueOrDefault(false), _transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : _transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
 
             //           ));
+            bool routeChange=false;
+            if(eventInfo == "worker-started"||_transition.Page==null)
+            {
+                routeChange=false;
+            }
+            else if(_transition.Page!=null&&_transition.Page.Pages!=null&&_transition.Page.Pages.Count>0)
+            {
+                routeChange=true;
+            }
             var responseSignalRMFAtype = _client.CreateInvokeMethodRequest<SignalRRequest>(
                       HttpMethod.Post,
                       hubUrl,
@@ -587,7 +596,8 @@ public class PostTransactionService : IPostTransactionService
                           source = "workflow",
                           type = "workflow",
                           subject = eventInfo,
-                          id = instance.Id.ToString()
+                          id = instance.Id.ToString(),
+                          routeChange=routeChange
 
 
                       }
