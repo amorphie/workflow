@@ -59,9 +59,13 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                                 entity.CreatedBy = new Guid(targetObject[ZeebeVariableKeys.TriggeredBy]?.ToString() ?? "");
                                 entity.CreatedByBehalfOf = new Guid(targetObject[ZeebeVariableKeys.TriggeredByBehalfOf]?.ToString() ?? "");
                             }
-                            entity.InstanceId = Guid.Parse(variables[ZeebeVariableKeys.InstanceId]?.ToString() ?? "").ToString();
-
-
+                            var guidParseResult = Guid.TryParse(variables[ZeebeVariableKeys.InstanceId]?.ToString(), out Guid instanceGuid);
+                            if (!guidParseResult)
+                            {
+                                messageToBeDeleted.Add(process.Id);
+                                continue;
+                            }
+                            entity.InstanceId = instanceGuid;
                             workerBody = SetWrokerBody(entity, stream);
 
                             dbContext.MessageSubscriptions.Add(entity);
@@ -82,7 +86,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                 }
 
             }
-            var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
         }
     }
     private WorkerBody? SetWrokerBody(MessageSubscription entity, MessageSubscriptionStream stream)
@@ -91,7 +95,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
         var targetObject = stream.Value.Variables[$"TRX-{entity.MessageName}"];
         var workerBody = new WorkerBody
         {
-            InstanceId = Guid.Parse(entity.InstanceId),
+            InstanceId = entity.InstanceId,
             LastTransition = variables[ZeebeVariableKeys.LastTransition]?.ToString()
 
 

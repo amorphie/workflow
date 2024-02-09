@@ -60,7 +60,7 @@ internal class MessageExporter : BaseExporter, IExporter
                     messageToBeDeleted.Add(process.Id);
                 }
             }
-            var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
         }
     }
     private Message StreamToEntity(MessageStream stream)

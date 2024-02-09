@@ -108,7 +108,7 @@ public class StateHelper
             var signalRequest = daprClient.CreateInvokeMethodRequest<SignalRRequest>(
                       HttpMethod.Post,
                        HubUrl,
-                      "sendMessage/Public",
+                      "sendExporterMessage/Public",
                       new SignalRRequest()
                       {
                           data = hubData,

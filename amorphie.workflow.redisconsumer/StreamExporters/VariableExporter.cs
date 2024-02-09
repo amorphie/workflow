@@ -47,7 +47,7 @@ public class VariableExporter : BaseExporter, IExporter
                 }
                 messageToBeDeleted.Add(process.Id);
             }
-            var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
         }
     }
     private Variable StreamToEntity(VariableStream stream)

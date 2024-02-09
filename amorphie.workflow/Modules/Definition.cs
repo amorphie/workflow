@@ -1702,7 +1702,7 @@ CancellationToken cancellationToken
             }
             else
             {
-                return Results.Problem("Not Modified", null, 304);
+                return Results.StatusCode(StatusCodes.Status304NotModified);
             }
         }
 

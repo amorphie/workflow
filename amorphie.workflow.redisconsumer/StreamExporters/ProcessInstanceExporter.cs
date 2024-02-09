@@ -28,6 +28,12 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
                 {
                     continue;
                 }
+                //Do not log these elements
+                if (stream.Value.BpmnElementType == ZeebeElementTypeKeys.SEQUENCE_FLOW || stream.Value.BpmnElementType == ZeebeElementTypeKeys.EXCLUSIVE_GATEWAY)
+                {
+                    messageToBeDeleted.Add(process.Id);
+                    continue;
+                }
 
                 var entity = dbContext.ProcessInstances.FirstOrDefault(p => p.Key == stream.Key);
                 if (entity != null)
@@ -46,8 +52,9 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
                 {
 
                 }
-                //if workflow is done
-                if (stream.Value.BpmnElementType == ZeebeElementTypeKeys.END_EVENT && stream.Intent == ZeebeEventKeys.ELEMENT_COMPLETED)
+                //if workflow is done, eventhough flow ends (flow maybe a subprocess), the main process may not end
+                //thus check parentprocess key entity.ParentProcessInstanceKey == -1 means it is parent
+                if (stream.Value.BpmnElementType == ZeebeElementTypeKeys.END_EVENT && stream.Intent == ZeebeEventKeys.ELEMENT_COMPLETED && entity.ParentProcessInstanceKey == -1)
                 {
                     RegisteredClients.ClientList.Remove(entity.ProcessInstanceKey);
                     RegisteredClients.ActiveInstanceList.Remove(entity.ProcessInstanceKey);
@@ -59,7 +66,7 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
                     messageToBeDeleted.Add(process.Id);
                 }
             }
-            var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
         }
     }
     private ProcessInstance StreamToEntity(ProcessInstanceStream stream)

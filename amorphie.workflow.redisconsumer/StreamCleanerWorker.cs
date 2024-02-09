@@ -17,7 +17,7 @@ public class StreamCleanerWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        //_logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+        _logger.LogInformation("Stream cleaner worker start running at: {time}", DateTimeOffset.Now);
 
         while (!cancellationToken.IsCancellationRequested)
         {

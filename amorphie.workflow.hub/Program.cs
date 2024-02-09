@@ -35,7 +35,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddHttpLogging(logging =>
 {
-    logging.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders | HttpLoggingFields.ResponsePropertiesAndHeaders;
+    logging.LoggingFields = HttpLoggingFields.All;
     logging.RequestHeaders.Add("sec-ch-ua");
     logging.MediaTypeOptions.AddText("application/javascript");
     logging.RequestBodyLogLimit = 4096;

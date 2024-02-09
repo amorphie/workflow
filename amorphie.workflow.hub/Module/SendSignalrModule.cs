@@ -13,6 +13,8 @@ public static class SendSignalrModule
         app.MapPost("/sendMessage", SendMessage);
         app.MapPost("/sendMessage/public", SendMessagePublic);
         app.MapPost("/sendMessage/private", SendMessagePrivate);
+
+        app.MapPost("/sendExporterMessage/public", SendExporterMessagePublic);
     }
     static async Task<IResult> SendMessage(IHubContext<WorkflowHub> hubContext, PostSignalRData data)
     {
@@ -61,6 +63,26 @@ public static class SendSignalrModule
         SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
     }
+    static async Task<IResult> SendExporterMessagePublic(
+     IHubContext<MFATypeHub> hubContext,
+     [FromServices] WorkflowDBContext dbContext,
+     SignalRRequest data,
+      CancellationToken cancellationToken,
+      [FromHeader(Name = "X-Device-Id")] string? deviceId,
+         [FromHeader(Name = "X-Token-Id")] string? tokenId,
+         [FromHeader(Name = "X-Request-Id")] string? requestId
+      )
+    {
+        SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
+        response.time = DateTime.UtcNow;
+        response.deviceId = deviceId;
+        SignalRData dbData = ObjectMapper.Mapper.Map<SignalRData>(response);
+        dbData.tokenId = tokenId;
+        string jsonString = JsonSerializer.Serialize(data);
+        await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendExporterMessage", jsonString);
+        return Results.Ok("");
+    }
+
     private static async Task SaveSignalRData(SignalRData data, CancellationToken cancellationToken, WorkflowDBContext dbContext)
     {
         await dbContext.SignalRResponses.AddAsync(data, cancellationToken);
