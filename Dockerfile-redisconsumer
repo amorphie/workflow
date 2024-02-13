@@ -4,7 +4,7 @@ WORKDIR /src
 RUN adduser --disabled-password --gecos '' amorphie-workflowuser && chown -R amorphie-workflowuser:amorphie-workflowuser /src
 USER amorphie-workflowuser
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0.1 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0.101 AS build
 WORKDIR /src
 ENV DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 COPY ["./amorphie.workflow.redisconsumer/amorphie.workflow.redisconsumer.csproj", "."]
