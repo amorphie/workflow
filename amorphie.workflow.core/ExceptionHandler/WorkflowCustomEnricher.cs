@@ -5,6 +5,7 @@ using Serilog.Core;
 using Serilog.Events;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.Options;
+using amorphie.workflow.core.Constants;
 
 namespace amorphie.workflow.core.ExceptionHandler;
 
@@ -29,12 +30,10 @@ public class WorkflowCustomEnricher : ILogEventEnricher
         _logEvent = logEvent;
         _propertyFactory = propertyFactory;
 
-
         var httpContext = _httpContextAccessor.HttpContext;
 
         if (httpContext is not null)
         {
-
             try
             {
                 foreach (var header in httpContext.Request.Headers)
@@ -48,6 +47,15 @@ public class WorkflowCustomEnricher : ILogEventEnricher
                 {
                     AddPropertyIfAbsent($"query.{query.Key}", query.Value);
                 }
+                foreach (var route in httpContext.Request.RouteValues.Where(p => p.Value != null))
+                {
+                    AddPropertyIfAbsent($"route.{route.Key}", route.Value!);
+                    if (ZeebeVariableKeys.InstanceId.Equals(route.Key, StringComparison.OrdinalIgnoreCase))
+                        AddPropertyIfAbsent($"correlation.{ZeebeVariableKeys.InstanceId}", route.Value!);
+
+                }
+                if (httpContext.Items.TryGetValue(ZeebeVariableKeys.InstanceId, out var instanceId))
+                    AddPropertyIfAbsent($"correlation.{ZeebeVariableKeys.InstanceId}", instanceId);
 
                 var request = httpContext.Request;
                 var stream = request.Body;// At the begining it holding original request stream                    

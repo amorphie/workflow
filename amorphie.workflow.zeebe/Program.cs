@@ -6,6 +6,7 @@ using Dapr.Client;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog.Context;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,14 +51,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddValidatorsFromAssemblyContaining<WorkerBodyValidator>(includeInternalTypes: true);
 ////Request and Response logging purpose
 
-var headersToBeLogged = new List<string>
-{
-    "Content-Type",
-    "Host",
-    "xdeviceid",
-    "X-Zeebe-Job-Key"
-};
-builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>(headersToBeLogged);
+builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>();
 
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -69,6 +63,13 @@ app.UseCloudEvents();
 app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
+LogContext.PushProperty("InstanceId", "instanceIdAsString");
+//Configure the HTTP request pipeline.
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpLogging();
+}
+
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapHealthChecks("/health");

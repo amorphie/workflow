@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Helper;
@@ -7,6 +8,7 @@ using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 public static class StateManagerModule
 {
@@ -93,6 +95,7 @@ public static class StateManagerModule
             return Results.Problem($"Instance not found with instance id : {body.InstanceId} ");
             //throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
         }
+        httpContext.Items.Add(ZeebeVariableKeys.InstanceId, body.InstanceId.ToString());
         bool error = false;
         Transition? transition = null;
         State? targetStateAsState = null;

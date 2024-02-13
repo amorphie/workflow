@@ -46,6 +46,7 @@ namespace amorphie.workflow.service.Zeebe
                 errorCode = "NonBusinessError";
                 errorMessage = ex.Message + " " + ex.InnerException?.Message;
             }
+            //Logger.ForContext("InstanceId",)
             Logger.Error($"{errorCode} : {errorMessage}");
 
 
