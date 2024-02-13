@@ -14,13 +14,30 @@ public static class GenericExceptionExtension
         app.UseMiddleware<ExceptionMiddleware>();
     }
 
-    public static void AddSeriLogWithHttpLogging<TEnricher>(this WebApplicationBuilder builder, List<string> headersToBeLogged) where TEnricher : class, ILogEventEnricher
+    public static void AddSeriLogWithHttpLogging<TEnricher>(this WebApplicationBuilder builder, List<string>? headersToBeLogged = null) where TEnricher : class, ILogEventEnricher
     {
-
+        var defaultHeadersToBeLogged = new List<string>
+        {
+            "Content-Type",
+            "Host",
+            "X-Zeebe-Job-Key",
+            "xdeviceid",
+            "X-Device-Id",
+            "xtokenid",
+            "X-Token-Id",
+            "Transfer-Encoding",
+            "X-Forwarded-Host",
+            "X-Forwarded-For"
+        };
+        if (headersToBeLogged != null)
+            defaultHeadersToBeLogged = defaultHeadersToBeLogged.Concat(headersToBeLogged).ToList();
         builder.Services.AddHttpLogging(logging =>
         {
             logging.LoggingFields = HttpLoggingFields.All;
-            logging.RequestHeaders.Concat(headersToBeLogged);
+            //logging.RequestHeaders.Concat(headersToBeLogged);
+            defaultHeadersToBeLogged.ForEach(p => logging.RequestHeaders.Add(p));
+
+
             logging.MediaTypeOptions.AddText("application/javascript");
             logging.RequestBodyLogLimit = 4096;
             logging.ResponseBodyLogLimit = 4096;
@@ -35,10 +52,11 @@ public static class GenericExceptionExtension
         {
             var enricher = serviceProvider.GetRequiredService<ILogEventEnricher>();
             loggerConfiguration
+            //.Enrich.FromLogContext()
                 .ReadFrom.Configuration(builder.Configuration)
-                //.Enrich.FromLogContext()
-                .Enrich.When(p => p.Exception != null, x => x.With(enricher))
-                .Enrich.FromLogContext();
+                .Enrich.With(enricher)
+                ;
+            //.Enrich.When(p => p.Exception != null, x => x.With(enricher))
         });
     }
 }

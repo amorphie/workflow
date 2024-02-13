@@ -1,9 +1,9 @@
 
 using amorphie.core.Extension;
+using amorphie.workflow.core.ExceptionHandler;
 using amorphie.workflow.hub;
 using amorphie.workflow.hub.Module;
 using Dapr.Client;
-using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -33,15 +33,9 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddHttpLogging(logging =>
-{
-    logging.LoggingFields = HttpLoggingFields.All;
-    logging.RequestHeaders.Add("sec-ch-ua");
-    logging.MediaTypeOptions.AddText("application/javascript");
-    logging.RequestBodyLogLimit = 4096;
-    logging.ResponseBodyLogLimit = 4096;
-    logging.CombineLogs = true;
-});
+
+builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>();
+
 builder.Services.AddSignalR(options =>
 {
     options.MaximumParallelInvocationsPerClient = 50;
@@ -50,15 +44,7 @@ builder.Services.AddSignalR(options =>
 
 builder.Services.AddHealthChecks();
 builder.Services.AddMvc();
-// var conf = builder.Configuration as IConfigurationRoot;
-// Log.Logger = new LoggerConfiguration()
-// .ReadFrom.Configuration(conf)
-// .CreateLogger();
 
-// //builder.Logging.ClearProviders();
-
-// builder.Host.UseSerilog(Log.Logger, true);
-builder.AddSeriLog();
 builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
 var app = builder.Build();

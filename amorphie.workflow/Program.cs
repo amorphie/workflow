@@ -71,13 +71,9 @@ builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
 
 ////Request and Response logging purpose
-
 var headersToBeLogged = new List<string>
 {
     "sec-ch-ua",
-    "Content-Type",
-    "Host",
-    "xdeviceid",
 };
 builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>(headersToBeLogged);
 

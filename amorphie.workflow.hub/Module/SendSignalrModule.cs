@@ -1,4 +1,5 @@
 using System.Text.Json;
+using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Models.SignalR;
 using Microsoft.AspNetCore.Mvc;
@@ -27,60 +28,61 @@ public static class SendSignalrModule
      IHubContext<MFATypeHub> hubContext,
      [FromServices] WorkflowDBContext dbContext,
      SignalRRequest data,
+     HttpContext httpContext,
       CancellationToken cancellationToken,
       [FromHeader(Name = "X-Device-Id")] string? deviceId,
          [FromHeader(Name = "X-Token-Id")] string? tokenId,
          [FromHeader(Name = "X-Request-Id")] string? requestId
       )
     {
-        SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
-        response.time = DateTime.UtcNow;
-        response.deviceId = deviceId;
-        SignalRData dbData = ObjectMapper.Mapper.Map<SignalRData>(response);
-        dbData.tokenId = tokenId;
+        httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
+        var dbData = PrepareData(data, deviceId, tokenId);
         string jsonString = JsonSerializer.Serialize(data);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
-        SaveSignalRData(dbData, cancellationToken, dbContext);
+        await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
     }
     static async Task<IResult> SendMessagePrivate(IHubContext<MFATypeHub> hubContext,
       [FromServices] WorkflowDBContext dbContext,
      SignalRRequest data,
+     HttpContext httpContext,
      CancellationToken cancellationToken,
      [FromHeader(Name = "A-Customer")] string? customer,
       [FromHeader(Name = "X-Device-Id")] string? deviceId,
       [FromHeader(Name = "X-Token-Id")] string? tokenId)
     {
-        SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
-        response.time = DateTime.UtcNow;
-        response.deviceId = deviceId;
-
-        SignalRData dbData = ObjectMapper.Mapper.Map<SignalRData>(response);
-        dbData.tokenId = tokenId;
+        httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
+        var dbData = PrepareData(data, deviceId, tokenId);
         string jsonString = JsonSerializer.Serialize(data);
-
         await hubContext.Clients.Group(deviceId + tokenId + customer).SendAsync("SendMessage", jsonString);
-        SaveSignalRData(dbData, cancellationToken, dbContext);
+        await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
     }
     static async Task<IResult> SendExporterMessagePublic(
      IHubContext<MFATypeHub> hubContext,
-     [FromServices] WorkflowDBContext dbContext,
      SignalRRequest data,
+     HttpContext httpContext,
       CancellationToken cancellationToken,
       [FromHeader(Name = "X-Device-Id")] string? deviceId,
          [FromHeader(Name = "X-Token-Id")] string? tokenId,
          [FromHeader(Name = "X-Request-Id")] string? requestId
       )
     {
-        SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
-        response.time = DateTime.UtcNow;
-        response.deviceId = deviceId;
-        SignalRData dbData = ObjectMapper.Mapper.Map<SignalRData>(response);
-        dbData.tokenId = tokenId;
+        httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
         string jsonString = JsonSerializer.Serialize(data);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendExporterMessage", jsonString);
         return Results.Ok("");
+    }
+
+    private static SignalRData PrepareData(SignalRRequest data, string? deviceId, string tokenId)
+    {
+        SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
+        response.time = DateTime.UtcNow;
+        response.deviceId = deviceId;
+
+        SignalRData dbData = ObjectMapper.Mapper.Map<SignalRData>(response);
+        dbData.tokenId = tokenId;
+        return dbData;
     }
 
     private static async Task SaveSignalRData(SignalRData data, CancellationToken cancellationToken, WorkflowDBContext dbContext)
