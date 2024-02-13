@@ -1,0 +1,24 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /src
+
+RUN adduser --disabled-password --gecos '' amorphie-workflowuser && chown -R amorphie-workflowuser:amorphie-workflowuser /src
+USER amorphie-workflowuser
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+ENV DOTNET_NUGET_SIGNATURE_VERIFICATION=false
+COPY ["./amorphie.workflow.redisconsumer/amorphie.workflow.redisconsumer.csproj", "."]
+RUN dotnet restore "./amorphie.workflow.redisconsumer.csproj"
+COPY . .
+WORKDIR "/src/."
+RUN dotnet build "./amorphie.workflow.redisconsumer/amorphie.workflow.redisconsumer.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "./amorphie.workflow.redisconsumer/amorphie.workflow.redisconsumer.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+EXPOSE 5000
+ENV ASPNETCORE_URLS=http://+:5000
+ENTRYPOINT ["dotnet", "amorphie.workflow.redisconsumer.dll"]
