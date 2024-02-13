@@ -29,7 +29,7 @@ public static class GenericExceptionExtension
             "X-Forwarded-Host",
             "X-Forwarded-For"
         };
-        if(headersToBeLogged!=null)
+        if (headersToBeLogged != null)
             defaultHeadersToBeLogged = defaultHeadersToBeLogged.Concat(headersToBeLogged).ToList();
         builder.Services.AddHttpLogging(logging =>
         {

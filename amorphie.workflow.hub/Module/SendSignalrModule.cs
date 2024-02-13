@@ -68,7 +68,7 @@ public static class SendSignalrModule
          [FromHeader(Name = "X-Request-Id")] string? requestId
       )
     {
-         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
+        httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
         string jsonString = JsonSerializer.Serialize(data);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendExporterMessage", jsonString);
         return Results.Ok("");
