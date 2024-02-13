@@ -1,6 +1,8 @@
 
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Unicode;
 using amorphie.workflow.core.Constants;
 
 namespace amorphie.workflow.core.Dtos;
@@ -18,18 +20,18 @@ public class JsonObjectConverter
 
         };
         var bodyHeaders = body["Headers"];
-        var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) });
 
         //TODO:  variable with (TRX-) will be deleted
         var workerBodyTrxDatasDyna = body[$"TRX-{transitionName}"];
-        var workerBodyTrxDatas = workerBodyTrxDatasDyna.Deserialize<WorkerBodyTrxDatas>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var workerBodyTrxDatas = workerBodyTrxDatasDyna.Deserialize<WorkerBodyTrxDatas>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) });
         workerBody.WorkerBodyTrxDataList.Add($"TRX-{transitionName}", workerBodyTrxDatas);
 
 
         transitionName = transitionName.DeleteUnAllowedCharecters();
 
         var workerBodyTrxDatasDynamic2 = body[$"TRX{transitionName}"];
-        var workerBodyTrxDatas2 = workerBodyTrxDatasDynamic2.Deserialize<WorkerBodyTrxDatas>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var workerBodyTrxDatas2 = workerBodyTrxDatasDynamic2.Deserialize<WorkerBodyTrxDatas>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) });
         workerBody.WorkerBodyTrxDataList.Add($"TRX{transitionName}", workerBodyTrxDatas2);
 
 
