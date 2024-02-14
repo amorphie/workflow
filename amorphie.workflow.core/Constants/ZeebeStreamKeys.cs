@@ -9,6 +9,7 @@ namespace amorphie.workflow.core.Constants
     public static class ZeebeStreamKeys
     {
         private const string GateWayPrefix = "zeebe:";
+        public static string GateWay = "zeebe";
 
         public static string DEPLOYMENT => $"{GateWayPrefix}DEPLOYMENT";
         public static string INCIDENT => $"{GateWayPrefix}INCIDENT";

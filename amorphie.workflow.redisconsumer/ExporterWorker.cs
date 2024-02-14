@@ -34,6 +34,7 @@ public class ExporterWorker : BackgroundService
         var variableExporter = new VariableExporter(dbContext, redisDb, consumerName);
         var jobExporter = new JobExporter(dbContext, redisDb, consumerName);
 
+
         while (!cancellationToken.IsCancellationRequested)
         {
             try
@@ -46,6 +47,7 @@ public class ExporterWorker : BackgroundService
                 await processInstanceExporter.Attach(cancellationToken);
                 await variableExporter.Attach(cancellationToken);
                 await jobExporter.Attach(cancellationToken);
+
                 await Task.Delay(1000, cancellationToken);
             }
             catch (Exception ex)
