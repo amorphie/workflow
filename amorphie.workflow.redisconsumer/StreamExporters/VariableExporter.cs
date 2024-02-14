@@ -1,33 +1,33 @@
 ﻿using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.redisconsumer.StreamObjects;
+using Serilog;
 using StackExchange.Redis;
-using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 public class VariableExporter : BaseExporter, IExporter
 {
+    private static readonly Serilog.ILogger _logger = Log.ForContext<VariableExporter>();
+
     public VariableExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.VARIABLE;
         this.groupName = ZeebeStreamKeys.VARIABLE_GROUP;
         ConfigureGroup().Wait();
     }
-    public async Task Attach(CancellationToken cancellationToken)
+    public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
-        var result = await ReadStreamEntryAsync(cancellationToken);
-        if (result.Any())
+        try
         {
             var messageToBeDeleted = new List<RedisValue>();
-            foreach (var process in result)
+            foreach (var process in streamEntries)
             {
-                var value = process.Values[0].Value.ToString();
-                var stream = JsonSerializer.Deserialize<VariableStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var stream = Deserialize<VariableStream>(process);
+
                 if (stream == null)
                 {
                     continue;
                 }
-
                 var entity = dbContext.Variables.FirstOrDefault(p => p.Key == stream.Key);
                 if (entity != null)
                 {
@@ -48,6 +48,11 @@ public class VariableExporter : BaseExporter, IExporter
                 messageToBeDeleted.Add(process.Id);
             }
             var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"{e}");
+            throw;
         }
     }
     private Variable StreamToEntity(VariableStream stream)
