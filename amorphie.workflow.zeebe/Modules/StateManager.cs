@@ -168,25 +168,16 @@ public static class StateManagerModule
                 pageTypeStringBYTransition = string.Empty;
             }
         }
-        // var responseSignalR = client.InvokeMethodAsync<PostSignalRData, string>(
-        //            HttpMethod.Post,
-        //             hubUrl,
-        //            "sendMessage",
-        //            new PostSignalRData(
-        //                newInstanceTransition.CreatedBy,
-        //                instance.RecordId,
-        //                eventInfo,
-        //                instance.Id,
-        //                instance.EntityName,
-        //              entityDataDynamic, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), IsTargetState && targetStateAsState != null ?
-        //             targetStateAsState.Name : newInstanceTransition.ToStateName, transition.Name, instance.BaseStatus,
-        //      !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new amorphie.workflow.core.Dtos.MultilanguageText(pageLanguage, pageUrl), timeout) :
-        //       transition.Page == null ? null :
-        //       new PostPageSignalRData(transition.Page.Operation.ToString(), pageTypeStringBYTransition, transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-        //       transition.Page.Timeout), hubMessage, hubErrorCode, additionalDataDynamic, instance.WorkflowName, transition.ToState.IsPublicForm == true ? "state" : "transition",
-        //       transition.requireData.GetValueOrDefault(false)
-        //       , transition.transitionButtonType == 0 ? amorphie.workflow.core.Enums.TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(amorphie.workflow.core.Enums.TransitionButtonType.Forward).ToString()
-        //            ), cancellationToken);
+
+        bool routeChange = false;
+        if (!string.IsNullOrEmpty(pageUrl))
+        {
+            routeChange = true;
+        }
+        else if (transition.Page != null && transition.Page.Pages != null && transition.Page.Pages.Count > 0)
+        {
+            routeChange = true;
+        }
 
 
 
@@ -222,7 +213,8 @@ public static class StateManagerModule
                            source = "workflow",
                            type = "workflow",
                            subject = eventInfo,
-                           id = instance.Id.ToString()
+                           id = instance.Id.ToString(),
+                           routeChange = routeChange
                        }
                        );
         responseSignalRMFAType.Headers.Add("X-Device-Id", body.Headers.XDeviceId);
