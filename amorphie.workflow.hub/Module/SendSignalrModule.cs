@@ -86,6 +86,21 @@ public static class SendSignalrModule
         SignalRData dbData = ObjectMapper.Mapper.Map<SignalRData>(response);
         dbData.tokenId = tokenId;
         dbData.routeChange = data.routeChange;
+        if (dbData.routeChange.GetValueOrDefault())
+        {
+            try
+            {
+                PostSignalRData? postSignalRData = JsonSerializer.Deserialize<PostSignalRData>(data.data);
+                dbData.pageUrl = postSignalRData.page.pageRoute.label;
+                dbData.navigationType = postSignalRData.page.type;
+            }
+            catch (Exception)
+            {
+                dbData.pageUrl = string.Empty;
+                dbData.navigationType = string.Empty;
+            }
+        }
+
         return dbData;
     }
 
