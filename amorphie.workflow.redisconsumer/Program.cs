@@ -17,6 +17,7 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
+
         //ConfigurationBuilder setup
         var configurationBuilder = new ConfigurationBuilder();
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
@@ -54,7 +55,8 @@ internal class Program
                     return multiplexer.GetDatabase();
                 });
                 services.AddDbContext<WorkflowDBContext>(options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
-                services.AddHostedService<ExporterWorker>();
+                services.AddHostedService<BulkReadWorker>();
+                //services.AddHostedService<ExporterWorker>();
                 services.AddHostedService<StreamCleanerWorker>();
             })
             .UseSerilog(Log.Logger, true)

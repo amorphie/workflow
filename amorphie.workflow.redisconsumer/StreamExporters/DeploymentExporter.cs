@@ -8,22 +8,22 @@ using System.Text.Json;
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 public class DeploymentExporter : BaseExporter, IExporter
 {
+    private static readonly Serilog.ILogger _logger = Log.ForContext<DeploymentExporter>();
+
     public DeploymentExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.DEPLOYMENT;
         this.groupName = ZeebeStreamKeys.DEPLOYMENT_GROUP;
         ConfigureGroup().Wait();
     }
-    public async Task Attach(CancellationToken cancellationToken)
+    public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
-        var result = await ReadStreamEntryAsync(cancellationToken);
-        if (result.Any())
+        try
         {
             var messageToBeDeleted = new List<RedisValue>();
-            foreach (var process in result)
+            foreach (var process in streamEntries)
             {
-                var value = process.Values[0].Value.ToString();
-                var stream = JsonSerializer.Deserialize<DeploymentStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var stream = Deserialize<DeploymentStream>(process);
                 if (stream == null)
                 {
                     continue;
@@ -52,6 +52,11 @@ public class DeploymentExporter : BaseExporter, IExporter
                 messageToBeDeleted.Add(process.Id);
             }
             var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"{e}");
+            throw;
         }
     }
     private Deployment StreamToEntity(DeploymentStream stream)

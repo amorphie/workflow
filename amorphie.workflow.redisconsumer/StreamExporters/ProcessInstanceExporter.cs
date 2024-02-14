@@ -1,29 +1,30 @@
 ﻿using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.redisconsumer.StreamObjects;
+using Serilog;
 using StackExchange.Redis;
-using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class ProcessInstanceExporter : BaseExporter, IExporter
 {
+    private static readonly Serilog.ILogger _logger = Log.ForContext<ProcessInstanceExporter>();
+
     public ProcessInstanceExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.PROCESS_INSTANCE;
         this.groupName = ZeebeStreamKeys.PROCESS_INSTANCE_GROUP;
         ConfigureGroup().Wait();
     }
-    public async Task Attach(CancellationToken cancellationToken)
-    {
 
-        var result = await ReadStreamEntryAsync(cancellationToken);
-        if (result.Any())
+    public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
+    {
+        try
         {
             var messageToBeDeleted = new List<RedisValue>();
-            foreach (var process in result)
+            foreach (var process in streamEntries)
             {
-                var value = process.Values[0].Value.ToString();
-                var stream = JsonSerializer.Deserialize<ProcessInstanceStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var stream = Deserialize<ProcessInstanceStream>(process);
+
                 if (stream == null)
                 {
                     continue;
@@ -67,6 +68,11 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
                 }
             }
             var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"{e}");
+            throw;
         }
     }
     private ProcessInstance StreamToEntity(ProcessInstanceStream stream)

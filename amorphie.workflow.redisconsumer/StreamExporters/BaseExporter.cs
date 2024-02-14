@@ -1,5 +1,9 @@
-﻿using Serilog;
+﻿using amorphie.workflow.redisconsumer.StreamObjects;
+using Serilog;
 using StackExchange.Redis;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters
 {
@@ -37,6 +41,22 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
             if (messageToBeDeleted.Any())
                 return await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
             return 0;
+        }
+        protected T? Deserialize<T>(StreamEntry streamEntry) where T : BaseStream
+        {
+            var value = streamEntry.Values[0].Value.ToString();
+            return JsonSerializer.Deserialize<T>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) });
+        }
+
+        public async Task Attach(CancellationToken cancellationToken)
+        {
+            var result = await ReadStreamEntryAsync(cancellationToken);
+            await DoBussiness(result, cancellationToken);
+        }
+
+        public virtual Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
 
 

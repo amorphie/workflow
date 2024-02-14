@@ -1,28 +1,27 @@
-﻿using amorphie.workflow.core.Constants;
+﻿using amorphie.core.Base;
+using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.redisconsumer.StreamObjects;
+using Serilog;
 using StackExchange.Redis;
 using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
 {
+    private static readonly Serilog.ILogger _logger = Log.ForContext<BaseMessageSubscriptionExporter>();
     public BaseMessageSubscriptionExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
     }
-    public async Task Attach(CancellationToken cancellationToken)
+    public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
-        // var result = await redisDb.StreamReadGroupAsync(streamName, groupName, this.consumerName, this.readingStrategy);
-        var result = await ReadStreamEntryAsync(cancellationToken);
-
-        if (result.Any())
+        try
         {
             var messageToBeDeleted = new List<RedisValue>();
-            foreach (var process in result)
+            foreach (var process in streamEntries)
             {
-                var value = process.Values[0].Value.ToString();
-                var stream = JsonSerializer.Deserialize<MessageSubscriptionStream>(value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var stream = Deserialize<MessageSubscriptionStream>(process);
                 if (stream == null)
                 {
                     continue;
@@ -87,6 +86,11 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
 
             }
             var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"{e}");
+            throw;
         }
     }
     private WorkerBody? SetWrokerBody(MessageSubscription entity, MessageSubscriptionStream stream)
