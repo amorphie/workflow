@@ -83,16 +83,16 @@ public static class StateManagerModule
         {
             pageLanguage = "en-EN";
         }
-         
-   if (!string.IsNullOrEmpty(viewSource))
+
+        if (!string.IsNullOrEmpty(viewSource))
         {
-           if(viewSource.ToLower()!=amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
-           &&viewSource.ToLower()!=amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>(((ViewSourceEnum)ViewSourceEnum.Transition))
-           &&viewSource.ToLower()!=amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>(((ViewSourceEnum)ViewSourceEnum.Page))
-           )
-           {
-                viewSource=string.Empty;
-           }
+            if (viewSource.ToLower() != amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
+            && viewSource.ToLower() != amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>(((ViewSourceEnum)ViewSourceEnum.Transition))
+            && viewSource.ToLower() != amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>(((ViewSourceEnum)ViewSourceEnum.Page))
+            )
+            {
+                viewSource = string.Empty;
+            }
         }
 
 
@@ -178,80 +178,80 @@ public static class StateManagerModule
         ((InstanceTransition, WorkerBodyTrxDatas, string))await SetInstanceTransition(dbContext, transition, instance, error, body, IsTargetState, targetStateAsState, cancellationToken);
 
 
-        
 
 
-if(notifyClient)
-{
+
+        if (notifyClient)
+        {
 
             string hubUrl = configuration["hubUrl"]!.ToString();
 
-        string pageTypeStringBYTransition = string.Empty;
-        if (transition.Page != null)
-        {
-
-            try
+            string pageTypeStringBYTransition = string.Empty;
+            if (transition.Page != null)
             {
 
-                pageTypeStringBYTransition = EnumHelper.GetDescription<NavigationType>(((NavigationType)transition.Page.Type));
+                try
+                {
+
+                    pageTypeStringBYTransition = EnumHelper.GetDescription<NavigationType>(((NavigationType)transition.Page.Type));
+                }
+                catch (Exception)
+                {
+                    pageTypeStringBYTransition = string.Empty;
+                }
             }
-            catch (Exception)
-            {
-                pageTypeStringBYTransition = string.Empty;
-            }
-        }
             bool routeChange = false;
-        if (!string.IsNullOrEmpty(pageUrl))
-        {
-            routeChange = true;
-        }
-        else if (transition.Page != null && transition.Page.Pages != null && transition.Page.Pages.Count > 0)
-        {
-            routeChange = true;
-        }
- var responseSignalRMFAType = client.CreateInvokeMethodRequest<SignalRRequest>(
-                       HttpMethod.Post,
-                        hubUrl,
-                       "sendMessage/" + transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower(),
-                       new SignalRRequest()
-                       {
-                           data = new PostSignalRData(
-                           newInstanceTransition.CreatedBy,
-                           instance.RecordId,
-                           eventInfo,
-                           instance.Id,
-                           instance.EntityName,
-                         data.Data?.EntityData,
-                         DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-                         IsTargetState && targetStateAsState != null ? targetStateAsState.Name : newInstanceTransition.ToStateName,
-                         transition.Name,
-                         instance.BaseStatus,
-                         !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new MultilanguageText(pageLanguage, pageUrl), timeout) :
-                  transition.Page == null ? null :
-                  new PostPageSignalRData(transition.Page.Operation.ToString(), pageTypeStringBYTransition, transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-                  transition.Page.Timeout),
-                  message: "",
-                  errorCode: hubErrorCode,
-                  data.Data?.AdditionalData,
-                  instance.WorkflowName,
-                  string.IsNullOrEmpty(viewSource)?transition.ToState.IsPublicForm == true ? amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
-                   : amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition):viewSource.ToLower(),
-                  transition.requireData.GetValueOrDefault(false),
-                  transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
-                       ),
-                           source = "workflow",
-                           type = "workflow",
-                           subject = eventInfo,
-                           id = instance.Id.ToString(),
-                           routeChange = routeChange
-                       }
-                       );
-        responseSignalRMFAType.Headers.Add("X-Device-Id", body.Headers.XDeviceId);
-        responseSignalRMFAType.Headers.Add("X-Token-Id", body.Headers.XTokenId);
-        responseSignalRMFAType.Headers.Add("A-Customer", body.Headers.ACustomer);
+            if (!string.IsNullOrEmpty(pageUrl))
+            {
+                routeChange = true;
+            }
+            else if (transition.Page != null && transition.Page.Pages != null && transition.Page.Pages.Count > 0)
+            {
+                routeChange = true;
+            }
+            var responseSignalRMFAType = client.CreateInvokeMethodRequest<SignalRRequest>(
+                                  HttpMethod.Post,
+                                   hubUrl,
+                                  "sendMessage/" + transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower(),
+                                  new SignalRRequest()
+                                  {
+                                      data = new PostSignalRData(
+                                      newInstanceTransition.CreatedBy,
+                                      instance.RecordId,
+                                      eventInfo,
+                                      instance.Id,
+                                      instance.EntityName,
+                                    data.Data?.EntityData,
+                                    DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
+                                    IsTargetState && targetStateAsState != null ? targetStateAsState.Name : newInstanceTransition.ToStateName,
+                                    transition.Name,
+                                    instance.BaseStatus,
+                                    !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new MultilanguageText(pageLanguage, pageUrl), timeout) :
+                             transition.Page == null ? null :
+                             new PostPageSignalRData(transition.Page.Operation.ToString(), pageTypeStringBYTransition, transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
+                             transition.Page.Timeout),
+                             message: "",
+                             errorCode: hubErrorCode,
+                             data.Data?.AdditionalData,
+                             instance.WorkflowName,
+                             string.IsNullOrEmpty(viewSource) ? transition.ToState.IsPublicForm == true ? amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
+                              : amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition) : viewSource.ToLower(),
+                             transition.requireData.GetValueOrDefault(false),
+                             transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
+                                  ),
+                                      source = "workflow",
+                                      type = "workflow",
+                                      subject = eventInfo,
+                                      id = instance.Id.ToString(),
+                                      routeChange = routeChange
+                                  }
+                                  );
+            responseSignalRMFAType.Headers.Add("X-Device-Id", body.Headers.XDeviceId);
+            responseSignalRMFAType.Headers.Add("X-Token-Id", body.Headers.XTokenId);
+            responseSignalRMFAType.Headers.Add("A-Customer", body.Headers.ACustomer);
 
-        await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
-}
+            await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
+        }
         return Results.Ok(createMessageVariables(newInstanceTransition, body.LastTransition, data));
     }
     private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, WorkerBodyTrxDatas _data)
