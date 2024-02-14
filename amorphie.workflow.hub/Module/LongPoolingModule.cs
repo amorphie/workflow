@@ -31,7 +31,9 @@ namespace amorphie.workflow.hub
          )
         {
             SignalRData? data = await dbContext.SignalRResponses.Where(w => w.InstanceId == instanceId && w.tokenId == tokenId && w.deviceId == deviceId
-            && (w.subject == "worker-completed" || w.subject == "transition-completed"))
+            && (w.subject == "worker-completed" || w.subject == "transition-completed")
+            &&w.routeChange==true
+            )
             .OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
 
             SignalRResponsePublic dbData = new SignalRResponsePublic();
@@ -81,6 +83,7 @@ namespace amorphie.workflow.hub
                 dbData.data = postSignalRData;
                 return Results.Ok(dbData);
             }
+            dbData.routeChange=null;
             dbData = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
             dbData.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(dbData.data);
             return Results.Ok(dbData);

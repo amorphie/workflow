@@ -37,6 +37,7 @@ public static class SendSignalrModule
     {
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
         var dbData = PrepareData(data, deviceId, tokenId);
+        data.routeChange=null;
         string jsonString = JsonSerializer.Serialize(data);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
         await SaveSignalRData(dbData, cancellationToken, dbContext);
@@ -53,8 +54,9 @@ public static class SendSignalrModule
     {
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
         var dbData = PrepareData(data, deviceId, tokenId);
+        data.routeChange=null;
         string jsonString = JsonSerializer.Serialize(data);
-        await hubContext.Clients.Group(deviceId + tokenId + customer).SendAsync("SendMessage", jsonString);
+        await hubContext.Clients.Group(deviceId + tokenId ).SendAsync("SendMessage", jsonString);
         await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
     }
@@ -69,6 +71,7 @@ public static class SendSignalrModule
       )
     {
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
+        data.routeChange=null;
         string jsonString = JsonSerializer.Serialize(data);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendExporterMessage", jsonString);
         return Results.Ok("");
@@ -79,9 +82,10 @@ public static class SendSignalrModule
         SignalRResponsePublic response = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
         response.time = DateTime.UtcNow;
         response.deviceId = deviceId;
-
+        
         SignalRData dbData = ObjectMapper.Mapper.Map<SignalRData>(response);
         dbData.tokenId = tokenId;
+        dbData.routeChange=data.routeChange;
         return dbData;
     }
 
