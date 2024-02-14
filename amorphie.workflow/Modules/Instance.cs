@@ -89,6 +89,19 @@ public static class InstanceModule
 
             return operation;
         });
+        app.MapGet("/workflow/instance/page/{pageName}/view", ViewPage)
+        .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status204NoContent)
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Return queried workflow instance(s)";
+            operation.Tags = new List<OpenApiTag> { new() { Name = "InstanceWorkflow" } };
+
+            operation.Responses["200"].Description = "One or more instances found.";
+            operation.Responses["204"].Description = "No instance found.";
+
+            return operation;
+        });
         app.MapPost("/workflow/instance/{instanceId}/transition/{transitionName}", TriggerFlow)
         .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
@@ -258,7 +271,7 @@ public static class InstanceModule
             {
 
                 uiForm = transition.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
-                return await View(configuration, transitionName, type, typeof(Transition).ToString(), uiForm, language, json);
+                return await View(configuration, transitionName, type, typeof(Transition).ToString(), uiForm, language, json,string.Empty);
             }
             if (transition == null)
             {
@@ -293,7 +306,7 @@ public static class InstanceModule
             {
 
                 uiForm = state.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
-                return await View(configuration, stateName, type, typeof(State).ToString(), uiForm, language, json);
+                return await View(configuration, stateName, type, typeof(State).ToString(), uiForm, language, json,string.Empty);
             }
             if (state == null)
             {
@@ -306,41 +319,78 @@ public static class InstanceModule
             return Results.BadRequest("Unexpected error:" + ex.ToString());
         }
     }
-
-    private static async ValueTask<IResult> View(IConfiguration configuration,
-        string name, string type, string typeofTable, UiForm? uiForm, string? language, int? json)
+    static async ValueTask<IResult> ViewPage(
+ [FromServices] WorkflowDBContext context,
+  IConfiguration configuration,
+ CancellationToken cancellationToken,
+ [FromRoute(Name = "pageName")] string pageName,
+ 
+ [FromQuery] string? type,
+    [FromQuery] int? json,
+    [FromHeader(Name = "InstanceId")] string instanceId ,
+ [FromHeader(Name = "Accept-Language")] string language = "en-EN"
+)
     {
         try
         {
+            string navigation=string.Empty;
+            var pageControl=await context.SignalRResponses.Where(w=>w.InstanceId==instanceId&&pageName==w.pageUrl).FirstOrDefaultAsync(cancellationToken);
+            if(pageControl==null)
+            return Results.BadRequest("There is no "+pageName +" page for "+instanceId);
+             if(pageControl!=null)
+             navigation=pageControl.navigationType;
+            return await View(configuration, pageName, type, typeof(Page).ToString(), null, language, json,navigation);
+
+        }
+        catch (Exception ex)
+        {
+            return Results.BadRequest("Unexpected error:" + ex.ToString());
+        }
+    }
+    private static async ValueTask<IResult> View(IConfiguration configuration,
+        string name, string type, string typeofTable, UiForm? uiForm, string? language, int? json,string navigation)
+    {
+        try
+        {
+            Translation? form=new Translation();
             if (json == null)
                 json = amorphie.workflow.core.Enums.JsonEnum.Json.GetHashCode();
-            if (uiForm == null)
+            if (typeofTable != typeof(Page).ToString())
             {
-                return Results.NotFound(typeofTable + " does not have " + type + " type");
-            }
-            Translation? form = uiForm.Forms.FirstOrDefault(f => f.Language == language);
-            if (form == null && language != "en-EN")
-            {
+                if (uiForm == null)
+                {
+                    return Results.NotFound(typeofTable + " does not have " + type + " type");
+                }
+                form = uiForm.Forms.FirstOrDefault(f => f.Language == language);
+                if (form == null && language != "en-EN")
+                {
 
-                string defaultLanguage = "en-EN";
-                form = uiForm.Forms.FirstOrDefault(f => f.Language == defaultLanguage);
-                if (form == null)
+                    string defaultLanguage = "en-EN";
+                    form = uiForm.Forms.FirstOrDefault(f => f.Language == defaultLanguage);
+                    if (form == null)
+                        return Results.NotFound(name + " " + typeofTable + ", type " + type + " does not exist " + language + " body. Check the Accept-Language header.");
+                }
+                if (form == null && language == "en-EN")
+                {
                     return Results.NotFound(name + " " + typeofTable + ", type " + type + " does not exist " + language + " body. Check the Accept-Language header.");
+                }
             }
-            if (form == null && language == "en-EN")
+            bool isPage=false;
+            if(typeofTable == typeof(Page).ToString())
             {
-                return Results.NotFound(name + " " + typeofTable + ", type " + type + " does not exist " + language + " body. Check the Accept-Language header.");
+                isPage=true;
             }
             var templateURL = configuration["templateEngineUrl"]!.ToString();
 
             return Results.Ok(new ViewTransitionModel()
             {
-                name = form.Label,
-                type = uiForm.TypeofUiEnum.ToString(),
-                language = form.Language,
-                navigation = uiForm.Navigation.ToString(),
+                name = isPage?name:form.Label,
+                type =isPage?type: uiForm.TypeofUiEnum.ToString(),
+                language =isPage?language: form.Language,
+                navigation =isPage?navigation: uiForm.Navigation.ToString(),
                 data = "latest",
-                body = string.Equals(type, TypeofUiEnum.PageUrl.ToString(), StringComparison.OrdinalIgnoreCase) ? form.Label
+                body = isPage?amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(name, string.Empty, templateURL, string.Empty, json)
+                :string.Equals(type, TypeofUiEnum.PageUrl.ToString(), StringComparison.OrdinalIgnoreCase) ? form.Label
                 : amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(form.Label, string.Empty, templateURL, string.Empty, json)
             });
 

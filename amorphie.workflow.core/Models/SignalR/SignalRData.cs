@@ -23,4 +23,6 @@ public class SignalRData : EntityBase
     public string? tokenId { get; set; }
     public string? requestId { get; set; }
     public bool? routeChange { get; set; }
+    public string? pageUrl { get; set; }
+    public string? navigationType { get; set; }
 }

@@ -43,8 +43,11 @@ public static class StateManagerModule
         string pageUrl = request.Headers["PAGE_URL"].ToString();
         string pageOperationTypeString = request.Headers["PAGE_OPERATION_TYPE"].ToString();
         string pageTypeString = request.Headers["PAGE_TYPE"].ToString();
+        string viewSource = request.Headers["VIEW_SOURCE"].ToString();
         string timeoutString = request.Headers["PAGE_TIMEOUT"].ToString();
         int timeout = 0;
+        string notifyClientString = request.Headers["NOTIFY_CLIENT"].ToString();
+        bool notifyClient = true;
         string pageLanguage = request.Headers["PAGE_LANGUAGE"].ToString();
         if (!string.IsNullOrEmpty(pageUrl) && string.IsNullOrEmpty(pageOperationTypeString))
         {
@@ -65,9 +68,31 @@ public static class StateManagerModule
                 timeout = 0;
             }
         }
+        if (!string.IsNullOrEmpty(notifyClientString))
+        {
+            try
+            {
+                notifyClient = Convert.ToBoolean(notifyClientString);
+            }
+            catch (Exception)
+            {
+                notifyClient = true;
+            }
+        }
         if (!string.IsNullOrEmpty(pageUrl) && string.IsNullOrEmpty(pageLanguage))
         {
             pageLanguage = "en-EN";
+        }
+         
+   if (!string.IsNullOrEmpty(viewSource))
+        {
+           if(viewSource.ToLower()!=amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
+           &&viewSource.ToLower()!=amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>(((ViewSourceEnum)ViewSourceEnum.Transition))
+           &&viewSource.ToLower()!=amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>(((ViewSourceEnum)ViewSourceEnum.Page))
+           )
+           {
+                viewSource=string.Empty;
+           }
         }
 
 
@@ -152,7 +177,14 @@ public static class StateManagerModule
         (newInstanceTransition, WorkerBodyTrxDatas? data, string eventInfo) =
         ((InstanceTransition, WorkerBodyTrxDatas, string))await SetInstanceTransition(dbContext, transition, instance, error, body, IsTargetState, targetStateAsState, cancellationToken);
 
-        string hubUrl = configuration["hubUrl"]!.ToString();
+
+        
+
+
+if(notifyClient)
+{
+
+            string hubUrl = configuration["hubUrl"]!.ToString();
 
         string pageTypeStringBYTransition = string.Empty;
         if (transition.Page != null)
@@ -168,8 +200,7 @@ public static class StateManagerModule
                 pageTypeStringBYTransition = string.Empty;
             }
         }
-
-        bool routeChange = false;
+            bool routeChange = false;
         if (!string.IsNullOrEmpty(pageUrl))
         {
             routeChange = true;
@@ -178,10 +209,7 @@ public static class StateManagerModule
         {
             routeChange = true;
         }
-
-
-
-        var responseSignalRMFAType = client.CreateInvokeMethodRequest<SignalRRequest>(
+ var responseSignalRMFAType = client.CreateInvokeMethodRequest<SignalRRequest>(
                        HttpMethod.Post,
                         hubUrl,
                        "sendMessage/" + transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower(),
@@ -206,7 +234,8 @@ public static class StateManagerModule
                   errorCode: hubErrorCode,
                   data.Data?.AdditionalData,
                   instance.WorkflowName,
-                  transition.ToState.IsPublicForm == true ? "state" : "transition",
+                  string.IsNullOrEmpty(viewSource)?transition.ToState.IsPublicForm == true ? amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
+                   : amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition):viewSource.ToLower(),
                   transition.requireData.GetValueOrDefault(false),
                   transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
                        ),
@@ -222,6 +251,7 @@ public static class StateManagerModule
         responseSignalRMFAType.Headers.Add("A-Customer", body.Headers.ACustomer);
 
         await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
+}
         return Results.Ok(createMessageVariables(newInstanceTransition, body.LastTransition, data));
     }
     private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, WorkerBodyTrxDatas _data)
