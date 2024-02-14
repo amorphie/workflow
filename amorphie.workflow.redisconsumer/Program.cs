@@ -17,7 +17,7 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        
+
         //ConfigurationBuilder setup
         var configurationBuilder = new ConfigurationBuilder();
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");

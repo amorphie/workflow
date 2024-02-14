@@ -15,7 +15,7 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
         this.groupName = ZeebeStreamKeys.PROCESS_INSTANCE_GROUP;
         ConfigureGroup().Wait();
     }
-   
+
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
         try
