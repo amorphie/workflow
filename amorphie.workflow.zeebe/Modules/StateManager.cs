@@ -169,17 +169,17 @@ public static class StateManagerModule
             }
         }
 
-       bool routeChange=false;
-           if(!string.IsNullOrEmpty(pageUrl))
-            {
-                routeChange=true;
-            }
-            else if (transition.Page!=null&&transition.Page.Pages!=null&&transition.Page.Pages.Count>0)
-            {
-                  routeChange=true;
-            }
-       
- 
+        bool routeChange = false;
+        if (!string.IsNullOrEmpty(pageUrl))
+        {
+            routeChange = true;
+        }
+        else if (transition.Page != null && transition.Page.Pages != null && transition.Page.Pages.Count > 0)
+        {
+            routeChange = true;
+        }
+
+
 
         var responseSignalRMFAType = client.CreateInvokeMethodRequest<SignalRRequest>(
                        HttpMethod.Post,
@@ -214,7 +214,7 @@ public static class StateManagerModule
                            type = "workflow",
                            subject = eventInfo,
                            id = instance.Id.ToString(),
-                           routeChange=routeChange
+                           routeChange = routeChange
                        }
                        );
         responseSignalRMFAType.Headers.Add("X-Device-Id", body.Headers.XDeviceId);

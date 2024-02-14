@@ -101,16 +101,16 @@ public class StateHelper
      CancellationToken cancellationToken)
     {
         DaprClient daprClient = new DaprClientBuilder().Build();
-            bool routeChange=false;
-         if(hubData.eventInfo == "worker-started"||hubData.page==null)
-            {
-                routeChange=false;
-            }
-            else if(hubData.page!=null&&hubData.page.pageRoute!=null&&!string.IsNullOrEmpty(
-                hubData.page.pageRoute.label))
-            {
-                routeChange=true;
-            }
+        bool routeChange = false;
+        if (hubData.eventInfo == "worker-started" || hubData.page == null)
+        {
+            routeChange = false;
+        }
+        else if (hubData.page != null && hubData.page.pageRoute != null && !string.IsNullOrEmpty(
+            hubData.page.pageRoute.label))
+        {
+            routeChange = true;
+        }
 
         if (!string.IsNullOrEmpty(HubUrl))
         {
@@ -125,7 +125,7 @@ public class StateHelper
                           type = "workflow",
                           subject = subject,
                           id = instanceId,
-                          routeChange=routeChange
+                          routeChange = routeChange
                       }
                       );
             // string deviceid = "123";

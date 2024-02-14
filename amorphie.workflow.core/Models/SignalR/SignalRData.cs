@@ -22,5 +22,5 @@ public class SignalRData : EntityBase
     public string? userId { get; set; }
     public string? tokenId { get; set; }
     public string? requestId { get; set; }
-    public bool? routeChange {get;set;}
+    public bool? routeChange { get; set; }
 }

@@ -20,6 +20,6 @@ public class SignalRResponsePrivate : SignalRResponsePublic
     {
         mfatype = "private";
     }
-    
+
     public string userId { get; set; }
 }
