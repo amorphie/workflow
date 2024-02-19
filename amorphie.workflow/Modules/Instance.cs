@@ -226,6 +226,7 @@ public static class InstanceModule
     static async ValueTask<IResult> InitInstance(
    [FromServices] WorkflowDBContext context,
      [FromRoute(Name = "workflowName")] string workflowName,
+     [FromQuery(Name = "suffix")] string? suffix,
     CancellationToken cancellationToken
 
 )
@@ -247,6 +248,10 @@ public static class InstanceModule
         }).FirstOrDefaultAsync(cancellationToken);
         if (query == null)
             return Results.NoContent();
+        if (!string.IsNullOrEmpty(query.initPageName) && !string.IsNullOrEmpty(suffix))
+        {
+            query.initPageName += "-" + suffix;
+        }
         return Results.Ok(query);
     }
     static async ValueTask<IResult> ViewTransition(

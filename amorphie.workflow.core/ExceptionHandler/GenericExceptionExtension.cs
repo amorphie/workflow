@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Serilog.Core;
 using Serilog;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.Extensions.Hosting;
 
 namespace amorphie.workflow.core.ExceptionHandler;
 public static class GenericExceptionExtension
@@ -31,9 +32,12 @@ public static class GenericExceptionExtension
         };
         if (headersToBeLogged != null)
             defaultHeadersToBeLogged = defaultHeadersToBeLogged.Concat(headersToBeLogged).ToList();
+
+
         builder.Services.AddHttpLogging(logging =>
         {
-            logging.LoggingFields = HttpLoggingFields.All;
+            //logs just props and headers in prod mode
+            logging.LoggingFields = builder.Environment.IsProduction() ? HttpLoggingFields.RequestPropertiesAndHeaders | HttpLoggingFields.ResponsePropertiesAndHeaders : HttpLoggingFields.All;
             //logging.RequestHeaders.Concat(headersToBeLogged);
             defaultHeadersToBeLogged.ForEach(p => logging.RequestHeaders.Add(p));
 
