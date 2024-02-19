@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 using Serilog.Core;
 using Serilog.Events;
 using Microsoft.AspNetCore.HttpLogging;
@@ -57,14 +56,14 @@ public class WorkflowCustomEnricher : ILogEventEnricher
                 if (httpContext.Items.TryGetValue(ZeebeVariableKeys.InstanceId, out var instanceId))
                     AddPropertyIfAbsent($"correlation.{ZeebeVariableKeys.InstanceId}", instanceId);
 
-                var request = httpContext.Request;
-                var stream = request.Body;// At the begining it holding original request stream                    
-                var originalReader = new StreamReader(stream);
-                var originalContent = await originalReader.ReadToEndAsync();
+                // var request = httpContext.Request;
+                // var stream = request.Body;// At the begining it holding original request stream                    
+                // var originalReader = new StreamReader(stream);
+                // var originalContent = await originalReader.ReadToEndAsync();
 
-                JObject jsonObject = JsonConvert.DeserializeObject<JObject>(originalContent);
-                if (jsonObject != null)
-                    RecursiveJsonLoop(jsonObject, "body");
+                // JObject jsonObject = JsonConvert.DeserializeObject<JObject>(originalContent);
+                // if (jsonObject != null)
+                //     RecursiveJsonLoop(jsonObject, "body");
             }
             catch (Exception ex)
             {
