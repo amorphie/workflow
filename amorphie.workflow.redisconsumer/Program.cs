@@ -22,7 +22,7 @@ internal class Program
         var configurationBuilder = new ConfigurationBuilder();
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         //configurationBuilder.AddJsonFile($"appsettings.{environment}.json", false, true);
-        await configurationBuilder.AddVaultSecrets("redisconsumer-secretstore", new[] { "redisconsumer-secretstore" });
+        await configurationBuilder.AddVaultSecrets("redisconsumer-secretstore", new[] { "workflow-secretstore" });
         var conf = configurationBuilder.Build();
         var postgreSql = conf.GetValue<string>("workflowdb");
         var redisEndPoint = conf.GetValue<string>("redisEndPoints");
