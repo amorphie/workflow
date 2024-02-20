@@ -31,7 +31,6 @@ public static class StateManagerModule
             HttpRequest request,
             HttpContext httpContext,
             [FromServices] DaprClient client,
-            [FromServices] IZeebeCommandService zbClient,
              CancellationToken cancellationToken,
              IConfiguration configuration
         )
@@ -39,7 +38,6 @@ public static class StateManagerModule
         WorkerBody body = JsonObjectConverter.JsonToWorkerBody(jsonBody);
 
         var targetState = request.Headers["TARGET_STATE"].ToString();
-        string hubErrorCode = string.Empty;
         string pageUrl = request.Headers["PAGE_URL"].ToString();
         string pageOperationTypeString = request.Headers["PAGE_OPERATION_TYPE"].ToString();
         string pageTypeString = request.Headers["PAGE_TYPE"].ToString();
@@ -221,23 +219,23 @@ public static class StateManagerModule
                                       eventInfo,
                                       instance.Id,
                                       instance.EntityName,
-                                    data.Data?.EntityData,
-                                    DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-                                    IsTargetState && targetStateAsState != null ? targetStateAsState.Name : newInstanceTransition.ToStateName,
-                                    transition.Name,
-                                    instance.BaseStatus,
-                                    !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new MultilanguageText(pageLanguage, pageUrl), timeout) :
-                             transition.Page == null ? null :
-                             new PostPageSignalRData(transition.Page.Operation.ToString(), pageTypeStringBYTransition, transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-                             transition.Page.Timeout),
-                             message: "",
-                             errorCode: hubErrorCode,
-                             data.Data?.AdditionalData,
-                             instance.WorkflowName,
-                             string.IsNullOrEmpty(viewSource) ? transition.ToState.IsPublicForm == true ? amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
-                              : amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition) : viewSource.ToLower(),
-                             transition.requireData.GetValueOrDefault(false),
-                             transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
+                                      data.Data?.EntityData,
+                                      DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
+                                      IsTargetState && targetStateAsState != null ? targetStateAsState.Name : newInstanceTransition.ToStateName,
+                                      transition.Name,
+                                      instance.BaseStatus,
+                                      !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new MultilanguageText(pageLanguage, pageUrl), timeout) :
+                                      transition.Page == null ? null :
+                                      new PostPageSignalRData(transition.Page.Operation.ToString(), pageTypeStringBYTransition, transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
+                                      transition.Page.Timeout),
+                                      message: body.Message,
+                                      errorCode: body.ErrorCode,
+                                      data.Data?.AdditionalData,
+                                      instance.WorkflowName,
+                                      string.IsNullOrEmpty(viewSource) ? transition.ToState.IsPublicForm == true ? amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
+                                       : amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition) : viewSource.ToLower(),
+                                      transition.requireData.GetValueOrDefault(false),
+                                      transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
                                   ),
                                       source = "workflow",
                                       type = "workflow",
