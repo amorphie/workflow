@@ -43,8 +43,8 @@ public class JsonObjectConverter
 public class WorkerBody
 {
     public string LastTransition { get; set; } = default!;
-    public string? HubMessage { get; set; }
-    public string? HubErrorCode { get; set; }
+    public string? Message { get; set; }
+    public string? ErrorCode { get; set; }
     public Guid InstanceId { get; set; } = default!;
 
     public WorkerBodyHeaders? Headers { get; set; } = new();
