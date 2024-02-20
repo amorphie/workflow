@@ -99,11 +99,11 @@ public static class HttpServiceManagerModule
         HttpResponseMessage response = await HttpClientSendAsync(httpClientFactory, httpMethodName, url, serialized, authorizationHeader);
         int statusCodeInt = (int)response!.StatusCode;
         var statusCode = statusCodeInt.ToString();
+        var responseBody = await response.Content.ReadAsStringAsync();
         if (FailureCodesControl(failureCodes, statusCode))
         {
-            throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: failureCodes);
+            throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: failureCodes + " " + responseBody);
         }
-        var responseBody = await response.Content.ReadAsStringAsync();
 
         return Results.Ok(createMessageVariables(responseBody, statusCode, content));
     }

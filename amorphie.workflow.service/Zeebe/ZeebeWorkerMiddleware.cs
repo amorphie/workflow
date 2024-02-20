@@ -34,6 +34,7 @@ namespace amorphie.workflow.service.Zeebe
         private async Task HandleExceptionAsync(HttpContext httpContext, IZeebeCommandService zeebeCommandService, Exception ex)
         {
             var jobKey = Convert.ToInt64(httpContext.Request.Headers["X-Zeebe-Job-Key"]);
+            var processInstanceKey = Convert.ToInt64(httpContext.Request.Headers["X-Zeebe-Process-Instance-Key"]);
             string errorCode, errorMessage;
 
             if (ex is ZeebeBussinesException bussinesException)
@@ -50,7 +51,7 @@ namespace amorphie.workflow.service.Zeebe
             Logger.Error($"{errorCode} : {errorMessage}");
 
 
-            var throwResult = await zeebeCommandService.ThrowError(bindingGateway, jobKey, errorCode, errorMessage);
+            var throwResult = await zeebeCommandService.ThrowError(bindingGateway, processInstanceKey, jobKey, errorCode, errorMessage);
             if (throwResult.Status == Status.Success.ToString())
             {
                 httpContext.Response.ContentType = "application/json";

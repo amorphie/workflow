@@ -9,7 +9,8 @@ namespace amorphie.workflow.service.Zeebe
     public interface IZeebeCommandService
     {
         Task<long> PublishMessage(string message, dynamic variables, string? correlationKey, string? gateway);
-        Task<Result> ThrowError(string gateway, long jobKey, string errorCode = "500", string errorMessage = "Bussines Error");
+        Task<Result> ThrowError(string gateway, long processInstanceKey, long jobKey, string errorCode = "500", string errorMessage = "Bussines Error");
+        Task<Result> SetErrorAsVariable(string gateway, long jobKey, string errorCode, string errorMessage = "Bussines Error");
 
     }
 
@@ -43,23 +44,42 @@ namespace amorphie.workflow.service.Zeebe
             }
         }
 
-        public async Task<Result> ThrowError(string gateway, long jobKey, string errorCode, string errorMessage = "Bussines Error")
+        public async Task<Result> ThrowError(string gateway, long processInstanceKey, long jobKey, string errorCode, string errorMessage = "Bussines Error")
         {
 
             ThrowErrorRequest messageData = new(jobKey, errorCode, errorMessage);
             try
             {
+                await SetErrorAsVariable(gateway, processInstanceKey, errorCode, errorMessage);
                 await _daprClient.InvokeBindingAsync(gateway, ZeebeCommands.ThrowError, messageData);
                 return new Result(Status.Success, "", "");
             }
             catch (Exception ex)
             {
-                return new Result(Status.Error, $"Problem occurred while thowing the zeebe error. Original error: {errorCode} {errorMessage} -- ThrowError Exception: {ex.Message}");
+                return new Result(Status.Error, $"Problem occurred while throwing the zeebe error. Original error: {errorCode} {errorMessage} -- ThrowError Exception: {ex.Message}");
+            }
+
+        }
+        public async Task<Result> SetErrorAsVariable(string gateway, long processInstanceKey, string errorCode, string errorMessage = "Bussines Error")
+        {
+            dynamic variables = new Dictionary<string, dynamic>();
+            variables.Add("ThrownError", new { errorCode, errorMessage });
+
+            SetVariableRequest messageData = new(processInstanceKey, variables);
+            try
+            {
+                await _daprClient.InvokeBindingAsync(gateway, ZeebeCommands.SetVariables, messageData);
+                return new Result(Status.Success, "", "");
+            }
+            catch (Exception ex)
+            {
+                return new Result(Status.Error, $"Problem occurred while setting error as variable. Original error: {errorCode} {errorMessage} -- ThrowError Exception: {ex.Message}");
             }
 
         }
         private record publishMessageResponse(long Key);
         private record publishMessageRequest(string MessageName, string CorrelationKey, string MessageId, string TimeToLive, dynamic Variables);
         private record ThrowErrorRequest(long JobKey, string ErrorCode, string ErrorMessage);
+        private record SetVariableRequest(long ElementInstanceKey, dynamic Variables);
     }
 }
