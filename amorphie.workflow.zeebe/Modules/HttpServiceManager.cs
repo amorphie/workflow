@@ -102,7 +102,7 @@ public static class HttpServiceManagerModule
         var responseBody = await response.Content.ReadAsStringAsync();
         if (FailureCodesControl(failureCodes, statusCode))
         {
-            throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: failureCodes + " " + responseBody);
+            throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: responseBody);
         }
 
         return Results.Ok(createMessageVariables(responseBody, statusCode, content));
