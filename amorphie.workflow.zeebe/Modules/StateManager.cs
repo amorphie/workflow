@@ -39,7 +39,7 @@ public static class StateManagerModule
 
         var targetState = request.Headers["TARGET_STATE"].ToString();
         string pageUrl = request.Headers["PAGE_URL"].ToString();
-        if(string.IsNullOrEmpty(pageUrl))
+        if (string.IsNullOrEmpty(pageUrl))
             pageUrl = body.PageUrl;
         string pageOperationTypeString = request.Headers["PAGE_OPERATION_TYPE"].ToString();
         string pageTypeString = request.Headers["PAGE_TYPE"].ToString();
@@ -50,7 +50,7 @@ public static class StateManagerModule
         bool notifyClient = true;
         string pageLanguage = request.Headers["PAGE_LANGUAGE"].ToString();
 
-        
+
         if (!string.IsNullOrEmpty(pageUrl) && string.IsNullOrEmpty(pageOperationTypeString))
         {
             pageOperationTypeString = PageOperationType.Open.ToString();
