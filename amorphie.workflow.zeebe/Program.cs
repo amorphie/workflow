@@ -1,3 +1,5 @@
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using amorphie.core.security.Extensions;
 using amorphie.workflow.core.ExceptionHandler;
 using amorphie.workflow.service.Zeebe;
@@ -49,8 +51,14 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
         options.SuppressModelStateInvalidFilter = true;
     });
 builder.Services.AddValidatorsFromAssemblyContaining<WorkerBodyValidator>(includeInternalTypes: true);
-////Request and Response logging purpose
 
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+    options.SerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
+});
+
+////Request and Response logging purpose
 builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>();
 
 var app = builder.Build();
