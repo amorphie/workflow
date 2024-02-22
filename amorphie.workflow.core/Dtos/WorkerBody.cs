@@ -15,9 +15,8 @@ public class JsonObjectConverter
         var workerBody = new WorkerBody
         {
             InstanceId = new Guid(body[ZeebeVariableKeys.InstanceId]?.ToString() ?? ""),
+            PageUrl = body[ZeebeVariableKeys.PageUrl]?.ToString() ?? "",
             LastTransition = transitionName
-
-
         };
         var bodyHeaders = body["Headers"];
         var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) });
@@ -43,6 +42,7 @@ public class JsonObjectConverter
 public class WorkerBody
 {
     public string LastTransition { get; set; } = default!;
+    public string PageUrl { get; set; } = default!;
     public string? Message { get; set; }
     public string? ErrorCode { get; set; }
     public Guid InstanceId { get; set; } = default!;
