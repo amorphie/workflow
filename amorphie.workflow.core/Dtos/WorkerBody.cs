@@ -24,7 +24,7 @@ public class JsonObjectConverter
 
         foreach (var item in body.Where(p => p.Key.StartsWith("TRX")))
         {
-            if(workerBody.WorkerBodyTrxDataList.Keys.Contains(item.Key))
+            if (workerBody.WorkerBodyTrxDataList.Keys.Contains(item.Key))
                 continue;
             var value = item.Value.Deserialize<WorkerBodyTrxDatas>(opt) ?? new WorkerBodyTrxDatas();
             workerBody.WorkerBodyTrxDataList.Add(item.Key, value);
