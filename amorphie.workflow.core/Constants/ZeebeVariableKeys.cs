@@ -13,6 +13,7 @@ namespace amorphie.workflow.core.Constants
         public const string InstanceId = "InstanceId";
         public const string PageUrl = "PageUrl";
         public const string Message = "Message";
+        public const string message = "message";
         public const string ErrorCode = "ErrorCode";
         public const string RecordId = "RecordId";
         public const string LastTransition = "LastTransition";

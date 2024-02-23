@@ -52,6 +52,12 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     });
 builder.Services.AddValidatorsFromAssemblyContaining<WorkerBodyValidator>(includeInternalTypes: true);
 
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.PropertyNameCaseInsensitive = false;
+    options.SerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
+});
+
 ////Request and Response logging purpose
 builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>();
 
