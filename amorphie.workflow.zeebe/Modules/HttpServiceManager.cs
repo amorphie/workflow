@@ -110,7 +110,7 @@ public static class HttpServiceManagerModule
         }
         catch (Exception ex)
         {
-            responseBody ="";
+            responseBody = "";
             Log.Fatal($"Exception while reading response body: {ex}");
 
         }
