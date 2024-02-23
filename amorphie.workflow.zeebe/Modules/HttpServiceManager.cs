@@ -102,7 +102,7 @@ public static class HttpServiceManagerModule
         var statusCode = statusCodeInt.ToString();
         // var responseBody = await response.Content.ReadAsStringAsync();
         var byteArray = await response.Content.ReadAsByteArrayAsync();
-        var responseBody  = Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
+        var responseBody = Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
         if (FailureCodesControl(failureCodes, statusCode))
         {
             throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: responseBody);
