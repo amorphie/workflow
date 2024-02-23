@@ -11,6 +11,7 @@ public class JsonObjectConverter
 {
     public static WorkerBody JsonToWorkerBody(JsonObject body)
     {
+        var opt = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
         string transitionName = body[ZeebeVariableKeys.LastTransition]!.ToString();
         var workerBody = new WorkerBody
         {
@@ -25,11 +26,11 @@ public class JsonObjectConverter
         {
             if(workerBody.WorkerBodyTrxDataList.Keys.Contains(item.Key))
                 continue;
-            var value = item.Value.Deserialize<WorkerBodyTrxDatas>() ?? new WorkerBodyTrxDatas();
+            var value = item.Value.Deserialize<WorkerBodyTrxDatas>(opt) ?? new WorkerBodyTrxDatas();
             workerBody.WorkerBodyTrxDataList.Add(item.Key, value);
         }
         var bodyHeaders = body["Headers"];
-        var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>();
+        var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(opt);
         workerBody.Headers = workerBodyHeaders;
         return workerBody;
     }
