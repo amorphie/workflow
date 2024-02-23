@@ -5,6 +5,7 @@ using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 namespace amorphie.workflow.zeebe.Modules;
 
@@ -100,9 +101,19 @@ public static class HttpServiceManagerModule
         HttpResponseMessage response = await HttpClientSendAsync(httpClientFactory, httpMethodName, url, serialized, authorizationHeader);
         int statusCodeInt = (int)response!.StatusCode;
         var statusCode = statusCodeInt.ToString();
-        // var responseBody = await response.Content.ReadAsStringAsync();
-        var byteArray = await response.Content.ReadAsByteArrayAsync();
-        var responseBody = Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
+        string responseBody;
+
+        try
+        {
+            var byteArray = await response.Content.ReadAsByteArrayAsync();
+            responseBody = Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
+        }
+        catch (Exception ex)
+        {
+            responseBody = "";
+            Log.Fatal($"Exception while reading response body: {ex}");
+
+        }
         if (FailureCodesControl(failureCodes, statusCode))
         {
             throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: responseBody);
