@@ -1,3 +1,5 @@
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using amorphie.core.security.Extensions;
 using amorphie.workflow.core.ExceptionHandler;
 using amorphie.workflow.service.Zeebe;
@@ -49,8 +51,8 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
         options.SuppressModelStateInvalidFilter = true;
     });
 builder.Services.AddValidatorsFromAssemblyContaining<WorkerBodyValidator>(includeInternalTypes: true);
-////Request and Response logging purpose
 
+////Request and Response logging purpose
 builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>();
 
 var app = builder.Build();

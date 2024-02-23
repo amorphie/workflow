@@ -11,6 +11,7 @@ public class JsonObjectConverter
 {
     public static WorkerBody JsonToWorkerBody(JsonObject body)
     {
+        var opt = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
         string transitionName = body[ZeebeVariableKeys.LastTransition]!.ToString();
         var workerBody = new WorkerBody
         {
@@ -20,22 +21,16 @@ public class JsonObjectConverter
             ErrorCode = body[ZeebeVariableKeys.ErrorCode]?.ToString() ?? "",
             LastTransition = transitionName
         };
+
+        foreach (var item in body.Where(p => p.Key.StartsWith("TRX")))
+        {
+            if (workerBody.WorkerBodyTrxDataList.Keys.Contains(item.Key))
+                continue;
+            var value = item.Value.Deserialize<WorkerBodyTrxDatas>(opt) ?? new WorkerBodyTrxDatas();
+            workerBody.WorkerBodyTrxDataList.Add(item.Key, value);
+        }
         var bodyHeaders = body["Headers"];
-        var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) });
-
-        //TODO:  variable with (TRX-) will be deleted
-        var workerBodyTrxDatasDyna = body[$"TRX-{transitionName}"];
-        var workerBodyTrxDatas = workerBodyTrxDatasDyna.Deserialize<WorkerBodyTrxDatas>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) });
-        workerBody.WorkerBodyTrxDataList.Add($"TRX-{transitionName}", workerBodyTrxDatas);
-
-
-        transitionName = transitionName.DeleteUnAllowedCharecters();
-
-        var workerBodyTrxDatasDynamic2 = body[$"TRX{transitionName}"];
-        var workerBodyTrxDatas2 = workerBodyTrxDatasDynamic2.Deserialize<WorkerBodyTrxDatas>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) });
-        workerBody.WorkerBodyTrxDataList.Add($"TRX{transitionName}", workerBodyTrxDatas2);
-
-
+        var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(opt);
         workerBody.Headers = workerBodyHeaders;
         return workerBody;
     }

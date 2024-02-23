@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.service.Zeebe;
@@ -99,7 +100,9 @@ public static class HttpServiceManagerModule
         HttpResponseMessage response = await HttpClientSendAsync(httpClientFactory, httpMethodName, url, serialized, authorizationHeader);
         int statusCodeInt = (int)response!.StatusCode;
         var statusCode = statusCodeInt.ToString();
-        var responseBody = await response.Content.ReadAsStringAsync();
+        // var responseBody = await response.Content.ReadAsStringAsync();
+        var byteArray = await response.Content.ReadAsByteArrayAsync();
+        var responseBody = Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
         if (FailureCodesControl(failureCodes, statusCode))
         {
             throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: responseBody);
