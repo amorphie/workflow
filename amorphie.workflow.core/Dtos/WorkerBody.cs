@@ -17,8 +17,8 @@ public class JsonObjectConverter
         {
             InstanceId = new Guid(body[ZeebeVariableKeys.InstanceId]?.ToString() ?? ""),
             PageUrl = body[ZeebeVariableKeys.PageUrl]?.ToString() ?? "",
-            Message = body[ZeebeVariableKeys.Message]?.ToString() ?? body[ZeebeVariableKeys.message]?.ToString() ?? "",
-            ErrorCode = body[ZeebeVariableKeys.ErrorCode]?.ToString() ?? body[ZeebeVariableKeys.errorCode]?.ToString() ?? "",
+            Message = body[ZeebeVariableKeys.Message]?.Deserialize<string>(opt) ?? body[ZeebeVariableKeys.message]?.Deserialize<string>(opt) ?? "",
+            ErrorCode = body[ZeebeVariableKeys.ErrorCode]?.Deserialize<string>(opt) ?? body[ZeebeVariableKeys.errorCode]?.Deserialize<string>(opt) ?? "",
             LastTransition = transitionName
         };
 
