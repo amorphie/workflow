@@ -15,6 +15,7 @@ namespace amorphie.workflow.core.Constants
         public const string Message = "Message";
         public const string message = "message";
         public const string ErrorCode = "ErrorCode";
+        public const string errorCode = "errorCode";
         public const string RecordId = "RecordId";
         public const string LastTransition = "LastTransition";
         public const string AmorphieHttpWorker = "amorphie-http-worker";
