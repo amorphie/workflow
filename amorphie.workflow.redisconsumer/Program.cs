@@ -13,17 +13,27 @@ internal class Program
         var configurationBuilder = new ConfigurationBuilder();
         try
         {
+            Console.WriteLine("Dapr init ");
             DaprClient daprClient = new DaprClientBuilder().Build();
+            Console.WriteLine("program goes to sleep for 5 sec ");
+            await Task.Delay(5000);
+            Console.WriteLine("program awaked ");
+            Console.WriteLine("dapr ... ");
 
-            configurationBuilder.AddInMemoryCollection(await daprClient.GetSecretAsync("workflow-secretstore", "workflow-secretstore"));
+            var confResult = await daprClient.GetSecretAsync("workflow-secretstore", "workflow-secretstore");
+            Console.WriteLine("conf result", confResult);
+
+
+            configurationBuilder.AddInMemoryCollection(confResult);
             var conf = configurationBuilder.Build();
+            Console.WriteLine("dapr read completed ");
 
             var postgreSql = conf.GetValue<string>("workflowdb");
             Console.WriteLine("postgres connstr : ", postgreSql);
         }
         catch (Exception ex)
         {
-            throw new Exception("An Error Occured At Dapr Secret Store. Detail:" + ex);
+            Console.WriteLine("Program has throwed an error", ex);
         }
         // //ConfigurationBuilder setup
         // var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
