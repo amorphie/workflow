@@ -7,5 +7,5 @@ using Refit;
 public interface ICallSerciveAPI
 {
     [Post("/")]
-    Task<ApiResponse<GenericResponse<dynamic>>> PostModel([Body]amorphie.workflow.core.Dtos.SendTransitionInfoRequest model);
+    Task<ApiResponse<GenericResponse<dynamic>>> PostModel([Body] amorphie.workflow.core.Dtos.SendTransitionInfoRequest model);
 }

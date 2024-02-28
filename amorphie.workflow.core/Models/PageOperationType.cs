@@ -4,8 +4,8 @@ public enum PageOperationType
 {
     [Description("Open")]
     Open = 1,
-     [Description("Close")]
+    [Description("Close")]
     Close = 2,
-     [Description("Stay")]
+    [Description("Stay")]
     Stay = 4
 }
