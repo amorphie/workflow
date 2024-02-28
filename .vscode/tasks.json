@@ -1,0 +1,121 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "workflow-build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/amorphie.workflow/amorphie.workflow.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "workflow-zeebe-build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/amorphie.workflow.zeebe/amorphie.workflow.zeebe.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "workflow-hub-build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/amorphie.workflow.hub/amorphie.workflow.hub.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "workflow-redisconsumer-build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/amorphie.workflow.redisconsumer/amorphie.workflow.redisconsumer.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "appId": "amorphie-workflow",
+            "dependsOn": "workflow-build",
+            "appPort": 4201,
+            "httpPort": 42010,
+            "grpcPort": 42011,
+            "label": "dapr-debug-amorphie-workflow",
+            "type": "daprd",
+            "componentsPath": "dapr/components",
+            "config": "dapr/config.yaml",
+            "metricsPort": 42012
+        },
+        {
+            "appId": "amorphie-workflow-zeebe",
+            "dependsOn": "workflow-zeebe-build",
+            "appPort": 4202,
+            "httpPort": 42020,
+            "grpcPort": 42021,
+            "label": "dapr-debug-amorphie-workflow-zeebe",
+            "type": "daprd",
+            "componentsPath": "dapr/components",
+            "config": "dapr/config.yaml",
+            "metricsPort": 42022
+        },
+        {
+            "appId": "amorphie-workflow-hub",
+            "dependsOn": "workflow-hub-build",
+            "appPort": 4203,
+            "httpPort": 42030,
+            "grpcPort": 42031,
+            "label": "dapr-debug-amorphie-workflow-hub",
+            "type": "daprd",
+            "componentsPath": "dapr/components",
+            "config": "dapr/config.yaml",
+            "metricsPort": 42032
+        },
+        {
+            "appId": "amorphie-workflow-redisconsumer",
+            "dependsOn": "workflow-redisconsumer-build",
+            "appPort": 4204,
+            "httpPort": 42040,
+            "grpcPort": 42041,
+            "label": "dapr-debug-amorphie-workflow-redisconsumer",
+            "type": "daprd",
+            "componentsPath": "dapr/components",
+            "config": "dapr/config.yaml",
+            "metricsPort": 42042
+        },
+        {
+            "appId": "amorphie-workflow",
+            "label": "daprd-down-amorphie-workflow",
+            "type": "daprd-down"
+        },
+        {
+            "appId": "amorphie-workflow-zeebe",
+            "label": "daprd-down-amorphie-workflow-zeebe",
+            "type": "daprd-down"
+        },
+        {
+            "appId": "amorphie-workflow-hub",
+            "label": "daprd-down-amorphie-workflow-hub",
+            "type": "daprd-down"
+        },
+        {
+            "appId": "amorphie-workflow-redisconsumer",
+            "label": "daprd-down-amorphie-workflow-redisconsumer",
+            "type": "daprd-down"
+        }
+    ]
+}

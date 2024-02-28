@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "local-p",
+            "database": "workflow",
+            "username": "postgres"
+        }
+    ],
+    "dotnet.defaultSolution": "workflow.sln"
+}
