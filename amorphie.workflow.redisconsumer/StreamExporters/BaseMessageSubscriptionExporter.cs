@@ -10,7 +10,7 @@ using System.Text.Json;
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
 {
-private static readonly Serilog.ILogger _logger = Log.ForContext<BaseMessageSubscriptionExporter>();
+    private static readonly Serilog.ILogger _logger = Log.ForContext<BaseMessageSubscriptionExporter>();
     public BaseMessageSubscriptionExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
     }

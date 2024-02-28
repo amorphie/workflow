@@ -93,7 +93,7 @@ public class BulkReadWorker : BackgroundService
 
                 _logger.LogCritical($"An unhandled exception occured while running attachers: {ex}");
             }
-            
+
 
         }
     }
