@@ -341,7 +341,8 @@ public static class InstanceModule
             string navigation = string.Empty;
             var pageControl = await context.SignalRResponses.Where(w => w.InstanceId == instanceId && pageName == w.pageUrl).FirstOrDefaultAsync(cancellationToken);
             if (pageControl == null)
-                return Results.BadRequest("There is no " + pageName + " page for " + instanceId);
+            navigation= amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.PushReplacement);
+                // return Results.BadRequest("There is no " + pageName + " page for " + instanceId);
             if (pageControl != null)
                 navigation = pageControl.navigationType;
             return await View(configuration, pageName, type, typeof(Page).ToString(), null, language, json, navigation);
