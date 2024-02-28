@@ -306,6 +306,12 @@ public static class StateManagerModule
                 updateName = newInstanceTransitionForName!.TransitionName.DeleteUnAllowedCharecters();
                 data = body.WorkerBodyTrxDataList?.GetValueOrDefault($"TRX{updateName}");
             }
+            if (data == null)
+            {
+                Log.Warning($"Data is still null for -got-first- {updateName} in {body.WorkerBodyTrxDataList}");
+
+                data = body.WorkerBodyTrxDataList?.FirstOrDefault().Value;
+            }
         }
         if (data == null)
         {

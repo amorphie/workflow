@@ -19,17 +19,19 @@ public class IncidentExporter : BaseExporter, IExporter
     }
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
-        try
+
+        var messageToBeDeleted = new List<RedisValue>();
+        string? currentProccessId = "";
+        foreach (var process in streamEntries)
         {
-            var messageToBeDeleted = new List<RedisValue>();
-            foreach (var process in streamEntries)
+            try
             {
                 var stream = Deserialize<IncidentStream>(process);
                 if (stream == null)
                 {
                     continue;
                 }
-
+                currentProccessId = process.Id;
                 var entity = dbContext.Incidents.FirstOrDefault(p => p.Key == stream.Key);
                 if (entity != null)
                 {
@@ -86,12 +88,11 @@ public class IncidentExporter : BaseExporter, IExporter
                 }
                 messageToBeDeleted.Add(process.Id);
             }
+            catch (Exception e)
+            {
+                _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
+            }
             var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
-        }
-        catch (Exception e)
-        {
-            _logger.Error($"{e}");
-            throw;
         }
     }
     private Incident StreamToEntity(IncidentStream stream)

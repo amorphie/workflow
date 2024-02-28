@@ -19,9 +19,10 @@ internal class MessageExporter : BaseExporter, IExporter
     }
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
+        var messageToBeDeleted = new List<RedisValue>();
+        string? currentProccessId = "";
         try
         {
-            var messageToBeDeleted = new List<RedisValue>();
             foreach (var process in streamEntries)
             {
                 var stream = Deserialize<MessageStream>(process);
@@ -30,7 +31,7 @@ internal class MessageExporter : BaseExporter, IExporter
                     //ihtimal mi??
                     continue;
                 }
-
+                currentProccessId = process.Id;
                 //PUBLISHING,
                 //PUBLISHED
                 //DELETED
@@ -61,13 +62,17 @@ internal class MessageExporter : BaseExporter, IExporter
                     messageToBeDeleted.Add(process.Id);
                 }
             }
-            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
         }
         catch (Exception e)
         {
-            _logger.Error($"{e}");
+            _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
             throw;
         }
+        finally
+        {
+            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+        }
+
     }
     private Message StreamToEntity(MessageStream stream)
     {

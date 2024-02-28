@@ -9,10 +9,10 @@ public class BulkReadWorker : BackgroundService
     protected readonly IDatabase redisDb;
     protected readonly string consumerName;
     protected readonly string readingStrategy;
-    private readonly ILogger<ExporterWorker> _logger;
+    private readonly ILogger<BulkReadWorker> _logger;
     private readonly DaprClient daprClient;
 
-    public BulkReadWorker(ILogger<ExporterWorker> logger, WorkflowDBContext dbContext, IDatabase redisDb, DaprClient daprClient)
+    public BulkReadWorker(ILogger<BulkReadWorker> logger, WorkflowDBContext dbContext, IDatabase redisDb, DaprClient daprClient)
     {
         this.dbContext = dbContext;
         this.redisDb = redisDb;
@@ -93,6 +93,7 @@ public class BulkReadWorker : BackgroundService
 
                 _logger.LogCritical($"An unhandled exception occured while running attachers: {ex}");
             }
+            
 
         }
     }

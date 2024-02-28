@@ -18,16 +18,20 @@ public class DeploymentExporter : BaseExporter, IExporter
     }
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
-        try
+        var messageToBeDeleted = new List<RedisValue>();
+        string? currentProccessId = "";
+
+        foreach (var process in streamEntries)
         {
-            var messageToBeDeleted = new List<RedisValue>();
-            foreach (var process in streamEntries)
+            try
             {
                 var stream = Deserialize<DeploymentStream>(process);
                 if (stream == null)
                 {
                     continue;
                 }
+                currentProccessId = process.Id;
+
                 var resourceName = stream.Value.Resources.FirstOrDefault()?.ResourceName ?? stream.Value.ProcessesMetadata.FirstOrDefault()?.ResourceName;
 
                 var entity = dbContext.Deployments.FirstOrDefault(p => p.ResourceName == resourceName);
@@ -51,13 +55,13 @@ public class DeploymentExporter : BaseExporter, IExporter
                 }
                 messageToBeDeleted.Add(process.Id);
             }
-            var deletedItemsCount = await redisDb.StreamDeleteAsync(streamName, messageToBeDeleted.ToArray());
+            catch (Exception e)
+            {
+                _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
+            }
         }
-        catch (Exception e)
-        {
-            _logger.Error($"{e}");
-            throw;
-        }
+        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+
     }
     private Deployment StreamToEntity(DeploymentStream stream)
     {

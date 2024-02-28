@@ -17,10 +17,13 @@ public class VariableExporter : BaseExporter, IExporter
     }
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
-        try
+        var messageToBeDeleted = new List<RedisValue>();
+        string? currentProccessId = "";
+
+
+        foreach (var process in streamEntries)
         {
-            var messageToBeDeleted = new List<RedisValue>();
-            foreach (var process in streamEntries)
+            try
             {
                 var stream = Deserialize<VariableStream>(process);
 
@@ -28,6 +31,7 @@ public class VariableExporter : BaseExporter, IExporter
                 {
                     continue;
                 }
+                currentProccessId = process.Id;
                 var entity = dbContext.Variables.FirstOrDefault(p => p.Key == stream.Key);
                 if (entity != null)
                 {
@@ -47,13 +51,14 @@ public class VariableExporter : BaseExporter, IExporter
                 }
                 messageToBeDeleted.Add(process.Id);
             }
-            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+            catch (Exception e)
+            {
+                _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
+            }
         }
-        catch (Exception e)
-        {
-            _logger.Error($"{e}");
-            throw;
-        }
+
+        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+
     }
     private Variable StreamToEntity(VariableStream stream)
     {

@@ -10,22 +10,24 @@ using System.Text.Json;
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
 {
-    private static readonly Serilog.ILogger _logger = Log.ForContext<BaseMessageSubscriptionExporter>();
+private static readonly Serilog.ILogger _logger = Log.ForContext<BaseMessageSubscriptionExporter>();
     public BaseMessageSubscriptionExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
     }
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
-        try
+        var messageToBeDeleted = new List<RedisValue>();
+        string? currentProccessId = "";
+        foreach (var process in streamEntries)
         {
-            var messageToBeDeleted = new List<RedisValue>();
-            foreach (var process in streamEntries)
+            try
             {
                 var stream = Deserialize<MessageSubscriptionStream>(process);
                 if (stream == null)
                 {
                     continue;
                 }
+                currentProccessId = process.Id;
 
                 //DELETE ...
                 //CORRELATING
@@ -83,15 +85,14 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                     //delete the messages which have other Intent's
                     messageToBeDeleted.Add(process.Id);
                 }
-
             }
-            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+            catch (Exception e)
+            {
+                _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
+            }
         }
-        catch (Exception e)
-        {
-            _logger.Error($"{e}");
-            throw;
-        }
+        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+
     }
     private WorkerBody? SetWrokerBody(MessageSubscription entity, MessageSubscriptionStream stream)
     {

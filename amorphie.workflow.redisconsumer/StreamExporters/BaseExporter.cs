@@ -32,6 +32,23 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
             //     await redisDb.StreamCreateConsumerGroupAsync(streamName, groupName, "0-0", true);
             // }
         }
+        protected async Task<StreamPendingMessageInfo[]?> ReadPendingStreamGroupEntryAsync(CancellationToken cancellationToken)
+        {
+            StreamPendingMessageInfo[]? pendingInfos = await redisDb.StreamPendingMessagesAsync(streamName, groupName, 0, consumerName);
+            return pendingInfos;
+        }
+        protected async Task<StreamEntry[]> ReadStreamGroupEntryAsync(CancellationToken cancellationToken)
+        {
+            return await redisDb.StreamReadGroupAsync(streamName, groupName, consumerName, StreamPosition.NewMessages, 0, CommandFlags.None);
+        }
+
+        protected async Task<long> AckMessagesAsync(List<RedisValue> messageToBeDeleted, CancellationToken cancellationToken)
+        {
+            if (messageToBeDeleted.Any())
+                return await redisDb.StreamAcknowledgeAsync(streamName, groupName, messageToBeDeleted.ToArray());
+            return 0;
+        }
+
         protected async Task<StreamEntry[]> ReadStreamEntryAsync(CancellationToken cancellationToken)
         {
             return await redisDb.StreamRangeAsync(streamName, 0, "+", 100, Order.Ascending);
@@ -50,7 +67,8 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
 
         public async Task Attach(CancellationToken cancellationToken)
         {
-            var result = await ReadStreamEntryAsync(cancellationToken);
+            // var result = await ReadStreamEntryAsync(cancellationToken);
+            var result = await ReadStreamGroupEntryAsync(cancellationToken);
             await DoBussiness(result, cancellationToken);
         }
 

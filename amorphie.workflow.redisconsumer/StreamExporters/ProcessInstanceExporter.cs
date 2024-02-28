@@ -18,17 +18,19 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
 
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
-        try
+        var messageToBeDeleted = new List<RedisValue>();
+        string? currentProccessId = "";
+
+        foreach (var process in streamEntries)
         {
-            var messageToBeDeleted = new List<RedisValue>();
-            foreach (var process in streamEntries)
+            try
             {
                 var stream = Deserialize<ProcessInstanceStream>(process);
-
                 if (stream == null)
                 {
                     continue;
                 }
+                currentProccessId = process.Id;
                 //Do not log these elements
                 if (stream.Value.BpmnElementType == ZeebeElementTypeKeys.SEQUENCE_FLOW || stream.Value.BpmnElementType == ZeebeElementTypeKeys.EXCLUSIVE_GATEWAY)
                 {
@@ -67,13 +69,13 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
                     messageToBeDeleted.Add(process.Id);
                 }
             }
-            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+            catch (Exception e)
+            {
+                _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
+            }
         }
-        catch (Exception e)
-        {
-            _logger.Error($"{e}");
-            throw;
-        }
+        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+
     }
     private ProcessInstance StreamToEntity(ProcessInstanceStream stream)
     {
