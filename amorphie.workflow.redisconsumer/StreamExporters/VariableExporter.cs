@@ -11,15 +11,14 @@ public class VariableExporter : BaseExporter, IExporter
 
     public VariableExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
-        this.streamName = ZeebeStreamKeys.VARIABLE;
-        this.groupName = ZeebeStreamKeys.VARIABLE_GROUP;
+        this.streamName = ZeebeStreamKeys.Streams.VARIABLE;
+        this.groupName = ZeebeStreamKeys.Groups.VARIABLE_GROUP;
         ConfigureGroup().Wait();
     }
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
         var messageToBeDeleted = new List<RedisValue>();
         string? currentProccessId = "";
-
 
         foreach (var process in streamEntries)
         {
@@ -49,7 +48,6 @@ public class VariableExporter : BaseExporter, IExporter
                 {
                     messageToBeDeleted.Add(process.Id);
                 }
-                messageToBeDeleted.Add(process.Id);
             }
             catch (Exception e)
             {

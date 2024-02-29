@@ -13,17 +13,18 @@ internal class MessageExporter : BaseExporter, IExporter
 
     public MessageExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
-        this.streamName = ZeebeStreamKeys.MESSAGE;
-        this.groupName = ZeebeStreamKeys.MESSAGE_GROUP;
+        this.streamName = ZeebeStreamKeys.Streams.MESSAGE;
+        this.groupName = ZeebeStreamKeys.Groups.MESSAGE_GROUP;
         ConfigureGroup().Wait();
     }
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
         var messageToBeDeleted = new List<RedisValue>();
         string? currentProccessId = "";
-        try
+
+        foreach (var process in streamEntries)
         {
-            foreach (var process in streamEntries)
+            try
             {
                 var stream = Deserialize<MessageStream>(process);
                 if (stream == null)
@@ -62,16 +63,14 @@ internal class MessageExporter : BaseExporter, IExporter
                     messageToBeDeleted.Add(process.Id);
                 }
             }
+            catch (Exception e)
+            {
+                _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
+            }
         }
-        catch (Exception e)
-        {
-            _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
-            throw;
-        }
-        finally
-        {
-            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
-        }
+
+        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+
 
     }
     private Message StreamToEntity(MessageStream stream)

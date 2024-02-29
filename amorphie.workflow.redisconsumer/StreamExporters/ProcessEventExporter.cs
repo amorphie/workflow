@@ -9,8 +9,8 @@ internal class ProcessEventExporter : BaseExporter, IExporter
 
     public ProcessEventExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
-        this.streamName = ZeebeStreamKeys.PROCESS_EVENT;
-        this.groupName = ZeebeStreamKeys.PROCESS_EVENT_GROUP;
+        this.streamName = ZeebeStreamKeys.Streams.PROCESS_EVENT;
+        this.groupName = ZeebeStreamKeys.Groups.PROCESS_EVENT_GROUP;
         ConfigureGroup().Wait();
     }
     public async Task Attach(CancellationToken cancellationToken)

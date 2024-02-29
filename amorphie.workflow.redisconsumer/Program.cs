@@ -4,9 +4,7 @@ using Dapr.Client;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using StackExchange.Redis;
-// Log.Logger = new LoggerConfiguration()
 
-//     .CreateLogger();
 var builder = WebApplication.CreateBuilder(args);
 
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
@@ -14,9 +12,6 @@ await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "wor
 var postgreSql = builder.Configuration["workflowdb"];
 var redisEndPoint = builder.Configuration["redisEndPoints"];
 
-
-// Console.WriteLine("postgreSql " + postgreSql);
-// Console.WriteLine("redisEndPoint " + redisEndPoint);
 var configurationOptions = new ConfigurationOptions
 {
     EndPoints =
@@ -47,7 +42,7 @@ builder.Host.UseSerilog((_, serviceProvider, loggerConfiguration) =>
                 .ReadFrom.Configuration(builder.Configuration);
         });
 var app = builder.Build();
-app.Logger.LogInformation("Starting Amorphie Workflow Redis Consumer application..." + postgreSql);
+app.Logger.LogInformation("Starting Amorphie Workflow Redis Consumer application...");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

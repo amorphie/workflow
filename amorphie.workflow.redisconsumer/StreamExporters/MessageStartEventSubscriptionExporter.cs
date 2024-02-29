@@ -8,8 +8,8 @@ internal class MessageStartEventSubscriptionExporter : BaseMessageSubscriptionEx
 
     public MessageStartEventSubscriptionExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
-        this.streamName = ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION;
-        this.groupName = ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION_GROUP;
+        this.streamName = ZeebeStreamKeys.Streams.MESSAGE_START_EVENT_SUBSCRIPTION;
+        this.groupName = ZeebeStreamKeys.Groups.MESSAGE_START_EVENT_SUBSCRIPTION_GROUP;
         ConfigureGroup().Wait();
     }
 }

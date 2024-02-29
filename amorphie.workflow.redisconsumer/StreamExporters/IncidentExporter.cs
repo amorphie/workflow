@@ -13,8 +13,8 @@ public class IncidentExporter : BaseExporter, IExporter
 
     public IncidentExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
-        this.streamName = ZeebeStreamKeys.INCIDENT;
-        this.groupName = ZeebeStreamKeys.INCIDENT_GROUP;
+        this.streamName = ZeebeStreamKeys.Streams.INCIDENT;
+        this.groupName = ZeebeStreamKeys.Groups.INCIDENT_GROUP;
         ConfigureGroup().Wait();
     }
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
@@ -83,7 +83,6 @@ public class IncidentExporter : BaseExporter, IExporter
                     if (instanceId != Guid.Empty)
                     {
                         await UpdateInstanceBaseStatusToErrorAsync(instanceId);
-
                     }
                 }
                 messageToBeDeleted.Add(process.Id);
