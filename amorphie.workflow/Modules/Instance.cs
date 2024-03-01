@@ -159,21 +159,21 @@ public static class InstanceModule
              operation.Responses["404"].Description = "No instance found.";
              return operation;
          });
-          app.MapGet("/workflow/instance/{instanceId}/history", getHistoryByInstanceAsync
-      )
-      .Produces<SignalRResponsePublic[]>(StatusCodes.Status200OK)
-      .Produces(StatusCodes.Status404NotFound)
-      .WithOpenApi(operation =>
-      {
-          operation.Summary = "Returns requested workflow instance history";
-          operation.Parameters[0].Description = "Workflow instance id.";
+        app.MapGet("/workflow/instance/{instanceId}/history", getHistoryByInstanceAsync
+    )
+    .Produces<SignalRResponsePublic[]>(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status404NotFound)
+    .WithOpenApi(operation =>
+    {
+        operation.Summary = "Returns requested workflow instance history";
+        operation.Parameters[0].Description = "Workflow instance id.";
 
-          operation.Tags = new List<OpenApiTag> { new() { Name = "InstanceWorkflow" } };
+        operation.Tags = new List<OpenApiTag> { new() { Name = "InstanceWorkflow" } };
 
-          operation.Responses["200"].Description = "Instances history information returned.";
-          operation.Responses["404"].Description = "No instance found.";
-          return operation;
-      });
+        operation.Responses["200"].Description = "Instances history information returned.";
+        operation.Responses["404"].Description = "No instance found.";
+        return operation;
+    });
 
     }
     static async Task<IResult> UiFormFill(
@@ -784,21 +784,21 @@ public static class InstanceModule
 
 
     }
-     static async Task<IResult> getHistoryByInstanceAsync(
-         [FromServices] WorkflowDBContext context,
-         [FromRoute(Name = "instanceId")] string instanceId,
-         CancellationToken cancellationToken,
-            [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
-     )
+    static async Task<IResult> getHistoryByInstanceAsync(
+        [FromServices] WorkflowDBContext context,
+        [FromRoute(Name = "instanceId")] string instanceId,
+        CancellationToken cancellationToken,
+           [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
+    )
     {
-        Instance instanceControl = await context.Instances.Include(i=>i.Workflow).FirstOrDefaultAsync(f => f.Id.ToString() == instanceId);
+        Instance instanceControl = await context.Instances.Include(i => i.Workflow).FirstOrDefaultAsync(f => f.Id.ToString() == instanceId);
         if (instanceControl == null)
         {
             return Results.NotFound();
         }
-        if(instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
+        if (instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
         {
-            return Results.Problem(instanceControl.WorkflowName+" is forbidden to get history");
+            return Results.Problem(instanceControl.WorkflowName + " is forbidden to get history");
         }
         List<amorphie.workflow.core.Models.SignalR.SignalRData> signalrHistoryList = await context.SignalRResponses.Where(w => w.InstanceId == instanceId
              && (w.subject == "worker-completed" || w.subject == "transition-completed")
