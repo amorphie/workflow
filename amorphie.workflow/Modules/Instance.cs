@@ -159,6 +159,21 @@ public static class InstanceModule
              operation.Responses["404"].Description = "No instance found.";
              return operation;
          });
+        app.MapGet("/workflow/instance/{instanceId}/history", getHistoryByInstanceAsync
+    )
+    .Produces<SignalRResponsePublic[]>(StatusCodes.Status200OK)
+    .Produces(StatusCodes.Status404NotFound)
+    .WithOpenApi(operation =>
+    {
+        operation.Summary = "Returns requested workflow instance history";
+        operation.Parameters[0].Description = "Workflow instance id.";
+
+        operation.Tags = new List<OpenApiTag> { new() { Name = "InstanceWorkflow" } };
+
+        operation.Responses["200"].Description = "Instances history information returned.";
+        operation.Responses["404"].Description = "No instance found.";
+        return operation;
+    });
 
     }
     static async Task<IResult> UiFormFill(
@@ -767,6 +782,45 @@ public static class InstanceModule
         }
         return Results.Problem("Try latest,latest-payload or first-payload");
 
+
+    }
+    static async Task<IResult> getHistoryByInstanceAsync(
+        [FromServices] WorkflowDBContext context,
+        [FromRoute(Name = "instanceId")] string instanceId,
+        CancellationToken cancellationToken,
+           [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
+    )
+    {
+        Instance instanceControl = await context.Instances.Include(i => i.Workflow).FirstOrDefaultAsync(f => f.Id.ToString() == instanceId);
+        if (instanceControl == null)
+        {
+            return Results.NotFound();
+        }
+        if (instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
+        {
+            return Results.Problem(instanceControl.WorkflowName + " is forbidden to get history");
+        }
+        List<amorphie.workflow.core.Models.SignalR.SignalRData> signalrHistoryList = await context.SignalRResponses.Where(w => w.InstanceId == instanceId
+             && (w.subject == "worker-completed" || w.subject == "transition-completed")
+             && w.routeChange == true
+             )
+             .OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);
+        if (signalrHistoryList == null)
+        {
+            return Results.NotFound();
+        }
+        if (signalrHistoryList != null && signalrHistoryList.Any())
+        {
+
+            List<SignalRResponsePublic> response = signalrHistoryList.Select(s =>
+            {
+                var temp = ObjectMapper.Mapper.Map<SignalRResponsePublic>(s);
+                temp.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(s.data);
+                return temp;
+            }).ToList();
+            return Results.Ok(response);
+        }
+        return Results.NotFound();
 
     }
 }
