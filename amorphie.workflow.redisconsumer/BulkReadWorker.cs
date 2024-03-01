@@ -11,7 +11,20 @@ public class BulkReadWorker : BackgroundService
     protected readonly string readingStrategy;
     private readonly ILogger<BulkReadWorker> _logger;
     private readonly DaprClient daprClient;
-
+    protected async Task ConfigureGroup(string groupName)
+    {
+        foreach (var item in typeof(ZeebeStreamKeys.Streams).GetProperties())
+        {
+            var streamName = item.GetValue(null)?.ToString();
+            if (!string.IsNullOrEmpty(streamName) && (
+                !await redisDb.KeyExistsAsync(streamName) ||
+                (await redisDb.StreamGroupInfoAsync(streamName)).All(x => x.Name != groupName)
+                ))
+            {
+                await redisDb.StreamCreateConsumerGroupAsync(streamName, groupName, "0-0", true);
+            }
+        }
+    }
     public BulkReadWorker(ILogger<BulkReadWorker> logger, WorkflowDBContext dbContext, IDatabase redisDb, DaprClient daprClient)
     {
         this.dbContext = dbContext;
@@ -24,24 +37,29 @@ public class BulkReadWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        var gatewayAsConsumerGroup = ZeebeStreamKeys.GateWay;
+        var consumer = Environment.MachineName;
+        await ConfigureGroup(gatewayAsConsumerGroup);
+
         _logger.LogInformation("Bulk Worker running at: {time}", DateTimeOffset.Now);
 
         var streamsToBeRead = new StreamPosition[]
         {
-            new StreamPosition(ZeebeStreamKeys.DEPLOYMENT, 0),
-            new StreamPosition(ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION, 0),
-            new StreamPosition(ZeebeStreamKeys.MESSAGE_SUBSCRIPTION, 0),
-            new StreamPosition(ZeebeStreamKeys.MESSAGE, 0),
-            new StreamPosition(ZeebeStreamKeys.PROCESS_INSTANCE, 0),
-            new StreamPosition(ZeebeStreamKeys.VARIABLE, 0),
-            new StreamPosition(ZeebeStreamKeys.JOB, 0),
+            new StreamPosition(ZeebeStreamKeys.Streams.DEPLOYMENT, StreamPosition.NewMessages),
+            new StreamPosition(ZeebeStreamKeys.Streams.MESSAGE_START_EVENT_SUBSCRIPTION, StreamPosition.NewMessages),
+            new StreamPosition(ZeebeStreamKeys.Streams.MESSAGE_SUBSCRIPTION, StreamPosition.NewMessages),
+            new StreamPosition(ZeebeStreamKeys.Streams.MESSAGE, StreamPosition.NewMessages),
+            new StreamPosition(ZeebeStreamKeys.Streams.PROCESS_INSTANCE, StreamPosition.NewMessages),
+            new StreamPosition(ZeebeStreamKeys.Streams.VARIABLE, StreamPosition.NewMessages),
+            new StreamPosition(ZeebeStreamKeys.Streams.JOB, StreamPosition.NewMessages),
         };
 
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                var result = await redisDb.StreamReadAsync(streamPositions: streamsToBeRead, 100);
+                //var result = await redisDb.StreamReadAsync(streamPositions: streamsToBeRead, 100);
+                var result = await redisDb.StreamReadGroupAsync(streamPositions: streamsToBeRead, gatewayAsConsumerGroup, consumer, 100);
                 if (result.Any())
                 {
                     foreach (var stream in result)
@@ -51,31 +69,31 @@ public class BulkReadWorker : BackgroundService
                             continue;
                         }
                         BaseExporter exporter;
-                        if (stream.Key == ZeebeStreamKeys.DEPLOYMENT)
+                        if (stream.Key == ZeebeStreamKeys.Streams.DEPLOYMENT)
                         {
                             exporter = new DeploymentExporter(dbContext, redisDb, consumerName);
                         }
-                        else if (stream.Key == ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION)
+                        else if (stream.Key == ZeebeStreamKeys.Streams.MESSAGE_START_EVENT_SUBSCRIPTION)
                         {
                             exporter = new MessageStartEventSubscriptionExporter(dbContext, redisDb, consumerName);
                         }
-                        else if (stream.Key == ZeebeStreamKeys.MESSAGE_SUBSCRIPTION)
+                        else if (stream.Key == ZeebeStreamKeys.Streams.MESSAGE_SUBSCRIPTION)
                         {
                             exporter = new MessageSubscriptionExporter(dbContext, redisDb, consumerName);
                         }
-                        else if (stream.Key == ZeebeStreamKeys.MESSAGE)
+                        else if (stream.Key == ZeebeStreamKeys.Streams.MESSAGE)
                         {
                             exporter = new MessageExporter(dbContext, redisDb, consumerName);
                         }
-                        else if (stream.Key == ZeebeStreamKeys.PROCESS_INSTANCE)
+                        else if (stream.Key == ZeebeStreamKeys.Streams.PROCESS_INSTANCE)
                         {
                             exporter = new ProcessInstanceExporter(dbContext, redisDb, consumerName);
                         }
-                        else if (stream.Key == ZeebeStreamKeys.VARIABLE)
+                        else if (stream.Key == ZeebeStreamKeys.Streams.VARIABLE)
                         {
                             exporter = new VariableExporter(dbContext, redisDb, consumerName);
                         }
-                        else if (stream.Key == ZeebeStreamKeys.JOB)
+                        else if (stream.Key == ZeebeStreamKeys.Streams.JOB)
                         {
                             exporter = new JobExporter(dbContext, redisDb, consumerName);
                         }

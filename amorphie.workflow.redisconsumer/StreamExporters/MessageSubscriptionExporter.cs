@@ -6,8 +6,8 @@ internal class MessageSubscriptionExporter : BaseMessageSubscriptionExporter, IE
 {
     public MessageSubscriptionExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
-        this.streamName = ZeebeStreamKeys.MESSAGE_SUBSCRIPTION;
-        this.groupName = ZeebeStreamKeys.MESSAGE_SUBSCRIPTION_GROUP;
+        this.streamName = ZeebeStreamKeys.Streams.MESSAGE_SUBSCRIPTION;
+        this.groupName = ZeebeStreamKeys.Groups.MESSAGE_SUBSCRIPTION_GROUP;
         ConfigureGroup().Wait();
     }
 }

@@ -108,7 +108,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
         var bodyHeaders = stream.Value.Variables["Headers"];
         var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         //Register user at start
-        if (stream.ValueType != null && ZeebeStreamKeys.MESSAGE_START_EVENT_SUBSCRIPTION.Contains(stream.ValueType))
+        if (stream.ValueType != null && ZeebeStreamKeys.Streams.MESSAGE_START_EVENT_SUBSCRIPTION.Contains(stream.ValueType))
         {
             RegisteredClients.ClientList.Add(entity.ProcessInstanceKey, workerBodyHeaders);
             RegisteredClients.ActiveInstanceList.Add(entity.ProcessInstanceKey, workerBody.InstanceId);

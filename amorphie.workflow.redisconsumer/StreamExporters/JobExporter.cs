@@ -13,17 +13,19 @@ internal class JobExporter : BaseExporter, IExporter
 
     public JobExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
-        this.streamName = ZeebeStreamKeys.JOB;
-        this.groupName = ZeebeStreamKeys.JOB_GROUP;
+        this.streamName = ZeebeStreamKeys.Streams.JOB;
+        this.groupName = ZeebeStreamKeys.Groups.JOB_GROUP;
         ConfigureGroup().Wait();
     }
 
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
-        try
+
+        var messageToBeDeleted = new List<RedisValue>();
+        string? currentProccessId = "";
+        foreach (var process in streamEntries)
         {
-            var messageToBeDeleted = new List<RedisValue>();
-            foreach (var process in streamEntries)
+            try
             {
                 var stream = Deserialize<JobStream>(process);
 
@@ -31,6 +33,7 @@ internal class JobExporter : BaseExporter, IExporter
                 {
                     continue;
                 }
+                currentProccessId = process.Id;
 
                 if (stream.Intent == ZeebeEventKeys.COMPLETED || stream.Intent == ZeebeEventKeys.CREATED)
                 {
@@ -91,7 +94,6 @@ internal class JobExporter : BaseExporter, IExporter
                                 cancellationToken);
                             }
                         }
-
                     }
                 }
                 else
@@ -99,15 +101,13 @@ internal class JobExporter : BaseExporter, IExporter
                     //delete the messages which have other Intent's
                     messageToBeDeleted.Add(process.Id);
                 }
-
             }
-            var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+            catch (Exception e)
+            {
+                _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
+            }
         }
-        catch (Exception e)
-        {
-            _logger.Error($"{e}");
-            throw;
-        }
+        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
     }
 
     private Job StreamToEntity(JobStream stream)

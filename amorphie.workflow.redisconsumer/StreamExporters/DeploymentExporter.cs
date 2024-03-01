@@ -12,8 +12,8 @@ public class DeploymentExporter : BaseExporter, IExporter
 
     public DeploymentExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
-        this.streamName = ZeebeStreamKeys.DEPLOYMENT;
-        this.groupName = ZeebeStreamKeys.DEPLOYMENT_GROUP;
+        this.streamName = ZeebeStreamKeys.Streams.DEPLOYMENT;
+        this.groupName = ZeebeStreamKeys.Groups.DEPLOYMENT_GROUP;
         ConfigureGroup().Wait();
     }
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
@@ -53,7 +53,6 @@ public class DeploymentExporter : BaseExporter, IExporter
                 {
                     messageToBeDeleted.Add(process.Id);
                 }
-                messageToBeDeleted.Add(process.Id);
             }
             catch (Exception e)
             {

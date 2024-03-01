@@ -11,8 +11,8 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
 
     public ProcessInstanceExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName) : base(dbContext, redisDb, consumerName)
     {
-        this.streamName = ZeebeStreamKeys.PROCESS_INSTANCE;
-        this.groupName = ZeebeStreamKeys.PROCESS_INSTANCE_GROUP;
+        this.streamName = ZeebeStreamKeys.Streams.PROCESS_INSTANCE;
+        this.groupName = ZeebeStreamKeys.Groups.PROCESS_INSTANCE_GROUP;
         ConfigureGroup().Wait();
     }
 
