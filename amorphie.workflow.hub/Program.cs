@@ -14,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 var daprClient = new DaprClientBuilder().Build();
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
-
+var redis = builder.Configuration["redisEndPoints"];
 builder.Services.AddControllers();
 builder.Services.AddDaprClient();
 builder.Logging.ClearProviders();
@@ -40,7 +40,9 @@ builder.Services.AddSignalR(options =>
 {
     options.MaximumParallelInvocationsPerClient = 50;
 
-});
+})
+.AddStackExchangeRedis(redis.ToString())
+;
 
 builder.Services.AddHealthChecks();
 builder.Services.AddMvc();
