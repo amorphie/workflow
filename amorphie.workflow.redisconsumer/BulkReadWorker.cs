@@ -35,6 +35,9 @@ public class BulkReadWorker : BackgroundService
         this.daprClient = daprClient;
     }
 
+
+
+
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         var gatewayAsConsumerGroup = ZeebeStreamKeys.GateWay;

@@ -22,7 +22,7 @@ namespace amorphie.workflow.redisconsumer.StreamExporters
             this.dbContext = dbContext;
             this.redisDb = redisDb;
             this.consumerName = consumerName;
-            Log.Information($"{this.GetType().Name} is constructed");
+            //Log.Information($"{this.GetType().Name} is constructed");
         }
         protected async Task ConfigureGroup()
         {
