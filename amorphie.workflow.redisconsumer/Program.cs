@@ -12,22 +12,15 @@ await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "wor
 var postgreSql = builder.Configuration["workflowdb"];
 var redisEndPoint = builder.Configuration["redisEndPoints"];
 
-var configurationOptions = new ConfigurationOptions
-{
-    EndPoints =
-    {
-        redisEndPoint
-    }
-};
 builder.Services.AddDaprClient();
 builder.Services.AddSingleton<IDatabase>(cfg =>
 {
-    IConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(configurationOptions);
+    IConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(redisEndPoint);
     return multiplexer.GetDatabase();
 });
 builder.Services.AddDbContext<WorkflowDBContext>(options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")), ServiceLifetime.Singleton, ServiceLifetime.Singleton);
 
-builder.Services.AddHostedService<BulkReadWorker>();
+builder.Services.AddHostedService<IndividiualReadWorker>();
 builder.Services.AddHostedService<StreamCleanerWorker>();
 
 // Add services to the container.
