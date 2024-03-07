@@ -242,8 +242,9 @@ public static class DefinitionModule
         }
 
     }
-    static IResult deleteDefinition(
+   async static Task<IResult> deleteDefinition(
         [FromServices] WorkflowDBContext context,
+        CancellationToken cancellationToken,
         [FromRoute(Name = "definition-name")] string definition
     )
     {
@@ -251,20 +252,47 @@ public static class DefinitionModule
         try
         {
             var existingRecord = context.Workflows!.Include(s => s.Titles)
-                  .Include(s => s.States).ThenInclude(s => s.Titles)
+                  .Include(s => s.States).ThenInclude(s => s.Descriptions)
+                   .Include(s => s.States).ThenInclude(s => s.PublicForms)
+                   .Include(s => s.States).ThenInclude(w => w.UiForms).ThenInclude(s => s.Forms)
+                   .Include(s => s.States).ThenInclude(s => s.Titles)
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Titles)
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Forms)
                   .Include(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s.Pages)
+                .Include(s => s.States).ThenInclude(w => w.Transitions).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms)
                 .Include(s => s.Entities)
                 .Include(s => s.HistoryForms)
 
                  .FirstOrDefault(w => w.Name == definition);
+            if (existingRecord != null&&existingRecord.States.Any())
+            {
+                foreach (State state in existingRecord.States)
+                {
+                    var toStateChangesTrans = context.Transitions!.Where(w => w.ToStateName == state.Name);
+                    foreach (var transition in toStateChangesTrans)
+                    {
+                        transition.ToStateName = null;
+                        transition.ToState = null;
+                    }
 
+                    foreach (var transition in state.Transitions)
+                    {
+                        var InstanceTransitions = context.InstanceTransitions.Where(w => w.TransitionName == transition.Name);
+                        foreach (InstanceTransition instanceTr in InstanceTransitions)
+                        {
+                            instanceTr.TransitionName = null;
+                            instanceTr.Transition = null;
+                        }
+                    }
+                       context!.Remove(state);
+                }
+
+            }
             if (existingRecord != null)
             {
                 context!.Remove(existingRecord);
                 // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
-                context.SaveChanges();
+             await   context.SaveChangesAsync(cancellationToken);
                 return Results.Ok();
             }
             else
@@ -1191,13 +1219,31 @@ CancellationToken cancellationToken
         [FromHeader(Name = "Language")] string? language = "en-EN"
         )
     {
-        // data.transitions[0].
         var existingRecord = context.States!.Include(s => s.Titles).Include(s => s.Transitions).Include(s => s.PublicForms)
         .Include(s => s.UiForms).ThenInclude(s => s.Forms)
                .FirstOrDefault(w => w.WorkflowName == definition && w.Name == data.name)
                ;
         if (existingRecord == null)
         {
+            var existingRecordControl = context.States!
+               .FirstOrDefault(w => w.Name == data.name)
+               ;
+            if (existingRecordControl != null)
+            {
+                return Results.Problem("There is already " + data.name + " state in " + existingRecordControl.WorkflowName + " flow");
+            }
+            if (data!.transitions!.Any())
+            {
+                var controlList=data!.transitions!.Select(s=>s.name).ToList();
+                var existingTransitionsControl = context.Transitions!
+                              .FirstOrDefault(w => controlList.Any(a => a == w.Name))
+                              ;
+                if (existingTransitionsControl != null)
+                {
+                    return Results.Problem("There is already " + existingTransitionsControl.Name + " transition in " + existingTransitionsControl.FromStateName + " state");
+                }
+            }
+
             State newRecord = new State
             {
                 WorkflowName = definition,
@@ -1434,6 +1480,13 @@ CancellationToken cancellationToken
                 //Kayıdı olmayan Transition ların eklenmesi
                 if (existingTransition == null)
                 {
+                    var existingTransitionsControl = context.Transitions!
+                           .FirstOrDefault(w => req.name == w.Name)
+                           ;
+                    if (existingTransitionsControl != null)
+                    {
+                        return Results.Problem("There is already " + existingTransitionsControl.Name + " transition in " + existingTransitionsControl.FromStateName + " state");
+                    }
                     context!.Transitions!.Add(new Transition
                     {
                         Name = req.name,
