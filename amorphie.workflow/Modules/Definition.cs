@@ -242,11 +242,11 @@ public static class DefinitionModule
         }
 
     }
-   async static Task<IResult> deleteDefinition(
-        [FromServices] WorkflowDBContext context,
-        CancellationToken cancellationToken,
-        [FromRoute(Name = "definition-name")] string definition
-    )
+    async static Task<IResult> deleteDefinition(
+         [FromServices] WorkflowDBContext context,
+         CancellationToken cancellationToken,
+         [FromRoute(Name = "definition-name")] string definition
+     )
     {
 
         try
@@ -264,7 +264,7 @@ public static class DefinitionModule
                 .Include(s => s.HistoryForms)
 
                  .FirstOrDefault(w => w.Name == definition);
-            if (existingRecord != null&&existingRecord.States.Any())
+            if (existingRecord != null && existingRecord.States.Any())
             {
                 foreach (State state in existingRecord.States)
                 {
@@ -284,7 +284,7 @@ public static class DefinitionModule
                             instanceTr.Transition = null;
                         }
                     }
-                       context!.Remove(state);
+                    context!.Remove(state);
                 }
 
             }
@@ -292,7 +292,7 @@ public static class DefinitionModule
             {
                 context!.Remove(existingRecord);
                 // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
-             await   context.SaveChangesAsync(cancellationToken);
+                await context.SaveChangesAsync(cancellationToken);
                 return Results.Ok();
             }
             else
@@ -1234,7 +1234,7 @@ CancellationToken cancellationToken
             }
             if (data!.transitions!.Any())
             {
-                var controlList=data!.transitions!.Select(s=>s.name).ToList();
+                var controlList = data!.transitions!.Select(s => s.name).ToList();
                 var existingTransitionsControl = context.Transitions!
                               .FirstOrDefault(w => controlList.Any(a => a == w.Name))
                               ;

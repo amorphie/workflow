@@ -28,9 +28,9 @@ public class ExceptionMiddleware
     {
         //var errorMessage = ex.Message + " " + ex.InnerException?.Message + " Current Stack " + ex.StackTrace + " All Exception" + ex.ToString();
         var errorMessage = $"An error occured and logged with \"{httpContext.TraceIdentifier}\" trace identifier id";
-        if(httpContext.Request.Path.HasValue&&httpContext.Request.Path.Value.Contains("/workflow/definition/"))
+        if (httpContext.Request.Path.HasValue && httpContext.Request.Path.Value.Contains("/workflow/definition/"))
         {
-            errorMessage+=" "+ex.InnerException.Message;
+            errorMessage += " " + ex.InnerException.Message;
         }
         httpContext.Response.ContentType = "application/json";
         if (ex is BadHttpRequestException badEx)
