@@ -291,7 +291,7 @@ public static class InstanceModule
             {
 
                 uiForm = transition.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
-                return await View(configuration, transitionName, type, typeof(Transition).ToString(), uiForm, language, json, string.Empty);
+                return await View(configuration, transitionName, type, typeof(Transition).ToString(), uiForm, language, json, string.Empty,string.Empty);
             }
             if (transition == null)
             {
@@ -309,7 +309,7 @@ public static class InstanceModule
       IConfiguration configuration,
      CancellationToken cancellationToken,
      [FromRoute(Name = "stateName")] string stateName,
-
+  [FromQuery(Name = "suffix")] string? suffix,
      [FromQuery] string? type,
         [FromQuery] int? json,
      [FromHeader(Name = "Accept-Language")] string language = "en-EN"
@@ -326,7 +326,7 @@ public static class InstanceModule
             {
 
                 uiForm = state.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
-                return await View(configuration, stateName, type, typeof(State).ToString(), uiForm, language, json, string.Empty);
+                return await View(configuration, stateName, type, typeof(State).ToString(), uiForm, language, json, string.Empty,suffix);
             }
             if (state == null)
             {
@@ -360,7 +360,7 @@ public static class InstanceModule
             // return Results.BadRequest("There is no " + pageName + " page for " + instanceId);
             if (pageControl != null)
                 navigation = pageControl.navigationType;
-            return await View(configuration, pageName, type, typeof(Page).ToString(), null, language, json, navigation);
+            return await View(configuration, pageName, type, typeof(Page).ToString(), null, language, json, navigation,string.Empty);
 
         }
         catch (Exception ex)
@@ -369,7 +369,7 @@ public static class InstanceModule
         }
     }
     private static async ValueTask<IResult> View(IConfiguration configuration,
-        string name, string type, string typeofTable, UiForm? uiForm, string? language, int? json, string navigation)
+        string name, string type, string typeofTable, UiForm? uiForm, string? language, int? json, string navigation,string suffix)
     {
         try
         {
@@ -405,14 +405,14 @@ public static class InstanceModule
 
             return Results.Ok(new ViewTransitionModel()
             {
-                name = isPage ? name : form.Label,
+                name = isPage ? name : form.Label+suffix,
                 type = isPage ? type : uiForm.TypeofUiEnum.ToString(),
                 language = isPage ? language : form.Language,
                 navigation = isPage ? navigation : uiForm.Navigation.ToString(),
                 data = "latest",
                 body = isPage ? amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(name, string.Empty, templateURL, string.Empty, json)
                 : string.Equals(type, TypeofUiEnum.PageUrl.ToString(), StringComparison.OrdinalIgnoreCase) ? form.Label
-                : amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(form.Label, string.Empty, templateURL, string.Empty, json)
+                : amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(form.Label+suffix, string.Empty, templateURL, string.Empty, json)
             });
 
         }
