@@ -1219,6 +1219,13 @@ CancellationToken cancellationToken
         [FromHeader(Name = "Language")] string? language = "en-EN"
         )
     {
+        var workflowControl = context.Workflows!
+               .FirstOrDefault(w => w.Name == definition)
+               ;
+        if (workflowControl == null)
+        {
+            return Results.Problem("There is no " + definition + " named flow");
+        }
         var existingRecord = context.States!.Include(s => s.Titles).Include(s => s.Transitions).Include(s => s.PublicForms)
         .Include(s => s.UiForms).ThenInclude(s => s.Forms)
                .FirstOrDefault(w => w.WorkflowName == definition && w.Name == data.name)
