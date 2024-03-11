@@ -325,9 +325,9 @@ public static class InstanceModule
             if (state != null)
             {
 
-                if(!string.IsNullOrEmpty(suffix))
+                if (!string.IsNullOrEmpty(suffix))
                 {
-                    suffix="-"+suffix;
+                    suffix = "-" + suffix;
                 }
                 uiForm = state.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
                 return await View(configuration, stateName, type, typeof(State).ToString(), uiForm, language, json, string.Empty, suffix);
