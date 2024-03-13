@@ -1,4 +1,5 @@
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.Unicode;
 using amorphie.core.security.Extensions;
 using amorphie.workflow.core.ExceptionHandler;
@@ -16,7 +17,8 @@ var daprClient = new DaprClientBuilder().Build();
 
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
-builder.Services.AddDaprClient();
+//builder.Services.AddDaprClient();
+builder.Services.AddDaprClient(conf=>conf.UseJsonSerializationOptions(new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
 builder.Services.AddEndpointsApiExplorer();

@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.Modules;
 using amorphie.workflow;
+using System.Text.Json;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 
 var builder = WebApplication.CreateBuilder(args);
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
@@ -23,7 +26,8 @@ builder.Logging.ClearProviders();
 builder.Services.AddHealthChecks();
 builder.Logging.AddJsonConsole();
 builder.Services.AddScoped<IBBTIdentity, FakeIdentity>();
-builder.Services.AddDaprClient();
+//builder.Services.AddDaprClient();
+builder.Services.AddDaprClient(conf=>conf.UseJsonSerializationOptions(new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
