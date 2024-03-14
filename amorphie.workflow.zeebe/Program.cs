@@ -18,7 +18,7 @@ var daprClient = new DaprClientBuilder().Build();
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
 //builder.Services.AddDaprClient();
-builder.Services.AddDaprClient(conf => conf.UseJsonSerializationOptions(new JsonSerializerOptions {PropertyNameCaseInsensitive = false, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));
+builder.Services.AddDaprClient(conf => conf.UseJsonSerializationOptions(new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase,PropertyNameCaseInsensitive = false, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
 builder.Services.AddEndpointsApiExplorer();
