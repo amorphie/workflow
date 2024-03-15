@@ -1,4 +1,5 @@
 ﻿using amorphie.core.Base;
+using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
 using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.core.Models.SignalR;
@@ -23,6 +24,7 @@ public class WorkflowDBContext : DbContext
     public DbSet<Workflow> Workflows { get; set; } = default!;
     public DbSet<WorkflowEntity> WorkflowEntities { get; set; } = default!;
     public DbSet<State> States { get; set; } = default!;
+    public DbSet<StateToState> StateToStates { get; set; } = default!;
     public DbSet<Transition> Transitions { get; set; } = default!;
     public DbSet<Instance> Instances { get; set; } = default!;
     public DbSet<ZeebeMessage> ZeebeMessages { get; set; } = default!;
@@ -73,7 +75,22 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<State>()
                .HasOne(w => w.Workflow)
                  .WithMany(w => w.States);
-        ;
+        modelBuilder.Entity<State>()
+            .Property(p => p.Kind).HasDefaultValue(StateKind.SimpleState);
+
+        modelBuilder.Entity<StateToState>()
+               .HasOne(w => w.FromState)
+                 .WithMany(w => w.FromStates)
+                 .HasForeignKey(f => f.FromStateName)
+                 ;
+        // modelBuilder.Entity<StateToState>()
+        //        .HasOne(w => w.ToState)
+        //        .WithMany()
+        //          .HasForeignKey(f => f.ToStateName)
+        //          ;
+        modelBuilder.Entity<StateToState>()
+        .Property(p => p.IsDefault).HasDefaultValue(false);
+
         modelBuilder.Entity<Transition>()
            .HasKey(s => s.Name);
 
@@ -185,10 +202,12 @@ public class WorkflowDBContext : DbContext
 
 
         modelBuilder.Entity<Translation>().Property<Guid?>("UiForm_Id");
+
         modelBuilder.Entity<UiForm>()
            .HasMany<Translation>(t => t.Forms)
            .WithOne()
            .HasForeignKey("UiForm_Id");
+
         // modelBuilder.SeedUserResetPassword();
         // modelBuilder.SeedUserLifecycle();
 

@@ -10,6 +10,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog.Context;
+using amorphie.workflow.service.Db;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,7 +63,8 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
 
 ////Request and Response logging purpose
 builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>();
-
+//Add Bussiness Services
+builder.Services.AddBussinessServices();
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 using var scope = app.Services.CreateScope();
@@ -91,4 +93,5 @@ app.MapStateManagerEndpoints();
 app.MapHttpServiceManagerEndpoints();
 app.MapAccountFlowManagerEndpoints();
 app.MapExporterStateManagerEndpoints();
+app.MapSimpleStateManagerManagerEndpoints();
 app.Run();
