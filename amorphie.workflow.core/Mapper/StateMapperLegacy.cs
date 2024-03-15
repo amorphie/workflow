@@ -46,7 +46,7 @@ public class StateMapperLegacy
 
         if (data.IsPublicForm == true && data.PublicForms.Any())
         {
-            newRecord.PublicForms =ManuelMultilanguageMapper.Map(data.PublicForms);
+            newRecord.PublicForms = ManuelMultilanguageMapper.Map(data.PublicForms);
         }
         newRecord.UiForms = UiFormMapper.Map(data.UiForms);
 

@@ -35,7 +35,7 @@ public static class HttpServiceManagerModule
             IConfiguration configuration
        )
     {
-        var aa =CultureInfo.CurrentCulture;
+        var aa = CultureInfo.CurrentCulture;
         //For fetching gateway from db
         // string workFlowName = body.GetProperty("EntityName").ToString();
         // ZeebeMessage? zeebeMessage = await dbContext.ZeebeMessages.FirstOrDefaultAsync(p => p.Process == workFlowName);

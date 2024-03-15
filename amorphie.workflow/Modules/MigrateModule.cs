@@ -64,17 +64,17 @@ public static class MigrateModule
 
 public class MigrateModuleApis
 {
-//     public static async Task<IResult> MigrateTransition(
-//   CancellationToken cancellationToken,
-//   [FromServices] MigrateService service,
-//   [FromServices] ILogger<MigrateModuleApis> logger,
-//   [FromRoute(Name = "workflowName")] string workflowName
-// )
-//     {
-//         var response = await service.GetDefinitionBulkAsync(workflowName);
-//         // logger.LogCritical("Service injection test");
-//         return ApiResult.CreateResult(response);
-//     }
+    //     public static async Task<IResult> MigrateTransition(
+    //   CancellationToken cancellationToken,
+    //   [FromServices] MigrateService service,
+    //   [FromServices] ILogger<MigrateModuleApis> logger,
+    //   [FromRoute(Name = "workflowName")] string workflowName
+    // )
+    //     {
+    //         var response = await service.GetDefinitionBulkAsync(workflowName);
+    //         // logger.LogCritical("Service injection test");
+    //         return ApiResult.CreateResult(response);
+    //     }
     public static async Task<IResult> GetDefinitionBulk(
   CancellationToken cancellationToken,
   [FromServices] MigrateService service,
