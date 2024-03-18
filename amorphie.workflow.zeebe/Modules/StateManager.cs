@@ -247,7 +247,7 @@ public static class StateManagerModule
                                       transition.requireData.GetValueOrDefault(false),
                                       transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
                                   ),
-                                      source = "workflow ü ş i ğ ö ç " + body.Message,
+                                      source = "workflow",
                                       type = "workflow",
                                       subject = eventInfo,
                                       id = instance.Id.ToString(),
@@ -259,7 +259,7 @@ public static class StateManagerModule
             responseSignalRMFAType.Headers.Add("X-Token-Id", body.Headers.XTokenId);
             responseSignalRMFAType.Headers.Add("A-Customer", body.Headers.ACustomer);
 
-            var tesst = await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
+            await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
         }
         return Results.Ok(createMessageVariables(newInstanceTransition, body.LastTransition, data));
     }
@@ -343,7 +343,7 @@ public static class StateManagerModule
             newInstanceTransition!.TransitionName = transition.Name;
             newInstanceTransition!.Transition = transition;
 
-            string eventInfo = "worker-completed";
+            string eventInfo = EventInfos.WorkerCompleted;
 
 
             instance.BaseStatus = transition.ToState!.BaseStatus;
