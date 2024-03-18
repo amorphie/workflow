@@ -259,7 +259,7 @@ public static class StateManagerModule
             responseSignalRMFAType.Headers.Add("X-Token-Id", body.Headers.XTokenId);
             responseSignalRMFAType.Headers.Add("A-Customer", body.Headers.ACustomer);
 
-            var tesst = await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
+            await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
         }
         return Results.Ok(createMessageVariables(newInstanceTransition, body.LastTransition, data));
     }
