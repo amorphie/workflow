@@ -247,7 +247,7 @@ public static class StateManagerModule
                                       transition.requireData.GetValueOrDefault(false),
                                       transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
                                   ),
-                                      source = "workflow ü ş i ğ ö ç "+body.Message,
+                                      source = "workflow",
                                       type = "workflow",
                                       subject = eventInfo,
                                       id = instance.Id.ToString(),
