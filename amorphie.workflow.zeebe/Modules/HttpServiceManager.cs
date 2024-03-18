@@ -60,9 +60,6 @@ public static class HttpServiceManagerModule
         {
             acceptHeadersAsString = string.Empty;
         }
-
-
-
         Dictionary<string, string> acceptHeaders = new Dictionary<string, string>();
         if (!string.IsNullOrEmpty(acceptHeadersAsString))
         {
