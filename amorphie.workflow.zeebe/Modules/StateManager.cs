@@ -343,7 +343,7 @@ public static class StateManagerModule
             newInstanceTransition!.TransitionName = transition.Name;
             newInstanceTransition!.Transition = transition;
 
-            string eventInfo = "worker-completed";
+            string eventInfo = EventInfos.WorkerCompleted;
 
 
             instance.BaseStatus = transition.ToState!.BaseStatus;

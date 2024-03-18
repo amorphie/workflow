@@ -5,6 +5,7 @@ using System.Text;
 using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.IBase;
+using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.service.Zeebe;
@@ -346,7 +347,7 @@ public class PostTransactionService : IPostTransactionService
 
         addInstanceTansition(newInstance, started, null);
         _dbContext.SaveChanges();
-        SendSignalRData(newInstance, "worker-started", string.Empty);
+        SendSignalRData(newInstance, EventInfos.WorkerStarted, string.Empty);
         _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
         return new Response
         {
@@ -372,7 +373,7 @@ public class PostTransactionService : IPostTransactionService
         addInstanceTansition(instanceAtState, started, null);
         _dbContext.SaveChanges();
         _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
-        SendSignalRData(instanceAtState, "worker-started", string.Empty);
+        SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
         //return Results.Ok();
         return new Response
         {
@@ -469,7 +470,7 @@ public class PostTransactionService : IPostTransactionService
                             hubMessage += response.ReasonPhrase;
                         }
 
-                        SendSignalRData(instance, "transition-completed-with-error", hubMessage);
+                        SendSignalRData(instance, EventInfos.TransitionCompletedWithError, hubMessage);
                         return new Response
                         {
                             Result = new Result(Status.Error, ""),
@@ -479,7 +480,7 @@ public class PostTransactionService : IPostTransactionService
                 }
                 catch (Exception ex)
                 {
-                    SendSignalRData(instance, "transition-completed-with-error", string.Empty);
+                    SendSignalRData(instance, EventInfos.TransitionCompletedWithError, string.Empty);
                     return new Response
                     {
                         Result = new Result(Status.Error, ""),
@@ -490,7 +491,7 @@ public class PostTransactionService : IPostTransactionService
             }
             catch (Exception ex)
             {
-                SendSignalRData(instance, "transition-completed-with-error", "unexpected error");
+                SendSignalRData(instance, EventInfos.TransitionCompletedWithError, "unexpected error");
                 return new Response
                 {
                     Result = new Result(Status.Error, "unexpected error:" + ex.ToString()),
@@ -528,7 +529,7 @@ public class PostTransactionService : IPostTransactionService
 
         addInstanceTansition(instance, started, DateTime.UtcNow);
         _dbContext.SaveChanges();
-        SendSignalRData(instance, "transition-completed", string.Empty);
+        SendSignalRData(instance, EventInfos.TransitionCompleted, string.Empty);
         return new Response
         {
             Result = new Result(Status.Success, "Instance has been updated"),
@@ -567,7 +568,7 @@ public class PostTransactionService : IPostTransactionService
 
             //           ));
             bool routeChange = false;
-            if (eventInfo == "worker-started" || _transition.Page == null)
+            if (eventInfo == EventInfos.WorkerStarted || _transition.Page == null)
             {
                 routeChange = false;
             }
@@ -588,7 +589,7 @@ public class PostTransactionService : IPostTransactionService
                           instance.Id,
                           instance.EntityName,
                         _data.EntityData, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc), instance.StateName, _transitionName, null, instance.BaseStatus,
-                        _transition.Page == null ? null : eventInfo == "worker-started" ? null :
+                        _transition.Page == null ? null : eventInfo ==EventInfos.WorkerStarted ? null :
                         new PostPageSignalRData(_transition.Page.Operation.ToString(), pageTypeStringBYTransition, _transition.Page.Pages == null || _transition.Page.Pages.Count == 0 ? null : new amorphie.workflow.core.Dtos.MultilanguageText(_transition.Page.Pages!.FirstOrDefault()!.Language, _transition.Page.Pages!.FirstOrDefault()!.Label),
                         _transition.Page.Timeout), message, string.Empty, _data.AdditionalData, instance.WorkflowName, _transition.ToState.IsPublicForm == true ? "state" : "transition", _transition.requireData.GetValueOrDefault(false), _transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : _transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
 
