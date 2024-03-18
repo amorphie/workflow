@@ -27,7 +27,7 @@ builder.Services.AddHealthChecks();
 builder.Logging.AddJsonConsole();
 builder.Services.AddScoped<IBBTIdentity, FakeIdentity>();
 //builder.Services.AddDaprClient();
-builder.Services.AddDaprClient(conf => conf.UseJsonSerializationOptions(new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase,PropertyNameCaseInsensitive = false, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));
+builder.Services.AddDaprClient(conf => conf.UseJsonSerializationOptions(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = false, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
