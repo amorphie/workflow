@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 using amorphie.core.Enums;
 
 
-public record PostSignalRData(Guid UserId, Guid recordId, string eventInfo, Guid instanceId, string entityName, dynamic data, DateTime time, string state, string transition, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]  string[]? stateTransitions, StatusType baseStatus, PostPageSignalRData? page, string message, string errorCode, dynamic? additionalData, string workflowName, string viewSource, bool? requireData, string buttonType);
+public record PostSignalRData(Guid UserId, Guid recordId, string eventInfo, Guid instanceId, string entityName, dynamic data, DateTime time, string state, string transition, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string[]? stateTransitions, StatusType baseStatus, PostPageSignalRData? page, string message, string errorCode, dynamic? additionalData, string workflowName, string viewSource, bool? requireData, string buttonType);
 public record PostPageSignalRData(string operation, string type, amorphie.workflow.core.Dtos.MultilanguageText? pageRoute, int? timeout);
