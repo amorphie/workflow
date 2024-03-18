@@ -1,4 +1,6 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Unicode;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Models.SignalR;
@@ -38,7 +40,8 @@ public static class SendSignalrModule
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
         var dbData = PrepareData(data, deviceId, tokenId);
         data.routeChange = null;
-        string jsonString = JsonSerializer.Serialize(data);
+        var opt = new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
+        string jsonString = JsonSerializer.Serialize(data,opt);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
         await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
@@ -55,7 +58,8 @@ public static class SendSignalrModule
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
         var dbData = PrepareData(data, deviceId, tokenId);
         data.routeChange = null;
-        string jsonString = JsonSerializer.Serialize(data);
+         var opt = new JsonSerializerOptions {  Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
+        string jsonString = JsonSerializer.Serialize(data,opt);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
         await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
@@ -72,6 +76,7 @@ public static class SendSignalrModule
     {
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
         data.routeChange = null;
+
         string jsonString = JsonSerializer.Serialize(data);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendExporterMessage", jsonString);
         return Results.Ok("");
