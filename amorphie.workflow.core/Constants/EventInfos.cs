@@ -9,6 +9,6 @@ public static class EventInfos
     public const string WorkerCompleted = "worker-completed";
     public const string WorkerStarted = "worker-started";
     public const string TransitionCompleted = "transition-completed";
-     public const string TransitionCompletedWithError = "transition-completed-with-error";
+    public const string TransitionCompletedWithError = "transition-completed-with-error";
 
 }
