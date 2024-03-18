@@ -231,8 +231,8 @@ public static class StateManagerModule
                                       DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
                                       IsTargetState && targetStateAsState != null ? targetStateAsState.Name : newInstanceTransition.ToStateName,
                                       transition.Name,
-                                      string.IsNullOrEmpty(viewSource)?transition.ToState.IsPublicForm == true?null:transition.ToState.Transitions.Select(s=>s.Name).ToArray():viewSource==amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition)?
-                                      transition.ToState.Transitions.Select(s=>s.Name).ToArray():null,
+                                      string.IsNullOrEmpty(viewSource) ? transition.ToState.IsPublicForm == true ? null : transition.ToState.Transitions.Select(s => s.Name).ToArray() : viewSource == amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition) ?
+                                      transition.ToState.Transitions.Select(s => s.Name).ToArray() : null,
                                       instance.BaseStatus,
                                       !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new MultilanguageText(pageLanguage, pageUrl), timeout) :
                                       transition.Page == null ? null :
@@ -259,7 +259,7 @@ public static class StateManagerModule
             responseSignalRMFAType.Headers.Add("X-Token-Id", body.Headers.XTokenId);
             responseSignalRMFAType.Headers.Add("A-Customer", body.Headers.ACustomer);
 
-         var tesst=   await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
+            var tesst = await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
         }
         return Results.Ok(createMessageVariables(newInstanceTransition, body.LastTransition, data));
     }
