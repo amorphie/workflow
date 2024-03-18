@@ -62,6 +62,7 @@ public class IncidentExporter : BaseExporter, IExporter
                             DateTime.Now,
                             stream.Intent,
                             "",
+                            null,
                             amorphie.core.Enums.StatusType.New,
                             new PostPageSignalRData("", "", new MultilanguageText("", ""), 1000),
                             message: message,

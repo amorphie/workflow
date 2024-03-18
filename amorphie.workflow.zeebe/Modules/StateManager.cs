@@ -115,6 +115,10 @@ public static class StateManagerModule
                 .ThenInclude(s => s.Transitions)
                 .ThenInclude(s => s.Page)
                 .ThenInclude(s => s!.Pages)
+            .Include(i => i.State)
+                .ThenInclude(s => s.Transitions)
+                .ThenInclude(t => t.ToState)
+                .ThenInclude(t => t!.Transitions)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (instance is null)
@@ -136,7 +140,7 @@ public static class StateManagerModule
 
             transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
                 .ThenInclude(t => t!.Entities).Where(t => t.Name == body.LastTransition
-           && instance.WorkflowName == t.ToState!.WorkflowName && t.ToState.Type == StateType.Fail).FirstOrDefaultAsync(cancellationToken);
+           && instance.WorkflowName == t.ToState!.WorkflowName && t.ToState.Type == StateType.Fail).Include(i => i.ToState).ThenInclude(t => t!.Transitions).FirstOrDefaultAsync(cancellationToken);
             error = true;
         }
         else
@@ -158,7 +162,7 @@ public static class StateManagerModule
                 .ThenInclude(t => t!.Entities).Where(t => t.Name == body.LastTransition
             //    && (instance.WorkflowName == t.ToState!.WorkflowName || (instance.State.Type == StateType.SubWorkflow &&
             //     instance.State.SubWorkflowName == t.ToState.WorkflowName))
-            ).FirstOrDefaultAsync(cancellationToken);
+            ).Include(i => i.ToState).ThenInclude(t => t!.Transitions).FirstOrDefaultAsync(cancellationToken);
 
         }
         //var transitionData = JsonSerializer.Deserialize<dynamic>(body.GetProperty("LastTransitionData").ToString());
@@ -227,6 +231,8 @@ public static class StateManagerModule
                                       DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
                                       IsTargetState && targetStateAsState != null ? targetStateAsState.Name : newInstanceTransition.ToStateName,
                                       transition.Name,
+                                      string.IsNullOrEmpty(viewSource) ? transition.ToState.IsPublicForm == true ? null : transition.ToState.Transitions.Select(s => s.Name).ToArray() : viewSource == amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition) ?
+                                      transition.ToState.Transitions.Select(s => s.Name).ToArray() : null,
                                       instance.BaseStatus,
                                       !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new MultilanguageText(pageLanguage, pageUrl), timeout) :
                                       transition.Page == null ? null :
@@ -249,6 +255,7 @@ public static class StateManagerModule
                                   }
                                   );
             responseSignalRMFAType.Headers.Add("X-Device-Id", body.Headers.XDeviceId);
+            responseSignalRMFAType.Headers.Add("Accept-Language", "tr-TR");
             responseSignalRMFAType.Headers.Add("X-Token-Id", body.Headers.XTokenId);
             responseSignalRMFAType.Headers.Add("A-Customer", body.Headers.ACustomer);
 
@@ -336,7 +343,7 @@ public static class StateManagerModule
             newInstanceTransition!.TransitionName = transition.Name;
             newInstanceTransition!.Transition = transition;
 
-            string eventInfo = "worker-completed";
+            string eventInfo = EventInfos.WorkerCompleted;
 
 
             instance.BaseStatus = transition.ToState!.BaseStatus;

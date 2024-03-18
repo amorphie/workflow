@@ -12,6 +12,7 @@ using amorphie.workflow;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
+using Elastic.Apm.NetCoreAll;
 
 var builder = WebApplication.CreateBuilder(args);
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
@@ -83,6 +84,7 @@ builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>(headersToBeLogged);
 
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+app.UseAllElasticApm(app.Configuration);
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
 db.Database.Migrate();
