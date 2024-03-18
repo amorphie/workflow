@@ -10,7 +10,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog.Context;
-
+using Elastic.Apm.NetCoreAll;
 var builder = WebApplication.CreateBuilder(args);
 
 var daprClient = new DaprClientBuilder().Build();
@@ -65,6 +65,7 @@ builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>();
 
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+app.UseAllElasticApm(app.Configuration);
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
 db.Database.Migrate();
