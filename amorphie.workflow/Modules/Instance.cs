@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.Extension;
+using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
@@ -805,7 +806,7 @@ public static class InstanceModule
             return Results.Problem(instanceControl.WorkflowName + " is forbidden to get history");
         }
         List<amorphie.workflow.core.Models.SignalR.SignalRData> signalrHistoryList = await context.SignalRResponses.Where(w => w.InstanceId == instanceId
-             && (w.subject == "worker-completed" || w.subject == "transition-completed")
+             && (w.subject == EventInfos.WorkerCompleted || w.subject == EventInfos.TransitionCompleted)
              && w.routeChange == true
              )
              .OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);

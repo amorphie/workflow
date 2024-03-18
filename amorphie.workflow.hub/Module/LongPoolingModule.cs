@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
+using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models.SignalR;
@@ -31,7 +33,7 @@ namespace amorphie.workflow.hub
          )
         {
             SignalRData? data = await dbContext.SignalRResponses.Where(w => w.InstanceId == instanceId && w.tokenId == tokenId && w.deviceId == deviceId
-            && (w.subject == "worker-completed" || w.subject == "transition-completed")
+            && (w.subject == EventInfos.WorkerCompleted || w.subject == EventInfos.TransitionCompleted)
             && w.routeChange == true
             )
             .OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(cancellationToken);
@@ -48,7 +50,7 @@ namespace amorphie.workflow.hub
                 {
                     state.InitPageName = state.Name;
                 }
-                string eventInfo = "worker-completed";
+                string eventInfo = EventInfos.WorkerCompleted;
                 PostSignalRData postSignalRData = new PostSignalRData(
                              Guid.Empty,
                            Guid.Empty,
@@ -56,7 +58,7 @@ namespace amorphie.workflow.hub
                            Guid.Empty,
                            state.Workflow.Entities.FirstOrDefault()!.Name,
                          new { }, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-                          state.Name, string.Empty, state.BaseStatus,
+                          state.Name, string.Empty, null, state.BaseStatus,
                          new PostPageSignalRData(
                               amorphie.workflow.core.Helper.EnumHelper.GetDescription<PageOperationType>(PageOperationType.Open),
                           amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.Push),
@@ -81,10 +83,29 @@ namespace amorphie.workflow.hub
                 };
                 dbData = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
                 dbData.data = postSignalRData;
+                //dbData.baseState="New";
+                dbData.baseState = string.Empty;
                 return Results.Ok(dbData);
             }
             dbData.routeChange = null;
+
             dbData = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
+            dbData.baseState = core.Constants.StatusTypes.InProgress;
+            try
+            {
+                PostSignalRData? postSignalRData = JsonSerializer.Deserialize<PostSignalRData>(dbData.data);
+                State? state = await dbContext.States.FirstOrDefaultAsync(f => f.Name == postSignalRData.state, cancellationToken);
+                if (state != null && state.Type == StateType.Finish)
+                {
+
+                    dbData.baseState = core.Constants.StatusTypes.Completed;
+                }
+            }
+            catch (Exception)
+            {
+                dbData.baseState = core.Constants.StatusTypes.InProgress;
+            }
+            dbData.baseState = string.Empty;
             dbData.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(dbData.data);
             return Results.Ok(dbData);
         }

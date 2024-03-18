@@ -102,7 +102,7 @@ public class StateHelper
     {
         DaprClient daprClient = new DaprClientBuilder().Build();
         bool routeChange = false;
-        if (hubData.eventInfo == "worker-started" || hubData.page == null)
+        if (hubData.eventInfo == EventInfos.WorkerStarted || hubData.page == null)
         {
             routeChange = false;
         }

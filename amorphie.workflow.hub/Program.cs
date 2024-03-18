@@ -9,7 +9,7 @@ using amorphie.workflow.hub.Module;
 using Dapr.Client;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-
+using Elastic.Apm.NetCoreAll;
 
 var builder = WebApplication.CreateBuilder(args);
 //builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", false, true);
@@ -60,6 +60,7 @@ builder.Services.AddMvc();
 builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
 var app = builder.Build();
+app.UseAllElasticApm(app.Configuration);
 app.UseHttpLogging();
 Log.Information("Amorphie Workflow Hub Starting");
 
