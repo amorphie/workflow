@@ -49,6 +49,7 @@ public static class HttpServiceManagerModule
         }
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, instanceIdAsString);
         var url = body.GetProperty("url").ToString();
+
         var acceptHeadersAsString = string.Empty;
         try
         {
@@ -59,6 +60,7 @@ public static class HttpServiceManagerModule
         {
             acceptHeadersAsString = string.Empty;
         }
+
 
 
         Dictionary<string, string> acceptHeaders = new Dictionary<string, string>();
