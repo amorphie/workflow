@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
@@ -56,7 +57,7 @@ namespace amorphie.workflow.hub
                            Guid.Empty,
                            state.Workflow.Entities.FirstOrDefault()!.Name,
                          new { }, DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-                          state.Name, string.Empty, state.BaseStatus,
+                          state.Name, string.Empty, null, state.BaseStatus,
                          new PostPageSignalRData(
                               amorphie.workflow.core.Helper.EnumHelper.GetDescription<PageOperationType>(PageOperationType.Open),
                           amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.Push),
@@ -81,10 +82,28 @@ namespace amorphie.workflow.hub
                 };
                 dbData = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
                 dbData.data = postSignalRData;
+                //dbData.baseState="New";
+                dbData.baseState = string.Empty;
                 return Results.Ok(dbData);
             }
             dbData.routeChange = null;
+
             dbData = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
+            dbData.baseState = "InProgress";
+            try
+            {
+                PostSignalRData? postSignalRData = JsonSerializer.Deserialize<PostSignalRData>(dbData.data);
+                State? state = await dbContext.States.FirstOrDefaultAsync(f => f.Name == postSignalRData.state, cancellationToken);
+                if (state != null && state.Type == StateType.Finish)
+                {
+                    dbData.baseState = "Completed";
+                }
+            }
+            catch (Exception)
+            {
+                dbData.baseState = "InProgress";
+            }
+            dbData.baseState = string.Empty;
             dbData.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(dbData.data);
             return Results.Ok(dbData);
         }

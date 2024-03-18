@@ -49,10 +49,24 @@ public static class HttpServiceManagerModule
         }
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, instanceIdAsString);
         var url = body.GetProperty("url").ToString();
+        var acceptHeadersAsString = body.GetProperty("acceptHeaders").ToString();
+        Dictionary<string, string> acceptHeaders = new Dictionary<string, string>();
+        if (!string.IsNullOrEmpty(acceptHeadersAsString))
+        {
+            try
+            {
+                acceptHeaders = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(acceptHeadersAsString);
+            }
+            catch (Exception)
+            {
+                throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Input parameter 'acceptHeaders' is not allowed format");
+            }
+        }
+
         if (string.IsNullOrEmpty(url))
         {
             //return Results.BadRequest("Header parameter 'url' is mandatory");
-            throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Header parameter 'url' is mandatory");
+            throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Input parameter 'url' is mandatory");
         }
 
         string httpMethodName;
@@ -67,6 +81,7 @@ public static class HttpServiceManagerModule
         {
             return Results.BadRequest("Header parameter 'method' value is not allowed Try one of them this values => post | get | put | delete | patch");
         }
+
         string failureCodes = "5xx";
         try
         {
@@ -98,7 +113,7 @@ public static class HttpServiceManagerModule
         catch (Exception ex)
         {
         }
-        HttpResponseMessage response = await HttpClientSendAsync(httpClientFactory, httpMethodName, url, serialized, authorizationHeader);
+        HttpResponseMessage response = await HttpClientSendAsync(httpClientFactory, httpMethodName, url, acceptHeaders, serialized, authorizationHeader);
         int statusCodeInt = (int)response!.StatusCode;
         var statusCode = statusCodeInt.ToString();
         string responseBody;
@@ -151,13 +166,23 @@ public static class HttpServiceManagerModule
         }
         return variables;
     }
-    private static async Task<HttpResponseMessage> HttpClientSendAsync(IHttpClientFactory httpClientFactory, string httpMethod, string url, HttpContent? serialized, string? authorizationHeader = null)
+    private static async Task<HttpResponseMessage> HttpClientSendAsync(IHttpClientFactory httpClientFactory, string httpMethod, string url,
+     Dictionary<string, string> acceptHeaders, HttpContent? serialized, string? authorizationHeader = null
+    )
     {
         var client = httpClientFactory.CreateClient("httpWorkerService");
         if (!string.IsNullOrEmpty(authorizationHeader))
             client.DefaultRequestHeaders.Add("Authorization", authorizationHeader);
-
         var httpRequestMessage = new HttpRequestMessage(new HttpMethod(httpMethod), url);
+        if (acceptHeaders.Any())
+        {
+            foreach (var item in acceptHeaders)
+            {
+                httpRequestMessage.Headers.Add(item.Key, item.Value);
+            }
+        }
+
+
         if (httpRequestMessage.Method != HttpMethod.Get && serialized != null)
         {
             httpRequestMessage.Content = serialized;

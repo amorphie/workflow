@@ -12,6 +12,9 @@ public class SignalRResponsePublic : SignalRRequest
     public string datacontenttype { get; set; } = "application/json";
     public string specversion { get; set; } = "v1.0";
     public string deviceId { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonPropertyName("base-state")]
+    public string baseState { get; set; }
 
 }
 public class SignalRResponsePrivate : SignalRResponsePublic
