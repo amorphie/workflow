@@ -41,7 +41,7 @@ public static class SendSignalrModule
         var dbData = PrepareData(data, deviceId, tokenId);
         data.routeChange = null;
         var opt = new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
-        string jsonString = JsonSerializer.Serialize(data,opt);
+        string jsonString = JsonSerializer.Serialize(data, opt);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
         await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
@@ -58,8 +58,8 @@ public static class SendSignalrModule
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
         var dbData = PrepareData(data, deviceId, tokenId);
         data.routeChange = null;
-         var opt = new JsonSerializerOptions {  Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
-        string jsonString = JsonSerializer.Serialize(data,opt);
+        var opt = new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
+        string jsonString = JsonSerializer.Serialize(data, opt);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
         await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
