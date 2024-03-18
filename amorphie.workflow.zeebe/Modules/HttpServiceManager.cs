@@ -49,17 +49,17 @@ public static class HttpServiceManagerModule
         }
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, instanceIdAsString);
         var url = body.GetProperty("url").ToString();
-          var acceptHeadersAsString =string.Empty;
+        var acceptHeadersAsString = string.Empty;
         try
-        { 
-             acceptHeadersAsString = body.GetProperty("acceptHeaders").ToString();
+        {
+            acceptHeadersAsString = body.GetProperty("acceptHeaders").ToString();
 
         }
-        catch(Exception)
+        catch (Exception)
         {
-            acceptHeadersAsString =string.Empty;
+            acceptHeadersAsString = string.Empty;
         }
-       
+
         Dictionary<string, string> acceptHeaders = new Dictionary<string, string>();
         if (!string.IsNullOrEmpty(acceptHeadersAsString))
         {
