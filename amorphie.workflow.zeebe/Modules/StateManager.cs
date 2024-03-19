@@ -183,10 +183,6 @@ public static class StateManagerModule
         (newInstanceTransition, WorkerBodyTrxDatas? data, string eventInfo) =
         ((InstanceTransition, WorkerBodyTrxDatas, string))await SetInstanceTransition(dbContext, transition, instance, error, body, IsTargetState, targetStateAsState, cancellationToken);
 
-
-
-
-
         if (notifyClient)
         {
 

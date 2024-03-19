@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using amorphie.core.Base;
 using amorphie.workflow.core.Dtos;
 
+[Obsolete("WorkflowCreateDtoLegacy should be used instead")]
 public class DtoSaveWorkflowWithFlow
 {
     public string? name { get; set; }

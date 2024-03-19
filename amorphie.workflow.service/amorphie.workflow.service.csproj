@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj" />
+    <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj" />
   </ItemGroup>
   <ItemGroup>
 	<FrameworkReference Include="Microsoft.AspNetCore.App" />
