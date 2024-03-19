@@ -344,11 +344,19 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid?>("CreatedByBehalfOf")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("FlowName")
+                        .HasColumnType("text");
+
                     b.Property<string>("InitPageName")
                         .HasColumnType("text");
 
                     b.Property<bool?>("IsPublicForm")
                         .HasColumnType("boolean");
+
+                    b.Property<int>("Kind")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(10001);
 
                     b.Property<int?>("MFAType")
                         .HasColumnType("integer");
@@ -368,20 +376,37 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<string>("OnExitFlowName")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("PageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ServiceName")
+                        .HasColumnType("text");
+
                     b.Property<string>("SubWorkflowName")
                         .HasColumnType("text");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("TypeofUi")
+                        .HasColumnType("integer");
+
                     b.Property<string>("WorkflowName")
                         .HasColumnType("text");
+
+                    b.Property<bool?>("requireData")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("transitionButtonType")
+                        .HasColumnType("integer");
 
                     b.HasKey("Name");
 
                     b.HasIndex("OnEntryFlowName");
 
                     b.HasIndex("OnExitFlowName");
+
+                    b.HasIndex("PageId");
 
                     b.HasIndex("SubWorkflowName");
 
@@ -1258,6 +1283,52 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("SignalRResponses", "signalrdata");
                 });
 
+            modelBuilder.Entity("amorphie.workflow.core.Models.StateToState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FromStateName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ModifiedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ToStateName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromStateName");
+
+                    b.HasIndex("ToStateName");
+
+                    b.ToTable("StateToStates");
+                });
+
             modelBuilder.Entity("amorphie.workflow.core.Models.TransitionRole", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1426,6 +1497,10 @@ namespace amorphie.workflow.data.Migrations
                         .WithMany()
                         .HasForeignKey("OnExitFlowName");
 
+                    b.HasOne("Page", "Page")
+                        .WithMany()
+                        .HasForeignKey("PageId");
+
                     b.HasOne("Workflow", "SubWorkflow")
                         .WithMany()
                         .HasForeignKey("SubWorkflowName");
@@ -1437,6 +1512,8 @@ namespace amorphie.workflow.data.Migrations
                     b.Navigation("OnEntryFlow");
 
                     b.Navigation("OnExitFlow");
+
+                    b.Navigation("Page");
 
                     b.Navigation("SubWorkflow");
 
@@ -1547,6 +1624,25 @@ namespace amorphie.workflow.data.Migrations
                         .HasForeignKey("WorkflowName_Title");
                 });
 
+            modelBuilder.Entity("amorphie.workflow.core.Models.StateToState", b =>
+                {
+                    b.HasOne("State", "FromState")
+                        .WithMany("FromStates")
+                        .HasForeignKey("FromStateName")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("State", "ToState")
+                        .WithMany()
+                        .HasForeignKey("ToStateName")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FromState");
+
+                    b.Navigation("ToState");
+                });
+
             modelBuilder.Entity("amorphie.workflow.core.Models.TransitionRole", b =>
                 {
                     b.HasOne("Transition", "Transition")
@@ -1586,6 +1682,8 @@ namespace amorphie.workflow.data.Migrations
             modelBuilder.Entity("State", b =>
                 {
                     b.Navigation("Descriptions");
+
+                    b.Navigation("FromStates");
 
                     b.Navigation("PublicForms");
 
