@@ -12,5 +12,5 @@ public interface IStateService
     Task<Response> SaveStateRoutesAsync(StateRoutesDto data);
 
     //Legacy
-    Task<Response> LegacySaveBulkAsync(WorkflowCreateDto data);    
+    Task<Response> LegacySaveBulkAsync(WorkflowCreateDto data);
 }

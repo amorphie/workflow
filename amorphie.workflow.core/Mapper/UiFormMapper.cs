@@ -22,7 +22,7 @@ public class UiFormMapper
         };
     }
 
-   public static List<UiForm>? Map(ICollection<UiFormDto>? uiForms)
+    public static List<UiForm>? Map(ICollection<UiFormDto>? uiForms)
     {
         if (uiForms == null) return null;
         return uiForms.Select(p => Map(p)).ToList();
