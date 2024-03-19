@@ -24,7 +24,7 @@ public class StateMapper
             MfaType = state.MFAType,
             Type = state.Type,
             Transition = StateMapper.SetTransitionCreateDto(state),
-            UiForms = UiFormMapper.Map (state.UiForms),
+            UiForms = UiFormMapper.Map(state.UiForms),
             SubWorkflowName = state.SubWorkflowName,
             Titles = state.Titles?.Select(t => new core.Dtos.MultilanguageText(t.Language, t.Label)).ToList(),
             PublicForms = state.PublicForms?.Select(t => new core.Dtos.MultilanguageText(t.Language, t.Label)).ToList(),

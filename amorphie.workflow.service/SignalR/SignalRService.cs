@@ -97,7 +97,7 @@ public class SignalRService
                 entityName: instance.EntityName,
                 data: request.EntityData,
                 DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-                state:instance.StateName,
+                state: instance.StateName,
                 transition: instance.State.Name,
                 stateTransitions: null,
                 baseStatus: instance.BaseStatus,

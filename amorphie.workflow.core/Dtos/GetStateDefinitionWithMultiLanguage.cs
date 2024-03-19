@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 namespace amorphie.workflow.core.Dtos
 {
     public record GetStateDefinitionWithMultiLanguage(
-        string name, 
-        MultilanguageText[] title, 
-        amorphie.core.Enums.StatusType baseStatus, 
+        string name,
+        MultilanguageText[] title,
+        amorphie.core.Enums.StatusType baseStatus,
         PostTransitionWithMultiLanguage[] transitions
         );
     public record PostTransitionWithMultiLanguage(
@@ -18,7 +18,7 @@ namespace amorphie.workflow.core.Dtos
     MultilanguageText[]? form,
     string fromState,
     string? serviceName,
-    string? message, 
+    string? message,
     string? gateway,
     PostPageDefinitionRequest? page);
 }

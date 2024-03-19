@@ -229,7 +229,7 @@ public class MigrateService
 
     }
     public async Task<Response> SaveDefinitionToLegacyBulkAsync(WorkflowCreateDto workflowDto)
-    {        
+    {
         if (!Md5.Check(workflowDto))
         {
             return Response.Error("Request body must not be modified before save");
