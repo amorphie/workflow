@@ -8,6 +8,7 @@ namespace amorphie.workflow.service.Zeebe
 {
     public interface IZeebeCommandService
     {
+        Task<long> PublishMessage(string message, dynamic variables, string? correlationKey);
         Task<long> PublishMessage(string message, dynamic variables, string? correlationKey, string? gateway);
         Task<Result> ThrowError(string gateway, long processInstanceKey, long jobKey, string errorCode = "500", string errorMessage = "Bussines Error");
         Task<Result> SetErrorAsVariable(string gateway, long jobKey, string errorCode, string errorMessage = "Bussines Error");
@@ -23,9 +24,14 @@ namespace amorphie.workflow.service.Zeebe
             _daprClient = daprClinet;
         }
 
+        public async Task<long> PublishMessage(string message, dynamic variables, string? correlationKey)
+        {
+            //TODO : Move gateway to environment
+            string zeebeGateway = "workflow-zeebe-command";
+            return await PublishMessage(message, variables, correlationKey, zeebeGateway);
+        }
         public async Task<long> PublishMessage(string message, dynamic variables, string? correlationKey, string? gateway)
         {
-
             dynamic messageData = new ExpandoObject();
             messageData.messageName = message;
             if (correlationKey is not null)
@@ -57,6 +63,20 @@ namespace amorphie.workflow.service.Zeebe
             catch (Exception ex)
             {
                 return new Result(Status.Error, $"Problem occurred while throwing the zeebe error. Original error: {errorCode} {errorMessage} -- ThrowError Exception: {ex.Message}");
+            }
+
+        }
+        public async Task<Result> SetVariables(string gateway, long processInstanceKey, dynamic variables)
+        {
+            SetVariableRequest messageData = new(processInstanceKey, variables);
+            try
+            {
+                await _daprClient.InvokeBindingAsync(gateway, ZeebeCommands.SetVariables, messageData);
+                return new Result(Status.Success, "", "");
+            }
+            catch (Exception ex)
+            {
+                return new Result(Status.Error, $"Problem occurred while setting variables.");
             }
 
         }
