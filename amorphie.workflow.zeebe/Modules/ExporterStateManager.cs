@@ -3,6 +3,7 @@ using System.Text.Json;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Helper;
+using amorphie.workflow.service.Variable;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
@@ -162,48 +163,6 @@ public static class ExporterStateManagerModule
             {
                 pageTypeStringBYTransition = string.Empty;
             }
-
-        // var responseSignalRMFAType = client.CreateInvokeMethodRequest<SignalRRequest>(
-        //                HttpMethod.Post,
-        //                 hubUrl,
-        //                "sendMessage/" + transition.ToState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower(),
-        //                new SignalRRequest()
-        //                {
-        //                    data = new PostSignalRData(
-        //                    newInstanceTransition.CreatedBy,
-        //                    instance.RecordId,
-        //                    eventInfo,
-        //                    instance.Id,
-        //                    instance.EntityName,
-        //                  entityDataDynamic,
-        //                  DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-        //                  IsTargetState && targetStateAsState != null ? targetStateAsState.Name : newInstanceTransition.ToStateName,
-        //                  transition.Name,
-        //                  instance.BaseStatus,
-        //                  !string.IsNullOrEmpty(pageUrl) ? new PostPageSignalRData(pageOperationTypeString, pageTypeString, new MultilanguageText(pageLanguage, pageUrl), timeout) :
-        //           transition.Page == null ? null :
-        //           new PostPageSignalRData(transition.Page.Operation.ToString(), pageTypeStringBYTransition, transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
-        //           transition.Page.Timeout),
-        //           body.HubMessage,
-        //           body.HubErrorCode,
-        //           additionalDataDynamic,
-        //           instance.WorkflowName,
-        //           transition.ToState.IsPublicForm == true ? "state" : "transition",
-        //           transition.requireData.GetValueOrDefault(false),
-        //           transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
-        //                ),
-        //                    source = "workflow",
-        //                    type = "workflow",
-        //                    subject = eventInfo,
-        //                    id = instance.Id.ToString()
-        //                }
-        //                );
-
-        // responseSignalRMFAType.Headers.Add("X-Device-Id", body.BodyHeaders.XDeviceId);
-        // responseSignalRMFAType.Headers.Add("X-Token-Id", body.BodyHeaders.XTokenId);
-        // responseSignalRMFAType.Headers.Add("A-Customer", body.BodyHeaders.ACustomer);
-
-        // await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
         return Results.Ok(createMessageVariables(newInstanceTransition, body.LastTransition, data));
     }
     private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, dynamic _data)

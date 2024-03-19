@@ -349,3 +349,4 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 vault.sh
+/amorphie.workflow.data/outputtedsql.sql

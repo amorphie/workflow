@@ -58,7 +58,7 @@ internal class JobExporter : BaseExporter, IExporter
                     if (savingResult > 0)
                     {
                         messageToBeDeleted.Add(process.Id);
-                        Boolean.TryParse(stream.Value.CustomHeaders["notifyClient"]?.ToString(), out bool notifyClient);
+                        Boolean.TryParse(stream.Value.CustomHeaders["NOTIFY_CLIENT_BYEXPORTER"]?.ToString(), out bool notifyClient);
                         var elementType = stream.Value.Type;
                         if (notifyClient)
                         {

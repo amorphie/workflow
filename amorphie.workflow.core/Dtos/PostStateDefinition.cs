@@ -2,7 +2,7 @@
 using amorphie.workflow.core.Dtos;
 using amorphie.core.Enums;
 using amorphie.workflow.core.Enums;
-
+namespace amorphie.workflow.core.Dtos;
 public record PostStateDefinitionRequest(string name, MultilanguageText title, StatusType baseStatus, StateType type,
  PostTransitionDefinitionRequest[] transitions, bool? ispublicForm, UiFormDto[]? publicForms, MFATypeEnum? mfaType,
  string? subWorkflowName, string? initPageName);
@@ -27,6 +27,10 @@ public record PostFSMTransitionDefinition(string name, MultilanguageText title, 
 public record PostZeebeTransitionDefinition(string name, MultilanguageText title, string toState, UiFormDto[]? form, string fromState, string? serviceName, string message, string gateway, PostPageDefinitionRequest? page, MultilanguageText[]? historyForms, TypeofUiEnum? typeofUi, TransitionButtonType? buttonType) : PostTransitionDefinitionRequest(name, title, toState, form, fromState, serviceName, message, gateway, page, historyForms, typeofUi, buttonType);
 
 public record PostStateDefinitionResponse(string name);
+
+
+//V2
+
 
 
 
