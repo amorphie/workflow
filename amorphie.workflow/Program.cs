@@ -13,7 +13,14 @@ using System.Text.Json;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Elastic.Apm.NetCoreAll;
+using Dapr.Client;
+using amorphie.workflow.service.Db;
+using amorphie.workflow.core.Token;
 
+// DaprClient daprClient = new DaprClientBuilder()
+//      //.UseHttpEndpoint("http://127.0.0.1:42010")
+//      //.UseGrpcEndpoint("http://127.0.0.1:42011")
+//     .Build();
 var builder = WebApplication.CreateBuilder(args);
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 
@@ -70,10 +77,13 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
 })
 .AddNewtonsoftJson(options =>
-    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore)
-;
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+
 builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
+
+//Add Bussiness Services
+builder.Services.AddBussinessServices();
 
 ////Request and Response logging purpose
 var headersToBeLogged = new List<string>
@@ -106,6 +116,12 @@ app.UseSwaggerUI();
 
 app.MapDefinitionEndpoints();
 app.MapInstanceEndpoints();
+//V2 on heavy construction :)
+app.MapDefinitionV2Endpoints();
+app.MapInstanceV2Endpoints();
+app.MapStateEndpoints();
+app.MapMigrateModuleEndpoints();
+
 app.MapConsumerEndpoints();
 app.MapAuthorizeEndpoints();
 try

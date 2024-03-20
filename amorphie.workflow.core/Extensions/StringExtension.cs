@@ -1,3 +1,6 @@
+using amorphie.core.Base;
+using amorphie.core.Enums;
+
 public static class StringExtension
 {
 

@@ -1,3 +1,6 @@
 -- Database migration an apply command
     dotnet-ef migrations add [Give a MigrationName]
     dotnet-ef database update
+
+--Generates Sql script --for more dotnet ef migrations script --help
+     dotnet-ef migrations script FROM-Mig-Name TO-Mig-Name -o outputtedsql.sql -i
