@@ -8,13 +8,18 @@ public class PageMapper
     public static PageCreateDto? Map(Page? page)
     {
         if (page != null)
-            return new PageCreateDto
+        {
+            var pageDto = new PageCreateDto
             {
                 Operation = page.Operation,
                 Type = page.Type,
                 Timeout = page.Timeout,
-                PageRoute = page.Pages != null ? ManuelMultilanguageMapper.Map(page.Pages.First()) : null
+                PageRoute = null
             };
+            if (page.Pages != null && page.Pages.Any())
+                pageDto.PageRoute = ManuelMultilanguageMapper.Map(page.Pages.First());
+            return pageDto;
+        }
         return null;
     }
 
