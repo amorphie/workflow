@@ -34,6 +34,43 @@ public class JsonObjectConverter
         workerBody.Headers = workerBodyHeaders;
         return workerBody;
     }
+    public static WorkerBody DynamicToWorkerBody(dynamic body)
+    {
+        var opt = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
+
+        IDictionary<string, object> propertyValues = (IDictionary<string, object>)body;
+
+        var workerBody = new WorkerBody
+        {
+            InstanceId = new Guid(propertyValues.FirstOrDefault(p => p.Key == ZeebeVariableKeys.InstanceId).ToString()),
+            Message = propertyValues.FirstOrDefault(p => p.Key == ZeebeVariableKeys.Message || p.Key == ZeebeVariableKeys.message).ToString(),
+            ErrorCode = propertyValues.FirstOrDefault(p => p.Key == ZeebeVariableKeys.ErrorCode || p.Key == ZeebeVariableKeys.errorCode).ToString()
+        };
+
+        foreach (var item in propertyValues.Where(p => p.Key.StartsWith("TRX")))
+        {
+            if (workerBody.WorkerBodyTrxDataList.Keys.Contains(item.Key))
+                continue;
+            var value = item.Value as WorkerBodyTrxDatas;
+            workerBody.WorkerBodyTrxDataList.Add(item.Key, value);
+        }
+
+        return workerBody;
+    }
+
+    private static string GetStringFromDynamic(dynamic body, string propName)
+    {
+        string value;
+        try
+        {
+            value = body.GetProperty(propName).ToString();
+        }
+        catch (Exception ex)
+        {
+            value = string.Empty;
+        }
+        return value;
+    }
 
 }
 public class WorkerBody
@@ -72,4 +109,10 @@ public class WorkerBodyTrxInnerDatas
     public dynamic? RouteData { get; set; }
     public dynamic? QueryData { get; set; }
     public string? SetStateVia { get; set; }
+}
+
+public class InstanceStateChangeDto
+{
+    public Guid InstanceId { get; set; } = default!;
+    public string TargetState { get; set; } = default!;
 }
