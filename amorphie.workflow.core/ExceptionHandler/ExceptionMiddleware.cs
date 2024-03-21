@@ -41,7 +41,7 @@ public class ExceptionMiddleware
         {
             httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
         }
-        Logger.Error($"ConnectionId : httpContext.TraceIdentifier. Exception: {ex}");
+        Logger.Error($"ConnectionId : {httpContext.TraceIdentifier}. Exception: {ex}");
         await httpContext.Response.WriteAsync(errorMessage);
 
     }

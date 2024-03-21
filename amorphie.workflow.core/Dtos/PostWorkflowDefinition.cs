@@ -12,13 +12,13 @@ using amorphie.workflow.core.Dtos;
 /// <param name="recordId"></param>
 /// <param name="IsForbiddenData"></param>
 public record PostWorkflowDefinitionRequest(
-    string name, 
-    MultilanguageText[] title, 
-    PostWorkflowEntity[]? entities, 
-    string[] tags, 
-    WorkflowStatus status, 
-    MultilanguageText[]? historyForms, 
-    string recordId, 
+    string name,
+    MultilanguageText[] title,
+    PostWorkflowEntity[]? entities,
+    string[] tags,
+    WorkflowStatus status,
+    MultilanguageText[]? historyForms,
+    string recordId,
     bool? IsForbiddenData);
 
 public record PostFSMWorkflowDefinitionRequest(string name, MultilanguageText[] title, PostWorkflowEntity[] entities, string[] tags, WorkflowStatus status, MultilanguageText[]? historyForms, string recordId, bool? IsForbiddenData) : PostWorkflowDefinitionRequest(name, title, entities, tags, status, historyForms, recordId, IsForbiddenData);

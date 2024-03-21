@@ -111,6 +111,7 @@ public partial class StateService
                 CreatedAt = DateTime.UtcNow,
                 CreatedByBehalfOf = Guid.NewGuid(),
             };
+            _dbContext.Transitions.Add(trx);
         }
         else
         {
