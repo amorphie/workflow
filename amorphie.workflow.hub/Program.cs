@@ -56,7 +56,7 @@ builder.Services.AddSignalR(options =>
 .AddStackExchangeRedis(redis.ToString())
 ;
 
-builder.Services.AddHealthChecks().AddNpgSql(postgreSql).AddRedis(redis.ToString(),"Redis", HealthStatus.Unhealthy).AddSignalRHub(signalrHealthAdress.ToString());;
+builder.Services.AddHealthChecks().AddNpgSql(postgreSql).AddSignalRHub(signalrHealthAdress.ToString());;
 builder.Services.AddMvc();
 
 builder.Services.AddDbContext<WorkflowDBContext>
