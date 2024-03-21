@@ -10,6 +10,7 @@ using Dapr.Client;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Elastic.Apm.NetCoreAll;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 //builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", false, true);
@@ -18,6 +19,7 @@ var daprClient = new DaprClientBuilder().Build();
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
 var redis = builder.Configuration["redisEndPoints"];
+var signalrHealthAdress = builder.Configuration["signalrHealthAdress"];
 // builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 // {
 //     options.SerializerOptions.PropertyNameCaseInsensitive = false;
@@ -54,7 +56,7 @@ builder.Services.AddSignalR(options =>
 .AddStackExchangeRedis(redis.ToString())
 ;
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks().AddNpgSql(postgreSql).AddRedis(redis.ToString(),"Redis", HealthStatus.Unhealthy).AddSignalRHub(signalrHealthAdress.ToString());;
 builder.Services.AddMvc();
 
 builder.Services.AddDbContext<WorkflowDBContext>
