@@ -263,7 +263,7 @@ public partial class StateService : IStateService
     {
         foreach (var languageForm in publicForms)
         {
-            Translation? translation = state.PublicForms.FirstOrDefault(f => f.Language == languageForm.language);
+            Translation? translation = state.PublicForms?.FirstOrDefault(f => f.Language == languageForm.language);
             if (translation != null && translation.Label != languageForm.label)
             {
                 translation.Label = languageForm.label;
@@ -278,7 +278,7 @@ public partial class StateService : IStateService
     {
         foreach (var languageForm in forms)
         {
-            Translation? translation = transition.Forms.FirstOrDefault(f => f.Language == languageForm.language);
+            Translation? translation = transition.Forms?.FirstOrDefault(f => f.Language == languageForm.language);
             if (translation != null && translation.Label != languageForm.label)
             {
                 translation.Label = languageForm.label;
@@ -291,6 +291,10 @@ public partial class StateService : IStateService
     }
     private void SaveZeebeMessage(Transition transition, TransitionCreateDtoLegacy trxDto, string workflowName)
     {
+        if (trxDto.Message == null)
+        {
+            return;
+        }
         ZeebeMessage? zeebeMessage = _dbContext.ZeebeMessages!.FirstOrDefault(f => f.Name == trxDto.Message);
         if (zeebeMessage == null)
         {
@@ -385,6 +389,10 @@ public partial class StateService : IStateService
 
     private void UpdatePage(State existingRecord, TransitionCreateDto transition)
     {
+        if (transition.Page == null)
+        {
+            return;
+        }
         Page? page = existingRecord.Page;
         if (page != null)
         {
@@ -442,6 +450,10 @@ public partial class StateService : IStateService
 
     private void UpdatePage(Transition existingRecord, TransitionCreateDtoLegacy trxDto)
     {
+        if (trxDto.Page == null)
+        {
+            return;
+        }
         Page? page = existingRecord.Page;
         if (page != null)
         {
