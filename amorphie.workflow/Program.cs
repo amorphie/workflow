@@ -8,19 +8,12 @@ using amorphie.workflow.core.ExceptionHandler;
 using Microsoft.EntityFrameworkCore;
 using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.Modules;
-using amorphie.workflow;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Elastic.Apm.NetCoreAll;
-using Dapr.Client;
 using amorphie.workflow.service.Db;
-using amorphie.workflow.core.Token;
 
-// DaprClient daprClient = new DaprClientBuilder()
-//      //.UseHttpEndpoint("http://127.0.0.1:42010")
-//      //.UseGrpcEndpoint("http://127.0.0.1:42011")
-//     .Build();
 var builder = WebApplication.CreateBuilder(args);
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 
@@ -34,7 +27,6 @@ builder.Logging.ClearProviders();
 builder.Services.AddHealthChecks();
 builder.Logging.AddJsonConsole();
 builder.Services.AddScoped<IBBTIdentity, FakeIdentity>();
-//builder.Services.AddDaprClient();
 builder.Services.AddDaprClient(conf => conf.UseJsonSerializationOptions(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = false, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -94,7 +86,11 @@ builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>(headersToBeLogged);
 
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-app.UseAllElasticApm(app.Configuration);
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseAllElasticApm(app.Configuration);
+}
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
 db.Database.Migrate();
@@ -120,7 +116,7 @@ app.MapInstanceEndpoints();
 app.MapDefinitionV2Endpoints();
 app.MapInstanceV2Endpoints();
 app.MapStateEndpoints();
-app.MapMigrateModuleEndpoints();
+app.MapTransferModuleEndpoints();
 
 app.MapConsumerEndpoints();
 app.MapAuthorizeEndpoints();

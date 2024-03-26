@@ -8,16 +8,19 @@ using amorphie.workflow.core.Mapper;
 using amorphie.workflow.core.Dtos.DefinitionLegacy;
 using amorphie.workflow.service.Db.Abstracts;
 using amorphie.workflow.core.Token;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using amorphie.workflow.core.Models.Transfer;
 
 namespace amorphie.workflow.service.Db;
-public class MigrateService
+public class TransferService
 {
     private readonly WorkflowDBContext _dbContext;
     private readonly DbSet<Workflow> _dbSet;
     private readonly IWorkflowService _workflowService;
     private readonly IStateService _stateService;
 
-    public MigrateService(WorkflowDBContext dbContext, IWorkflowService workflowService, IStateService stateService)
+    public TransferService(WorkflowDBContext dbContext, IWorkflowService workflowService, IStateService stateService)
     {
         _dbContext = dbContext;
         _dbSet = dbContext.Set<Workflow>();
@@ -210,14 +213,15 @@ public class MigrateService
                 Name = workflow.Name,
                 Titles = workflow.Titles.Select(title => ManuelMultilanguageMapper.Map(title)).ToList(),
                 Tags = workflow.Tags,
+                RecordId = workflow.RecordId.HasValue ? workflow.RecordId.Value : Guid.Empty,
+                Entities = workflow.Entities.Select(e => new WorkflowEntityDto
+                {
+                    Name = e.Name,
+                    IsStateManager = e.IsStateManager,
+                    AvailableInStatus = e.AvailableInStatus,
+                }).ToList(),
+                States = StateMapperLegacy.Map(workflow.States)
             };
-            workflowDto.Entities = workflow.Entities.Select(e => new WorkflowEntityDto
-            {
-                Name = e.Name,
-                IsStateManager = e.IsStateManager,
-                AvailableInStatus = e.AvailableInStatus,
-            }).ToList();
-            workflowDto.States = StateMapperLegacy.Map(workflow.States);
             workflowDto.Hash = Md5.Generate(workflowDto);
 
             return new Response<WorkflowCreateDto>
@@ -226,15 +230,9 @@ public class MigrateService
                 Result = new Result(amorphie.core.Enums.Status.Success, "")
             };
         }
-
     }
     public async Task<Response> SaveDefinitionToLegacyBulkAsync(WorkflowCreateDto workflowDto)
     {
-        if (!Md5.Check(workflowDto))
-        {
-            return Response.Error("Request body must not be modified before save");
-        }
-
         var workflow = await GetWorkflowForLegacyAsync(workflowDto.Name);
         if (workflow == null)
         {
@@ -251,6 +249,52 @@ public class MigrateService
         return Response.Success("");
 
 
+    }
+    public async Task<Response> SaveTransferRequestAsync(WorkflowCreateDto workflowDto)
+    {
+        if (string.IsNullOrEmpty(workflowDto.Hash))
+        {
+            return Response.Error("Hash must be provided");
+        }
+        var transferHistroy = new TransferHistory
+        {
+            Hash = workflowDto.Hash,
+            RequestBody = JsonSerializer.Serialize(workflowDto),
+            WorkflowName = workflowDto.Name,
+            TransferStatus = TransferStatus.WaitingForApproval
+        };
+        _dbContext.TransferHistories.Add(transferHistroy);
+        await _dbContext.SaveChangesAsync();
+        return Response.Success($"{transferHistroy.Id}");
+    }
+
+    public async Task<Response> ApproveOrCancelTransferOfLegacyDefinition(Guid transferId, TransferStatus transferStatus)
+    {
+        var transferHistroy = await _dbContext.TransferHistories.FirstOrDefaultAsync(p => p.Id == transferId && p.TransferStatus == TransferStatus.WaitingForApproval);
+        if (transferHistroy == null)
+        {
+            return Response.Error("Transfer request not found nor it is in WaitingForApproval state");
+        }
+        if (transferStatus == TransferStatus.Approved)
+        {
+            var workflowDto = JsonSerializer.Deserialize<WorkflowCreateDto>(transferHistroy.RequestBody);
+            if (workflowDto == null)
+            {
+                return Response.Error($"Transfer request could not be parsed to {nameof(WorkflowCreateDto)}");
+            }
+            if (!Md5.Check(workflowDto))
+            {
+                return Response.Error("Request body must not be modified before save");
+            }
+            var saveResponse = await SaveDefinitionToLegacyBulkAsync(workflowDto!);
+            transferHistroy.TransferStatus = TransferStatus.Approved;
+        }
+        else
+        {
+            transferHistroy.TransferStatus = TransferStatus.Cancelled;
+        }
+        await _dbContext!.SaveChangesAsync();
+        return Response.Success("");
     }
     private async Task<Workflow?> GetWorkflowForLegacyAsync(string workflowName)
     {

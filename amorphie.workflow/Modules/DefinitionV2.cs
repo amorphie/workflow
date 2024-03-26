@@ -1,6 +1,5 @@
 using amorphie.workflow;
 using amorphie.workflow.core.Dtos.Definition;
-using amorphie.workflow.core.Dtos.DefinitionLegacy;
 using amorphie.workflow.service.Db;
 using amorphie.workflow.service.Db.Abstracts;
 using Microsoft.AspNetCore.Mvc;
@@ -51,11 +50,11 @@ public static class DefinitionV2Module
     }
 
     static async Task<IResult> SaveWorkflowLegacyAsync(
-      [FromServices] MigrateService migrateService,
+      [FromServices] TransferService transferService,
       [FromBody] WorkflowCreateDto data
       )
     {
-        var response = await migrateService.SaveDefinitionToLegacyBulkAsync(data);
+        var response = await transferService.SaveDefinitionToLegacyBulkAsync(data);
         return ApiResult.CreateResult(response);
     }
 
