@@ -3,7 +3,7 @@ using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.workflow.core.Constants;
 using Dapr.Client;
-using Microsoft.AspNetCore.Http;
+using amorphie.workflow.core.Extensions;
 namespace amorphie.workflow.service.Zeebe
 {
     public interface IZeebeCommandService
@@ -11,7 +11,7 @@ namespace amorphie.workflow.service.Zeebe
         Task<long> PublishMessage(string message, dynamic variables, string? correlationKey);
         Task<long> PublishMessage(string message, dynamic variables, string? correlationKey, string? gateway);
         Task<Result> ThrowError(string gateway, long processInstanceKey, long jobKey, string errorCode = "500", string errorMessage = "Bussines Error");
-        Task<Result> SetErrorAsVariable(string gateway, long jobKey, string errorCode, string errorMessage = "Bussines Error");
+        Task<Result> SetErrorAsVariable(string gateway, long jobKey, string errorCode, string errorMessageString = "Bussines Error");
 
     }
 
@@ -76,13 +76,15 @@ namespace amorphie.workflow.service.Zeebe
             }
             catch (Exception ex)
             {
-                return new Result(Status.Error, $"Problem occurred while setting variables.");
+                return new Result(Status.Error, $"Problem occurred while setting variables. Exception: {ex}");
             }
 
         }
-        public async Task<Result> SetErrorAsVariable(string gateway, long processInstanceKey, string errorCode, string errorMessage = "Bussines Error")
+        public async Task<Result> SetErrorAsVariable(string gateway, long processInstanceKey, string errorCode, string errorMessageString = "Bussines Error")
         {
             dynamic variables = new Dictionary<string, dynamic>();
+            var errorMessage = errorMessageString.TryDeserialize();
+
             variables.Add("ThrownError", new { errorCode, errorMessage });
 
             SetVariableRequest messageData = new(processInstanceKey, variables);
@@ -93,7 +95,7 @@ namespace amorphie.workflow.service.Zeebe
             }
             catch (Exception ex)
             {
-                return new Result(Status.Error, $"Problem occurred while setting error as variable. Original error: {errorCode} {errorMessage} -- ThrowError Exception: {ex.Message}");
+                return new Result(Status.Error, $"Problem occurred while setting error as variable. Original error: {errorCode} {errorMessageString} -- ThrowError Exception: {ex}");
             }
 
         }
