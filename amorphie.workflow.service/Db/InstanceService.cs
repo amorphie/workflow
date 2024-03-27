@@ -38,7 +38,12 @@ public partial class InstanceService : IInstanceService
         _instanceTransitionService = instanceTransition;
     }
 
-    public async Task<IResponse> TriggerFlow(Guid instanceId, string targetTransitionOrStateName, Guid user, Guid behalfOfUser, dynamic data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken)
+    public async Task<bool> IsRouteDefined(string targetTransitionOrStateName, CancellationToken cancellationToken)
+    {
+        return await _dbContext.StateToStates.AnyAsync(p => p.FromStateName == targetTransitionOrStateName);
+    }
+
+    public async Task<IResponse> TriggerFlowAsync(Guid instanceId, string targetTransitionOrStateName, Guid user, Guid behalfOfUser, dynamic data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken)
     {
 
         var commitResult = await CommitInstanceAndState(targetTransitionOrStateName, instanceId, user, behalfOfUser, cancellationToken);
@@ -56,7 +61,7 @@ public partial class InstanceService : IInstanceService
             GetSignalRHub = true
         };
         var headers = await SetHeaders(instanceId, headerParameters);
-        _instanceTransitionService.Insert(instance!, request, headers, targetTransitionOrStateName, DateTime.Now, DateTime.Now, user, behalfOfUser);
+        _instanceTransitionService.Insert(instance!, request, headers, DateTime.UtcNow, DateTime.UtcNow, user, behalfOfUser);
 
         _dbContext.SaveChanges();
         if (targetState?.Kind == StateKind.Transition)
@@ -67,10 +72,10 @@ public partial class InstanceService : IInstanceService
         string hubUrl = _configuration["hubUrl"]!.ToString();
         var requestTrx = new WorkerBodyTrxInnerDatas { EntityData = data };
         await SignalRService.SendSignalRDataAsync(instance!, requestTrx, "worker-started", string.Empty, hubUrl, _client, headers);
-        return Response.Success("");
+        return Response.Success("Instance triggered");
     }
 
-    public async Task<Response> ChangeInstanceState(Guid instanceId, string targetTransitionOrStateName, WorkerBodyTrxInnerDatas request, Guid createdBy, Guid createdBehalf, CancellationToken cancellationToken)
+    public async Task<Response> ChangeInstanceStateAsync(Guid instanceId, string targetTransitionOrStateName, WorkerBodyTrxInnerDatas request, Guid createdBy, Guid createdBehalf, CancellationToken cancellationToken)
     {
         var commitResult = await CommitInstanceAndState(targetTransitionOrStateName, instanceId, createdBy, createdBehalf, cancellationToken);
         if (commitResult.HasError)
@@ -78,7 +83,7 @@ public partial class InstanceService : IInstanceService
             return Response.Error(commitResult.Message);
         }
         var instance = commitResult.Instance;
-        _instanceTransitionService.Insert(instance!, request, targetTransitionOrStateName!, DateTime.Now, DateTime.Now, createdBy, createdBehalf);
+        _instanceTransitionService.Insert(instance!, request, DateTime.UtcNow, DateTime.UtcNow, createdBy, createdBehalf);
         _dbContext.SaveChanges();
         return Response.Success("", instance!);
     }
@@ -118,11 +123,16 @@ public partial class InstanceService : IInstanceService
                 return new InstanceAndStateCommitResult(true, $"{targetTransitionOrStateName} target state is not defined", null, null);
             }
         }
+        //if same state is intending then let it flow
+        if (instance?.StateName == targetTransitionOrStateName)
+        {
+            return new InstanceAndStateCommitResult(false, "", instance, targetState);
+        }
         if (instance == null && targetState?.Type != StateType.Start)
         {
             return new InstanceAndStateCommitResult(true, $"No instance found with {instanceId} instance id", null, null);
         }
-        else if (instance == null && targetState?.Type == StateType.Start)
+        if (instance == null && targetState?.Type == StateType.Start)
         {
             //Create an instace for request.
             instance = new Instance
@@ -142,6 +152,8 @@ public partial class InstanceService : IInstanceService
         else if (instance != null)
         {
             var updateResult = await UpdateInstance(instance, targetState, targetTransitionOrStateName, cancellationToken);
+            instance.ModifiedBy = userId;
+            instance.ModifiedByBehalfOf = behalfOfUserId;
             if (updateResult.HasError) return updateResult;
         }
         return new InstanceAndStateCommitResult(false, "", instance, targetState);
@@ -173,7 +185,11 @@ public partial class InstanceService : IInstanceService
         {
             if (targetTransitionOrStateName == "error")
             {
-                targetState = await _dbContext.States.FirstOrDefaultAsync(i => i.Type == StateType.Fail);
+                targetState = await _dbContext.States.FirstOrDefaultAsync(i => i.Type == StateType.Fail && i.WorkflowName == instance.WorkflowName);
+                if (targetState == null)
+                {
+                    return new InstanceAndStateCommitResult(true, $"No error state defined for {instance.WorkflowName}", null, null);
+                }
             }
             else
             {

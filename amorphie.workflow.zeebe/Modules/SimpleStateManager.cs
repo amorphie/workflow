@@ -27,7 +27,7 @@ public static class SimpleStateManagerModule
             });
     }
 
-    static async ValueTask<IResult> SimpleState(
+    public static async ValueTask<IResult> SimpleState(
             [FromBody] JsonObject jsonBody,
             [FromServices] IInstanceService instanceService,
             HttpRequest request,
@@ -46,6 +46,7 @@ public static class SimpleStateManagerModule
         string viewSource = request.Headers["VIEW_SOURCE"].ToString();
         string timeoutString = request.Headers["PAGE_TIMEOUT"].ToString();
         int timeout = 0;
+        Boolean.TryParse(request.Headers["NOTIFY_CLIENT"].ToString(), out bool notifyClient);
 
         string pageLanguage = request.Headers["PAGE_LANGUAGE"].ToString();
         if (!string.IsNullOrEmpty(pageUrl) && string.IsNullOrEmpty(pageOperationTypeString))
@@ -67,7 +68,6 @@ public static class SimpleStateManagerModule
                 timeout = 0;
             }
         }
-        Boolean.TryParse(request.Headers["NOTIFY_CLIENT"].ToString(), out bool notifyClient);
         if (!string.IsNullOrEmpty(pageUrl) && string.IsNullOrEmpty(pageLanguage))
         {
             pageLanguage = "en-EN";
@@ -91,7 +91,7 @@ public static class SimpleStateManagerModule
         {
             data = body.WorkerBodyTrxDataList!.FirstOrDefault().Value;
         }
-        var response = await instanceService.ChangeInstanceState(body.InstanceId, targetState, data.Data, data.TriggeredBy, data.TriggeredByBehalfOf, cancellationToken);
+        var response = await instanceService.ChangeInstanceStateAsync(body.InstanceId, targetState, data.Data, data.TriggeredBy, data.TriggeredByBehalfOf, cancellationToken);
         if (response.Result.Status != "Success")
         {
             return Results.Problem(response.Result.Message);
@@ -101,10 +101,10 @@ public static class SimpleStateManagerModule
         {
             string hubUrl = configuration["hubUrl"]!.ToString();
 
-            await SignalRService.SendSignalRDataAsync(instance, data.Data, "worker-completed", body.Message ?? "", hubUrl, daprClient, body.Headers);
+            await SignalRService.SendSignalRDataAsync(instance, data.Data, "worker-completed", body.Message ?? "", hubUrl, daprClient, body.Headers, viewSource);
         }
 
-        dynamic variables = VariableService.CreateMessageVariables(instance, data);
+        dynamic variables = VariableService.CreateMessageVariables(instance, instance!.StateName, data);
         return Results.Ok(variables);
     }
 
