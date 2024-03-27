@@ -8,16 +8,19 @@ using amorphie.workflow.core.Mapper;
 using amorphie.workflow.core.Dtos.DefinitionLegacy;
 using amorphie.workflow.service.Db.Abstracts;
 using amorphie.workflow.core.Token;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using amorphie.workflow.core.Models.Transfer;
 
 namespace amorphie.workflow.service.Db;
-public class MigrateService
+public class TransferService
 {
     private readonly WorkflowDBContext _dbContext;
     private readonly DbSet<Workflow> _dbSet;
     private readonly IWorkflowService _workflowService;
     private readonly IStateService _stateService;
 
-    public MigrateService(WorkflowDBContext dbContext, IWorkflowService workflowService, IStateService stateService)
+    public TransferService(WorkflowDBContext dbContext, IWorkflowService workflowService, IStateService stateService)
     {
         _dbContext = dbContext;
         _dbSet = dbContext.Set<Workflow>();
@@ -41,39 +44,36 @@ public class MigrateService
                 Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
             };
         }
-        else
+        var stateNames = workFlows.States.Select(s => s.Name).ToList();
+        var transitionFromState = await _dbContext.Transitions
+        .Include(p => p.FromState)
+        .Where(p => stateNames.Contains(p.FromStateName) || (p.ToStateName != null && stateNames.Contains(p.ToStateName))).ToListAsync();
+        if (transitionFromState.Any())
         {
-            var stateNames = workFlows.States.Select(s => s.Name).ToList();
-            var transitionFromState = await _dbContext.Transitions
-            .Include(p => p.FromState)
-            .Where(p => stateNames.Contains(p.FromStateName) || stateNames.Contains(p.ToStateName)).ToListAsync();
-            if (transitionFromState.Any())
+            foreach (var trx in transitionFromState)
             {
-                foreach (var trx in transitionFromState)
+                //is there state that has same name with transition
+                var trxState = await _dbContext.States.Where(p => p.Name == trx.Name).FirstOrDefaultAsync();
+                if (trxState != null)
                 {
-                    //is there state that has same name with transition
-                    var trxState = await _dbContext.States.Where(p => p.Name == trx.Name).FirstOrDefaultAsync();
-                    if (trxState != null)
-                    {
-                        trxState.Kind = StateKind.Transition;
-                        trxState.PageId = trx.PageId;
-                        trxState.transitionButtonType = trx.transitionButtonType;
-                    }
-                    else
-                    {
-                        var newState = MapStateFromTrx(workflowName, trx);
-                        _dbContext.States.Add(newState);
-                    }
-                    var stateToStates = await _dbContext.StateToStates.Where(p => p.FromStateName == trx.Name && p.ToStateName == trx.ToStateName).FirstOrDefaultAsync();
-                    if (stateToStates == null)
-                    {
-                        var newStateRoute = MapStateRouteFromTrx(trx);
-                        _dbContext.StateToStates.Add(newStateRoute);
-                    }
+                    trxState.Kind = StateKind.Transition;
+                    trxState.PageId = trx.PageId;
+                    trxState.transitionButtonType = trx.transitionButtonType;
+                }
+                else
+                {
+                    var newState = MapStateFromTrx(workflowName, trx);
+                    _dbContext.States.Add(newState);
+                }
+                var stateToStates = await _dbContext.StateToStates.Where(p => p.FromStateName == trx.Name && p.ToStateName == trx.ToStateName).FirstOrDefaultAsync();
+                if (stateToStates == null)
+                {
+                    var newStateRoute = MapStateRouteFromTrx(trx);
+                    _dbContext.StateToStates.Add(newStateRoute);
                 }
             }
-            await _dbContext.SaveChangesAsync();
         }
+        await _dbContext.SaveChangesAsync();
 
         return new Response<Workflow>
         {
@@ -108,27 +108,23 @@ public class MigrateService
                 Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
             };
         }
-        else
+        var statesResult = StateMapper.Map(workFlow.States);
+        var workflowDto = new WorkflowCreateDto
         {
-            var statesResult = StateMapper.Map(workFlow.States);
-            var workflowDto = new WorkflowCreateDto
-            {
 
-                Name = workFlow.Name,
-                NewStates = statesResult
-            };
-            return new Response<WorkflowCreateDto>
-            {
-                Data = workflowDto,
-                Result = new Result(amorphie.core.Enums.Status.Success, "")
-            };
-        }
-
+            Name = workFlow.Name,
+            NewStates = statesResult
+        };
+        return new Response<WorkflowCreateDto>
+        {
+            Data = workflowDto,
+            Result = new Result(amorphie.core.Enums.Status.Success, "")
+        };
     }
 
-    public async Task<Response<WorkflowCreateDto>> GetDefinitionFromLegacyToNewBulkAsync(string workflowName)
+    public async Task<Response<WorkflowCreateDto>> GetDefinitionFromLegacyToNewBulkAsync(string workflowName, CancellationToken cancellationToken)
     {
-        var workflow = await GetWorkflowForLegacyAsync(workflowName);
+        var workflow = await GetWorkflowForLegacyAsync(workflowName, cancellationToken);
 
         if (workflow == null)
         {
@@ -137,64 +133,60 @@ public class MigrateService
                 Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
             };
         }
-        else
+        var stateNames = workflow.States.Select(s => s.Name).ToList();
+
+        //Add transition as state
+        var transitionFromState = await _dbContext.Transitions
+        .Include(p => p.FromState)
+        .Include(p => p.Titles)
+        .Include(p => p.Forms)
+        .Include(p => p.Flow)
+
+        .Where(p => stateNames.Contains(p.FromStateName) || stateNames.Contains(p.ToStateName)).ToListAsync();
+        List<StateCreateDto> statesList = new List<StateCreateDto>();
+        if (transitionFromState.Any())
         {
-            var stateNames = workflow.States.Select(s => s.Name).ToList();
-
-            //Add transition as state
-            var transitionFromState = await _dbContext.Transitions
-            .Include(p => p.FromState)
-            .Include(p => p.Titles)
-            .Include(p => p.Forms)
-            .Include(p => p.Flow)
-
-            .Where(p => stateNames.Contains(p.FromStateName) || stateNames.Contains(p.ToStateName)).ToListAsync();
-            List<StateCreateDto> statesList = new List<StateCreateDto>();
-            if (transitionFromState.Any())
+            foreach (var trx in transitionFromState)
             {
-                foreach (var trx in transitionFromState)
+                //Trx -> To State
+                var newState = MapStateCreateDtoFromTrx(trx);
+                //From State -> To Trx
+                if (trx.Name != trx.FromStateName)
                 {
-                    //Trx -> To State
-                    var newState = MapStateCreateDtoFromTrx(trx);
-                    //From State -> To Trx
-                    if (trx.Name != trx.FromStateName)
+
+                    var fromState = statesList.FirstOrDefault(p => p.Name == trx.FromStateName);
+                    if (fromState == null)
                     {
+                        fromState = StateMapper.Map(trx.FromState);
 
-                        var fromState = statesList.FirstOrDefault(p => p.Name == trx.FromStateName);
-                        if (fromState == null)
-                        {
-                            fromState = StateMapper.Map(trx.FromState);
-
-                            statesList.Add(fromState);
-                        }
-                        var isDefault = fromState.ToStates.Count == 0;
-                        var stateRouteForFrom = new StateRouteDto(trx.Name!, isDefault);
-                        fromState.ToStates.Add(stateRouteForFrom);
-
-
+                        statesList.Add(fromState);
                     }
-                    statesList.Add(newState);
+                    var isDefault = fromState.ToStates.Count == 0;
+                    var stateRouteForFrom = new StateRouteDto(trx.Name!, isDefault);
+                    fromState.ToStates.Add(stateRouteForFrom);
+
+
                 }
+                statesList.Add(newState);
             }
-
-            var workflowDto = new WorkflowCreateDto
-            {
-
-                Name = workflow.Name,
-                NewStates = statesList
-            };
-
-            return new Response<WorkflowCreateDto>
-            {
-                Data = workflowDto,
-                Result = new Result(amorphie.core.Enums.Status.Success, "")
-            };
         }
 
+        var workflowDto = new WorkflowCreateDto
+        {
+
+            Name = workflow.Name,
+            NewStates = statesList
+        };
+
+        return new Response<WorkflowCreateDto>
+        {
+            Data = workflowDto,
+            Result = new Result(amorphie.core.Enums.Status.Success, "")
+        };
     }
-    public async Task<Response<WorkflowCreateDto>> GetDefinitionFromLegacyBulkAsync(string workflowName)
+    public async Task<Response<WorkflowCreateDto>> GetDefinitionFromLegacyBulkAsync(string workflowName, CancellationToken cancellationToken)
     {
-        var workflow = await GetWorkflowForLegacyAsync(workflowName);
+        var workflow = await GetWorkflowForLegacyAsync(workflowName, cancellationToken);
 
         if (workflow == null)
         {
@@ -203,39 +195,31 @@ public class MigrateService
                 Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
             };
         }
-        else
+        var workflowDto = new WorkflowCreateDto
         {
-            var workflowDto = new WorkflowCreateDto
-            {
-                Name = workflow.Name,
-                Titles = workflow.Titles.Select(title => ManuelMultilanguageMapper.Map(title)).ToList(),
-                Tags = workflow.Tags,
-            };
-            workflowDto.Entities = workflow.Entities.Select(e => new WorkflowEntityDto
+            Name = workflow.Name,
+            Titles = workflow.Titles.Select(title => ManuelMultilanguageMapper.Map(title)).ToList(),
+            Tags = workflow.Tags,
+            RecordId = workflow.RecordId.HasValue ? workflow.RecordId.Value : Guid.Empty,
+            Entities = workflow.Entities.Select(e => new WorkflowEntityDto
             {
                 Name = e.Name,
                 IsStateManager = e.IsStateManager,
                 AvailableInStatus = e.AvailableInStatus,
-            }).ToList();
-            workflowDto.States = StateMapperLegacy.Map(workflow.States);
-            workflowDto.Hash = Md5.Generate(workflowDto);
+            }).ToList(),
+            States = StateMapperLegacy.Map(workflow.States)
+        };
+        workflowDto.Hash = Md5.Generate(workflowDto);
 
-            return new Response<WorkflowCreateDto>
-            {
-                Data = workflowDto,
-                Result = new Result(amorphie.core.Enums.Status.Success, "")
-            };
-        }
-
-    }
-    public async Task<Response> SaveDefinitionToLegacyBulkAsync(WorkflowCreateDto workflowDto)
-    {
-        if (!Md5.Check(workflowDto))
+        return new Response<WorkflowCreateDto>
         {
-            return Response.Error("Request body must not be modified before save");
-        }
-
-        var workflow = await GetWorkflowForLegacyAsync(workflowDto.Name);
+            Data = workflowDto,
+            Result = new Result(amorphie.core.Enums.Status.Success, "")
+        };
+    }
+    public async Task<Response> SaveDefinitionToLegacyBulkAsync(WorkflowCreateDto workflowDto, CancellationToken cancellationToken)
+    {
+        var workflow = await GetWorkflowForLegacyAsync(workflowDto.Name, cancellationToken);
         if (workflow == null)
         {
             //Insert WF
@@ -252,7 +236,53 @@ public class MigrateService
 
 
     }
-    private async Task<Workflow?> GetWorkflowForLegacyAsync(string workflowName)
+    public async Task<Response> SaveTransferRequestAsync(WorkflowCreateDto workflowDto, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(workflowDto.Hash))
+        {
+            return Response.Error("Hash must be provided");
+        }
+        var transferHistroy = new TransferHistory
+        {
+            Hash = workflowDto.Hash,
+            RequestBody = JsonSerializer.Serialize(workflowDto),
+            WorkflowName = workflowDto.Name,
+            TransferStatus = TransferStatus.WaitingForApproval
+        };
+        _dbContext.TransferHistories.Add(transferHistroy);
+        await _dbContext.SaveChangesAsync();
+        return Response.Success($"{transferHistroy.Id}");
+    }
+
+    public async Task<Response> ApproveOrCancelTransferOfLegacyDefinitionAsync(Guid transferId, TransferStatus transferStatus, CancellationToken cancellationToken)
+    {
+        var transferHistroy = await _dbContext.TransferHistories.FirstOrDefaultAsync(p => p.Id == transferId && p.TransferStatus == TransferStatus.WaitingForApproval);
+        if (transferHistroy == null)
+        {
+            return Response.Error("Transfer request not found nor it is in WaitingForApproval state");
+        }
+        if (transferStatus == TransferStatus.Approved)
+        {
+            var workflowDto = JsonSerializer.Deserialize<WorkflowCreateDto>(transferHistroy.RequestBody);
+            if (workflowDto == null)
+            {
+                return Response.Error($"Transfer request could not be parsed to {nameof(WorkflowCreateDto)}");
+            }
+            if (!Md5.Check(workflowDto))
+            {
+                return Response.Error("Request body must not be modified before save");
+            }
+            var saveResponse = await SaveDefinitionToLegacyBulkAsync(workflowDto!, cancellationToken);
+            transferHistroy.TransferStatus = TransferStatus.Approved;
+        }
+        else
+        {
+            transferHistroy.TransferStatus = TransferStatus.Cancelled;
+        }
+        await _dbContext!.SaveChangesAsync();
+        return Response.Success("");
+    }
+    private async Task<Workflow?> GetWorkflowForLegacyAsync(string workflowName, CancellationToken cancellationToken)
     {
         return await _dbSet
              .Include(d => d.Titles)
@@ -264,7 +294,7 @@ public class MigrateService
              .Include(x => x.States).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms)
              .Include(x => x.States).ThenInclude(s => s.PublicForms)
              .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s!.Pages)
-             .Where(w => w.Name == workflowName).FirstOrDefaultAsync();
+             .Where(w => w.Name == workflowName).FirstOrDefaultAsync(cancellationToken);
     }
 
     private State MapStateFromTrx(string workflowName, Transition trx)

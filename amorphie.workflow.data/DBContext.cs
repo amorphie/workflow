@@ -3,6 +3,7 @@ using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
 using amorphie.workflow.core.Models.GatewayMessages;
 using amorphie.workflow.core.Models.SignalR;
+using amorphie.workflow.core.Models.Transfer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -35,6 +36,7 @@ public class WorkflowDBContext : DbContext
     public DbSet<PageComponentUiModel> PageComponentUiModels { get; set; } = default!;
     public DbSet<UiForm> UiForms { get; set; } = default!;
     public DbSet<FlowHeader> FlowHeaders { get; set; } = default!;
+    public DbSet<TransferHistory> TransferHistories { get; set; } = default!;
 
     public DbSet<TransitionRole> TransitionRoles { get; set; } = default!;
     //Hub Data
@@ -207,6 +209,11 @@ public class WorkflowDBContext : DbContext
            .HasMany<Translation>(t => t.Forms)
            .WithOne()
            .HasForeignKey("UiForm_Id");
+
+           
+        modelBuilder.Entity<TransferHistory>().ToTable("TransferHistories", "transfer")
+        .HasKey(p => p.Id);
+
 
         // modelBuilder.SeedUserResetPassword();
         // modelBuilder.SeedUserLifecycle();
