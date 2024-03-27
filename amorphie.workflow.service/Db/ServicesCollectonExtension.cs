@@ -10,7 +10,7 @@ namespace amorphie.workflow.service.Db;
         services.AddScoped<IInstanceTransitionService, InstanceTransitionService>();
         services.AddScoped<IStateService, StateService>();
         services.AddScoped<IWorkflowService, WorkflowService>();
-        services.AddScoped<MigrateService>();
+        services.AddScoped<TransferService>();
     }
 }
 

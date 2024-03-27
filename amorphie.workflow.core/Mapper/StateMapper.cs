@@ -26,8 +26,8 @@ public class StateMapper
             Transition = StateMapper.SetTransitionCreateDto(state),
             UiForms = UiFormMapper.Map(state.UiForms),
             SubWorkflowName = state.SubWorkflowName,
-            Titles = state.Titles?.Select(t => new core.Dtos.MultilanguageText(t.Language, t.Label)).ToList(),
-            PublicForms = state.PublicForms?.Select(t => new core.Dtos.MultilanguageText(t.Language, t.Label)).ToList(),
+            Titles = ManuelMultilanguageMapper.Map(state.Titles)!,
+            PublicForms =ManuelMultilanguageMapper.Map(state.PublicForms),
             //FromStates = this state's foreign relation of statestostates table
             ToStates = MapStateRouteFromEntity(state.FromStates),
             Kind = state.Kind
@@ -36,42 +36,37 @@ public class StateMapper
 
     public static State MapStateFromStateCreateDto(StateCreateDto stateDto)
     {
-        var data = stateDto;
         State newRecord = new State
         {
             //WorkflowName = definition,
-            Name = data.Name,
-            BaseStatus = data.BaseStatus,
+            Name = stateDto.Name,
+            BaseStatus = stateDto.BaseStatus,
             CreatedAt = DateTime.UtcNow,
             CreatedByBehalfOf = Guid.NewGuid(),
-            Type = data.Type,
-            IsPublicForm = data.IsPublicForm,
-            SubWorkflowName = data.SubWorkflowName,
-            MFAType = data.MfaType,
-            InitPageName = data.Type == StateType.Start ? data.InitPageName : string.Empty,
+            Type = stateDto.Type,
+            IsPublicForm = stateDto.IsPublicForm,
+            SubWorkflowName = stateDto.SubWorkflowName,
+            MFAType = stateDto.MfaType,
+            InitPageName = stateDto.Type == StateType.Start ? stateDto.InitPageName : string.Empty,
         };
 
-        if (data.IsPublicForm == true && data.PublicForms.Any())
+        if (stateDto.IsPublicForm == true)
         {
-            newRecord.PublicForms = data.PublicForms.Select(s => new Translation()
-            {
-                Language = s.language,
-                Label = s.label
-            }).ToList();
+            newRecord.PublicForms = ManuelMultilanguageMapper.Map(stateDto.PublicForms);
         }
-        newRecord.UiForms = UiFormMapper.Map(data.UiForms);
+        newRecord.UiForms = UiFormMapper.Map((ICollection<UiFormDto>?)stateDto.UiForms);
 
-        newRecord.Titles = ManuelMultilanguageMapper.Map(data.Titles);
+        newRecord.Titles = ManuelMultilanguageMapper.Map(stateDto.Titles)!;
 
         #region Transition props
-        if (data.Transition != null)
+        if (stateDto.Transition != null)
         {
             newRecord.Kind = StateKind.Transition;
-            newRecord.ServiceName = data.Transition.ServiceName;
-            newRecord.TypeofUi = data.Transition.TypeofUi;
-            newRecord.transitionButtonType = data.Transition.ButtonType;
-            newRecord.FlowName = data.Transition.Message;
-            newRecord.Page = PageMapper.Map(data.Transition.Page);
+            newRecord.ServiceName = stateDto.Transition.ServiceName;
+            newRecord.TypeofUi = stateDto.Transition.TypeofUi;
+            newRecord.transitionButtonType = stateDto.Transition.ButtonType;
+            newRecord.FlowName = stateDto.Transition.Message;
+            newRecord.Page = PageMapper.Map((PageCreateDto?)stateDto.Transition.Page);
         }
         else
         {
