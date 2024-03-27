@@ -62,7 +62,10 @@ builder.Services.AddMvc();
 builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
 var app = builder.Build();
-app.UseAllElasticApm(app.Configuration);
+if (!app.Environment.IsDevelopment())
+{
+    app.UseAllElasticApm(app.Configuration);
+}
 app.UseHttpLogging();
 Log.Information("Amorphie Workflow Hub Starting");
 

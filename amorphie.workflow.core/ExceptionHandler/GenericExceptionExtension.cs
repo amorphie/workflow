@@ -62,6 +62,7 @@ public static class GenericExceptionExtension
                 ;
             //.Enrich.When(p => p.Exception != null, x => x.With(enricher))
         });
+        builder.Services.AddHttpLoggingInterceptor<HeaderCheckHttpLoggingInterceptor>();
     }
 }
 
