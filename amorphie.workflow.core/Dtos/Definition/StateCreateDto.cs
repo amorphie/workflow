@@ -4,8 +4,8 @@ using amorphie.workflow.core.Enums;
 namespace amorphie.workflow.core.Dtos.Definition;
 public class StateCreateDto
 {
-    public string Name { get; set; }
-    public List<MultilanguageText>? Titles { get; set; }
+    public string Name { get; set; } = default!;
+    public List<MultilanguageText> Titles { get; set; } = default!;
     public StatusType BaseStatus { get; set; }
     public StateType Type { get; set; }
     public TransitionCreateDto? Transition { get; set; }
@@ -16,6 +16,6 @@ public class StateCreateDto
     public string? SubWorkflowName { get; set; }
     public string? InitPageName { get; set; }
     public StateKind Kind { get; set; }
-    public List<StateRouteDto> ToStates { get; set; }
+    public List<StateRouteDto>? ToStates { get; set; }
 }
 
