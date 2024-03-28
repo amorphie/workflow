@@ -12,6 +12,10 @@ using Serilog;
 using Elastic.Apm.NetCoreAll;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
+using HealthChecks.UI.Client;
+using StackExchange.Redis;
+
+
 var builder = WebApplication.CreateBuilder(args);
 //builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", false, true);
 
@@ -25,6 +29,11 @@ var signalrHealthAdress = builder.Configuration["signalrHealthAdress"];
 //     options.SerializerOptions.PropertyNameCaseInsensitive = false;
 //     options.SerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
 // });
+builder.Services.AddSingleton<IDatabase>(cfg =>
+{
+    IConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(redis);
+    return multiplexer.GetDatabase();
+});
 
 builder.Services.AddControllers();
 //builder.Services.AddDaprClient();
