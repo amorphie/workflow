@@ -32,21 +32,13 @@ public class WorkflowService : IWorkflowService
         {
             Update(data, existingRecord);
         }
-
+        await _dbContext!.SaveChangesAsync();
         //Save States
-        await _stateService.SaveBulkAsync(data.NewStates, data.Name);
-
-
-        if (_dbContext!.SaveChanges() > 0)
+        if (data.NewStates != null)
         {
-            return Response.Success("");
+            await _stateService.SaveBulkAsync(data.NewStates, data.Name);
         }
-        else
-        {
-            return Response.Success("No changes");
-        }
-
-
+        return Response.Success("");
     }
 
     public async Task<Response<Workflow>> GetAsync(string workflowName)

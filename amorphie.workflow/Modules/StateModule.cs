@@ -71,21 +71,6 @@ public static class StateModule
                   operation.Responses["201"] = new OpenApiResponse { Description = "State created." };
                   return operation;
               });
-
-        app.MapPost("/workflow/states/savebulk/{workFlowName}", SaveBulk)
-            .Produces<Response>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status422UnprocessableEntity)
-            .WithOpenApi(operation =>
-              {
-                  operation.Summary = "Definition Bulk In New Style. Update or Create Workflow All State's at once";
-                  operation.Tags = new List<OpenApiTag> { new() { Name = "V2 State" } };
-                  operation.Responses["200"] = new OpenApiResponse { Description = "Bulk States updated." };
-                  operation.Responses["201"] = new OpenApiResponse { Description = "Bulk States created." };
-                  return operation;
-              });
-
-
     }
 
 
@@ -107,16 +92,6 @@ public static class StateModule
       )
     {
         var response = await service.GetAsync(workflowName, stateName);
-        return ApiResult.CreateResult(response);
-    }
-    static async Task<IResult> SaveBulk(
-    [FromServices] IStateService service,
-    [FromBody] WorkflowCreateDto data,
-    [FromRoute(Name = "workflowName")] string workflowName,
-    [FromHeader(Name = "Language")] string? language = "en-EN"
-    )
-    {
-        var response = await service.SaveBulkAsync(data.NewStates, workflowName);
         return ApiResult.CreateResult(response);
     }
     static async Task<IResult> SaveState(
