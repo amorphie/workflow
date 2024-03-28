@@ -22,15 +22,6 @@ public partial class StateService : IStateService
 
     public async Task<Response> SaveBulkAsync(List<StateCreateDto> states, string workflowName)
     {
-        var isWfExist = await _dbContext.Workflows.AnyAsync(p => p.Name == workflowName);
-
-        if (!isWfExist)
-        {
-            return Response.Error($"{workflowName} not defined as workflow");
-
-        }
-        //TODO:Check wf existence
-
         //First Save States
         foreach (var item in states)
         {
@@ -59,11 +50,19 @@ public partial class StateService : IStateService
            ;
         if (existingRecord == null)
         {
-            return await InsertAsync(data, workflowName);
+            Insert(data, workflowName);
         }
         else
         {
-            return await UpdateAsync(data, existingRecord);
+            Update(data, existingRecord);
+        }
+        if (await _dbContext!.SaveChangesAsync() > 0)
+        {
+            return Response.Success("");
+        }
+        else
+        {
+            return Response.Success("Not Modified");
         }
 
     }
@@ -152,17 +151,14 @@ public partial class StateService : IStateService
     }
 
 
-    private async Task<Response> InsertAsync(StateCreateDto data, string workflowName)
+    private void Insert(StateCreateDto data, string workflowName)
     {
         var newRecord = StateMapper.MapStateFromStateCreateDto(data);
         newRecord.WorkflowName = workflowName;
         _dbContext!.States!.Add(newRecord);
-        // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
-        await _dbContext!.SaveChangesAsync();
-        return Response.Success("");
 
     }
-    private async Task<Response> UpdateAsync(StateCreateDto data, State existingRecord)
+    private void Update(StateCreateDto data, State existingRecord)
     {
         if (existingRecord.BaseStatus != data.BaseStatus || existingRecord.Type != data.Type)
         {
@@ -209,14 +205,7 @@ public partial class StateService : IStateService
         {
             existingRecord.Kind = StateKind.SimpleState;
         }
-        if (await _dbContext!.SaveChangesAsync() > 0)
-        {
-            return Response.Success("");
-        }
-        else
-        {
-            return Response.Success("Not Modified");
-        }
+
     }
 
     private void SaveTitle(State state, List<core.Dtos.MultilanguageText>? titles)
