@@ -1,4 +1,5 @@
 using amorphie.workflow.core.Dtos.Definition;
+using amorphie.workflow.core.Dtos.Transfer;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.service.Db;
 using Microsoft.AspNetCore.Mvc;
@@ -112,15 +113,15 @@ public class TransferModuleApis
         return ApiResult.CreateResult(response);
     }
 
-    public static async Task<IResult> ApproveTransferOfLegacyDefinitionAsync([FromServices] TransferService service, [FromBody] Guid transferId, CancellationToken cancellationToken)
+    public static async Task<IResult> ApproveTransferOfLegacyDefinitionAsync([FromServices] TransferService service, [FromBody] WorkflowTransferResultDto transferDto, CancellationToken cancellationToken)
     {
-        var response = await service.ApproveOrCancelTransferOfLegacyDefinitionAsync(transferId, TransferStatus.Approved, cancellationToken);
+        var response = await service.ApproveOrCancelTransferOfLegacyDefinitionAsync(transferDto, TransferStatus.Approved, cancellationToken);
         return ApiResult.CreateResult(response);
     }
 
-    public static async Task<IResult> CancelTransferOfLegacyDefinitionAsync([FromServices] TransferService service, [FromBody] Guid transferId, CancellationToken cancellationToken)
+    public static async Task<IResult> CancelTransferOfLegacyDefinitionAsync([FromServices] TransferService service, [FromBody] WorkflowTransferResultDto transferDto, CancellationToken cancellationToken)
     {
-        var response = await service.ApproveOrCancelTransferOfLegacyDefinitionAsync(transferId, TransferStatus.Cancelled, cancellationToken);
+        var response = await service.ApproveOrCancelTransferOfLegacyDefinitionAsync(transferDto, TransferStatus.Cancelled, cancellationToken);
         return ApiResult.CreateResult(response);
     }
 
