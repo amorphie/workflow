@@ -21,11 +21,13 @@ await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "wor
 var postgreSql = builder.Configuration["workflowdb"];
 
 
+
 builder.Services.AddScoped<IPostTransactionService, PostTransactionService>();
 builder.Services.AddScoped<IZeebeCommandService, ZeebeCommandService>();
 
 builder.Logging.ClearProviders();
-builder.Services.AddHealthChecks();
+// builder.Services.AddHealthChecks();,
+builder.Services.AddHealthChecks().AddNpgSql(postgreSql);
 builder.Logging.AddJsonConsole();
 builder.Services.AddScoped<IBBTIdentity, FakeIdentity>();
 builder.Services.AddDaprClient(conf => conf.UseJsonSerializationOptions(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = false, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));

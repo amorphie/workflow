@@ -6,7 +6,7 @@ using Serilog;
 namespace amorphie.workflow.service.SignalR;
 public class SignalRService
 {
-    public static async Task SendSignalRDataAsync(Instance instance, WorkerBodyTrxInnerDatas request, string eventInfo, string message, string hubUrl, DaprClient client, WorkerBodyHeaders headerParameters)
+    public static async Task SendSignalRDataAsync(Instance instance, WorkerBodyTrxInnerDatas request, string eventInfo, string message, string hubUrl, DaprClient client, WorkerBodyHeaders headerParameters, string viewsource)
     {
         var targetState = instance.State;
         var mfaType = targetState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
@@ -16,7 +16,7 @@ public class SignalRService
                       HttpMethod.Post,
                       hubUrl,
                       "sendMessage/" + mfaType,
-                      CreateSignalRRequest(instance, request, eventInfo, message)
+                      CreateSignalRRequest(instance, request, eventInfo, message, viewsource)
                           );
             responseSignalRMFAtype.Headers.Add("X-Device-Id", headerParameters.XDeviceId);
             responseSignalRMFAtype.Headers.Add("X-Token-Id", headerParameters.XTokenId);
@@ -42,7 +42,7 @@ public class SignalRService
                       HttpMethod.Post,
                       hubUrl,
                       "sendMessage/" + mfaType,
-                      CreateSignalRRequest(instance, request, eventInfo, message)
+                      CreateSignalRRequest(instance, request, eventInfo, message, "transition")
                           );
 
             if (headerParameters.TryGetValue("xdeviceid", out string deviceID))
@@ -55,11 +55,11 @@ public class SignalRService
         }
         catch (Exception ex)
         {
-            Log.Fatal($"Error while sending siganlr request: {ex}");
+            Log.Fatal($"InstanceId {instance.Id}. Error while sending signalr request: {ex}");
         }
 
     }
-    private static SignalRRequest CreateSignalRRequest(Instance instance, WorkerBodyTrxInnerDatas request, string eventInfo, string message)
+    private static SignalRRequest CreateSignalRRequest(Instance instance, WorkerBodyTrxInnerDatas request, string eventInfo, string message, string viewsource)
     {
         var targetState = instance.State;
         string pageTypeStringBYTransition = string.Empty;
@@ -106,7 +106,7 @@ public class SignalRService
                 errorCode: string.Empty,
                 additionalData: request.AdditionalData,
                 workflowName: instance.WorkflowName,
-                viewSource: targetState.IsPublicForm == true ? "state" : "transition",
+                viewSource: targetState.IsPublicForm == true ? "state" : viewsource,
                 requireData: targetState.requireData.GetValueOrDefault(false),
                 buttonType: targetState.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : targetState.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
 

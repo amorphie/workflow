@@ -1,10 +1,5 @@
-
-using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using System.Linq.Expressions;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.Extension;
@@ -12,6 +7,7 @@ using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
+using amorphie.workflow.service.Db.Abstracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -431,15 +427,24 @@ public static class InstanceModule
   IConfiguration configuration,
   CancellationToken cancellationToken,
   [FromServices] IPostTransactionService service,
+ [FromServices] IInstanceService instanceService,
+
   [FromRoute(Name = "transitionName")] string transitionName,
   [FromRoute(Name = "instanceId")] Guid instanceId,
   HttpRequest request,
-    [FromBody] dynamic body,
+  [FromBody] dynamic body,
   [FromHeader(Name = "User")] Guid user,
   [FromHeader(Name = "Behalf-Of-User")] Guid behalOfUser,
   [FromHeader(Name = "Accept-Language")] string language = "en-EN"
 )
     {
+        //if workflow is defined in new style then its states should have state routes
+        var hasStateRoutes = await instanceService.IsRouteDefined(transitionName, cancellationToken);
+        if (hasStateRoutes)
+        {
+            var newResult = await instanceService.TriggerFlowAsync(instanceId, transitionName, user, behalOfUser, body, request.Headers, cancellationToken);
+            return newResult;
+        }
 
         var result = await service.InitWithoutEntity(instanceId, transitionName, user, behalOfUser, body, request.Headers, cancellationToken);
         if (result.Result.Status == Status.Success.ToString())

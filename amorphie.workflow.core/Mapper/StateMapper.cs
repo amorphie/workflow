@@ -50,7 +50,7 @@ public class StateMapper
             InitPageName = stateDto.Type == StateType.Start ? stateDto.InitPageName : string.Empty,
         };
 
-        if (stateDto.IsPublicForm == true)
+        if (stateDto.IsPublicForm == true )
         {
             newRecord.PublicForms = ManuelMultilanguageMapper.Map(stateDto.PublicForms);
         }
