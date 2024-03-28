@@ -185,7 +185,7 @@ public static class HttpServiceManagerModule
 
     private static async Task<string> ExtractResponseBodyAsync(HttpResponseMessage httpResponse)
     {
-        Stream byteArray = await httpResponse.Content.ReadAsStreamAsync();
+        var byteArray = await httpResponse.Content.ReadAsByteArrayAsync();
         var responseBodyObj = JsonSerializer.Deserialize<object>(byteArray);
         string? stringResult = "";
         if (responseBodyObj != null)

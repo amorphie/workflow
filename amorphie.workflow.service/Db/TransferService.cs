@@ -11,6 +11,7 @@ using amorphie.workflow.core.Token;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using amorphie.workflow.core.Models.Transfer;
+using amorphie.workflow.core.Dtos.Transfer;
 
 namespace amorphie.workflow.service.Db;
 public class TransferService
@@ -221,11 +222,14 @@ public class TransferService
 
 
     }
-    public async Task<Response> SaveTransferRequestAsync(WorkflowCreateDto workflowDto, CancellationToken cancellationToken)
+    public async Task<Response<WorkflowTransferResultDto>> SaveTransferRequestAsync(WorkflowCreateDto workflowDto, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(workflowDto.Hash))
         {
-            return Response.Error("Hash must be provided");
+            return new Response<WorkflowTransferResultDto>
+            {
+                Result = new Result(amorphie.core.Enums.Status.Error, "Hash must be provided")
+            };
         }
         var transferHistroy = new TransferHistory
         {
@@ -236,7 +240,13 @@ public class TransferService
         };
         _dbContext.TransferHistories.Add(transferHistroy);
         await _dbContext.SaveChangesAsync();
-        return Response.Success($"{transferHistroy.Id}");
+        return new Response<WorkflowTransferResultDto>
+        {
+            Data = new WorkflowTransferResultDto{
+                TransferId = transferHistroy.Id
+            },
+            Result = new Result(amorphie.core.Enums.Status.Success, "")
+        };
     }
 
     public async Task<Response> ApproveOrCancelTransferOfLegacyDefinitionAsync(Guid transferId, TransferStatus transferStatus, CancellationToken cancellationToken)
