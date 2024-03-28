@@ -11,8 +11,10 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Elastic.Apm.NetCoreAll;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 using HealthChecks.UI.Client;
 using StackExchange.Redis;
+
 
 var builder = WebApplication.CreateBuilder(args);
 //builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", false, true);
@@ -87,9 +89,7 @@ app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
 app.UseSwagger();
-	app.MapHealthChecks("/health",new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions{
-    ResponseWriter=UIResponseWriter.WriteHealthCheckUIResponse
-});
+app.MapHealthChecks("/health");
 app.UseSwaggerUI();
 app.MapHub<WorkflowHub>("/hubs/workflow");
 app.MapHub<MFATypeHub>("/hubs/genericHub");
