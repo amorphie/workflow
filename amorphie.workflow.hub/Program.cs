@@ -89,7 +89,9 @@ app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
 app.UseSwagger();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health",new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions{
+    ResponseWriter=UIResponseWriter.WriteHealthCheckUIResponse
+});
 app.UseSwaggerUI();
 app.MapHub<WorkflowHub>("/hubs/workflow");
 app.MapHub<MFATypeHub>("/hubs/genericHub");
