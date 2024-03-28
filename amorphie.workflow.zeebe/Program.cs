@@ -38,7 +38,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks().AddNpgSql(postgreSql);
 builder.Services.AddHttpClient("httpWorkerService")
 .ConfigurePrimaryHttpMessageHandler((c) =>
      new HttpClientHandler()

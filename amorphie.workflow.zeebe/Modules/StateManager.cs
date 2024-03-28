@@ -3,9 +3,11 @@ using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Helper;
+using amorphie.workflow.service.Db.Abstracts;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -31,13 +33,14 @@ public static class StateManagerModule
             HttpRequest request,
             HttpContext httpContext,
             [FromServices] DaprClient client,
+            [FromServices] IInstanceService instanceService,
              CancellationToken cancellationToken,
              IConfiguration configuration
         )
     {
         WorkerBody body = JsonObjectConverter.JsonToWorkerBody(jsonBody);
-
         var targetState = request.Headers["TARGET_STATE"].ToString();
+
         string pageUrl = request.Headers["PAGE_URL"].ToString();
         if (string.IsNullOrEmpty(pageUrl))
             pageUrl = body.PageUrl;
@@ -119,6 +122,8 @@ public static class StateManagerModule
                 .ThenInclude(s => s.Transitions)
                 .ThenInclude(t => t.ToState)
                 .ThenInclude(t => t!.Transitions)
+            .Include(i => i.State)
+                .ThenInclude(s => s.FromStates)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (instance is null)
@@ -127,6 +132,16 @@ public static class StateManagerModule
             //throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
         }
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, body.InstanceId.ToString());
+
+        //INJECT New State Manager
+        if (instance.State.FromStates.Any())
+        {
+            var simpleStateResult = await SimpleStateManagerModule.SimpleState(jsonBody, instanceService, request, configuration, client, cancellationToken);
+            return simpleStateResult;
+        }
+
+
+
         bool error = false;
         Transition? transition = null;
         State? targetStateAsState = null;
@@ -218,14 +233,14 @@ public static class StateManagerModule
                                   new SignalRRequest()
                                   {
                                       data = new PostSignalRData(
-                                      newInstanceTransition.CreatedBy,
+                                      data.TriggeredBy,
                                       instance.RecordId,
                                       eventInfo,
                                       instance.Id,
                                       instance.EntityName,
                                       data.Data?.EntityData,
                                       DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
-                                      IsTargetState && targetStateAsState != null ? targetStateAsState.Name : newInstanceTransition.ToStateName,
+                                      IsTargetState && targetStateAsState != null ? targetStateAsState.Name : transition.ToStateName,
                                       transition.Name,
                                       string.IsNullOrEmpty(viewSource) ? transition.ToState.IsPublicForm == true ? null : transition.ToState.Transitions.Select(s => s.Name).ToArray() : viewSource == amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition) ?
                                       transition.ToState.Transitions.Select(s => s.Name).ToArray() : null,

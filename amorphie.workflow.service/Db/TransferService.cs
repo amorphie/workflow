@@ -84,7 +84,8 @@ public class TransferService
 
     public async Task<Response<WorkflowCreateDto>> GetDefinitionFromNewBulkAsync(string workflowName)
     {
-        var workFlow = await _dbSet
+        var workflow = await _dbSet
+             .Include(d => d.Titles)
             .Include(s => s.Entities)
             .Include(s => s.States)
             .ThenInclude(ss => ss.FromStates)
@@ -101,20 +102,16 @@ public class TransferService
             .Where(w => w.Name == workflowName)
             .FirstOrDefaultAsync();
 
-        if (workFlow == null)
+        if (workflow == null)
         {
             return new Response<WorkflowCreateDto>
             {
                 Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
             };
         }
-        var statesResult = StateMapper.Map(workFlow.States);
-        var workflowDto = new WorkflowCreateDto
-        {
-
-            Name = workFlow.Name,
-            NewStates = statesResult
-        };
+        var statesResult = StateMapper.Map(workflow.States);
+        var workflowDto = SetWorkflowCreateDtoBaseProps(workflow);
+        workflowDto.NewStates = statesResult;
         return new Response<WorkflowCreateDto>
         {
             Data = workflowDto,
@@ -195,20 +192,8 @@ public class TransferService
                 Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
             };
         }
-        var workflowDto = new WorkflowCreateDto
-        {
-            Name = workflow.Name,
-            Titles = workflow.Titles.Select(title => ManuelMultilanguageMapper.Map(title)).ToList(),
-            Tags = workflow.Tags,
-            RecordId = workflow.RecordId.HasValue ? workflow.RecordId.Value : Guid.Empty,
-            Entities = workflow.Entities.Select(e => new WorkflowEntityDto
-            {
-                Name = e.Name,
-                IsStateManager = e.IsStateManager,
-                AvailableInStatus = e.AvailableInStatus,
-            }).ToList(),
-            States = StateMapperLegacy.Map(workflow.States)
-        };
+        var workflowDto = SetWorkflowCreateDtoBaseProps(workflow);
+        workflowDto.States = StateMapperLegacy.Map(workflow.States);
         workflowDto.Hash = Md5.Generate(workflowDto);
 
         return new Response<WorkflowCreateDto>
@@ -229,9 +214,9 @@ public class TransferService
         {
             _workflowService.Update(workflowDto, workflow);
         }
+        await _dbContext!.SaveChangesAsync();
         //Insert States and Trxs
         await _stateService.LegacySaveBulkAsync(workflowDto);
-        await _dbContext!.SaveChangesAsync();
         return Response.Success("");
 
 
@@ -389,6 +374,21 @@ public class TransferService
 
         };
     }
-
+    private WorkflowCreateDto SetWorkflowCreateDtoBaseProps(Workflow workflow)
+    {
+        return new WorkflowCreateDto
+        {
+            Name = workflow.Name,
+            Titles = workflow.Titles.Select(title => ManuelMultilanguageMapper.Map(title)).ToList(),
+            Tags = workflow.Tags,
+            RecordId = workflow.RecordId.HasValue ? workflow.RecordId.Value : Guid.Empty,
+            Entities = workflow.Entities.Select(e => new WorkflowEntityDto
+            {
+                Name = e.Name,
+                IsStateManager = e.IsStateManager,
+                AvailableInStatus = e.AvailableInStatus,
+            }).ToList()
+        };
+    }
 }
 
