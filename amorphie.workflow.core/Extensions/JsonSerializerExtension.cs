@@ -1,4 +1,6 @@
+using System.Text;
 using System.Text.Json;
+using System.Text.Unicode;
 namespace amorphie.workflow.core.Extensions;
 public static class JsonSerializerExtension
 {
@@ -14,5 +16,4 @@ public static class JsonSerializerExtension
             return jsonString;
         }
     }
-
 }
