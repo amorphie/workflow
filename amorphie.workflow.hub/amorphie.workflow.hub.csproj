@@ -23,6 +23,9 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="8.0.1"/>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.1"/>
     <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.26.0"/>
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.0"/>
+    <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.0"/>
+    <PackageReference Include="AspNetCore.HealthChecks.SignalR" Version="8.0.0"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj"/>

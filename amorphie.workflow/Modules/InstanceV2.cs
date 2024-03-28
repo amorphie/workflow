@@ -21,7 +21,7 @@ public static class InstanceV2Module
         });
     }
 
-    static async ValueTask<amorphie.core.IBase.IResponse> TriggerFlow(
+    static async ValueTask<IResult> TriggerFlow(
         CancellationToken cancellationToken,
         [FromServices] IInstanceService service,
         [FromRoute(Name = "transitionName")] string transitionName,
@@ -31,7 +31,7 @@ public static class InstanceV2Module
         [FromHeader(Name = "User")] Guid user,
         [FromHeader(Name = "Behalf-Of-User")] Guid behalOfUser)
     {
-        var response = await service.TriggerFlow(instanceId, transitionName, user, behalOfUser, body, request.Headers, cancellationToken);
+        var response = await service.TriggerFlowAsync(instanceId, transitionName, user, behalOfUser, body, request.Headers, cancellationToken);
         return ApiResult.CreateResult(response);
     }
 

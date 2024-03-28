@@ -26,14 +26,14 @@ public class VariableService
     }
 
     //Üsttekinde headers var ve param farklı
-    public static dynamic CreateMessageVariables(Instance instance, WorkerBodyTrxDatas _data)
+    public static dynamic CreateMessageVariables(Instance instance, string lastTransition, WorkerBodyTrxDatas _data)
     {
         dynamic variables = new Dictionary<string, dynamic>();
 
         variables.Add("EntityName", instance.EntityName);
         variables.Add("RecordId", instance.RecordId);
         variables.Add("InstanceId", instance.Id);
-        variables.Add("LastTransition", instance.StateName);
+        variables.Add("LastTransition", lastTransition);
         dynamic targetObject = new System.Dynamic.ExpandoObject();
         targetObject.Data = _data.Data;
         targetObject.TriggeredBy = instance.CreatedBy;
