@@ -78,7 +78,7 @@ public partial class StateService : IStateService
         {
 
             var toStates = data.ToStates.Select(p => p.ToStateName);
-            _dbContext.StateToStates.Where(p => toStates.Contains(p.ToStateName)).ExecuteDelete();
+            _dbContext.StateToStates.Where(p => toStates.Contains(p.ToStateName) && p.FromStateName == data.Name).ExecuteDelete();
 
             foreach (var toState in data.ToStates)
             {
