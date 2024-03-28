@@ -32,6 +32,7 @@ builder.Services.AddSingleton<IDatabase>(cfg =>
     IConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(redis);
     return multiplexer.GetDatabase();
 });
+
 builder.Services.AddControllers();
 //builder.Services.AddDaprClient();
 builder.Services.AddDaprClient(conf => conf.UseJsonSerializationOptions(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = false, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));
