@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using amorphie.workflow.core.Constants;
+using amorphie.workflow.core.Extensions;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
@@ -186,13 +187,7 @@ public static class HttpServiceManagerModule
     private static async Task<string> ExtractResponseBodyAsync(HttpResponseMessage httpResponse)
     {
         var byteArray = await httpResponse.Content.ReadAsByteArrayAsync();
-        var responseBodyObj = JsonSerializer.Deserialize<object>(byteArray);
-        string? stringResult = "";
-        if (responseBodyObj != null)
-        {
-            stringResult = responseBodyObj.ToString();
-        }
-        return stringResult ?? "";
+        return Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
     }
 }
 
