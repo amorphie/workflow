@@ -12,19 +12,18 @@ using Serilog;
 using Elastic.Apm.NetCoreAll;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
+using HealthChecks.UI.Client;
+using StackExchange.Redis;
+
+
 var builder = WebApplication.CreateBuilder(args);
 //builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", false, true);
 
 var daprClient = new DaprClientBuilder().Build();
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
-var redis = builder.Configuration["redisEndPoints"];
+var redis = builder.Configuration["redisEndpointsWithoutComma"];
 var signalrHealthAdress = builder.Configuration["signalrHealthAdress"];
-// builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
-// {
-//     options.SerializerOptions.PropertyNameCaseInsensitive = false;
-//     options.SerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-// });
 
 builder.Services.AddControllers();
 //builder.Services.AddDaprClient();
@@ -56,7 +55,7 @@ builder.Services.AddSignalR(options =>
 .AddStackExchangeRedis(redis.ToString())
 ;
 
-builder.Services.AddHealthChecks().AddNpgSql(postgreSql).AddRedis(redis.ToString(),"Redis", HealthStatus.Unhealthy).AddSignalRHub(signalrHealthAdress.ToString());;
+builder.Services.AddHealthChecks().AddNpgSql(postgreSql).AddRedis(redis.ToString(),"Redis", HealthStatus.Unhealthy,null, TimeSpan.FromSeconds(15)).AddSignalRHub(signalrHealthAdress.ToString());;
 builder.Services.AddMvc();
 
 builder.Services.AddDbContext<WorkflowDBContext>
@@ -80,7 +79,9 @@ app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
 app.UseSwagger();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health",new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions{
+    ResponseWriter=UIResponseWriter.WriteHealthCheckUIResponse
+});
 app.UseSwaggerUI();
 app.MapHub<WorkflowHub>("/hubs/workflow");
 app.MapHub<MFATypeHub>("/hubs/genericHub");
