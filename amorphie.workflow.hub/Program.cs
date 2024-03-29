@@ -22,18 +22,8 @@ var builder = WebApplication.CreateBuilder(args);
 var daprClient = new DaprClientBuilder().Build();
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
-var redis = builder.Configuration["redisEndPoints"];
+var redis = builder.Configuration["redisEndpointsWithoutComma"];
 var signalrHealthAdress = builder.Configuration["signalrHealthAdress"];
-// builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
-// {
-//     options.SerializerOptions.PropertyNameCaseInsensitive = false;
-//     options.SerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-// });
-builder.Services.AddSingleton<IDatabase>(cfg =>
-{
-    IConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(redis);
-    return multiplexer.GetDatabase();
-});
 
 builder.Services.AddControllers();
 //builder.Services.AddDaprClient();
