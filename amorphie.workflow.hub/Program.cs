@@ -52,7 +52,9 @@ builder.Services.AddSignalR(options =>
     options.MaximumParallelInvocationsPerClient = 50;
 
 })
-.AddStackExchangeRedis(redis.ToString())
+.AddStackExchangeRedis(redis.ToString(), options => {
+      options.Configuration.ChannelPrefix = "AmorphieWorkflowSignalR";
+  })
 ;
 
 builder.Services.AddHealthChecks().AddNpgSql(postgreSql).AddRedis(redis.ToString(),"Redis", HealthStatus.Unhealthy,null, TimeSpan.FromSeconds(15)).AddSignalRHub(signalrHealthAdress.ToString());;
