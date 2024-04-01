@@ -53,7 +53,7 @@ builder.Services.AddSignalR(options =>
 
 })
 .AddStackExchangeRedis(redis.ToString(), options => {
-      options.Configuration.ChannelPrefix = "AmorphieWorkflowSignalR";
+      options.Configuration.ChannelPrefix = RedisChannel.Literal("amorphie-workflow-hub");
   })
 ;
 
