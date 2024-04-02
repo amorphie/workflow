@@ -81,12 +81,8 @@ app.UseCloudEvents();
 app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
-LogContext.PushProperty("InstanceId", "instanceIdAsString");
-//Configure the HTTP request pipeline.
-if (!app.Environment.IsProduction())
-{
-    app.UseHttpLogging();
-}
+//Request and Response Logging
+app.UseHttpLogging();
 
 app.UseSwagger();
 app.UseSwaggerUI();

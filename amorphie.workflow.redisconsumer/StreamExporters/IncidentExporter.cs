@@ -75,11 +75,7 @@ public class IncidentExporter : BaseExporter, IExporter
                         );
                     if (RegisteredClients.ClientList.TryGetValue(stream.Value.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
                     {
-                        await StateHelper.SendHubMessage(hubData, "eventInfo", "",
-                        bodyHeaders.XDeviceId,
-                        bodyHeaders.XTokenId,
-                        bodyHeaders.ACustomer,
-                        cancellationToken);
+                        await StateHelper.SendHubMessage(hubData, "eventInfo", "", bodyHeaders, cancellationToken);
                     }
                     if (instanceId != Guid.Empty)
                     {
