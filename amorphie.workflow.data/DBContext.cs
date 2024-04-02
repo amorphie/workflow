@@ -46,6 +46,7 @@ public class WorkflowDBContext : DbContext
     public DbSet<Deployment> Deployments { get; set; } = default!;
     public DbSet<Incident> Incidents { get; set; } = default!;
     public DbSet<Job> Jobs { get; set; } = default!;
+    public DbSet<JobBatch> JobBatchs { get; set; } = default!;
     public DbSet<Message> Messages { get; set; } = default!;
     public DbSet<MessageSubscription> MessageSubscriptions { get; set; } = default!;
     public DbSet<ProcessInstance> ProcessInstances { get; set; } = default!;
@@ -210,7 +211,7 @@ public class WorkflowDBContext : DbContext
            .WithOne()
            .HasForeignKey("UiForm_Id");
 
-           
+
         modelBuilder.Entity<TransferHistory>().ToTable("TransferHistories", "transfer")
         .HasKey(p => p.Id);
 
@@ -232,6 +233,8 @@ public class WorkflowDBContext : DbContext
 
         modelBuilder.Entity<Job>().ToTable("Jobs", "exporter")
         .HasKey(p => p.Key);
+        modelBuilder.Entity<JobBatch>().ToTable("JobBatchs", "exporter")
+        .HasKey(p => new { p.Key, p.ElementInstanceKey });
 
         modelBuilder.Entity<Message>().ToTable("Messages", "exporter")
         .HasKey(p => p.Id);

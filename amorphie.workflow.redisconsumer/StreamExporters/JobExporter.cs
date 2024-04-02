@@ -41,8 +41,6 @@ internal class JobExporter : BaseExporter, IExporter
 
                     if (entity != null)
                     {
-                        //entity.Intent = stream.Intent;
-                        //entity.ModifiedAt = DateTime.UtcNow;
                         entity.EndTimestamp = stream.Timestamp;
                         entity.Intent = stream.Intent;
                         dbContext.Jobs.Update(entity);
@@ -58,43 +56,6 @@ internal class JobExporter : BaseExporter, IExporter
                     if (savingResult > 0)
                     {
                         messageToBeDeleted.Add(process.Id);
-                        Boolean.TryParse(stream.Value.CustomHeaders["NOTIFY_CLIENT_BYEXPORTER"]?.ToString(), out bool notifyClient);
-                        var elementType = stream.Value.Type;
-                        if (notifyClient)
-                        {
-                            var instanceGuid = RegisteredClients.ActiveInstanceList.TryGetValue(stream.Value.ProcessInstanceKey, out Guid instanceId) ? instanceId : Guid.Empty;
-                            var hubData = new PostSignalRData(
-                                Guid.Empty,
-                                instanceGuid,
-                                "message from exporter",
-                                instanceGuid,
-                                stream.Value.ElementId ?? "",
-                                "",
-                                DateTime.Now,
-                                stream.Intent,
-                                "",
-                                null,
-                                amorphie.core.Enums.StatusType.New,
-                                new PostPageSignalRData("", "", new MultilanguageText("", ""), 1000),
-                                message: elementType,
-                                "",
-                                "",
-                                workflowName: stream.Value.BpmnProcessId ?? "",
-                                "",
-                                false,
-                                buttonType: ""
-                            );
-
-                            if (RegisteredClients.ClientList.TryGetValue(stream.Value.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
-                            {
-
-                                await StateHelper.SendHubMessage(hubData, "eventInfo", "",
-                                bodyHeaders.XDeviceId,
-                                bodyHeaders.XTokenId,
-                                bodyHeaders.ACustomer,
-                                cancellationToken);
-                            }
-                        }
                     }
                 }
                 else
