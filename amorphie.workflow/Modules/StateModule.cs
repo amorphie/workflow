@@ -5,6 +5,7 @@ using amorphie.workflow.core.Dtos.Definition;
 using amorphie.workflow.service.Db.Abstracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 public static class StateModule
 {
@@ -91,6 +92,7 @@ public static class StateModule
       [FromServices] IStateService service
       )
     {
+        Log.Error("Error log test");
         var response = await service.GetAsync(workflowName, stateName);
         return ApiResult.CreateResult(response);
     }

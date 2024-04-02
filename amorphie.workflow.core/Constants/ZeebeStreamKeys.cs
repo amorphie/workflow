@@ -27,6 +27,10 @@ namespace amorphie.workflow.core.Constants
             public static string PROCESS_MESSAGE_SUBSCRIPTION => $"{GateWayPrefix}PROCESS_MESSAGE_SUBSCRIPTION";
             public static string VARIABLE => $"{GateWayPrefix}VARIABLE";
             public static string VARIABLE_DOCUMENT => $"{GateWayPrefix}VARIABLE_DOCUMENT";
+            public static string TIMER => $"{GateWayPrefix}TIMER";
+            public static string PROCESS_INSTANCE_CREATION => $"{GateWayPrefix}PROCESS_INSTANCE_CREATION";
+            public static string PROCESS_INSTANCE_BATCH => $"{GateWayPrefix}PROCESS_INSTANCE_BATCH";
+            public static string COMMAND_DISTRIBUTION => $"{GateWayPrefix}COMMAND_DISTRIBUTION";
         }
         public class Groups
         {

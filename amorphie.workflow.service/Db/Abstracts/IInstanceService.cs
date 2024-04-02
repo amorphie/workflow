@@ -9,7 +9,7 @@ namespace amorphie.workflow.service.Db.Abstracts;
     Task<bool> IsRouteDefined(string targetTransitionOrStateName, CancellationToken cancellationToken);
 
     Task<IResponse> TriggerFlowAsync(Guid instanceId, string targetTransitionOrStateName, Guid user, Guid behalfOfUser, dynamic data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken);
-    Task<Response> ChangeInstanceStateAsync(Guid instanceId, string targetTransitionOrStateName, WorkerBodyTrxInnerDatas request, Guid createdBy, Guid createdBehalf, CancellationToken cancellationToken);
+    Task<Response> ChangeInstanceStateAsync(Guid instanceId, string targetTransitionOrStateName, WorkerBodyTrxDatas workerBodyTrxDatas, CancellationToken cancellationToken);
 
 }
 

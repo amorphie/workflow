@@ -6,6 +6,7 @@ using Serilog.Core;
 using Serilog;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.Hosting;
+using Elastic.Apm.SerilogEnricher;
 
 namespace amorphie.workflow.core.ExceptionHandler;
 public static class GenericExceptionExtension
@@ -13,6 +14,8 @@ public static class GenericExceptionExtension
     public static void UseExceptionMiddleware(this IApplicationBuilder app)
     {
         app.UseMiddleware<ExceptionMiddleware>();
+        //Request and Response Logging
+        app.UseHttpLogging();
     }
 
     public static void AddSeriLogWithHttpLogging<TEnricher>(this WebApplicationBuilder builder, List<string>? headersToBeLogged = null) where TEnricher : class, ILogEventEnricher
@@ -59,6 +62,8 @@ public static class GenericExceptionExtension
             //.Enrich.FromLogContext()
                 .ReadFrom.Configuration(builder.Configuration)
                 .Enrich.With(enricher)
+                // .Enrich.WithCorrelationId()
+                .Enrich.WithElasticApmCorrelationInfo()
                 ;
             //.Enrich.When(p => p.Exception != null, x => x.With(enricher))
         });

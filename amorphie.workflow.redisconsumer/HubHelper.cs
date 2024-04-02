@@ -96,9 +96,7 @@ public class StateHelper
 
     }
 
-    public static async Task SendHubMessage(PostSignalRData hubData, string subject, string instanceId,
-    string deviceid, string tokenid, string customerid,
-     CancellationToken cancellationToken)
+    public static async Task SendHubMessage(PostSignalRData hubData, string subject, string instanceId,WorkerBodyHeaders bodyHeaders, CancellationToken cancellationToken)
     {
         DaprClient daprClient = new DaprClientBuilder().Build();
         bool routeChange = false;
@@ -106,8 +104,7 @@ public class StateHelper
         {
             routeChange = false;
         }
-        else if (hubData.page != null && hubData.page.pageRoute != null && !string.IsNullOrEmpty(
-            hubData.page.pageRoute.label))
+        else if (hubData.page != null && hubData.page.pageRoute != null && !string.IsNullOrEmpty(hubData.page.pageRoute.label))
         {
             routeChange = true;
         }
@@ -131,10 +128,10 @@ public class StateHelper
             // string deviceid = "123";
             // string tokenid = "abc";
             // string customerid = "456";
-            signalRequest.Headers.Add("X-Device-Id", deviceid);
-            signalRequest.Headers.Add("X-Token-Id", tokenid);
-            signalRequest.Headers.Add("A-Customer", customerid);
-            signalRequest.Headers.Add("X-Request-Id", customerid);
+            signalRequest.Headers.Add("X-Device-Id", bodyHeaders.XDeviceId);
+            signalRequest.Headers.Add("X-Token-Id", bodyHeaders.XTokenId);
+            signalRequest.Headers.Add("A-Customer", bodyHeaders.ACustomer);
+            signalRequest.Headers.Add("X-Request-Id", bodyHeaders.ACustomer);
             await daprClient.InvokeMethodAsync<string>(signalRequest, cancellationToken);
 
 
