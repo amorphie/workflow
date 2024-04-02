@@ -37,7 +37,7 @@ internal class JobBatchExporter : BaseExporter, IExporter
                     continue;
                 }
                 currentProccessId = process.Id;
-                if (stream.Value.Type == "amorphie-workflow-set-state" || stream.Value.Jobs == null)
+                if (stream.Value.Type == ZeebeVariableKeys.AmorphieWorkflowSetState || stream.Value.Jobs == null)
                 {
                     messageToBeDeleted.Add(process.Id);
                     continue;
@@ -55,8 +55,8 @@ internal class JobBatchExporter : BaseExporter, IExporter
                         if (savingResult > 0)
                         {
                             messageToBeDeleted.Add(process.Id);
-                            Boolean.TryParse(job.CustomHeaders["NOTIFY_CLIENT"]?.ToString(), out bool notifyClient);
-                            string? targetState = job.CustomHeaders["TARGET_STATE"]?.ToString();
+                            Boolean.TryParse(job.CustomHeaders[ZeebeVariableKeys.Headers.NOTIFY_CLIENT]?.ToString(), out bool notifyClient);
+                            string? targetState = job.CustomHeaders[ZeebeVariableKeys.Headers.TARGET_STATE]?.ToString();
                             if (notifyClient || !string.IsNullOrEmpty(targetState))
                             {
                                 var workerBody = JsonObjectConverter.JsonToWorkerBody(job.Variables);
@@ -121,13 +121,9 @@ internal class JobBatchExporter : BaseExporter, IExporter
     {
         if (RegisteredClients.ClientList.TryGetValue(job.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
         {
-            var url = job.CustomHeaders["url"];
-            var pageUrl = job.CustomHeaders["PAGE_URL"];
-            var viewSource = job.CustomHeaders["VIEW_SOURCE"]?.ToString() ?? "";
-            //headers that come from instance trigger
-            var headers = job.Variables["Headers"];
-            //Headers that mentioned in bpmn
-            var customHeaders = job.CustomHeaders;
+            var url = job.CustomHeaders[ZeebeVariableKeys.Url];
+            var pageUrl = job.CustomHeaders[ZeebeVariableKeys.Headers.PAGE_URL];
+            var viewSource = job.CustomHeaders[ZeebeVariableKeys.Headers.VIEW_SOURCE]?.ToString() ?? "";
 
             var registeredInstanceGuid = RegisteredClients.ActiveInstanceList.TryGetValue(job.ProcessInstanceKey, out Guid instanceId) ? instanceId : Guid.Empty;
             var hubData = new PostSignalRData(
