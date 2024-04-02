@@ -10,4 +10,8 @@ public static class ZeebeEventKeys
     public const string CREATED = "CREATED";
     public const string CORRELATED = "CORRELATED";
     public const string PUBLISHED = "PUBLISHED";
+
+
+    public const string ACTIVATED = "ACTIVATED";
+    public const string ACTIVATE = "ACTIVATE";
 }

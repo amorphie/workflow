@@ -23,7 +23,11 @@ public class StreamCleanerWorker : BackgroundService
         {
             await redisDb.StreamTrimAsync(ZeebeStreamKeys.Streams.PROCESS_EVENT, 10, false, CommandFlags.PreferMaster);
             await redisDb.StreamTrimAsync(ZeebeStreamKeys.Streams.VARIABLE_DOCUMENT, 10, false, CommandFlags.PreferMaster);
-            await redisDb.StreamTrimAsync(ZeebeStreamKeys.Streams.JOB_BATCH, 10, false, CommandFlags.PreferMaster);
+            await redisDb.StreamTrimAsync(ZeebeStreamKeys.Streams.JOB, 10, false, CommandFlags.PreferMaster);
+            await redisDb.StreamTrimAsync(ZeebeStreamKeys.Streams.TIMER, 10, false, CommandFlags.PreferMaster);
+            await redisDb.StreamTrimAsync(ZeebeStreamKeys.Streams.PROCESS_INSTANCE_CREATION, 10, false, CommandFlags.PreferMaster);
+            await redisDb.StreamTrimAsync(ZeebeStreamKeys.Streams.PROCESS_INSTANCE_BATCH, 10, false, CommandFlags.PreferMaster);
+            await redisDb.StreamTrimAsync(ZeebeStreamKeys.Streams.COMMAND_DISTRIBUTION, 10, false, CommandFlags.PreferMaster);
             await Task.Delay(timeToLive * 1000);
         }
     }

@@ -24,7 +24,7 @@ public class JsonObjectConverter
 
         foreach (var item in body.Where(p => p.Key.StartsWith("TRX")))
         {
-            if (workerBody.WorkerBodyTrxDataList.Keys.Contains(item.Key))
+            if (workerBody.WorkerBodyTrxDataList!.ContainsKey(item.Key))
                 continue;
             var value = item.Value.Deserialize<WorkerBodyTrxDatas>(opt) ?? new WorkerBodyTrxDatas();
             workerBody.WorkerBodyTrxDataList.Add(item.Key, value);
@@ -33,6 +33,17 @@ public class JsonObjectConverter
         var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(opt);
         workerBody.Headers = workerBodyHeaders;
         return workerBody;
+    }
+
+    public static WorkerBodyTrxDatas GetWorkerBodyTrxData(WorkerBody workerBody)
+    {
+        var data = workerBody.WorkerBodyTrxDataList!.GetValueOrDefault($"TRX{workerBody.LastTransition.DeleteUnAllowedCharecters()}");
+        //Data is null for -got-first-
+        if (data == null)
+        {
+            data = workerBody.WorkerBodyTrxDataList!.FirstOrDefault().Value;
+        }
+        return data;
     }
     public static WorkerBody DynamicToWorkerBody(dynamic body)
     {
@@ -49,12 +60,13 @@ public class JsonObjectConverter
 
         foreach (var item in propertyValues.Where(p => p.Key.StartsWith("TRX")))
         {
-            if (workerBody.WorkerBodyTrxDataList.Keys.Contains(item.Key))
+            if (workerBody.WorkerBodyTrxDataList!.ContainsKey(item.Key))
                 continue;
-            var value = item.Value as WorkerBodyTrxDatas;
-            workerBody.WorkerBodyTrxDataList.Add(item.Key, value);
+            if (item.Value is WorkerBodyTrxDatas value)
+            {
+                workerBody.WorkerBodyTrxDataList.Add(item.Key, value);
+            }
         }
-
         return workerBody;
     }
 
@@ -82,7 +94,7 @@ public class WorkerBody
     public Guid InstanceId { get; set; } = default!;
 
     public WorkerBodyHeaders? Headers { get; set; } = new();
-    public Dictionary<string, WorkerBodyTrxDatas>? WorkerBodyTrxDataList { get; set; } = new();
+    public Dictionary<string, WorkerBodyTrxDatas>? WorkerBodyTrxDataList { get; set; } = [];
 }
 
 public class WorkerBodyHeaders

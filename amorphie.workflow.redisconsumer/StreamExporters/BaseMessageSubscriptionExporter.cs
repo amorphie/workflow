@@ -6,6 +6,7 @@ using amorphie.workflow.redisconsumer.StreamObjects;
 using Serilog;
 using StackExchange.Redis;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
@@ -54,7 +55,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                         if (stream.Value.Variables != null)
                         {
                             var variables = stream.Value.Variables;
-                            var targetObject = stream.Value.Variables[$"TRX-{entity.MessageName}"];
+                            var targetObject = stream.Value.Variables[$"TRX{entity.MessageName?.DeleteUnAllowedCharecters()}"];
                             if (targetObject != null)
                             {
                                 entity.CreatedBy = new Guid(targetObject[ZeebeVariableKeys.TriggeredBy]?.ToString() ?? "");
@@ -67,7 +68,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                                 continue;
                             }
                             entity.InstanceId = instanceGuid;
-                            workerBody = SetWrokerBody(entity, stream);
+                            RegisterClient(stream.Value.ProcessInstanceKey, instanceGuid, stream.ValueType, stream.Value.Variables);
 
                             dbContext.MessageSubscriptions.Add(entity);
                         }
@@ -76,8 +77,6 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                     if (savingResult > 0)
                     {
                         messageToBeDeleted.Add(process.Id);
-                        if (workerBody != null)
-                            await StateHelper.CallStateManager(workerBody, "default", entity.ProcessInstanceKey, cancellationToken);
                     }
                 }
                 else
@@ -94,36 +93,21 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
         var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
 
     }
-    private WorkerBody? SetWrokerBody(MessageSubscription entity, MessageSubscriptionStream stream)
+    private void RegisterClient(long processInstanceKey, Guid instanceId, string? valueType, JsonObject variables)
     {
-        var variables = stream.Value.Variables;
-        var targetObject = stream.Value.Variables[$"TRX-{entity.MessageName}"];
-        var workerBody = new WorkerBody
+        var lastTransition = variables[ZeebeVariableKeys.LastTransition]?.ToString().DeleteUnAllowedCharecters();
+        if (lastTransition == null)
         {
-            InstanceId = entity.InstanceId,
-            LastTransition = variables[ZeebeVariableKeys.LastTransition]?.ToString()
-
-
-        };
-        var bodyHeaders = stream.Value.Variables["Headers"];
+            throw new InvalidDataException(message: $"{nameof(lastTransition)} LastTransition property must exist");
+        }
+        var bodyHeaders = variables["Headers"];
         var workerBodyHeaders = bodyHeaders.Deserialize<WorkerBodyHeaders>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         //Register user at start
-        if (stream.ValueType != null && ZeebeStreamKeys.Streams.MESSAGE_START_EVENT_SUBSCRIPTION.Contains(stream.ValueType))
+        if (valueType != null && ZeebeStreamKeys.Streams.MESSAGE_START_EVENT_SUBSCRIPTION.Contains(valueType))
         {
-            RegisteredClients.ClientList.Add(entity.ProcessInstanceKey, workerBodyHeaders);
-            RegisteredClients.ActiveInstanceList.Add(entity.ProcessInstanceKey, workerBody.InstanceId);
+            RegisteredClients.ClientList.Add(processInstanceKey, workerBodyHeaders);
+            RegisteredClients.ActiveInstanceList.Add(processInstanceKey, instanceId);
         }
-
-        var workerBodyTrxDatas = targetObject.Deserialize<WorkerBodyTrxDatas>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        if (workerBodyTrxDatas?.Data?.SetStateVia != "exporter")
-            return null;
-
-
-        //Set users headers in order to claim at job notification stage
-
-        workerBody.WorkerBodyTrxDataList.Add($"TRX{entity.MessageName}", workerBodyTrxDatas);
-        workerBody.Headers = workerBodyHeaders;
-        return workerBody;
     }
 
 

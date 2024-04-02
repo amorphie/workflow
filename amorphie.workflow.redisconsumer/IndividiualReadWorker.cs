@@ -1,5 +1,6 @@
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.redisconsumer.StreamExporters;
+using amorphie.workflow.service.Db.Abstracts;
 using Dapr.Client;
 using StackExchange.Redis;
 namespace amorphie.workflow.redisconsumer;
@@ -12,6 +13,8 @@ public class IndividiualReadWorker : BackgroundService
     protected readonly string readingStrategy;
     private readonly ILogger<BulkReadWorker> _logger;
     private readonly DaprClient daprClient;
+    private readonly IInstanceService _instanceService;
+
     protected async Task ConfigureGroup()
     {
         foreach (var item in typeof(ZeebeStreamKeys.Streams).GetProperties())
@@ -26,7 +29,7 @@ public class IndividiualReadWorker : BackgroundService
             }
         }
     }
-    public IndividiualReadWorker(ILogger<BulkReadWorker> logger, WorkflowDBContext dbContext, IDatabase redisDb, DaprClient daprClient)
+    public IndividiualReadWorker(ILogger<BulkReadWorker> logger, WorkflowDBContext dbContext, IDatabase redisDb, DaprClient daprClient, IInstanceService instanceService)
     {
         this.dbContext = dbContext;
         this.redisDb = redisDb;
@@ -35,6 +38,7 @@ public class IndividiualReadWorker : BackgroundService
         this.readingStrategy = ">";
         _logger = logger;
         this.daprClient = daprClient;
+        _instanceService = instanceService;
     }
 
     private async Task<(string, StreamEntry[])> ReadGroupAsync(string streamName, int count)
@@ -62,7 +66,8 @@ public class IndividiualReadWorker : BackgroundService
                 var messageEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.MESSAGE, 100);
                 var proccessEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.PROCESS_INSTANCE, 100);
                 var variableEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.VARIABLE, 100);
-                var jobEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.JOB, 100);
+                //var jobEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.JOB, 100);
+                var jobBatchEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.JOB_BATCH, 100);
 
                 await ProccessStreamsAsync(deploymentEntry.Item1, deploymentEntry.Item2, cancellationToken);
                 await ProccessStreamsAsync(messageStartEventEntry.Item1, messageStartEventEntry.Item2, cancellationToken);
@@ -70,7 +75,8 @@ public class IndividiualReadWorker : BackgroundService
                 await ProccessStreamsAsync(messageEntry.Item1, messageEntry.Item2, cancellationToken);
                 await ProccessStreamsAsync(proccessEntry.Item1, proccessEntry.Item2, cancellationToken);
                 await ProccessStreamsAsync(variableEntry.Item1, variableEntry.Item2, cancellationToken);
-                await ProccessStreamsAsync(jobEntry.Item1, jobEntry.Item2, cancellationToken);
+                //await ProccessStreamsAsync(jobEntry.Item1, jobEntry.Item2, cancellationToken);
+                await ProccessStreamsAsync(jobBatchEntry.Item1, jobBatchEntry.Item2, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -112,9 +118,13 @@ public class IndividiualReadWorker : BackgroundService
             {
                 exporter = new VariableExporter(dbContext, redisDb, consumerName);
             }
-            else if (streamName == ZeebeStreamKeys.Streams.JOB)
+            // else if (streamName == ZeebeStreamKeys.Streams.JOB)
+            // {
+            //     exporter = new JobExporter(dbContext, redisDb, consumerName);
+            // }
+            else if (streamName == ZeebeStreamKeys.Streams.JOB_BATCH)
             {
-                exporter = new JobExporter(dbContext, redisDb, consumerName);
+                exporter = new JobBatchExporter(dbContext, redisDb, consumerName, _instanceService);
             }
             else
             {
@@ -124,7 +134,7 @@ public class IndividiualReadWorker : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogCritical($"An unhandled exception occured while running ProccessStreamsAsync: {ex}");
+            _logger.LogCritical(ex, "An unhandled exception occured while running ProccessStreamsAsync: ");
         }
     }
 }

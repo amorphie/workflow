@@ -98,18 +98,16 @@ using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
 db.Database.Migrate();
 app.MapHealthChecks("/health");
+
 app.UseExceptionMiddleware();
+
 
 app.UseCloudEvents();
 app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
 
-//Configure the HTTP request pipeline.
-if (!app.Environment.IsProduction())
-{
-    app.UseHttpLogging();
-}
+
 app.UseSwagger();
 app.UseSwaggerUI();
 

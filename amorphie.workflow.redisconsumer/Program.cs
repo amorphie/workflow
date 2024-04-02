@@ -1,16 +1,18 @@
 ﻿using amorphie.core.Extension;
 using amorphie.workflow.redisconsumer;
-using Dapr.Client;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using StackExchange.Redis;
-
+using amorphie.workflow.service.Db;
+using amorphie.workflow.service.Zeebe;
+using amorphie.workflow.service.Db.Abstracts;
 var builder = WebApplication.CreateBuilder(args);
 
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 
 var postgreSql = builder.Configuration["workflowdb"];
 var redisEndPoint = builder.Configuration["redisEndPoints"];
+StateHelper.HubUrl = builder.Configuration["hubUrl"] ?? "";
 
 builder.Services.AddDaprClient();
 builder.Services.AddSingleton<IDatabase>(cfg =>
@@ -22,6 +24,11 @@ builder.Services.AddDbContext<WorkflowDBContext>(options => options.UseNpgsql(po
 
 builder.Services.AddHostedService<IndividiualReadWorker>();
 builder.Services.AddHostedService<StreamCleanerWorker>();
+//Add Bussiness Services
+builder.Services.AddSingleton<IZeebeCommandService, ZeebeCommandService>();
+builder.Services.AddSingleton<IInstanceService, InstanceService>();
+builder.Services.AddSingleton<IInstanceTransitionService, InstanceTransitionService>();
+
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
