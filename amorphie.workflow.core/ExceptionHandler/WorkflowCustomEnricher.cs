@@ -24,7 +24,7 @@ public class WorkflowCustomEnricher : ILogEventEnricher
     private LogEvent _logEvent;
     private ILogEventPropertyFactory _propertyFactory;
 
-    public async void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+    public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
         _logEvent = logEvent;
         _propertyFactory = propertyFactory;
@@ -46,24 +46,17 @@ public class WorkflowCustomEnricher : ILogEventEnricher
                 {
                     AddPropertyIfAbsent($"query.{query.Key}", query.Value);
                 }
-                foreach (var route in httpContext.Request.RouteValues.Where(p => p.Value != null))
+                var instanceIdInRoute = httpContext.Request.RouteValues.FirstOrDefault(route => route.Value != null && ZeebeVariableKeys.InstanceId.Equals(route.Key, StringComparison.OrdinalIgnoreCase));
+                if (instanceIdInRoute.Value != null)
                 {
-                    AddPropertyIfAbsent($"route.{route.Key}", route.Value!);
-                    if (ZeebeVariableKeys.InstanceId.Equals(route.Key, StringComparison.OrdinalIgnoreCase))
-                        AddPropertyIfAbsent($"correlation.{ZeebeVariableKeys.InstanceId}", route.Value!);
-
+                    AddPropertyIfAbsent($"correlation.{ZeebeVariableKeys.InstanceId}", instanceIdInRoute.Value!);
                 }
-                if (httpContext.Items.TryGetValue(ZeebeVariableKeys.InstanceId, out var instanceId))
+                if (httpContext.Items.TryGetValue(ZeebeVariableKeys.InstanceId, out var instanceId) && instanceId != null)
                     AddPropertyIfAbsent($"correlation.{ZeebeVariableKeys.InstanceId}", instanceId);
-
-                // var request = httpContext.Request;
-                // var stream = request.Body;// At the begining it holding original request stream                    
-                // var originalReader = new StreamReader(stream);
-                // var originalContent = await originalReader.ReadToEndAsync();
-
-                // JObject jsonObject = JsonConvert.DeserializeObject<JObject>(originalContent);
-                // if (jsonObject != null)
-                //     RecursiveJsonLoop(jsonObject, "body");
+                if (httpContext.Request.Path.HasValue)
+                {
+                    AddPropertyIfAbsent("RequestPath", httpContext.Request.Path.Value);
+                }
             }
             catch (Exception ex)
             {
@@ -71,36 +64,9 @@ public class WorkflowCustomEnricher : ILogEventEnricher
             }
         }
 
-        AddPropertyIfAbsent("Environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"));
-        AddPropertyIfAbsent("ApplicationName", Environment.GetEnvironmentVariable("ApplicationName"));
+        AddPropertyIfAbsent("Environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "None");
+        AddPropertyIfAbsent("ApplicationName", Environment.GetEnvironmentVariable("ApplicationName") ?? "None");
     }
-    void RecursiveJsonLoop(JObject jsonObject, string currentPath)
-    {
-        if (jsonObject == null)
-            return;
-
-        foreach (var property in jsonObject.Properties())
-        {
-            string newPath = currentPath == "" ? property.Name : $"{currentPath}.{property.Name}";
-
-            if (property.Value.Type == JTokenType.Object)
-            {
-                RecursiveJsonLoop((JObject)property.Value, newPath);
-            }
-            else if (property.Value.Type == JTokenType.Array)
-            {
-                for (int i = 0; i < ((JArray)property.Value).Count; i++)
-                {
-                    RecursiveJsonLoop((JObject)((JArray)property.Value)[i], $"{newPath}[{i}]");
-                }
-            }
-            else
-            {
-                AddPropertyIfAbsent($"{newPath}", property.Value.ToString());
-            }
-        }
-    }
-
     void AddPropertyIfAbsent(string key, object value)
     {
         if (wild.Contains(key))

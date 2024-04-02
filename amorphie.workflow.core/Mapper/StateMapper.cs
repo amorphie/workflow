@@ -27,7 +27,7 @@ public class StateMapper
             UiForms = UiFormMapper.Map(state.UiForms),
             SubWorkflowName = state.SubWorkflowName,
             Titles = ManuelMultilanguageMapper.Map(state.Titles)!,
-            PublicForms =ManuelMultilanguageMapper.Map(state.PublicForms),
+            PublicForms = ManuelMultilanguageMapper.Map(state.PublicForms),
             //FromStates = this state's foreign relation of statestostates table
             ToStates = MapStateRouteFromEntity(state.FromStates),
             Kind = state.Kind
@@ -50,7 +50,7 @@ public class StateMapper
             InitPageName = stateDto.Type == StateType.Start ? stateDto.InitPageName : string.Empty,
         };
 
-        if (stateDto.IsPublicForm == true )
+        if (stateDto.IsPublicForm == true)
         {
             newRecord.PublicForms = ManuelMultilanguageMapper.Map(stateDto.PublicForms);
         }

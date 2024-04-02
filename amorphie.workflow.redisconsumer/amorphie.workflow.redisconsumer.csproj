@@ -10,7 +10,7 @@
     <PackageReference Include="Dapr.AspNetCore" Version="1.12.0" />
     <PackageReference Include="Dapr.Client" Version="1.12.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-    <PackageReference Include="amorphie.core" Version="1.1.29" />
+    <PackageReference Include="amorphie.core" Version="1.1.30" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.7.17" />
@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj" />
     <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj" />
+    <ProjectReference Include="..\amorphie.workflow.service\amorphie.workflow.service.csproj" />
   </ItemGroup>
 
 </Project>

@@ -84,14 +84,8 @@ public static class SimpleStateManagerModule
             }
         }
 
-
-        var data = body.WorkerBodyTrxDataList!.GetValueOrDefault($"TRX{body.LastTransition.DeleteUnAllowedCharecters()}");
-        //Data is null for -got-first-
-        if (data == null)
-        {
-            data = body.WorkerBodyTrxDataList!.FirstOrDefault().Value;
-        }
-        var response = await instanceService.ChangeInstanceStateAsync(body.InstanceId, targetState, data.Data, data.TriggeredBy, data.TriggeredByBehalfOf, cancellationToken);
+        var data = JsonObjectConverter.GetWorkerBodyTrxData(body);
+        var response = await instanceService.ChangeInstanceStateAsync(body.InstanceId, targetState, data, cancellationToken);
         if (response.Result.Status != "Success")
         {
             return Results.Problem(response.Result.Message);
