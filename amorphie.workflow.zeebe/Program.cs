@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog.Context;
 using Elastic.Apm.NetCoreAll;
 using amorphie.workflow.service.Db;
+using amorphie.core.Middleware.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,7 +64,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
 });
 
 ////Request and Response logging purpose
-builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>();
+
+builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
+
 //Add Bussiness Services
 builder.Services.AddBussinessServices();
 var app = builder.Build();
@@ -72,6 +75,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseAllElasticApm(app.Configuration);
 }
+app.UseLoggingHandlerMiddlewares();
 
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
@@ -81,8 +85,7 @@ app.UseCloudEvents();
 app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
-//Request and Response Logging
-app.UseHttpLogging();
+
 
 app.UseSwagger();
 app.UseSwaggerUI();
