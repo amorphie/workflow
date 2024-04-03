@@ -113,13 +113,13 @@ public class TransferModuleApis
         return ApiResult.CreateResult(response);
     }
 
-    public static async Task<IResult> ApproveTransferOfLegacyDefinitionAsync([FromServices] TransferService service, [FromBody] WorkflowTransferResultDto transferDto, CancellationToken cancellationToken)
+    public static async Task<IResult> ApproveTransferOfLegacyDefinitionAsync([FromServices] TransferService service, [FromBody] TransferResultDto transferDto, CancellationToken cancellationToken)
     {
         var response = await service.ApproveOrCancelTransferOfLegacyDefinitionAsync(transferDto, TransferStatus.Approved, cancellationToken);
         return ApiResult.CreateResult(response);
     }
 
-    public static async Task<IResult> CancelTransferOfLegacyDefinitionAsync([FromServices] TransferService service, [FromBody] WorkflowTransferResultDto transferDto, CancellationToken cancellationToken)
+    public static async Task<IResult> CancelTransferOfLegacyDefinitionAsync([FromServices] TransferService service, [FromBody] TransferResultDto transferDto, CancellationToken cancellationToken)
     {
         var response = await service.ApproveOrCancelTransferOfLegacyDefinitionAsync(transferDto, TransferStatus.Cancelled, cancellationToken);
         return ApiResult.CreateResult(response);
