@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0.2 AS base
 WORKDIR /app
 
-RUN adduser -u 5679 --disabled-password --gecos "" amorphie-workflowuser && chown -R amorphie-workflowuser:amorphie-workflowuser /app
+RUN adduser amorphie-workflowuser --disabled-password --gecos "" && chown -R amorphie-workflowuser:amorphie-workflowuser /app
 USER amorphie-workflowuser
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0.200 AS build

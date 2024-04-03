@@ -1,4 +1,3 @@
-
 // using Microsoft.AspNetCore.Builder;
 // using Microsoft.Extensions.DependencyInjection.Extensions;
 // using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +6,7 @@
 // using Serilog;
 // using Microsoft.AspNetCore.HttpLogging;
 // using Microsoft.Extensions.Hosting;
+
 
 // namespace amorphie.workflow.core.ExceptionHandler;
 // public static class GenericExceptionExtension
@@ -43,7 +43,6 @@
 //             //logging.RequestHeaders.Concat(headersToBeLogged);
 //             defaultHeadersToBeLogged.ForEach(p => logging.RequestHeaders.Add(p));
 
-
 //             logging.MediaTypeOptions.AddText("application/javascript");
 //             logging.RequestBodyLogLimit = 4096;
 //             logging.ResponseBodyLogLimit = 4096;
@@ -67,5 +66,6 @@
 //         builder.Services.AddHttpLoggingInterceptor<HeaderCheckHttpLoggingInterceptor>();
 //     }
 // }
+
 
 
