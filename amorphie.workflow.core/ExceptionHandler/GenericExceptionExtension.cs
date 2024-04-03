@@ -1,3 +1,4 @@
+
 // using Microsoft.AspNetCore.Builder;
 // using Microsoft.Extensions.DependencyInjection.Extensions;
 // using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@
 //     {
 //         app.UseMiddleware<ExceptionMiddleware>();
 //     }
+
 
 //     public static void AddSeriLogWithHttpLogging<TEnricher>(this WebApplicationBuilder builder, List<string>? headersToBeLogged = null) where TEnricher : class, ILogEventEnricher
 //     {
@@ -65,4 +67,5 @@
 //         builder.Services.AddHttpLoggingInterceptor<HeaderCheckHttpLoggingInterceptor>();
 //     }
 // }
+
 
