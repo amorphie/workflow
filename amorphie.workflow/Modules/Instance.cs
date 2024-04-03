@@ -264,6 +264,24 @@ public static class InstanceModule
         {
             query.initPageName += "-" + suffix;
         }
+        if (query.transition is null || query.transition.Count == 0)
+        {
+            var toStates = await context.StateToStates.Include(p => p.ToState).Where(p => p.FromStateName == query.state).ToListAsync();
+            if (toStates != null)
+            {
+                query.transition = toStates.Select(p => p.ToState).Select(t => new InitTransition
+                {
+                    type = t.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
+                    requireData = t.requireData,
+                    transition = t.Name,
+
+                    hasViewVariant = t.UiForms != null && t.UiForms.Count() > 1 ? true : false
+                }).ToList();
+            }
+
+        }
+
+
         return Results.Ok(query);
     }
     static async ValueTask<IResult> ViewTransition(
