@@ -5,10 +5,8 @@ using amorphie.workflow.core.Models;
 using Microsoft.EntityFrameworkCore;
 using amorphie.workflow.core.Dtos.Definition;
 using amorphie.workflow.core.Mapper;
-using amorphie.workflow.core.Dtos.DefinitionLegacy;
 using amorphie.workflow.service.Db.Abstracts;
 using amorphie.workflow.core.Token;
-using System.Text.Json.Serialization;
 using System.Text.Json;
 using amorphie.workflow.core.Models.Transfer;
 using amorphie.workflow.core.Dtos.Transfer;
@@ -222,11 +220,11 @@ public class TransferService
 
 
     }
-    public async Task<Response<WorkflowTransferResultDto>> SaveTransferRequestAsync(WorkflowCreateDto workflowDto, CancellationToken cancellationToken)
+    public async Task<Response<TransferResultDto>> SaveTransferRequestAsync(WorkflowCreateDto workflowDto, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(workflowDto.Hash))
         {
-            return new Response<WorkflowTransferResultDto>
+            return new Response<TransferResultDto>
             {
                 Result = new Result(amorphie.core.Enums.Status.Error, "Hash must be provided")
             };
@@ -235,21 +233,23 @@ public class TransferService
         {
             Hash = workflowDto.Hash,
             RequestBody = JsonSerializer.Serialize(workflowDto),
-            WorkflowName = workflowDto.Name,
-            TransferStatus = TransferStatus.WaitingForApproval
+            SubjectName = workflowDto.Name,
+            TransferStatus = TransferStatus.WaitingForApproval,
+            TransferringType = nameof(Workflow)
         };
         _dbContext.TransferHistories.Add(transferHistroy);
         await _dbContext.SaveChangesAsync();
-        return new Response<WorkflowTransferResultDto>
+        return new Response<TransferResultDto>
         {
-            Data = new WorkflowTransferResultDto{
+            Data = new TransferResultDto
+            {
                 TransferId = transferHistroy.Id
             },
             Result = new Result(amorphie.core.Enums.Status.Success, "")
         };
     }
 
-    public async Task<Response> ApproveOrCancelTransferOfLegacyDefinitionAsync(WorkflowTransferResultDto transferDto, TransferStatus transferStatus, CancellationToken cancellationToken)
+    public async Task<Response> ApproveOrCancelTransferOfLegacyDefinitionAsync(TransferResultDto transferDto, TransferStatus transferStatus, CancellationToken cancellationToken)
     {
         var transferHistroy = await _dbContext.TransferHistories.FirstOrDefaultAsync(p => p.Id == transferDto.TransferId && p.TransferStatus == TransferStatus.WaitingForApproval);
         if (transferHistroy == null)

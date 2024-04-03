@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Elastic.Apm.NetCoreAll;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using amorphie.core.Middleware.Logging;
 
 using HealthChecks.UI.Client;
 using StackExchange.Redis;
@@ -45,7 +46,7 @@ builder.Services.AddCors(options =>
 });
 
 
-builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>();
+builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
 
 builder.Services.AddSignalR(options =>
 {
@@ -67,7 +68,8 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseAllElasticApm(app.Configuration);
 }
-app.UseHttpLogging();
+app.UseLoggingHandlerMiddlewares();
+
 Log.Information("Amorphie Workflow Hub Starting");
 
 // Configure the HTTP request pipeline.
