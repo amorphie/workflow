@@ -11,6 +11,8 @@ namespace amorphie.workflow.service.Db;
         services.AddScoped<IStateService, StateService>();
         services.AddScoped<IWorkflowService, WorkflowService>();
         services.AddScoped<TransferService>();
+        services.AddScoped<ComponentTransferService>();
+        services.AddScoped<PageComponentService>();
     }
 }
 
