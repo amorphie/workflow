@@ -14,6 +14,7 @@ using System.Text.Unicode;
 using Elastic.Apm.NetCoreAll;
 using amorphie.workflow.service.Db;
 using amorphie.workflow;
+using amorphie.core.Middleware.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
@@ -81,11 +82,8 @@ builder.Services.AddDbContext<WorkflowDBContext>
 builder.Services.AddBussinessServices();
 
 ////Request and Response logging purpose
-var headersToBeLogged = new List<string>
-{
-    "sec-ch-ua",
-};
-builder.AddSeriLogWithHttpLogging<WorkflowCustomEnricher>(headersToBeLogged);
+builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
+
 
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -94,13 +92,12 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseAllElasticApm(app.Configuration);
 }
+app.UseLoggingHandlerMiddlewares();
+
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
 db.Database.Migrate();
 app.MapHealthChecks("/health");
-
-app.UseExceptionMiddleware();
-
 
 app.UseCloudEvents();
 app.UseRouting();
