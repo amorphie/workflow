@@ -86,7 +86,6 @@ app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
 
-
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapHealthChecks("/health");

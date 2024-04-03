@@ -1,3 +1,4 @@
+
 // using Microsoft.AspNetCore.Builder;
 // using Microsoft.Extensions.DependencyInjection.Extensions;
 // using Microsoft.Extensions.DependencyInjection;
@@ -6,7 +7,6 @@
 // using Serilog;
 // using Microsoft.AspNetCore.HttpLogging;
 // using Microsoft.Extensions.Hosting;
-
 
 // namespace amorphie.workflow.core.ExceptionHandler;
 // public static class GenericExceptionExtension
@@ -66,6 +66,5 @@
 //         builder.Services.AddHttpLoggingInterceptor<HeaderCheckHttpLoggingInterceptor>();
 //     }
 // }
-
 
 

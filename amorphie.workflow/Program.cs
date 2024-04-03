@@ -99,6 +99,7 @@ var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
 db.Database.Migrate();
 app.MapHealthChecks("/health");
 
+
 app.UseCloudEvents();
 app.UseRouting();
 app.MapSubscribeHandler();
