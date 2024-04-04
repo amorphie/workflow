@@ -81,25 +81,9 @@ public class TransferService
         };
     }
 
-    public async Task<Response<WorkflowCreateDto>> GetDefinitionFromNewBulkAsync(string workflowName)
+    public async Task<Response<WorkflowCreateDto>> GetDefinitionBulkAsync(string workflowName,  CancellationToken cancellationToken)
     {
-        var workflow = await _dbSet
-             .Include(d => d.Titles)
-            .Include(s => s.Entities)
-            .Include(s => s.States)
-            .ThenInclude(ss => ss.FromStates)
-            .Include(s => s.States)
-            .ThenInclude(sp => sp.Page)
-            .ThenInclude(spp => spp.Pages)
-            .Include(s => s.States)
-            .ThenInclude(st => st.Titles)
-            .Include(s => s.States)
-            .ThenInclude(su => su.UiForms)
-            .ThenInclude(suf => suf.Forms)
-            .Include(s => s.States)
-            .ThenInclude(spf => spf.PublicForms)
-            .Where(w => w.Name == workflowName)
-            .FirstOrDefaultAsync();
+        var workflow = await GetWorkflowForLegacyAsync(workflowName, cancellationToken);
 
         if (workflow == null)
         {
@@ -108,9 +92,16 @@ public class TransferService
                 Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
             };
         }
-        var statesResult = StateMapper.Map(workflow.States);
         var workflowDto = SetWorkflowCreateDtoBaseProps(workflow);
-        workflowDto.NewStates = statesResult;
+        if (workflow.States.SelectMany(p => p.FromStates).Count() > 0)
+        {
+            workflowDto.NewStates = StateMapper.Map(workflow.States);
+        }
+        else
+        {
+            workflowDto.States = StateMapperLegacy.Map(workflow.States);
+        }
+        workflowDto.Hash = Md5.Generate(workflowDto);
         return new Response<WorkflowCreateDto>
         {
             Data = workflowDto,
@@ -180,46 +171,7 @@ public class TransferService
             Result = new Result(amorphie.core.Enums.Status.Success, "")
         };
     }
-    public async Task<Response<WorkflowCreateDto>> GetDefinitionFromLegacyBulkAsync(string workflowName, CancellationToken cancellationToken)
-    {
-        var workflow = await GetWorkflowForLegacyAsync(workflowName, cancellationToken);
 
-        if (workflow == null)
-        {
-            return new Response<WorkflowCreateDto>
-            {
-                Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
-            };
-        }
-        var workflowDto = SetWorkflowCreateDtoBaseProps(workflow);
-        workflowDto.States = StateMapperLegacy.Map(workflow.States);
-        workflowDto.Hash = Md5.Generate(workflowDto);
-
-        return new Response<WorkflowCreateDto>
-        {
-            Data = workflowDto,
-            Result = new Result(amorphie.core.Enums.Status.Success, "")
-        };
-    }
-    public async Task<Response> SaveDefinitionToLegacyBulkAsync(WorkflowCreateDto workflowDto, CancellationToken cancellationToken)
-    {
-        var workflow = await GetWorkflowForLegacyAsync(workflowDto.Name, cancellationToken);
-        if (workflow == null)
-        {
-            //Insert WF
-            _workflowService.Insert(workflowDto);
-        }
-        else
-        {
-            _workflowService.Update(workflowDto, workflow);
-        }
-        await _dbContext!.SaveChangesAsync();
-        //Insert States and Trxs
-        await _stateService.LegacySaveBulkAsync(workflowDto);
-        return Response.Success("");
-
-
-    }
     public async Task<Response<TransferResultDto>> SaveTransferRequestAsync(WorkflowCreateDto workflowDto, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(workflowDto.Hash))
@@ -249,7 +201,7 @@ public class TransferService
         };
     }
 
-    public async Task<Response> ApproveOrCancelTransferOfLegacyDefinitionAsync(TransferResultDto transferDto, TransferStatus transferStatus, CancellationToken cancellationToken)
+    public async Task<Response> ApproveOrCancelTransferOfDefinitionAsync(TransferResultDto transferDto, TransferStatus transferStatus, CancellationToken cancellationToken)
     {
         var transferHistroy = await _dbContext.TransferHistories.FirstOrDefaultAsync(p => p.Id == transferDto.TransferId && p.TransferStatus == TransferStatus.WaitingForApproval);
         if (transferHistroy == null)
@@ -267,7 +219,7 @@ public class TransferService
             {
                 return Response.Error("Request body must not be modified before save");
             }
-            var saveResponse = await SaveDefinitionToLegacyBulkAsync(workflowDto!, cancellationToken);
+            var saveResponse = await _workflowService.SaveAsync(workflowDto!);
             transferHistroy.TransferStatus = TransferStatus.Approved;
         }
         else
@@ -289,6 +241,7 @@ public class TransferService
              .Include(x => x.States).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms)
              .Include(x => x.States).ThenInclude(s => s.PublicForms)
              .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s!.Pages)
+             .Include(s => s.States).ThenInclude(ss => ss.FromStates)
              .Where(w => w.Name == workflowName).FirstOrDefaultAsync(cancellationToken);
     }
 

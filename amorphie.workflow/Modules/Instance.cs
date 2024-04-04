@@ -243,46 +243,43 @@ public static class InstanceModule
 
 )
     {
-        var query = await context.States.Where(w => w.WorkflowName == workflowName && w.Type == StateType.Start)
-        .Include(s => s.Transitions).Select(s => new GetRecordWorkflowInit()
-        {
-            state = s.Name,
-            viewSource = s.IsPublicForm == true ? "state" : "transition",
-            initPageName = s.InitPageName,
-            transition = s.Transitions.Select(t => new InitTransition()
-            {
-                type = t.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
-                requireData = t.requireData,
-                transition = t.Name,
-
-                hasViewVariant = t.UiForms.Any() && t.UiForms.Count() > 1 ? true : false
-            }).ToList(),
-        }).FirstOrDefaultAsync(cancellationToken);
-        if (query == null)
+        var currentState = await context.States.Where(w => w.WorkflowName == workflowName && w.Type == StateType.Start)
+        .Include(s => s.Transitions)
+        .Include(s => s.UiForms)
+        .FirstOrDefaultAsync(cancellationToken);
+        if (currentState == null)
             return Results.NoContent();
-        if (!string.IsNullOrEmpty(query.initPageName) && !string.IsNullOrEmpty(suffix))
+        var initDto = new GetRecordWorkflowInit()
         {
-            query.initPageName += "-" + suffix;
-        }
-        if (query.transition is null || query.transition.Count == 0)
-        {
-            var toStates = await context.StateToStates.Include(p => p.ToState).Where(p => p.FromStateName == query.state).ToListAsync();
-            if (toStates != null)
+            state = currentState.Name,
+            viewSource = currentState.IsPublicForm == true ? "state" : "transition",
+            initPageName = currentState.InitPageName,
+            transition = currentState.Transitions.Select(t => new InitTransition()
             {
-                query.transition = toStates.Select(p => p.ToState).Select(t => new InitTransition
-                {
-                    type = t.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
-                    requireData = t.requireData,
-                    transition = t.Name,
+                type = currentState.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
+                requireData = currentState.requireData,
+                transition = currentState.Name,
+                hasViewVariant = currentState.UiForms != null && currentState.UiForms.Count() > 1 ? true : false
+            }).ToList(),
+        };
 
-                    hasViewVariant = t.UiForms != null && t.UiForms.Count() > 1 ? true : false
-                }).ToList();
-            }
-
+        if (!string.IsNullOrEmpty(initDto.initPageName) && !string.IsNullOrEmpty(suffix))
+        {
+            initDto.initPageName += "-" + suffix;
+        }
+        if (initDto.transition.Count == 0)
+        {
+            initDto.transition.Add(new InitTransition
+            {
+                type = currentState.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
+                requireData = currentState.requireData,
+                transition = currentState.Name,
+                hasViewVariant = currentState.UiForms != null && currentState.UiForms.Count() > 1 ? true : false
+            });
         }
 
 
-        return Results.Ok(query);
+        return Results.Ok(initDto);
     }
     static async ValueTask<IResult> ViewTransition(
         [FromServices] WorkflowDBContext context,
