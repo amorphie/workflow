@@ -4,7 +4,6 @@ using System.Reflection;
 using amorphie.core.Extension;
 using amorphie.core.Identity;
 using FluentValidation;
-using amorphie.workflow.core.ExceptionHandler;
 using Microsoft.EntityFrameworkCore;
 using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.Modules;
@@ -115,6 +114,7 @@ app.MapDefinitionV2Endpoints();
 app.MapInstanceV2Endpoints();
 app.MapStateEndpoints();
 app.MapTransferModuleEndpoints();
+app.MapComponentTransferModuleEndpoints();
 
 app.MapConsumerEndpoints();
 app.MapAuthorizeEndpoints();
