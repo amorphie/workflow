@@ -33,10 +33,14 @@ public class WorkflowService : IWorkflowService
             Update(data, existingRecord);
         }
         await _dbContext!.SaveChangesAsync();
-        //Save States
-        if (data.NewStates != null)
+        //Save States and Trxs
+        if (data.NewStates != null && data.NewStates.Count > 0)
         {
             await _stateService.SaveBulkAsync(data.NewStates, data.Name);
+        }
+        else
+        {
+            await _stateService.LegacySaveBulkAsync(data);
         }
         return Response.Success("");
     }
