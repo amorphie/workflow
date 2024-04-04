@@ -16,7 +16,7 @@ public class PageComponentService
         _dbSet = dbContext.Set<PageComponent>();
         this._bbtIdentity = bbtIdentity;
     }
-    public async Task<Response> InsertOrUpdateAsync(DtoPageComponents dto, CancellationToken cancellationToken)
+    public async Task<Response> SaveDefinitionAsync(DtoPageComponents dto, CancellationToken cancellationToken)
     {
         string json = string.Empty;
         try
@@ -53,6 +53,7 @@ public class PageComponentService
             existingPageComponent.ModifiedBy = _bbtIdentity.UserId.Value;
             existingPageComponent.ModifiedByBehalfOf = _bbtIdentity.BehalfOfId.Value;
         }
+        await _dbContext.SaveChangesAsync(cancellationToken);
         return Response.Success("");
     }
 

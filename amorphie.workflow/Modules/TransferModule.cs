@@ -10,12 +10,12 @@ public static class TransferModule
 
     public static void MapTransferModuleEndpoints(this WebApplication app)
     {
-        app.MapGet("/transfer/wf/{workflowName}/new", TransferModuleApis.GetDefinitionFromNewBulkAsync)
+        app.MapGet("/transfer/wf/{workflowName}", TransferModuleApis.GetDefinitionBulkAsync)
         .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Get Definition Bulk In New Style";
+            operation.Summary = "Get Definition Bulk";
             operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
             operation.Responses["200"].Description = "wf with its states.";
             operation.Responses["204"].Description = "No instance found.";
@@ -34,24 +34,12 @@ public static class TransferModule
             return operation;
         });
 
-        app.MapGet("/transfer/wf/{workflowName}/legacy", TransferModuleApis.GetDefinitionFromLegacyBulkAsync)
-        .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status204NoContent)
-        .WithOpenApi(operation =>
-        {
-            operation.Summary = "Get Definition Bulk";
-            operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
-            operation.Responses["200"].Description = "wf with its states and transitions.";
-            operation.Responses["204"].Description = "No instance found.";
-            return operation;
-        });
-
-        app.MapPost("/transfer/wf/save/legacy", TransferModuleApis.SaveTransferRequestAsync)
+        app.MapPost("/transfer/wf/save", TransferModuleApis.SaveTransferRequestAsync)
        .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
        .Produces(StatusCodes.Status201Created)
        .WithOpenApi(operation =>
          {
-             operation.Summary = "Saves or updates the request of -workflow and its states and transitions definition in legacy style-.";
+             operation.Summary = "Saves or updates the request of -workflow and its states and transitions definition-.";
              operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
 
              operation.Responses["200"] = new OpenApiResponse { Description = "Definition updated." };
@@ -60,23 +48,23 @@ public static class TransferModule
              return operation;
          });
 
-        app.MapPost("/transfer/wf/approve/legacy", TransferModuleApis.ApproveTransferOfLegacyDefinitionAsync)
+        app.MapPost("/transfer/wf/approve", TransferModuleApis.ApproveTransferOfDefinitionAsync)
         .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Approve Transfer of Legacy Definition";
+            operation.Summary = "Approve Transfer of Definition";
             operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
             operation.Responses["200"].Description = "Approve";
             operation.Responses["204"].Description = "No request found.";
             return operation;
         });
-        app.MapPost("/transfer/wf/cancel/legacy", TransferModuleApis.CancelTransferOfLegacyDefinitionAsync)
+        app.MapPost("/transfer/wf/cancel", TransferModuleApis.CancelTransferOfDefinitionAsync)
         .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
         {
-            operation.Summary = "Cancel Transfer of Legacy Definition";
+            operation.Summary = "Cancel Transfer of Definition";
             operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
             operation.Responses["200"].Description = "Cancel";
             operation.Responses["204"].Description = "No request found.";
@@ -88,9 +76,9 @@ public static class TransferModule
 
 public class TransferModuleApis
 {
-    public static async Task<IResult> GetDefinitionFromNewBulkAsync([FromServices] TransferService service, [FromRoute(Name = "workflowName")] string workflowName, CancellationToken cancellationToken)
-    {
-        var response = await service.GetDefinitionFromNewBulkAsync(workflowName);
+    public static async Task<IResult> GetDefinitionBulkAsync([FromServices] TransferService service, [FromRoute(Name = "workflowName")] string workflowName, CancellationToken cancellationToken)
+    {        
+        var response = await service.GetDefinitionFromNewBulkAsync(workflowName, cancellationToken);
         return ApiResult.CreateResult(response);
     }
 
@@ -100,28 +88,21 @@ public class TransferModuleApis
         return ApiResult.CreateResult(response);
     }
 
-    public static async Task<IResult> GetDefinitionFromLegacyBulkAsync([FromServices] TransferService service, [FromRoute(Name = "workflowName")] string workflowName, CancellationToken cancellationToken)
-    {
-        var response = await service.GetDefinitionFromLegacyBulkAsync(workflowName, cancellationToken);
-        return ApiResult.CreateResult(response);
-    }
-
-
     public static async Task<IResult> SaveTransferRequestAsync([FromServices] TransferService service, [FromBody] WorkflowCreateDto data, CancellationToken cancellationToken)
     {
         var response = await service.SaveTransferRequestAsync(data, cancellationToken);
         return ApiResult.CreateResult(response);
     }
 
-    public static async Task<IResult> ApproveTransferOfLegacyDefinitionAsync([FromServices] TransferService service, [FromBody] TransferResultDto transferDto, CancellationToken cancellationToken)
+    public static async Task<IResult> ApproveTransferOfDefinitionAsync([FromServices] TransferService service, [FromBody] TransferResultDto transferDto, CancellationToken cancellationToken)
     {
-        var response = await service.ApproveOrCancelTransferOfLegacyDefinitionAsync(transferDto, TransferStatus.Approved, cancellationToken);
+        var response = await service.ApproveOrCancelTransferOfDefinitionAsync(transferDto, TransferStatus.Approved, cancellationToken);
         return ApiResult.CreateResult(response);
     }
 
-    public static async Task<IResult> CancelTransferOfLegacyDefinitionAsync([FromServices] TransferService service, [FromBody] TransferResultDto transferDto, CancellationToken cancellationToken)
+    public static async Task<IResult> CancelTransferOfDefinitionAsync([FromServices] TransferService service, [FromBody] TransferResultDto transferDto, CancellationToken cancellationToken)
     {
-        var response = await service.ApproveOrCancelTransferOfLegacyDefinitionAsync(transferDto, TransferStatus.Cancelled, cancellationToken);
+        var response = await service.ApproveOrCancelTransferOfDefinitionAsync(transferDto, TransferStatus.Cancelled, cancellationToken);
         return ApiResult.CreateResult(response);
     }
 

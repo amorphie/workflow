@@ -1,10 +1,15 @@
-using amorphie.core.Extension;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using amorphie.core.Identity;
 using amorphie.core.Module.minimal_api;
 using AutoMapper;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 namespace amorphie.workflow.Modules;
 
 public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent, WorkflowDBContext>
@@ -21,7 +26,6 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
         base.AddRoutes(routeGroupBuilder);
 
         routeGroupBuilder.MapGet("search", getAllPageComponentFullTextSearch);
-        routeGroupBuilder.MapGet("search/names", getAllPageComponentNameFullTextSearch);
         routeGroupBuilder.MapGet("/page/{pageName}", getPageComponentByPageName);
     }
 
@@ -34,6 +38,8 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
         var query = context!.PageComponents!
             .Skip(dataSearch.Page * dataSearch.PageSize)
             .Take(dataSearch.PageSize);
+
+
         if (!string.IsNullOrEmpty(dataSearch.Keyword))
         {
             query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", dataSearch.Keyword)));
@@ -45,33 +51,6 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
         {
             var response = securityQuestions.Select(x => ObjectMapper.Mapper.Map<DtoPageComponents>(x));
             return Results.Ok(response);
-        }
-
-        return Results.NoContent();
-    }
-
-    async ValueTask<IResult> getAllPageComponentNameFullTextSearch(
-        [FromServices] WorkflowDBContext context,
-       [AsParameters] PageComponentSearch dataSearch,
-        CancellationToken cancellationToken
-   )
-    {
-        var query = context!.PageComponents!.AsQueryable();
-        query = await query.Sort<PageComponent>(dataSearch.SortColumn ?? "PageName", dataSearch.SortDirection);
-        query = query.Skip(dataSearch.Page * dataSearch.PageSize)
-        .Take(dataSearch.PageSize);
-
-
-        if (!string.IsNullOrEmpty(dataSearch.Keyword))
-        {
-            query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", dataSearch.Keyword)));
-        }
-
-        var pageComponents = await query.Select(p => p.PageName).ToListAsync(cancellationToken);
-
-        if (pageComponents.Any())
-        {
-            return Results.Ok(pageComponents);
         }
 
         return Results.NoContent();
