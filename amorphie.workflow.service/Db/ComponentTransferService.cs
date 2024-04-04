@@ -1,14 +1,7 @@
 ﻿using amorphie.core.Base;
-using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
-using amorphie.workflow.core.Models;
 using Microsoft.EntityFrameworkCore;
-using amorphie.workflow.core.Dtos.Definition;
-using amorphie.workflow.core.Mapper;
-using amorphie.workflow.core.Dtos.DefinitionLegacy;
-using amorphie.workflow.service.Db.Abstracts;
 using amorphie.workflow.core.Token;
-using System.Text.Json.Serialization;
 using System.Text.Json;
 using amorphie.workflow.core.Models.Transfer;
 using amorphie.workflow.core.Dtos.Transfer;
@@ -18,25 +11,17 @@ public class ComponentTransferService
 {
     private readonly WorkflowDBContext _dbContext;
     private readonly DbSet<Workflow> _dbSet;
-    private readonly IWorkflowService _workflowService;
-    private readonly IStateService _stateService;
+    private readonly PageComponentService _pageComponentService;
 
-    public ComponentTransferService(WorkflowDBContext dbContext, IWorkflowService workflowService, IStateService stateService)
+
+    public ComponentTransferService(WorkflowDBContext dbContext, PageComponentService pageComponentService)
     {
         _dbContext = dbContext;
         _dbSet = dbContext.Set<Workflow>();
-        _workflowService = workflowService;
-        _stateService = stateService;
+        _pageComponentService = pageComponentService;
     }
     public async Task<Response<TransferResultDto>> SaveTransferRequestAsync(DtoPageComponents pageComponentsDto, CancellationToken cancellationToken)
     {
-        // if (string.IsNullOrEmpty(workflowDto.Hash))
-        // {
-        //     return new Response<WorkflowTransferResultDto>
-        //     {
-        //         Result = new Result(amorphie.core.Enums.Status.Error, "Hash must be provided")
-        //     };
-        // }
         var transferHistroy = new TransferHistory
         {
             Hash = Md5.Generate(pageComponentsDto),
@@ -50,7 +35,8 @@ public class ComponentTransferService
         await _dbContext.SaveChangesAsync();
         return new Response<TransferResultDto>
         {
-            Data = new TransferResultDto{
+            Data = new TransferResultDto
+            {
                 TransferId = transferHistroy.Id
             },
             Result = new Result(amorphie.core.Enums.Status.Success, "")
@@ -69,13 +55,13 @@ public class ComponentTransferService
             var pageComponentsDto = JsonSerializer.Deserialize<DtoPageComponents>(transferHistroy.RequestBody);
             if (pageComponentsDto == null)
             {
-                return Response.Error($"Transfer request could not be parsed to {nameof(WorkflowCreateDto)}");
+                return Response.Error($"Transfer request could not be parsed to {nameof(DtoPageComponents)}");
             }
-            // if (!Md5.Check(pageComponentsDto))
-            // {
-            //     return Response.Error("Request body must not be modified before save");
-            // }
-            //var saveResponse = await SaveDefinitionToLegacyBulkAsync(workflowDto!, cancellationToken);
+            var saveResponse = await _pageComponentService.InsertOrUpdateAsync(pageComponentsDto, cancellationToken);
+            if (saveResponse.Result.Status == "Error")
+            {
+                return saveResponse;
+            }
             transferHistroy.TransferStatus = TransferStatus.Approved;
         }
         else
