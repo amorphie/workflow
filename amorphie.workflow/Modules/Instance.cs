@@ -243,7 +243,8 @@ public static class InstanceModule
 
 )
     {
-        var currentState = await context.States.Where(w => w.WorkflowName == workflowName && w.Type == StateType.Start)
+        var currentState = await context.States.Where(w => w.WorkflowName == workflowName && w.Type == StateType.Start
+        &&((string.IsNullOrEmpty(suffix))||(!string.IsNullOrEmpty(suffix)&&w.AllowedSuffix!=null&&w.AllowedSuffix.Any(a=>a.Equals(suffix)))))
         .Include(s => s.Transitions)
         .Include(s => s.UiForms)
         .FirstOrDefaultAsync(cancellationToken);
@@ -258,7 +259,7 @@ public static class InstanceModule
             {
                 type = currentState.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
                 requireData = currentState.requireData,
-                transition = currentState.Name,
+                transition = t.Name,
                 hasViewVariant = currentState.UiForms != null && currentState.UiForms.Count() > 1 ? true : false
             }).ToList(),
         };
@@ -337,9 +338,14 @@ public static class InstanceModule
             if (state != null)
             {
 
-                if (!string.IsNullOrEmpty(suffix))
+                 if (!string.IsNullOrEmpty(suffix))
                 {
+                    if(state.AllowedSuffix!=null&&state.AllowedSuffix.All(a=>a.Equals(suffix)))
+                    {
+                        return Results.Problem(suffix +" is not allowed suffix");
+                    }
                     suffix = "-" + suffix;
+
                 }
                 uiForm = state.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
                 return await View(configuration, stateName, type, typeof(State).ToString(), uiForm, language, json, string.Empty, suffix);
