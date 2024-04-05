@@ -340,9 +340,8 @@ public static class InstanceModule
 
                  if (!string.IsNullOrEmpty(suffix))
                 {
-                    if(state.AllowedSuffix!=null)
+                    if(state.AllowedSuffix!=null&&state.AllowedSuffix.All(a=>a.Equals(suffix)))
                     {
-                        if(!state.AllowedSuffix.Any(a=>a.Equals(suffix)))
                         return Results.Problem(suffix +" is not allowed suffix");
                     }
                     suffix = "-" + suffix;

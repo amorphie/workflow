@@ -14,11 +14,11 @@ public class TemplateEngineGetDefinitionResponseModel
 public class TemplateEngineTemplateDefinitions
 {
     public string? name { get; set; }
-    [JsonPropertyNameAttribute("master-template")]
+    [JsonPropertyName("master-template")]
     public string? masterTemplate { get; set; }
     public string? template { get; set; }
-    [JsonPropertyNameAttribute("semantic-version")]
+    [JsonPropertyName("semantic-version")]
     public string? semanticVersion { get; set; }
-    [JsonPropertyNameAttribute("dynamic-data")]
+    [JsonPropertyName("dynamic-data")]
     public dynamic? dynamicData { get; set; }
 }
