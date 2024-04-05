@@ -20,6 +20,7 @@ var daprClient = new DaprClientBuilder().Build();
 
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
+builder.Services.AddScoped<amorphie.core.Identity.IBBTIdentity, amorphie.core.Identity.FakeIdentity>();
 //builder.Services.AddDaprClient();
 builder.Services.AddDaprClient(conf => conf.UseJsonSerializationOptions(new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = false, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) }));
 builder.Logging.ClearProviders();
@@ -37,6 +38,7 @@ builder.Services.AddCors(options =>
         });
 });
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
 builder.Services.AddHealthChecks().AddNpgSql(postgreSql);

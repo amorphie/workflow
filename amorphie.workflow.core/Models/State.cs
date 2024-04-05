@@ -14,6 +14,7 @@ public class State : EntityBaseWithOutId
     public ICollection<Translation> Descriptions { get; set; } = default!;
 
     public ICollection<Transition> Transitions { get; set; } = default!;
+    public string[]? AllowedSuffix { get; set; }
     public ICollection<StateToState> FromStates { get; set; } = default!;
     public bool? IsPublicForm { get; set; }
     [Obsolete("UiForms took its place")]
