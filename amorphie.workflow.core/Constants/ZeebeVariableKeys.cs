@@ -21,6 +21,7 @@ public static class ZeebeVariableKeys
         public const string NOTIFY_CLIENT = "NOTIFY_CLIENT";
         public const string TARGET_STATE = "TARGET_STATE";
         public const string PAGE_URL = "PAGE_URL";
+        public const string PAGE_LANGUAGE = "PAGE_LANGUAGE";
         public const string VIEW_SOURCE = "VIEW_SOURCE";
 
     }
