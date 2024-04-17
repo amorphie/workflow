@@ -1259,6 +1259,7 @@ CancellationToken cancellationToken
                 CreatedAt = DateTime.UtcNow,
                 CreatedByBehalfOf = Guid.NewGuid(),
                 Type = data.type,
+                AllowedSuffix=data.allowedSuffix,
                 IsPublicForm = data.ispublicForm,
                 SubWorkflowName = string.IsNullOrEmpty(data.subWorkflowName) ? null : data.subWorkflowName,
                 MFAType = data.mfaType,
@@ -1378,6 +1379,18 @@ CancellationToken cancellationToken
             {
                 hasChanges = true;
                 existingRecord.SubWorkflowName = data.subWorkflowName;
+
+            }
+             if (data.allowedSuffix!=null&&data.allowedSuffix.Any())
+            {
+                hasChanges = true;
+                existingRecord.AllowedSuffix = data.allowedSuffix;
+
+            }
+               if (data.ispublicForm!=existingRecord.IsPublicForm)
+            {
+                hasChanges = true;
+                existingRecord.IsPublicForm = data.ispublicForm;
 
             }
             if (!string.IsNullOrEmpty(data.initPageName) &&

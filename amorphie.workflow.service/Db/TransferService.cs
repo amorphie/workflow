@@ -229,6 +229,121 @@ public class TransferService
         await _dbContext!.SaveChangesAsync();
         return Response.Success("");
     }
+    public async Task<Response<TemplateEngineTemplateDefinitions>> SaveTemplatesFromLegacyBulkAsync(TemplateEngineTransferModel transferModel, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var clientHttp = new HttpClient();
+          HttpResponseMessage  responseFrom = await clientHttp.GetAsync(transferModel.TransferFromUrl + "/0/10?query=" + transferModel.TemplateName);
+            bool saveFlag = false;
+            TemplateEngineTemplateDefinitions? formFrom = null;
+            if (responseFrom.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var twiceSerializeFrom = await responseFrom!.Content!.ReadAsStringAsync();
+                TemplateEngineGetDefinitionResponseModel formFromRM = System.Text.Json.JsonSerializer.Deserialize<TemplateEngineGetDefinitionResponseModel>(twiceSerializeFrom)!;
+                formFrom = formFromRM.templateDefinitions![0];
+                HttpResponseMessage responseTo = await clientHttp.GetAsync(transferModel.TransferToUrl + "/0/10?query=" + transferModel.TemplateName);
+                if (responseTo.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var twiceSerializeTo = await responseTo!.Content!.ReadAsStringAsync();
+                    TemplateEngineGetDefinitionResponseModel formToRM = System.Text.Json.JsonSerializer.Deserialize<TemplateEngineGetDefinitionResponseModel>(twiceSerializeTo)!;
+                    TemplateEngineTemplateDefinitions formTo = formToRM.templateDefinitions![0];
+                    if (formFrom.semanticVersion != formTo.semanticVersion)
+                    {
+                        saveFlag = true;
+                    }
+                }
+                if (responseTo.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    saveFlag = true;
+                }
+
+            }
+            if (saveFlag&&formFrom != null)
+            {
+                    var serializeRequest = JsonSerializer.Serialize(formFrom);
+
+                    HttpResponseMessage response = await clientHttp.PostAsync(transferModel.TransferToUrl, new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json"));
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        return new Response<TemplateEngineTemplateDefinitions>
+                        {
+                            Data = formFrom,
+                            Result = new Result(amorphie.core.Enums.Status.Success, string.Empty)
+                        };
+                    }
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            return new Response<TemplateEngineTemplateDefinitions>
+            {
+                Result = new Result(amorphie.core.Enums.Status.Error, ex.Message)
+            };
+        }
+        return new Response<TemplateEngineTemplateDefinitions>
+        {
+            Result = new Result(amorphie.core.Enums.Status.Success, "Not Modified")
+        };
+
+    }
+    public async Task<Response<List<string>>> GetTemplatesFromLegacyBulkAsync(TemplateListRequestModel requestModel, CancellationToken cancellationToken)
+    {
+
+        var workflow = await GetWorkflowForLegacyAsync(requestModel.workflowName, cancellationToken);
+
+        if (workflow == null)
+        {
+            return new Response<List<string>>
+            {
+                Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
+            };
+        }
+
+        List<string> templateList = new List<string>();
+
+        foreach (State state in workflow.States)
+        {
+            if (state.UiForms != null)
+            {
+                templateList.AddRange(GetTemplateFromUiForms(state.UiForms));
+            }
+            if (state.Transitions != null && state.Transitions.Any())
+            {
+                var uiForms = state.Transitions.Where(s => s.UiForms != null)
+                .SelectMany(s => s.UiForms!).Distinct().ToList();
+                templateList.AddRange(GetTemplateFromUiForms(uiForms));
+            }
+
+
+        }
+        if(requestModel.IsPage)
+        {
+                string workflowName = "\"workflowName\":\""+requestModel.workflowName+"\"";
+              templateList.AddRange(await _dbContext.SignalRResponses.Where(w =>w.routeChange==true&&!string.IsNullOrEmpty(w.data)&& 
+              w.data.Contains("\"viewSource\":\"page\"")&&w.data.Contains(workflowName)
+              &&!string.IsNullOrEmpty(w.pageUrl))
+              .Select(s => s.pageUrl??string.Empty).Distinct().ToListAsync(cancellationToken));
+        }
+        if(requestModel.extraTemplates!=null&&requestModel.extraTemplates.Any())
+        {
+            templateList.AddRange(requestModel.extraTemplates);
+        }
+
+
+        return new Response<List<string>>
+        {
+            Data = templateList.Distinct().ToList(),
+            Result = new Result(amorphie.core.Enums.Status.Success, "")
+        };
+
+    }
+    private List<string> GetTemplateFromUiForms(IEnumerable<UiForm> uiForms)
+    {
+        return uiForms.Where(s => s.Forms != null).SelectMany(s => s.Forms!).Select(s => s.Label).ToList();
+    }
     private async Task<Workflow?> GetWorkflowForLegacyAsync(string workflowName, CancellationToken cancellationToken)
     {
         return await _dbSet
