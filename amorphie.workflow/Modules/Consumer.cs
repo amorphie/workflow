@@ -346,8 +346,8 @@ public static class ConsumerModule
             [FromServices] IPostTransactionService service,
             IConfiguration configuration,
             [FromServices] DaprClient client,
-            CancellationToken cancellationToken,
-             HttpRequest request
+             HttpRequest request,
+             CancellationToken cancellationToken
         )
     {
         var result = await service.Init(entity, recordId, transition, user, behalOfUser, data, request.Headers,cancellationToken);

@@ -350,7 +350,7 @@ public class PostTransactionService : IPostTransactionService
 
         await _dbContext.AddAsync(newInstance,_cancellationToken);
 
-        addInstanceTansition(newInstance, started, null);
+        await addInstanceTansition(newInstance, started, null);
         await _dbContext.SaveChangesAsync(_cancellationToken);
         SendSignalRData(newInstance, EventInfos.WorkerStarted, string.Empty);
         await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
@@ -375,7 +375,7 @@ public class PostTransactionService : IPostTransactionService
 
 
 
-        addInstanceTansition(instanceAtState, started, null);
+        await addInstanceTansition(instanceAtState, started, null);
         await _dbContext.SaveChangesAsync(_cancellationToken);
         _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
         SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
@@ -410,7 +410,7 @@ public class PostTransactionService : IPostTransactionService
     {
         return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
     }
-    private async void addInstanceTansition(Instance instance, DateTime? started, DateTime? finished)
+    private async Task addInstanceTansition(Instance instance, DateTime? started, DateTime? finished)
     {
         var newInstanceTransition = new InstanceTransition
         {
@@ -532,7 +532,7 @@ public class PostTransactionService : IPostTransactionService
           await  _dbContext.AddAsync(instance,_cancellationToken);
         }
 
-        addInstanceTansition(instance, started, DateTime.UtcNow);
+        await addInstanceTansition(instance, started, DateTime.UtcNow);
         await _dbContext.SaveChangesAsync(_cancellationToken);
         SendSignalRData(instance, EventInfos.TransitionCompleted, string.Empty);
         return new Response
