@@ -15,6 +15,7 @@ public static class ZeebeVariableKeys
     public const string LastTransition = "LastTransition";
     public const string AmorphieHttpWorker = "amorphie-http-worker";
     public const string AmorphieWorkflowSetState = "amorphie-workflow-set-state";
+    public const string TypeUserTask = "io.camunda.zeebe:userTask";
     public const string Url = "url";
     public static class Headers
     {

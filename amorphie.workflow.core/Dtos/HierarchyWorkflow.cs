@@ -10,10 +10,18 @@ namespace amorphie.workflow.core.Dtos
         public string StateName { get; set; } = string.Empty;
         public List<HierarchyTransition>? Transitions { get; set; }
     }
+
     public class HierarchyTransition
     {
         public string? TransitionName { get; set; } = string.Empty;
         public string? ToStateName { get; set; } = string.Empty;
         public HierarchyState? ToState { get; set; }
+    }
+
+        public class HierarchyStateNew
+    {
+        public string StateName { get; set; } = string.Empty;
+        public string Kind { get; set; } = string.Empty;
+        public List<HierarchyStateNew>? ToStates { get; set; }
     }
 }

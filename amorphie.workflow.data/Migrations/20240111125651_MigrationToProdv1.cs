@@ -35,7 +35,7 @@ namespace amorphie.workflow.data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     RedisId = table.Column<string>(type: "text", nullable: false),
-                    InstanceId = table.Column<string>(type: "text", nullable: true),
+                    InstanceId = table.Column<Guid>(type: "uuid", nullable: true),
                     Deadline = table.Column<long>(type: "bigint", nullable: false),
                     Key = table.Column<long>(type: "bigint", nullable: false),
                     Timestamp = table.Column<long>(type: "bigint", nullable: false),

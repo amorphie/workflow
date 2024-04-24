@@ -189,6 +189,17 @@ public static class DefinitionModule
           };
           return operation;
       });
+        app.MapGet("/workflow/definition/{workflowName}/hyerarchy/v2", getWorkflowHierarchyV2)
+      .WithOpenApi(operation =>
+      {
+
+          operation.Tags = new List<OpenApiTag> { new() { Name = "Definition" } };
+
+          operation.Responses = new OpenApiResponses
+          {
+          };
+          return operation;
+      });
 
     }
 
@@ -1259,7 +1270,7 @@ CancellationToken cancellationToken
                 CreatedAt = DateTime.UtcNow,
                 CreatedByBehalfOf = Guid.NewGuid(),
                 Type = data.type,
-                AllowedSuffix=data.allowedSuffix,
+                AllowedSuffix = data.allowedSuffix,
                 IsPublicForm = data.ispublicForm,
                 SubWorkflowName = string.IsNullOrEmpty(data.subWorkflowName) ? null : data.subWorkflowName,
                 MFAType = data.mfaType,
@@ -1381,13 +1392,13 @@ CancellationToken cancellationToken
                 existingRecord.SubWorkflowName = data.subWorkflowName;
 
             }
-             if (data.allowedSuffix!=null&&data.allowedSuffix.Any())
+            if (data.allowedSuffix != null && data.allowedSuffix.Any())
             {
                 hasChanges = true;
                 existingRecord.AllowedSuffix = data.allowedSuffix;
 
             }
-               if (data.ispublicForm!=existingRecord.IsPublicForm)
+            if (data.ispublicForm != existingRecord.IsPublicForm)
             {
                 hasChanges = true;
                 existingRecord.IsPublicForm = data.ispublicForm;
@@ -1822,6 +1833,36 @@ CancellationToken cancellationToken
         }
         return Results.Ok(hierarchyStates);
     }
+    static async ValueTask<IResult> getWorkflowHierarchyV2(
+   [FromServices] WorkflowDBContext context,
+   [FromRoute(Name = "workflowName")] string workflowName,
+   CancellationToken cancellationToken
+   )
+    {
+
+
+        var startStates = await context.States.Where(s => s.Type == StateType.Start && s.WorkflowName == workflowName)
+        .Include(s => s.Transitions).ThenInclude(s => s.ToState)
+        .ToListAsync(cancellationToken);
+        List<HierarchyStateNew> hierarchyStates = new List<HierarchyStateNew>();
+        List<string> AllWorkflowStates = new List<string>();
+        foreach (State startState in startStates)
+        {
+            WorkflowStates = new List<string>();
+            hierarchyStates.Add(ChangeToHyerArchyV2(context, startState, cancellationToken));
+            AllWorkflowStates.AddRange(WorkflowStates);
+        }
+        var excludeStates = await context.States.Where(s => !AllWorkflowStates.Any(a => a == s.Name) && s.WorkflowName == workflowName)
+        .Include(s => s.Transitions).ThenInclude(s => s.ToState)
+        .ToListAsync(cancellationToken);
+        foreach (State startState in excludeStates)
+        {
+            WorkflowStates = new List<string>();
+            hierarchyStates.Add(ChangeToHyerArchyV2(context, startState, cancellationToken));
+            AllWorkflowStates.AddRange(WorkflowStates);
+        }
+        return Results.Ok(hierarchyStates);
+    }
     private static List<string> WorkflowStates = new List<string>();
     private static HierarchyState ChangeToHyerArchy(WorkflowDBContext context, State state, CancellationToken cancellationToken)
     {
@@ -1843,6 +1884,37 @@ CancellationToken cancellationToken
                     ToStateName = s.ToStateName,
                     ToState = string.IsNullOrEmpty(s.ToStateName) ? null : !WorkflowStates.Any(a => a == s.ToStateName) ? ChangeToHyerArchy(context, s.ToState, cancellationToken) : null
                 }).ToList();
+            }
+
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        return hierarchyState;
+    }
+
+    private static HierarchyStateNew ChangeToHyerArchyV2(WorkflowDBContext context, State state, CancellationToken cancellationToken)
+    {
+        HierarchyStateNew hierarchyState = new HierarchyStateNew();
+        try
+        {
+            if (state == null)
+                return null;
+
+            WorkflowStates.Add(state.Name);
+
+            hierarchyState.StateName = state.Name;
+            hierarchyState.Kind = state.Kind.ToString();
+            hierarchyState.ToStates = new List<HierarchyStateNew>();
+
+            var stateRoutes = context.StateToStates.Include(s => s.ToState).Where(p => p.FromStateName == state.Name).ToList();
+            foreach (var stateRoute in stateRoutes)
+            {
+                var toState = string.IsNullOrEmpty(stateRoute.ToStateName) ? null : !WorkflowStates.Any(a => a == stateRoute.ToStateName) ? ChangeToHyerArchyV2(context, stateRoute.ToState, cancellationToken) : null;
+                hierarchyState.ToStates.Add(toState);
+
             }
 
         }

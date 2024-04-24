@@ -66,7 +66,7 @@ public class IndividiualReadWorker : BackgroundService
                 var messageEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.MESSAGE, 100);
                 var proccessEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.PROCESS_INSTANCE, 100);
                 var variableEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.VARIABLE, 100);
-                //var jobEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.JOB, 100);
+                var jobEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.JOB, 100);
                 var jobBatchEntry = await ReadGroupAsync(ZeebeStreamKeys.Streams.JOB_BATCH, 100);
 
                 await ProccessStreamsAsync(deploymentEntry.Item1, deploymentEntry.Item2, cancellationToken);
@@ -75,7 +75,7 @@ public class IndividiualReadWorker : BackgroundService
                 await ProccessStreamsAsync(messageEntry.Item1, messageEntry.Item2, cancellationToken);
                 await ProccessStreamsAsync(proccessEntry.Item1, proccessEntry.Item2, cancellationToken);
                 await ProccessStreamsAsync(variableEntry.Item1, variableEntry.Item2, cancellationToken);
-                //await ProccessStreamsAsync(jobEntry.Item1, jobEntry.Item2, cancellationToken);
+                await ProccessStreamsAsync(jobEntry.Item1, jobEntry.Item2, cancellationToken);
                 await ProccessStreamsAsync(jobBatchEntry.Item1, jobBatchEntry.Item2, cancellationToken);
             }
             catch (Exception ex)
@@ -118,10 +118,10 @@ public class IndividiualReadWorker : BackgroundService
             {
                 exporter = new VariableExporter(dbContext, redisDb, consumerName);
             }
-            // else if (streamName == ZeebeStreamKeys.Streams.JOB)
-            // {
-            //     exporter = new JobExporter(dbContext, redisDb, consumerName);
-            // }
+            else if (streamName == ZeebeStreamKeys.Streams.JOB)
+            {
+                exporter = new JobExporter(dbContext, redisDb, consumerName);
+            }
             else if (streamName == ZeebeStreamKeys.Streams.JOB_BATCH)
             {
                 exporter = new JobBatchExporter(dbContext, redisDb, consumerName, _instanceService);
