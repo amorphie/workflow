@@ -34,8 +34,8 @@ internal class JobExporter : BaseExporter, IExporter
                     continue;
                 }
                 currentProccessId = process.Id;
-
-                if (stream.Intent == ZeebeEventKeys.COMPLETED || stream.Intent == ZeebeEventKeys.CREATED)
+                //Take only user tasks
+                if ((stream.Intent == ZeebeEventKeys.COMPLETED || stream.Intent == ZeebeEventKeys.CREATED) && stream.Value.Type == ZeebeVariableKeys.TypeUserTask)
                 {
                     var entity = dbContext.Jobs.FirstOrDefault(s => s.Key == stream.Value.ElementInstanceKey);
 
@@ -77,7 +77,7 @@ internal class JobExporter : BaseExporter, IExporter
         return new Job
         {
             BpmnProcessId = stream.Value.BpmnProcessId,
-            Key = stream.Value.ElementInstanceKey,
+            Key = stream.Key,
             Timestamp = stream.Timestamp,
             ElementType = stream.Value.Type,
             Intent = stream.Intent,
