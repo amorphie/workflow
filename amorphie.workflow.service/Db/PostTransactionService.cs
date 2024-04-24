@@ -21,7 +21,7 @@ using Microsoft.OpenApi.Models;
 
 public interface IPostTransactionService
 {
-    Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters);
+    Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken);
     Task<IResponse> InitWithoutEntity(Guid instanceId, string transitionName, Guid user, Guid behalfOfUser, dynamic data, IHeaderDictionary? headerParameters, CancellationToken cancellationToken);
     Task<IResponse> Execute();
     Task<IResponse> ExecuteWithoutEntity();
@@ -52,8 +52,8 @@ public class PostTransactionService : IPostTransactionService
     private IHeaderDictionary? _headerParameters { get; set; }
     private dynamic? headers { get; set; }
     private dynamic? mfaType { get; set; } = MFATypeEnum.Public.ToString();
-
     private Dictionary<string, string> _headerDict { get; set; }
+    private CancellationToken _cancellationToken { get; set; }
 
     public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService, DaprClient client, IConfiguration configuration)
     {
@@ -71,7 +71,8 @@ public class PostTransactionService : IPostTransactionService
         _configuration = configuration;
     }
 
-    public async Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters)
+    public async Task<IResponse> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters,
+    CancellationToken cancellationToken)
     {
         _entity = entity;
         _recordId = recordId;
@@ -80,7 +81,7 @@ public class PostTransactionService : IPostTransactionService
         _behalfOfUser = behalfOfUser;
         _data = data;
         _headerParameters = headerParameters;
-
+        _cancellationToken=cancellationToken;
         // var transition = _dbContext.Transitions.Find(_transitionName);
         var Control = await TransitionControl(_transitionName);
         if (Control!.Result.Status == Status.Error.ToString())
@@ -107,6 +108,7 @@ public class PostTransactionService : IPostTransactionService
         _headerParameters = headerParameters;
         _instanceId = instanceId;
         _recordId = instanceId;
+        _cancellationToken=cancellationToken;
         ConsumerPostTransitionRequest request = new ConsumerPostTransitionRequest()
         {
             EntityData = data,
@@ -243,7 +245,7 @@ public class PostTransactionService : IPostTransactionService
                 else
                 {
                     mfaType = _transition.FromState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
-                    return hasFlowNoInstance();
+                    return await hasFlowNoInstance();
                 }
             }
             else
@@ -264,7 +266,7 @@ public class PostTransactionService : IPostTransactionService
             else
             {
                 mfaType = _transition.FromState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
-                return hasFlowHasInstance(instanceAtState);
+                return await hasFlowHasInstance(instanceAtState);
             }
         }
     }
@@ -314,7 +316,7 @@ public class PostTransactionService : IPostTransactionService
 
     }
 
-    private IResponse hasFlowNoInstance()
+    private async Task<IResponse> hasFlowNoInstance()
     {
         DateTime started = DateTime.UtcNow;
         _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
@@ -346,19 +348,19 @@ public class PostTransactionService : IPostTransactionService
 
 
 
-        _dbContext.Add(newInstance);
+        await _dbContext.AddAsync(newInstance,_cancellationToken);
 
-        addInstanceTansition(newInstance, started, null);
-        _dbContext.SaveChanges();
+        await addInstanceTansition(newInstance, started, null);
+        await _dbContext.SaveChangesAsync(_cancellationToken);
         SendSignalRData(newInstance, EventInfos.WorkerStarted, string.Empty);
-        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
+        await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
         return new Response
         {
             Result = new Result(Status.Success, "Instance Has been Created"),
         };
     }
 
-    private IResponse hasFlowHasInstance(Instance instanceAtState)
+    private async Task<IResponse> hasFlowHasInstance(Instance instanceAtState)
     {
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
         _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
@@ -373,8 +375,8 @@ public class PostTransactionService : IPostTransactionService
 
 
 
-        addInstanceTansition(instanceAtState, started, null);
-        _dbContext.SaveChanges();
+        await addInstanceTansition(instanceAtState, started, null);
+        await _dbContext.SaveChangesAsync(_cancellationToken);
         _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
         SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
         //return Results.Ok();
@@ -408,7 +410,7 @@ public class PostTransactionService : IPostTransactionService
     {
         return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
     }
-    private void addInstanceTansition(Instance instance, DateTime? started, DateTime? finished)
+    private async Task addInstanceTansition(Instance instance, DateTime? started, DateTime? finished)
     {
         var newInstanceTransition = new InstanceTransition
         {
@@ -428,7 +430,7 @@ public class PostTransactionService : IPostTransactionService
             FinishedAt = finished
         };
 
-        _dbContext.Add(newInstanceTransition);
+       await _dbContext.AddAsync(newInstanceTransition,_cancellationToken);
     }
     private async Task<IResponse> ServiceKontrol(Instance instance, bool hasInstance, DateTime? started)
     {
@@ -458,7 +460,7 @@ public class PostTransactionService : IPostTransactionService
                            || response.StatusCode == System.Net.HttpStatusCode.NotModified
                         )
                     {
-                        return UpdateInstance(instance, hasInstance, started);
+                        return await UpdateInstance(instance, hasInstance, started);
                     }
                     else
                     {
@@ -503,11 +505,11 @@ public class PostTransactionService : IPostTransactionService
         }
         else
         {
-            return UpdateInstance(instance, hasInstance, started);
+            return await UpdateInstance(instance, hasInstance, started);
         }
     }
 
-    private IResponse UpdateInstance(Instance instance, bool hasInstance, DateTime? started)
+    private async Task<IResponse> UpdateInstance(Instance instance, bool hasInstance, DateTime? started)
     {
         if (hasInstance)
         {
@@ -527,11 +529,11 @@ public class PostTransactionService : IPostTransactionService
         }
         else
         {
-            _dbContext.Add(instance);
+          await  _dbContext.AddAsync(instance,_cancellationToken);
         }
 
-        addInstanceTansition(instance, started, DateTime.UtcNow);
-        _dbContext.SaveChanges();
+        await addInstanceTansition(instance, started, DateTime.UtcNow);
+        await _dbContext.SaveChangesAsync(_cancellationToken);
         SendSignalRData(instance, EventInfos.TransitionCompleted, string.Empty);
         return new Response
         {
