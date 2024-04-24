@@ -203,7 +203,7 @@ public partial class StateService : IStateService
         }
         else
         {
-            existingRecord.Kind = StateKind.SimpleState;
+            existingRecord.Kind = StateKind.State;
         }
 
     }
