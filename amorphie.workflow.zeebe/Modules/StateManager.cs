@@ -134,7 +134,7 @@ public static class StateManagerModule
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, body.InstanceId.ToString());
 
         //INJECT New State Manager
-        if (instance.State.FromStates.Any())
+        if (instance.State.FromStates.Any() || instance.State.Kind != null || instance.State.Kind != StateKind.Default)
         {
             var simpleStateResult = await SimpleStateManagerModule.SimpleState(jsonBody, instanceService, request, configuration, client, cancellationToken);
             return simpleStateResult;

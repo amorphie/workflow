@@ -38,7 +38,7 @@ public class WorkflowService : IWorkflowService
         {
             await _stateService.SaveBulkAsync(data.NewStates, data.Name);
         }
-        else
+        else if (data.States != null)
         {
             await _stateService.LegacySaveBulkAsync(data);
         }
