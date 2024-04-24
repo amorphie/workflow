@@ -346,10 +346,11 @@ public static class ConsumerModule
             [FromServices] IPostTransactionService service,
             IConfiguration configuration,
             [FromServices] DaprClient client,
+            CancellationToken cancellationToken,
              HttpRequest request
         )
     {
-        var result = await service.Init(entity, recordId, transition, user, behalOfUser, data, request.Headers);
+        var result = await service.Init(entity, recordId, transition, user, behalOfUser, data, request.Headers,cancellationToken);
         var templateURL = configuration["templateEngineUrl"];
         if (result.Result.Status == Status.Success.ToString())
         {
