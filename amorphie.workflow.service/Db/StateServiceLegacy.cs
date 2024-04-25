@@ -89,7 +89,7 @@ public partial class StateService
         {
             SavePublicForm(existingRecord, data.PublicForms);
         }
-        existingRecord.Kind = StateKind.SimpleState;
+        existingRecord.Kind = StateKind.State;
     }
 
     private async Task LegacyInsertOrUpdateTrxAsync(TransitionCreateDtoLegacy trxDto, string workFlowName)

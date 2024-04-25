@@ -13,6 +13,7 @@ using Serilog.Context;
 using Elastic.Apm.NetCoreAll;
 using amorphie.workflow.service.Db;
 using amorphie.core.Middleware.Logging;
+using amorphie.core.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,6 +70,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
 
 builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
 
+builder.Services.AddScoped<IBBTIdentity, FakeIdentity>();
 //Add Bussiness Services
 builder.Services.AddBussinessServices();
 var app = builder.Build();
