@@ -47,7 +47,7 @@ internal class JobBatchExporter : BaseExporter, IExporter
                     foreach (var job in stream.Value.Jobs)
                     {
                         if (job.Variables == null)
-                        {                           
+                        {
                             continue;
                         }
                         await InsertOrUpdateJobBatchAsync(stream, job, cancellationToken);
@@ -121,9 +121,10 @@ internal class JobBatchExporter : BaseExporter, IExporter
     {
         if (RegisteredClients.ClientList.TryGetValue(job.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
         {
-            var url = job.CustomHeaders[ZeebeVariableKeys.Url];
-            var pageUrl = job.CustomHeaders[ZeebeVariableKeys.Headers.PAGE_URL];
+            var url = job.CustomHeaders[ZeebeVariableKeys.Url]?.ToString() ?? "";
+            var pageUrl = job.CustomHeaders[ZeebeVariableKeys.Headers.PAGE_URL]?.ToString() ?? "";
             var viewSource = job.CustomHeaders[ZeebeVariableKeys.Headers.VIEW_SOURCE]?.ToString() ?? "";
+            var pageLanguage = job.CustomHeaders[ZeebeVariableKeys.Headers.PAGE_LANGUAGE]?.ToString() ?? "en-EN";
 
             var registeredInstanceGuid = RegisteredClients.ActiveInstanceList.TryGetValue(job.ProcessInstanceKey, out Guid instanceId) ? instanceId : Guid.Empty;
             var hubData = new PostSignalRData(
@@ -138,7 +139,7 @@ internal class JobBatchExporter : BaseExporter, IExporter
                 transition: workerBody.LastTransition,
                 stateTransitions: null,
                 baseStatus: amorphie.core.Enums.StatusType.New,
-                page: new PostPageSignalRData("", "", new MultilanguageText("", ""), 1234),
+                page: new PostPageSignalRData("", "", new MultilanguageText(pageLanguage, pageUrl), 3000),
                 message: workerBody.Message,
                 errorCode: workerBody.ErrorCode,
                 additionalData: workerBodyTrxDatas.Data!.AdditionalData,

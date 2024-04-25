@@ -15,12 +15,14 @@ public static class ZeebeVariableKeys
     public const string LastTransition = "LastTransition";
     public const string AmorphieHttpWorker = "amorphie-http-worker";
     public const string AmorphieWorkflowSetState = "amorphie-workflow-set-state";
+    public const string TypeUserTask = "io.camunda.zeebe:userTask";
     public const string Url = "url";
     public static class Headers
     {
         public const string NOTIFY_CLIENT = "NOTIFY_CLIENT";
         public const string TARGET_STATE = "TARGET_STATE";
         public const string PAGE_URL = "PAGE_URL";
+        public const string PAGE_LANGUAGE = "PAGE_LANGUAGE";
         public const string VIEW_SOURCE = "VIEW_SOURCE";
 
     }

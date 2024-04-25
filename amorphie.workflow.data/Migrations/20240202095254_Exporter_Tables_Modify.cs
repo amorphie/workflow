@@ -37,17 +37,6 @@ namespace amorphie.workflow.data.Migrations
                 schema: "exporter",
                 table: "Deployments");
 
-            migrationBuilder.AlterColumn<Guid>(
-                name: "InstanceId",
-                schema: "exporter",
-                table: "MessageSubscriptions",
-                type: "uuid",
-                nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
-                oldClrType: typeof(string),
-                oldType: "text",
-                oldNullable: true);
-
             migrationBuilder.AddColumn<string>(
                 name: "Resource",
                 schema: "exporter",
@@ -91,15 +80,6 @@ namespace amorphie.workflow.data.Migrations
                 type: "text",
                 nullable: false,
                 defaultValue: "");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "InstanceId",
-                schema: "exporter",
-                table: "MessageSubscriptions",
-                type: "text",
-                nullable: true,
-                oldClrType: typeof(Guid),
-                oldType: "uuid");
 
             migrationBuilder.AddColumn<string>(
                 name: "RedisId",

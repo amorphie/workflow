@@ -359,7 +359,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<int?>("Kind")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(10001);
+                        .HasDefaultValue(0);
 
                     b.Property<int?>("MFAType")
                         .HasColumnType("integer");
