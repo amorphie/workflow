@@ -79,7 +79,7 @@ public class WorkflowDBContext : DbContext
                .HasOne(w => w.Workflow)
                  .WithMany(w => w.States);
         modelBuilder.Entity<State>()
-            .Property(p => p.Kind).HasDefaultValue(StateKind.SimpleState);
+            .Property(p => p.Kind).HasDefaultValue(StateKind.Default);
 
         modelBuilder.Entity<StateToState>()
                .HasOne(w => w.FromState)

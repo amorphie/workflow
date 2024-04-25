@@ -70,7 +70,7 @@ public class StateMapper
         }
         else
         {
-            newRecord.Kind = StateKind.SimpleState;
+            newRecord.Kind = StateKind.State;
         }
         #endregion
         return newRecord;

@@ -53,7 +53,7 @@ public class StateMapperLegacy
         newRecord.Titles = ManuelMultilanguageMapper.Map(data.Titles);
 
 
-        newRecord.Kind = StateKind.SimpleState;
+        newRecord.Kind = StateKind.State;
 
         return newRecord;
     }
