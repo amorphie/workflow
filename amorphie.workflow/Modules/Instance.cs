@@ -8,6 +8,7 @@ using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
 using amorphie.workflow.service.Db.Abstracts;
+using amorphie.workflow.service.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -111,7 +112,7 @@ public static class InstanceModule
             operation.Responses["204"].Description = "No instance found.";
 
             return operation;
-        });
+        }).AddEndpointFilter<DynamicSchemaValidationFilter>();
 
         app.MapGet("/workflow/uiform/updatedb", UiFormFill
       )
@@ -244,7 +245,7 @@ public static class InstanceModule
 )
     {
         var currentState = await context.States.Where(w => w.WorkflowName == workflowName && w.Type == StateType.Start
-        &&((string.IsNullOrEmpty(suffix))||(!string.IsNullOrEmpty(suffix)&&w.AllowedSuffix!=null&&w.AllowedSuffix.Any(a=>a.Equals(suffix)))))
+        && ((string.IsNullOrEmpty(suffix)) || (!string.IsNullOrEmpty(suffix) && w.AllowedSuffix != null && w.AllowedSuffix.Any(a => a.Equals(suffix)))))
         .Include(s => s.Transitions)
         .Include(s => s.UiForms)
         .FirstOrDefaultAsync(cancellationToken);
@@ -338,11 +339,11 @@ public static class InstanceModule
             if (state != null)
             {
 
-                 if (!string.IsNullOrEmpty(suffix))
+                if (!string.IsNullOrEmpty(suffix))
                 {
-                    if(state.AllowedSuffix!=null&&!state.AllowedSuffix.Any(a=>a.Equals(suffix)))
+                    if (state.AllowedSuffix != null && !state.AllowedSuffix.Any(a => a.Equals(suffix)))
                     {
-                        return Results.Problem(suffix +" is not allowed suffix");
+                        return Results.Problem(suffix + " is not allowed suffix");
                     }
                     suffix = "-" + suffix;
 
@@ -444,29 +445,21 @@ public static class InstanceModule
         }
     }
     static async ValueTask<amorphie.core.IBase.IResponse> TriggerFlow(
+  [FromBody] dynamic body,
+  [FromRoute(Name = "transitionName")] string transitionName,
   [FromServices] WorkflowDBContext context,
   IConfiguration configuration,
   CancellationToken cancellationToken,
   [FromServices] IPostTransactionService service,
  [FromServices] IInstanceService instanceService,
 
-  [FromRoute(Name = "transitionName")] string transitionName,
   [FromRoute(Name = "instanceId")] Guid instanceId,
   HttpRequest request,
-  [FromBody] dynamic body,
   [FromHeader(Name = "User")] Guid user,
   [FromHeader(Name = "Behalf-Of-User")] Guid behalOfUser,
   [FromHeader(Name = "Accept-Language")] string language = "en-EN"
 )
     {
-        //if workflow is defined in new style then its states should have state routes
-        var hasStateRoutes = await instanceService.IsRouteDefined(transitionName, cancellationToken);
-        if (hasStateRoutes)
-        {
-            var newResult = await instanceService.TriggerFlowAsync(instanceId, transitionName, user, behalOfUser, body, request.Headers, cancellationToken);
-            return newResult;
-        }
-
         var result = await service.InitWithoutEntity(instanceId, transitionName, user, behalOfUser, body, request.Headers, cancellationToken);
         if (result.Result.Status == Status.Success.ToString())
         {
