@@ -11,7 +11,7 @@ public static class TransferModule
 
     public static void MapTransferModuleEndpoints(this WebApplication app)
     {
-        app.MapGet("/transfer/wf/{workflowName}", TransferModuleApis.GetDefinitionBulkAsync)
+        app.MapGet("/workflow/transfer/wf/{workflowName}", TransferModuleApis.GetDefinitionBulkAsync)
         .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
@@ -23,7 +23,7 @@ public static class TransferModule
             return operation;
         });
 
-        app.MapGet("/transfer/wf/{workflowName}/convert", TransferModuleApis.GetDefinitionFromLegacyToNewBulkAsync)
+        app.MapGet("/workflow/transfer/wf/{workflowName}/convert", TransferModuleApis.GetDefinitionFromLegacyToNewBulkAsync)
         .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
@@ -34,7 +34,7 @@ public static class TransferModule
             operation.Responses["204"].Description = "No instance found.";
             return operation;
         });
-        app.MapPost("/transfer/wf/get/templates", TransferModuleApis.GetTemplatesFromLegacyBulkAsync)
+        app.MapPost("/workflow/transfer/wf/get/templates", TransferModuleApis.GetTemplatesFromLegacyBulkAsync)
         .Produces<amorphie.core.Base.Response<List<string>>>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
@@ -45,7 +45,7 @@ public static class TransferModule
             operation.Responses["204"].Description = "No instance found.";
             return operation;
         });
-          app.MapPost("/transfer/wf/save/templates", TransferModuleApis.SaveTemplatesFromLegacyBulkAsync)
+          app.MapPost("/workflow/transfer/wf/save/templates", TransferModuleApis.SaveTemplatesFromLegacyBulkAsync)
         .Produces<amorphie.core.Base.Response<TemplateEngineTemplateDefinitions>>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
@@ -56,7 +56,7 @@ public static class TransferModule
             operation.Responses["204"].Description = "No instance found.";
             return operation;
         });
-        app.MapPost("/transfer/wf/save", TransferModuleApis.SaveTransferRequestAsync)
+        app.MapPost("/workflow/transfer/wf/save", TransferModuleApis.SaveTransferRequestAsync)
        .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
        .Produces(StatusCodes.Status201Created)
        .WithOpenApi(operation =>
@@ -70,7 +70,7 @@ public static class TransferModule
              return operation;
          });
 
-        app.MapPost("/transfer/wf/approve", TransferModuleApis.ApproveTransferOfDefinitionAsync)
+        app.MapPost("/workflow/transfer/wf/approve", TransferModuleApis.ApproveTransferOfDefinitionAsync)
         .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
@@ -81,7 +81,7 @@ public static class TransferModule
             operation.Responses["204"].Description = "No request found.";
             return operation;
         });
-        app.MapPost("/transfer/wf/cancel", TransferModuleApis.CancelTransferOfDefinitionAsync)
+        app.MapPost("/workflow/transfer/wf/cancel", TransferModuleApis.CancelTransferOfDefinitionAsync)
         .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
