@@ -1,12 +1,16 @@
+using System.Dynamic;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Web;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Extensions;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using NJsonSchema;
 using Serilog;
 
 namespace amorphie.workflow.zeebe.Modules;
@@ -24,7 +28,7 @@ public static class HttpServiceManagerModule
                 return operation;
             });
     }
-    static async ValueTask<IResult> HttpWorker([FromBody] dynamic body, HttpRequest request, HttpContext httpContext, [FromServices] IHttpClientFactory httpClientFactory)
+    static async ValueTask<IResult> HttpWorker([FromBody] dynamic body, HttpRequest request, HttpContext httpContext, [FromServices] IHttpClientFactory httpClientFactory, [FromServices] WorkflowDBContext dbContext)
     {
         var instanceIdAsString = body.GetProperty(ZeebeVariableKeys.InstanceId).ToString();
         Guid instanceId;
@@ -129,8 +133,9 @@ public static class HttpServiceManagerModule
         {
             throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: responseBody);
         }
+        var messageVariables = await CreateMessageVariablesAsync(responseBody, statusCode, content, url, dbContext);
 
-        return Results.Ok(CreateMessageVariables(responseBody, statusCode, content));
+        return Results.Ok(messageVariables);
     }
     private static bool FailureCodesControl(string failureCodes, string statusCode)
     {
@@ -139,12 +144,16 @@ public static class HttpServiceManagerModule
         return failCodes.Any(a => { var match = Regex.Match(statusCode, a.Replace("x", @"\d")); return match.Success; });
 
     }
-    private static dynamic CreateMessageVariables(string body, string statuscode, string requestBody)
+    private static async Task<dynamic> CreateMessageVariablesAsync(string body, string statuscode, string requestBody, string url, WorkflowDBContext dbContext)
     {
         dynamic variables = new Dictionary<string, dynamic>();
         try
         {
-            variables.Add("bodyHttpWorker", JsonSerializer.Deserialize<dynamic>(body));
+            // dynamic deserializedBody2 = JsonSerializer.Deserialize<dynamic>(body);
+            dynamic deserializedBody = JsonSerializer.Deserialize<JsonElement>(body);
+            // dynamic deserializedBody = JsonSerializer.Deserialize<IDictionary<string, object>>(body);
+            var filteredBody = await FilterBodyAsync(deserializedBody, url, dbContext);
+            variables.Add("bodyHttpWorker", deserializedBody);
         }
         catch (Exception)
         {
@@ -189,5 +198,37 @@ public static class HttpServiceManagerModule
         var byteArray = await httpResponse.Content.ReadAsByteArrayAsync();
         return Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
     }
+
+    private static async Task<dynamic> FilterBodyAsync(JsonElement body, string url, WorkflowDBContext dbContext)
+    {
+        if (body.TryConvertToDictionary(out Dictionary<string, object>? pairs) && pairs != null)
+        {
+            try
+            {
+                var jsonSchemaEntity = await dbContext.JsonSchemas.FirstOrDefaultAsync(p => p.SubjectName == url);
+                if (jsonSchemaEntity != null)
+                {
+                    var theSchema = await JsonSchema.FromJsonAsync(jsonSchemaEntity.Schema);
+                    var tObjectKeysLower = pairs.Select(x => x.Key);
+                    var keyToBeStayed = theSchema.Properties.Where(p => tObjectKeysLower.Contains(p.Key))
+                        .Select(p => p.Key)
+                        .ToList();
+                    var tNewObject = pairs.Where(p => keyToBeStayed.Contains(p.Key)).ToList();
+                    return tNewObject;
+                }
+                else return body;
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal("HttpManager: Exception for {Url} while parsing response body: {Ex}", url, ex);
+                return body;
+            }
+        }
+        return body;
+    }
+
+
+
+
 }
 

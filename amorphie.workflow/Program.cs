@@ -109,15 +109,14 @@ app.UseSwaggerUI();
 
 app.MapDefinitionEndpoints();
 app.MapInstanceEndpoints();
-//V2 on heavy construction :)
-app.MapDefinitionV2Endpoints();
-app.MapInstanceV2Endpoints();
 app.MapStateEndpoints();
 app.MapTransferModuleEndpoints();
 app.MapComponentTransferModuleEndpoints();
 
 app.MapConsumerEndpoints();
 app.MapAuthorizeEndpoints();
+
+app.MapSchemaValidatorEndpoints();
 try
 {
     app.Logger.LogInformation("Starting Amorphie Workflow application...");
