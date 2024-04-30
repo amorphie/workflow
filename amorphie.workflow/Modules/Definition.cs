@@ -8,6 +8,7 @@ using amorphie.core.Extension;
 using amorphie.core.IBase;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Dtos.Hierarchy;
+using amorphie.workflow.service.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -65,7 +66,9 @@ public static class DefinitionModule
                   operation.Responses["201"] = new OpenApiResponse { Description = "New definition created." };
 
                   return operation;
-              });
+              })
+              .AddEndpointFilter<SchemaValidationFilter>();
+
         app.MapPost("/workflow/definition/saveWorkflowWithFlow", saveWorkflowWitFlowAsync)
       .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
       .Produces(StatusCodes.Status201Created)
@@ -321,8 +324,8 @@ public static class DefinitionModule
 
     }
     static IResult saveDefinition(
-      [FromServices] WorkflowDBContext context,
       [FromBody] PostWorkflowDefinitionRequest data,
+      [FromServices] WorkflowDBContext context,
       [FromHeader(Name = "Language")] string? language = "en-EN"
       )
     {
