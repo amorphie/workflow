@@ -126,7 +126,7 @@ public static class HttpServiceManagerModule
         catch (Exception ex)
         {
             responseBody = "";
-            Log.Fatal($"Exception while reading response body: {ex}");
+            Log.Fatal("Exception while reading response body: Exception : {Ex}", ex);
 
         }
         if (FailureCodesControl(failureCodes, statusCode))
@@ -149,14 +149,13 @@ public static class HttpServiceManagerModule
         dynamic variables = new Dictionary<string, dynamic>();
         try
         {
-            // dynamic deserializedBody2 = JsonSerializer.Deserialize<dynamic>(body);
             dynamic deserializedBody = JsonSerializer.Deserialize<JsonElement>(body);
-            // dynamic deserializedBody = JsonSerializer.Deserialize<IDictionary<string, object>>(body);
             var filteredBody = await FilterBodyAsync(deserializedBody, url, dbContext);
-            variables.Add("bodyHttpWorker", deserializedBody);
+            variables.Add("bodyHttpWorker", filteredBody);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Log.Fatal("HttpManager Exception : body couldnt be parsed to JsonElement. Url : {Url} Exception : {Ex} Body : {Body}", url, ex, body);
             variables.Add("bodyHttpWorker", body);
         }
 
@@ -220,7 +219,7 @@ public static class HttpServiceManagerModule
             }
             catch (Exception ex)
             {
-                Log.Fatal("HttpManager: Exception for {Url} while parsing response body: {Ex}", url, ex);
+                Log.Fatal("HttpManager Exception : while filtering response body. Url : {Url} Exception : {Ex} Body : {Body}", url, ex, body);
                 return body;
             }
         }
