@@ -77,13 +77,13 @@ public partial class InstanceService : IInstanceService
 
     public async Task<Response> ChangeInstanceStateAsync(Guid instanceId, string targetTransitionOrStateName, WorkerBodyTrxDatas workerBodyTrxDatas, CancellationToken cancellationToken)
     {
-        var commitResult = await CommitInstanceAndState(targetTransitionOrStateName, instanceId, workerBodyTrxDatas.TriggeredBy, workerBodyTrxDatas.TriggeredByBehalfOf, cancellationToken);
+        var commitResult = await CommitInstanceAndState(targetTransitionOrStateName, instanceId, workerBodyTrxDatas.TriggeredBy.GetValueOrDefault(Guid.Empty), workerBodyTrxDatas.TriggeredByBehalfOf.GetValueOrDefault(Guid.Empty), cancellationToken);
         if (commitResult.HasError)
         {
             return Response.Error(commitResult.Message);
         }
         var instance = commitResult.Instance;
-        _instanceTransitionService.Insert(instance!, workerBodyTrxDatas.Data!, DateTime.UtcNow, DateTime.UtcNow, workerBodyTrxDatas.TriggeredBy, workerBodyTrxDatas.TriggeredByBehalfOf);
+        _instanceTransitionService.Insert(instance!, workerBodyTrxDatas.Data!, DateTime.UtcNow, DateTime.UtcNow, workerBodyTrxDatas.TriggeredBy.GetValueOrDefault(Guid.Empty), workerBodyTrxDatas.TriggeredByBehalfOf.GetValueOrDefault(Guid.Empty));
         _dbContext.SaveChanges();
         return Response.Success("", instance!);
     }

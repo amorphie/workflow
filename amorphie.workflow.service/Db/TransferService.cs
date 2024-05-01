@@ -10,6 +10,7 @@ using amorphie.workflow.core.Token;
 using System.Text.Json;
 using amorphie.workflow.core.Models.Transfer;
 using amorphie.workflow.core.Dtos.Transfer;
+using System.Diagnostics;
 
 namespace amorphie.workflow.service.Db;
 public class TransferService
@@ -291,47 +292,19 @@ public class TransferService
     }
     public async Task<Response<List<string>>> GetTemplatesFromLegacyBulkAsync(TemplateListRequestModel requestModel, CancellationToken cancellationToken)
     {
-
-        var workflow = await GetWorkflowForLegacyAsync(requestModel.workflowName, cancellationToken);
-
-        if (workflow == null)
-        {
-            return new Response<List<string>>
-            {
-                Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
-            };
-        }
-
         List<string> templateList = new List<string>();
-
-        foreach (State state in workflow.States)
+        if(requestModel.workflowNames!=null&&requestModel.workflowNames.Any())
         {
-            if (state.UiForms != null)
+             foreach(string workflowName in requestModel.workflowNames)
             {
-                templateList.AddRange(GetTemplateFromUiForms(state.UiForms));
+                templateList.AddRange(await GetTemplatesFromLegacyAsync(workflowName,requestModel.IsPage,cancellationToken));
             }
-            if (state.Transitions != null && state.Transitions.Any())
-            {
-                var uiForms = state.Transitions.Where(s => s.UiForms != null)
-                .SelectMany(s => s.UiForms!).Distinct().ToList();
-                templateList.AddRange(GetTemplateFromUiForms(uiForms));
-            }
-
-
         }
-        if(requestModel.IsPage)
-        {
-                string workflowName = "\"workflowName\":\""+requestModel.workflowName+"\"";
-              templateList.AddRange(await _dbContext.SignalRResponses.Where(w =>w.routeChange==true&&!string.IsNullOrEmpty(w.data)&& 
-              w.data.Contains("\"viewSource\":\"page\"")&&w.data.Contains(workflowName)
-              &&!string.IsNullOrEmpty(w.pageUrl))
-              .Select(s => s.pageUrl??string.Empty).Distinct().ToListAsync(cancellationToken));
-        }
+        
         if(requestModel.extraTemplates!=null&&requestModel.extraTemplates.Any())
         {
             templateList.AddRange(requestModel.extraTemplates);
         }
-
 
         return new Response<List<string>>
         {
@@ -343,6 +316,53 @@ public class TransferService
     private List<string> GetTemplateFromUiForms(IEnumerable<UiForm> uiForms)
     {
         return uiForms.Where(s => s.Forms != null).SelectMany(s => s.Forms!).Select(s => s.Label).ToList();
+    }
+    private  async Task<List<string>> GetTemplatesFromLegacyAsync(string workflowName,bool IsPage, CancellationToken cancellationToken)
+    {
+      
+        var stateList = await GetWorkflowForTemplateLegacyAsync(workflowName, cancellationToken);
+         List<string> templateList = new List<string>();
+        if (stateList == null||!stateList.Any())
+        {
+            return templateList;
+        }
+        foreach (State state in stateList)
+        {   
+            if (state.UiForms != null)
+            {
+                List<string> uiFormTemplates=GetTemplateFromUiForms(state.UiForms);
+               
+                if(state.AllowedSuffix!=null&&state.AllowedSuffix.Any())
+                {
+                    foreach (string suffix in state.AllowedSuffix)
+                    {
+                        string suffixWith="-"+suffix;
+                        uiFormTemplates.AddRange(uiFormTemplates.Select(s=>s+suffixWith).ToList());
+                    }
+                }
+                 templateList.AddRange(uiFormTemplates);
+            }
+            if (state.Transitions != null && state.Transitions.Any())
+            {
+                var uiForms = state.Transitions.Where(s => s.UiForms != null)
+                .SelectMany(s => s.UiForms!).Distinct().ToList();
+                templateList.AddRange(GetTemplateFromUiForms(uiForms));
+            }
+        }
+        if(IsPage)
+        {
+                string workflowNameFromPage = "\"workflowName\":\""+workflowName+"\"";
+              templateList.AddRange(await _dbContext.SignalRResponses.Where(w =>w.routeChange==true&&!string.IsNullOrEmpty(w.data)&& 
+              w.data.Contains("\"viewSource\":\"page\"")&&w.data.Contains(workflowNameFromPage)
+              &&!string.IsNullOrEmpty(w.pageUrl))
+              .Select(s => s.pageUrl??string.Empty).Distinct().ToListAsync(cancellationToken));
+        }
+        return templateList;
+    }
+     private async Task<List<State>?> GetWorkflowForTemplateLegacyAsync(string workflowName, CancellationToken cancellationToken)
+    {
+        return await _dbContext.States.Where(w=>w.WorkflowName==workflowName).Include(s=>s.UiForms).ThenInclude(s=>s.Forms)
+        .Include(s=>s.Transitions).ThenInclude(s=>s.UiForms).ThenInclude(s=>s.Forms).ToListAsync(cancellationToken);
     }
     private async Task<Workflow?> GetWorkflowForLegacyAsync(string workflowName, CancellationToken cancellationToken)
     {
