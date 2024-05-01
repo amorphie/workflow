@@ -128,7 +128,7 @@ internal class JobBatchExporter : BaseExporter, IExporter
 
             var registeredInstanceGuid = RegisteredClients.ActiveInstanceList.TryGetValue(job.ProcessInstanceKey, out Guid instanceId) ? instanceId : Guid.Empty;
             var hubData = new PostSignalRData(
-                UserId: workerBodyTrxDatas.TriggeredBy,
+                UserId: workerBodyTrxDatas.TriggeredBy.GetValueOrDefault(Guid.Empty),
                 recordId: workerBody.InstanceId,
                 eventInfo: "message from exporter",
                 instanceId: workerBody.InstanceId,

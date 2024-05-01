@@ -108,8 +108,8 @@ public class WorkerBodyHeaders
 public class WorkerBodyTrxDatas
 {
     public WorkerBodyTrxInnerDatas? Data { get; set; }
-    public Guid TriggeredBy { get; set; }
-    public Guid TriggeredByBehalfOf { get; set; }
+    public Guid? TriggeredBy { get; set; }
+    public Guid? TriggeredByBehalfOf { get; set; }
 }
 public class WorkerBodyTrxInnerDatas
 {
