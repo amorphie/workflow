@@ -37,7 +37,7 @@ public class WorkflowDBContext : DbContext
     public DbSet<UiForm> UiForms { get; set; } = default!;
     public DbSet<FlowHeader> FlowHeaders { get; set; } = default!;
     public DbSet<TransferHistory> TransferHistories { get; set; } = default!;
-
+     public DbSet<HumanTask> HumanTasks { get; set; } = default!;
     public DbSet<TransitionRole> TransitionRoles { get; set; } = default!;
     //Hub Data
     public DbSet<SignalRData> SignalRResponses { get; set; } = default!;
@@ -96,7 +96,8 @@ public class WorkflowDBContext : DbContext
 
         modelBuilder.Entity<Transition>()
            .HasKey(s => s.Name);
-
+        modelBuilder.Entity<HumanTask>()
+           .HasKey(s => s.TaskId);
         modelBuilder.Entity<Page>()
           .HasKey(s => s.Id);
         modelBuilder.Entity<UiForm>()
