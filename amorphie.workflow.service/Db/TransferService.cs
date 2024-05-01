@@ -319,8 +319,6 @@ public class TransferService
     }
     private  async Task<List<string>> GetTemplatesFromLegacyAsync(string workflowName,bool IsPage, CancellationToken cancellationToken)
     {
-           Stopwatch stopWatch =new Stopwatch();
-        stopWatch.Start();
       
         var stateList = await GetWorkflowForTemplateLegacyAsync(workflowName, cancellationToken);
          List<string> templateList = new List<string>();
@@ -328,9 +326,6 @@ public class TransferService
         {
             return templateList;
         }
-        stopWatch.Stop();
-        var elapsed=stopWatch.ElapsedMilliseconds;
-        stopWatch.Restart();
         foreach (State state in stateList)
         {   
             if (state.UiForms != null)
@@ -354,9 +349,6 @@ public class TransferService
                 templateList.AddRange(GetTemplateFromUiForms(uiForms));
             }
         }
-         stopWatch.Stop();
-        var elapsed2=stopWatch.ElapsedMilliseconds;
-         stopWatch.Restart();
         if(IsPage)
         {
                 string workflowNameFromPage = "\"workflowName\":\""+workflowName+"\"";
@@ -365,8 +357,6 @@ public class TransferService
               &&!string.IsNullOrEmpty(w.pageUrl))
               .Select(s => s.pageUrl??string.Empty).Distinct().ToListAsync(cancellationToken));
         }
-         stopWatch.Stop();
-        var elapsed3=stopWatch.ElapsedMilliseconds;
         return templateList;
     }
      private async Task<List<State>?> GetWorkflowForTemplateLegacyAsync(string workflowName, CancellationToken cancellationToken)
