@@ -6,12 +6,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NJsonSchema;
 namespace amorphie.workflow.service.Filters;
-public class BaseSchemaValidationFilter : IEndpointFilter
+public class InstanceSchemaValidationFilter : IEndpointFilter
 {
     protected readonly ILogger _logger;
     protected readonly WorkflowDBContext _dbContext;
 
-    public BaseSchemaValidationFilter(ILoggerFactory loggerFactory, WorkflowDBContext dbContext)
+    public InstanceSchemaValidationFilter(ILoggerFactory loggerFactory, WorkflowDBContext dbContext)
     {
         _logger = loggerFactory.CreateLogger<SchemaValidationFilter>();
         _dbContext = dbContext;
