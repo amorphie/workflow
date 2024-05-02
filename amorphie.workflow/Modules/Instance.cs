@@ -112,7 +112,7 @@ public static class InstanceModule
             operation.Responses["204"].Description = "No instance found.";
 
             return operation;
-        }).AddEndpointFilter<DynamicSchemaValidationFilter>();
+        }).AddEndpointFilter<InstanceSchemaValidationFilter>();
 
         app.MapGet("/workflow/uiform/updatedb", UiFormFill
       )
