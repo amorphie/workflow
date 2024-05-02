@@ -134,7 +134,7 @@ public static class HttpServiceManagerModule
         {
             throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: responseBody);
         }
-        var messageVariables = await CreateMessageVariablesAsync(responseBody, statusCode, content, url, dbContext);
+        var messageVariables = await CreateMessageVariables(responseBody, statusCode, content, url);
 
         return Results.Ok(messageVariables);
     }
@@ -145,14 +145,14 @@ public static class HttpServiceManagerModule
         return failCodes.Any(a => { var match = Regex.Match(statusCode, a.Replace("x", @"\d")); return match.Success; });
 
     }
-    private static async Task<dynamic> CreateMessageVariablesAsync(string body, string statuscode, string requestBody, string url, WorkflowDBContext dbContext)
+    private static dynamic CreateMessageVariables(string body, string statuscode, string requestBody, string url)
     {
         dynamic variables = new Dictionary<string, dynamic>();
         try
         {
             dynamic deserializedBody = JsonSerializer.Deserialize<JsonElement>(body);
-            var filteredBody = await FilterBodyAsync(deserializedBody, url, dbContext);
-            variables.Add("bodyHttpWorker", filteredBody);
+            ///var filteredBody = await FilterBodyAsync(deserializedBody, url, dbContext);
+            variables.Add("bodyHttpWorker", deserializedBody);
         }
         catch (Exception ex)
         {
@@ -208,7 +208,7 @@ public static class HttpServiceManagerModule
                 var jsonSchemaEntity = await dbContext.JsonSchemas.FirstOrDefaultAsync(p => p.SubjectName == url);
                 if (jsonSchemaEntity != null)
                 {
-                    return await FilterHelper.FilterResponseAsync(body,jsonSchemaEntity.Schema);
+                    return await FilterHelper.FilterResponseAsync(body, await JsonSchema.FromJsonAsync(jsonSchemaEntity.Schema));
                 }
                 else return body;
             }
