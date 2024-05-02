@@ -1,10 +1,11 @@
+using amorphie.workflow.core.Dtos.Schema;
 using NJsonSchema.Validation;
 namespace amorphie.workflow.service.Filters;
 public static class ValidationErrorExtension
 {
-    public static Dictionary<string, string[]> ToDict(this ICollection<ValidationError> errors)
+    public static List<ValidationErrorDto> ToDto(this ICollection<ValidationError> errors)
     {
-        Dictionary<string, string[]> errorDictionary = new Dictionary<string, string[]>();
+        List<ValidationErrorDto> errorDictionary = new List<ValidationErrorDto>();
 
         foreach (var error in errors)
         {
@@ -12,12 +13,12 @@ public static class ValidationErrorExtension
             {
                 var key = multiError.Path ?? multiError.Kind.ToString();
 
-                errorDictionary.Add(key, SetErrors(multiError.Errors, key));
+                errorDictionary.Add(new ValidationErrorDto { Key = key, Errors = SetErrors(multiError.Errors, key) });
             }
             else if (error is ChildSchemaValidationError childError)
             {
                 var key = childError.Path ?? childError.Kind.ToString();
-                errorDictionary.Add(key, SetErrors(childError.Errors, key));
+                errorDictionary.Add(new ValidationErrorDto { Key = key, Errors = SetErrors(childError.Errors, key) });
 
             }
             else
@@ -26,14 +27,15 @@ public static class ValidationErrorExtension
                 {
                     error.Kind.ToString()
                 };
-                errorDictionary.Add(error.Path ?? error.Kind.ToString(), validationErrors.ToArray());
+                errorDictionary.Add(new ValidationErrorDto { Key = error.Path ?? error.Kind.ToString(), Errors = validationErrors });
             }
 
         }
 
         return errorDictionary;
     }
-    private static string[] SetErrors(IReadOnlyDictionary<NJsonSchema.JsonSchema, ICollection<ValidationError>> errors, string path)
+
+    private static List<string> SetErrors(IReadOnlyDictionary<NJsonSchema.JsonSchema, ICollection<ValidationError>> errors, string path)
     {
         var validationErrors = new List<string>();
         foreach (var error in errors)
@@ -44,9 +46,9 @@ public static class ValidationErrorExtension
                 validationErrors.Add($"{validationErrorPath} {validationError.Kind}");
             }
         }
-        return validationErrors.ToArray();
+        return validationErrors;
     }
-    private static string[] SetErrors(IReadOnlyDictionary<NJsonSchema.JsonObjectType, ICollection<ValidationError>> errors, string path)
+    private static List<string> SetErrors(IReadOnlyDictionary<NJsonSchema.JsonObjectType, ICollection<ValidationError>> errors, string path)
     {
         var validationErrors = new List<string>();
         foreach (var error in errors)
@@ -57,6 +59,6 @@ public static class ValidationErrorExtension
                 validationErrors.Add($"{validationErrorPath} {validationError.Kind}");
             }
         }
-        return validationErrors.ToArray();
+        return validationErrors;
     }
 }

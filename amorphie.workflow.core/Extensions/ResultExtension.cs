@@ -1,11 +1,10 @@
 using System.Net;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using amorphie.workflow.core.Dtos.Schema;
 using Microsoft.AspNetCore.Http;
 namespace amorphie.workflow.core.Extensions;
 public static class ResultExtension
 {
-    public static IResult ValidationError(this IResultExtensions resultExtensions, Dictionary<string, string[]> validationErrors)
+    public static IResult ValidationError(this IResultExtensions resultExtensions, List<ValidationErrorDto> validationErrors)
     {
         ArgumentNullException.ThrowIfNull(resultExtensions);
 
@@ -15,9 +14,9 @@ public static class ResultExtension
 
 public class ValidationErrorResult : IResult
 {
-    private readonly Dictionary<string, string[]> _validationErrors;
+    private readonly List<ValidationErrorDto> _validationErrors;
 
-    public ValidationErrorResult(Dictionary<string, string[]> validationErrors)
+    public ValidationErrorResult(List<ValidationErrorDto> validationErrors)
     {
         _validationErrors = validationErrors;
     }
@@ -25,7 +24,6 @@ public class ValidationErrorResult : IResult
     public Task ExecuteAsync(HttpContext httpContext)
     {
         httpContext.Response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;
-
         return httpContext.Response.WriteAsJsonAsync(_validationErrors);
     }
 }
