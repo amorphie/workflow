@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Extensions;
+using amorphie.workflow.service.Filters;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
@@ -211,13 +212,7 @@ public static class HttpServiceManagerModule
                 var jsonSchemaEntity = await dbContext.JsonSchemas.FirstOrDefaultAsync(p => p.SubjectName == url);
                 if (jsonSchemaEntity != null)
                 {
-                    var theSchema = await JsonSchema.FromJsonAsync(jsonSchemaEntity.Schema);
-                    var tObjectKeysLower = pairs.Select(x => x.Key);
-                    var keyToBeStayed = theSchema.Properties.Where(p => tObjectKeysLower.Contains(p.Key))
-                        .Select(p => p.Key)
-                        .ToList();
-                    var tNewObject = pairs.Where(p => keyToBeStayed.Contains(p.Key)).ToList();
-                    return tNewObject;
+                    return await FilterHelper.FilterResponseAsync(body,jsonSchemaEntity.Schema);
                 }
                 else return body;
             }
