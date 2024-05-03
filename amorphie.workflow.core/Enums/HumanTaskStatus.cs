@@ -10,5 +10,5 @@ public enum HumanTaskStatus
     [Description("completed ")]
     Completed = 4,
     [Description("denied ")]
-    Denied = 4
+    Denied = 8
 }

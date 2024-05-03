@@ -382,7 +382,7 @@ public class PostTransactionService : IPostTransactionService
         &&f.InstanceId==instanceAtState.Id&&f.Status!=HumanTaskStatus.Completed&&f.Status!=HumanTaskStatus.Denied,_cancellationToken);
         if(humanTask!=null)
         {
-            message="humanTaskMessage";
+            message=HumanTaskZeebeCommand.humanTaskMessage;
             variables.Add($"humanTaskMessageValue", _transition.Name);
         }
         _zeebeService.PublishMessage(message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
