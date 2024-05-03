@@ -8,5 +8,7 @@ public enum HumanTaskStatus
     [Description("in_progress  ")]
     InProgress = 2,
     [Description("completed ")]
-    Completed = 4
+    Completed = 4,
+    [Description("denied ")]
+    Denied = 4
 }

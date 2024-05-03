@@ -59,7 +59,7 @@ public static class TransferModule
 
              return operation;
          });
-        app.MapPost("/tasks/{taskId}/complete", CompleteTask)
+        app.MapGet("/tasks/{taskId}/complete", CompleteTask)
    .Produces<HumanTask>(StatusCodes.Status200OK)
 
    .WithOpenApi(operation =>
@@ -70,7 +70,28 @@ public static class TransferModule
          operation.Responses["200"] = new OpenApiResponse { Description = "Task as completed" };
          return operation;
      });
+ app.MapGet("/tasks/{taskId}/deny", DenyTask)
+   .Produces<HumanTask>(StatusCodes.Status200OK)
 
+   .WithOpenApi(operation =>
+     {
+         operation.Summary = "Marks a task as Denied.";
+         operation.Tags = new List<OpenApiTag> { new() { Name = "Human Task" } };
+
+         operation.Responses["200"] = new OpenApiResponse { Description = "Task as Denied" };
+         return operation;
+     });
+      app.MapGet("/tasks/{taskId}/triggerAutoTransition", TriggerAutoTransition)
+   .Produces<HumanTask>(StatusCodes.Status200OK)
+
+   .WithOpenApi(operation =>
+     {
+         operation.Summary = "Marks a task as Denied.";
+         operation.Tags = new List<OpenApiTag> { new() { Name = "Human Task" } };
+
+         operation.Responses["200"] = new OpenApiResponse { Description = "Task as Denied" };
+         return operation;
+     });
 
 
     }
@@ -83,7 +104,8 @@ CancellationToken token
     {
         try
         {
-            var taskList = await context.HumanTasks.Where(w => w.Assignee == Assignee&&w.Status!=HumanTaskStatus.Completed).ToListAsync(token);
+            var taskList = await context.HumanTasks.Where(w => w.Assignee == Assignee&&w.Status!=HumanTaskStatus.Completed
+            &&w.Status!=HumanTaskStatus.Denied).ToListAsync(token);
             if (taskList.Any())
             {
                 return Results.Ok(taskList);
@@ -175,8 +197,44 @@ CancellationToken token
         }
         dbModel.Name = updateModel.Name;
     }
+    async static ValueTask<IResult> DenyTask(
+ [FromHeader(Name = "user_reference")] string user,
+   [FromServices] WorkflowDBContext context,
+   [FromServices] IZeebeCommandService zeebeCommandService,
+     [FromRoute(Name = "taskId")] Guid? taskId,
+   CancellationToken token
+   )
+    {
+        try
+        {
+            
+            var task = await context.HumanTasks.Where(w => w.TaskId == taskId).FirstOrDefaultAsync(token);
+            if (task != null)
+            {
+                if(task.Type==HumanTaskType.Assigned&&user!=task.Assignee)
+                {
+                    return Results.Problem(user+" can not deny this task!");
+                }
+                task.Status = HumanTaskStatus.Denied;
+                await context.SaveChangesAsync(token);
+                Instance? instance=await context.Instances.Where(w => w.Id == task.InstanceId).FirstOrDefaultAsync(token);
+                if(instance!=null&&!string.IsNullOrEmpty(task.DenyTransitionName))
+                {   
+                  await  zeebeCommandService.PublishMessage(task.DenyTransitionName!,new {},instance.Id.ToString());
+                }
+              
+                return Results.Ok();
+            }
+            return Results.NoContent();
+
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem("Unexcepted error:" + ex.ToString());
+        }
+    }
+ 
     async static ValueTask<IResult> CompleteTask(
- [FromBody] HumanTask data,
  [FromHeader(Name = "user_reference")] string user,
    [FromServices] WorkflowDBContext context,
    [FromServices] IZeebeCommandService zeebeCommandService,
@@ -195,12 +253,43 @@ CancellationToken token
                     return Results.Problem(user+" can not complete this task!");
                 }
                 task.Status = HumanTaskStatus.Completed;
-                UpdateTask(task, data);
                 await context.SaveChangesAsync(token);
                 Instance? instance=await context.Instances.Where(w => w.Id == task.InstanceId).FirstOrDefaultAsync(token);
-                if(instance!=null&&!string.IsNullOrEmpty(task.HumanTaskAppTransition))
+                if(instance!=null&&!string.IsNullOrEmpty(task.AppTransitionName))
                 {   
-                  await  zeebeCommandService.PublishMessage(task.HumanTaskAppTransition!,new {},instance.Id.ToString());
+                  await  zeebeCommandService.PublishMessage(task.AppTransitionName!,new {},instance.Id.ToString());
+                }
+              
+                return Results.Ok();
+            }
+            return Results.NoContent();
+
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem("Unexcepted error:" + ex.ToString());
+        }
+    }
+     async static ValueTask<IResult> TriggerAutoTransition(
+ 
+   [FromServices] WorkflowDBContext context,
+   [FromServices] IZeebeCommandService zeebeCommandService,
+     [FromRoute(Name = "taskId")] Guid? taskId,
+   CancellationToken token
+   )
+    {
+        try
+        {
+            
+            var task = await context.HumanTasks.Where(w => w.TaskId == taskId).FirstOrDefaultAsync(token);
+            if (task != null)
+            {
+                task.Status = HumanTaskStatus.Completed;
+                await context.SaveChangesAsync(token);
+                Instance? instance=await context.Instances.Where(w => w.Id == task.InstanceId).FirstOrDefaultAsync(token);
+                if(instance!=null&&!string.IsNullOrEmpty(task.AutoTransitionName))
+                {   
+                  await  zeebeCommandService.PublishMessage(task.AutoTransitionName!,new {},instance.Id.ToString());
                 }
               
                 return Results.Ok();
