@@ -379,10 +379,10 @@ public class PostTransactionService : IPostTransactionService
         await addInstanceTansition(instanceAtState, started, null);
         await _dbContext.SaveChangesAsync(_cancellationToken);
         HumanTask? humanTask= await _dbContext.HumanTasks.FirstOrDefaultAsync(f=>f.State== instanceAtState.StateName
-        &&f.InstanceId==instanceAtState.Id&&f.Status!=HumanTaskStatus.Completed,_cancellationToken);
+        &&f.InstanceId==instanceAtState.Id&&f.Status!=HumanTaskStatus.Completed&&f.Status!=HumanTaskStatus.Denied,_cancellationToken);
         if(humanTask!=null)
         {
-            message="humanTaskMessage";
+            message=HumanTaskZeebeCommand.humanTaskMessage;
             variables.Add($"humanTaskMessageValue", _transition.Name);
         }
         _zeebeService.PublishMessage(message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);

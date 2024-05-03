@@ -22,8 +22,9 @@ public class HumanTask
     public bool? AutoTransaction { get; set; }=false;
     public int? AutoTransactionTimeout { get; set; } =0;
     public string? State { get; set; }
-    public string? HumanTaskAppTransition { get; set; }
-
+    public string? AppTransitionName { get; set; }
+    public string? DenyTransitionName { get; set; }
+    public string? AutoTransitionName { get; set; }
     public string? Metadata { get; set; }
 
 }

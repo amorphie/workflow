@@ -354,6 +354,10 @@ public static class StateManagerModule
             if(humanTask!=null)
             {
                 humanTask.Status=HumanTaskStatus.Completed;
+                if(humanTask.DenyTransitionName==transition.Name)
+                {
+                     humanTask.Status=HumanTaskStatus.Denied;
+                }
             }
             instance.BaseStatus = transition.ToState!.BaseStatus;
             if (IsTargetState && targetStateAsState != null)
