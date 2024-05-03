@@ -134,7 +134,7 @@ public static class HttpServiceManagerModule
         {
             throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: responseBody);
         }
-        var messageVariables = await CreateMessageVariables(responseBody, statusCode, content, url);
+        var messageVariables = CreateMessageVariables(responseBody, statusCode, content, url);
 
         return Results.Ok(messageVariables);
     }
