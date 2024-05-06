@@ -9,6 +9,7 @@ using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Dtos.Consumer;
 using amorphie.workflow.core.Enums;
+using amorphie.workflow.core.Models;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
 using Microsoft.AspNetCore.Http;
@@ -374,10 +375,17 @@ public class PostTransactionService : IPostTransactionService
         dynamic variables = createMessageVariables(instanceAtState);
 
 
-
+        string message=_transition.Flow!.Message;
         await addInstanceTansition(instanceAtState, started, null);
         await _dbContext.SaveChangesAsync(_cancellationToken);
-        _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
+        HumanTask? humanTask= await _dbContext.HumanTasks.FirstOrDefaultAsync(f=>f.State== instanceAtState.StateName
+        &&f.InstanceId==instanceAtState.Id&&f.Status!=HumanTaskStatus.Completed&&f.Status!=HumanTaskStatus.Denied,_cancellationToken);
+        if(humanTask!=null)
+        {
+            message=HumanTaskZeebeCommand.humanTaskMessage;
+            variables.Add($"humanTaskMessageValue", _transition.Name);
+        }
+        _zeebeService.PublishMessage(message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
         SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
         //return Results.Ok();
         return new Response

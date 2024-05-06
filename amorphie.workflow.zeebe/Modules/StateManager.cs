@@ -3,6 +3,7 @@ using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Helper;
+using amorphie.workflow.core.Models;
 using amorphie.workflow.service.Db.Abstracts;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
@@ -226,7 +227,7 @@ public static class StateManagerModule
                                   new SignalRRequest()
                                   {
                                       data = new PostSignalRData(
-                                      data.TriggeredBy,
+                                      data.TriggeredBy.GetValueOrDefault(Guid.Empty),
                                       instance.RecordId,
                                       eventInfo,
                                       instance.Id,
@@ -341,7 +342,7 @@ public static class StateManagerModule
             if (IsTargetState && targetStateAsState != null)
                 newInstanceTransition!.ToStateName = targetStateAsState.Name;
 
-            newInstanceTransition!.CreatedBy = data.TriggeredBy;
+            newInstanceTransition!.CreatedBy = data.TriggeredBy.GetValueOrDefault(Guid.Empty);
             newInstanceTransition!.CreatedByBehalfOf = data.TriggeredByBehalfOf;
 
             newInstanceTransition!.TransitionName = transition.Name;
@@ -349,7 +350,15 @@ public static class StateManagerModule
 
             string eventInfo = EventInfos.WorkerCompleted;
 
-
+            HumanTask? humanTask=await dbContext.HumanTasks.FirstOrDefaultAsync(f=>f.State==instance.StateName&&f.InstanceId==instance.Id,cancellationToken);
+            if(humanTask!=null)
+            {
+                humanTask.Status=HumanTaskStatus.Completed;
+                if(humanTask.DenyTransitionName==transition.Name)
+                {
+                     humanTask.Status=HumanTaskStatus.Denied;
+                }
+            }
             instance.BaseStatus = transition.ToState!.BaseStatus;
             if (IsTargetState && targetStateAsState != null)
             {
