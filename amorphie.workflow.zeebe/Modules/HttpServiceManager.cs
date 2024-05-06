@@ -72,17 +72,21 @@ public static class HttpServiceManagerModule
 
         string httpMethodName;
         //Note: Exception never occurs
-        try
+         try
         {
             httpMethodName = request.Headers["method"].ToString();
+            
             if (string.IsNullOrEmpty(httpMethodName))
-                httpMethodName = "GET";
+            {
+                 httpMethodName=body.GetProperty("method")?.ToString() ?? "GET";
+            }
+               
         }
         catch
         {
-            return Results.BadRequest("Header parameter 'method' value is not allowed Try one of them this values => post | get | put | delete | patch");
+            httpMethodName = "GET";
         }
-
+	
         string failureCodes = "5xx";
         try
         {

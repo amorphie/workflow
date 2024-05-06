@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -11,9 +12,11 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240501122210_MigrationHumanTask")]
+    partial class MigrationHumanTask
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1255,9 +1258,6 @@ namespace amorphie.workflow.data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("AppTransitionName")
-                        .HasColumnType("text");
-
                     b.Property<string>("Assignee")
                         .HasColumnType("text");
 
@@ -1267,23 +1267,20 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<int?>("AutoTransactionTimeout")
                         .HasColumnType("integer");
 
-                    b.Property<string>("AutoTransitionName")
-                        .HasColumnType("text");
-
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("DenyTransitionName")
-                        .HasColumnType("text");
-
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("DueBy")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("HumanTaskAppTransition")
+                        .HasColumnType("text");
 
                     b.Property<Guid?>("InstanceId")
                         .HasColumnType("uuid");
