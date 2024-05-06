@@ -197,7 +197,7 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
             var task = await context.HumanTasks.Where(w => w.TaskId == taskId).FirstOrDefaultAsync(token);
             if (task != null)
             {
-                string transitionName = string.Empty;
+                string transitionName = task.AutoTransitionName!=null?task.AutoTransitionName:string.Empty;
                 bool sendZeebe = false;
                 if (amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(HumanTaskCompleteType.AutoTrigger) != type.ToLower()
                 && task.Type == HumanTaskType.Assigned && user != task.Assignee)
@@ -217,7 +217,22 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
                     sendZeebe = true;
                 }
 
-                Instance? instance = await context.Instances.Where(w => w.Id == task.InstanceId).FirstOrDefaultAsync(token);
+                await SendZeebeMessage(context,transitionName,task.InstanceId,sendZeebe,zeebeCommandService,token);
+                await context.SaveChangesAsync(token);
+                return Results.Ok(task);
+            }
+            return Results.NoContent();
+
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem("Unexcepted error:" + ex.ToString());
+        }
+    }
+    private static async Task SendZeebeMessage(WorkflowDBContext context,string transitionName,Guid? InstanceId,bool sendZeebe,
+    IZeebeCommandService zeebeCommandService,CancellationToken token)
+    {
+          Instance? instance = await context.Instances.Where(w => w.Id == InstanceId).FirstOrDefaultAsync(token);
                 if (instance != null)
                 {
                     dynamic variables = new Dictionary<string, dynamic>();
@@ -230,6 +245,8 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
                         FromStateName = instance.StateName,
                         ToStateName = transition!.ToStateName!,
                         EntityData="{}",
+                        HeadersData="{}",
+                        AdditionalData="{}",
                         TransitionName = transitionName,
                         StartedAt = DateTime.UtcNow
                     };
@@ -240,18 +257,7 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
                     }
 
                 }
-                await context.SaveChangesAsync(token);
-                return Results.Ok(task);
-            }
-            return Results.NoContent();
-
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem("Unexcepted error:" + ex.ToString());
-        }
     }
-
     async static ValueTask<IResult> InsertTaskMethod(
 
 [FromServices] WorkflowDBContext context,
