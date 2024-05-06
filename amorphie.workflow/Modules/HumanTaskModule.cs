@@ -197,7 +197,7 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
             var task = await context.HumanTasks.Where(w => w.TaskId == taskId).FirstOrDefaultAsync(token);
             if (task != null)
             {
-                string transitionName = string.Empty;
+                string transitionName = task.AutoTransitionName!=null?task.AutoTransitionName:string.Empty;
                 bool sendZeebe = false;
                 if (amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(HumanTaskCompleteType.AutoTrigger) != type.ToLower()
                 && task.Type == HumanTaskType.Assigned && user != task.Assignee)
@@ -230,6 +230,8 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
                         FromStateName = instance.StateName,
                         ToStateName = transition!.ToStateName!,
                         EntityData="{}",
+                        HeadersData="{}",
+                        AdditionalData="{}",
                         TransitionName = transitionName,
                         StartedAt = DateTime.UtcNow
                     };
