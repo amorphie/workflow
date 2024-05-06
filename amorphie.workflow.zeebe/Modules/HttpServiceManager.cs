@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Extensions;
+using amorphie.workflow.service.Filters;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
@@ -133,7 +134,7 @@ public static class HttpServiceManagerModule
         {
             throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: responseBody);
         }
-        var messageVariables = await CreateMessageVariablesAsync(responseBody, statusCode, content, url, dbContext);
+        var messageVariables = CreateMessageVariables(responseBody, statusCode, content, url);
 
         return Results.Ok(messageVariables);
     }
@@ -144,14 +145,14 @@ public static class HttpServiceManagerModule
         return failCodes.Any(a => { var match = Regex.Match(statusCode, a.Replace("x", @"\d")); return match.Success; });
 
     }
-    private static async Task<dynamic> CreateMessageVariablesAsync(string body, string statuscode, string requestBody, string url, WorkflowDBContext dbContext)
+    private static dynamic CreateMessageVariables(string body, string statuscode, string requestBody, string url)
     {
         dynamic variables = new Dictionary<string, dynamic>();
         try
         {
             dynamic deserializedBody = JsonSerializer.Deserialize<JsonElement>(body);
-            var filteredBody = await FilterBodyAsync(deserializedBody, url, dbContext);
-            variables.Add("bodyHttpWorker", filteredBody);
+            ///var filteredBody = await FilterBodyAsync(deserializedBody, url, dbContext);
+            variables.Add("bodyHttpWorker", deserializedBody);
         }
         catch (Exception ex)
         {
@@ -207,13 +208,7 @@ public static class HttpServiceManagerModule
                 var jsonSchemaEntity = await dbContext.JsonSchemas.FirstOrDefaultAsync(p => p.SubjectName == url);
                 if (jsonSchemaEntity != null)
                 {
-                    var theSchema = await JsonSchema.FromJsonAsync(jsonSchemaEntity.Schema);
-                    var tObjectKeysLower = pairs.Select(x => x.Key);
-                    var keyToBeStayed = theSchema.Properties.Where(p => tObjectKeysLower.Contains(p.Key))
-                        .Select(p => p.Key)
-                        .ToList();
-                    var tNewObject = pairs.Where(p => keyToBeStayed.Contains(p.Key)).ToList();
-                    return tNewObject;
+                    return await FilterHelper.FilterResponseAsync(body, await JsonSchema.FromJsonAsync(jsonSchemaEntity.Schema));
                 }
                 else return body;
             }

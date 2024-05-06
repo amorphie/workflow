@@ -1,8 +1,10 @@
 using amorphie.core.Extension;
 using amorphie.core.Identity;
 using amorphie.core.Module.minimal_api;
+using amorphie.workflow.core.Dtos.Transfer;
 using AutoMapper;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 namespace amorphie.workflow.Modules;
@@ -67,7 +69,7 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
             query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", dataSearch.Keyword)));
         }
 
-        var pageComponents = await query.Select(p => p.PageName).ToListAsync(cancellationToken);
+        var pageComponents = await query.Select(p => new SelectDto { Name = p.PageName }).ToListAsync(cancellationToken);
 
         if (pageComponents.Any())
         {
@@ -81,80 +83,80 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
          [FromRoute(Name = "pageName")] string pageName,
         CancellationToken cancellationToken
    )
+{
+    var query = await context!.PageComponents!.FirstOrDefaultAsync(f => f.PageName == pageName, cancellationToken);
+    if (query != null)
+        return Results.Ok(ObjectMapper.Mapper.Map<dynamic>(query));
+    return Results.NoContent();
+}
+protected override async ValueTask<IResult> UpsertMethod(
+    [FromServices] IMapper mapper,
+    [FromServices] IValidator<PageComponent> validator,
+    [FromServices] WorkflowDBContext context,
+    [FromServices] IBBTIdentity bbtIdentity,
+    [FromBody] DtoPageComponents data,
+    HttpContext httpContext,
+    CancellationToken token
+    )
+{
+    try
     {
-        var query = await context!.PageComponents!.FirstOrDefaultAsync(f => f.PageName == pageName, cancellationToken);
-        if (query != null)
-            return Results.Ok(ObjectMapper.Mapper.Map<dynamic>(query));
-        return Results.NoContent();
-    }
-    protected override async ValueTask<IResult> UpsertMethod(
-        [FromServices] IMapper mapper,
-        [FromServices] IValidator<PageComponent> validator,
-        [FromServices] WorkflowDBContext context,
-        [FromServices] IBBTIdentity bbtIdentity,
-        [FromBody] DtoPageComponents data,
-        HttpContext httpContext,
-        CancellationToken token
-        )
-    {
+
+        bool IsChange = false;
+        string json = string.Empty;
         try
         {
-
-            bool IsChange = false;
-            string json = string.Empty;
-            try
-            {
-                json = System.Text.Json.JsonSerializer.Serialize(data.componentJson);
-            }
-            catch (Exception ex)
-            {
-
-            }
-            PageComponent? existingPageComponent = await context.PageComponents.FirstOrDefaultAsync(f => f.PageName == data.pageName, token);
-            if (existingPageComponent == null)
-            {
-                PageComponent add = new PageComponent()
-                {
-
-                    PageName = data.pageName,
-                    ComponentJson = json,
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = bbtIdentity.UserId.Value,
-                    CreatedByBehalfOf = bbtIdentity.BehalfOfId.Value,
-                    ModifiedAt = DateTime.UtcNow,
-                    ModifiedBy = bbtIdentity.UserId.Value,
-                    ModifiedByBehalfOf = bbtIdentity.BehalfOfId.Value
-
-                };
-                await context.PageComponents.AddAsync(add, token);
-                IsChange = true;
-                await context.SaveChangesAsync(token);
-                return Results.Created($"/{add.Id}", mapper.Map<DtoPageComponents>(add));
-            }
-            else
-            {
-                existingPageComponent.ComponentJson = json;
-                existingPageComponent.ModifiedAt = DateTime.UtcNow;
-                existingPageComponent.ModifiedBy = bbtIdentity.UserId.Value;
-                existingPageComponent.ModifiedByBehalfOf = bbtIdentity.BehalfOfId.Value;
-                IsChange = true;
-            }
-            if (IsChange)
-            {
-                await context.SaveChangesAsync(token);
-                return Results.Ok();
-            }
-            else
-            {
-                return Results.NoContent();
-            }
-
+            json = System.Text.Json.JsonSerializer.Serialize(data.componentJson);
         }
         catch (Exception ex)
         {
-            return Results.Problem("Unexcepted error:" + ex.ToString());
+
         }
+        PageComponent? existingPageComponent = await context.PageComponents.FirstOrDefaultAsync(f => f.PageName == data.pageName, token);
+        if (existingPageComponent == null)
+        {
+            PageComponent add = new PageComponent()
+            {
+
+                PageName = data.pageName,
+                ComponentJson = json,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = bbtIdentity.UserId.Value,
+                CreatedByBehalfOf = bbtIdentity.BehalfOfId.Value,
+                ModifiedAt = DateTime.UtcNow,
+                ModifiedBy = bbtIdentity.UserId.Value,
+                ModifiedByBehalfOf = bbtIdentity.BehalfOfId.Value
+
+            };
+            await context.PageComponents.AddAsync(add, token);
+            IsChange = true;
+            await context.SaveChangesAsync(token);
+            return Results.Created($"/{add.Id}", mapper.Map<DtoPageComponents>(add));
+        }
+        else
+        {
+            existingPageComponent.ComponentJson = json;
+            existingPageComponent.ModifiedAt = DateTime.UtcNow;
+            existingPageComponent.ModifiedBy = bbtIdentity.UserId.Value;
+            existingPageComponent.ModifiedByBehalfOf = bbtIdentity.BehalfOfId.Value;
+            IsChange = true;
+        }
+        if (IsChange)
+        {
+            await context.SaveChangesAsync(token);
+            return Results.Ok();
+        }
+        else
+        {
+            return Results.NoContent();
+        }
+
     }
+    catch (Exception ex)
+    {
+        return Results.Problem("Unexcepted error:" + ex.ToString());
+    }
+}
 
 
 
