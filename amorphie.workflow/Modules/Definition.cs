@@ -8,7 +8,7 @@ using amorphie.core.Extension;
 using amorphie.core.IBase;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Dtos.Hierarchy;
-using amorphie.workflow.service.Filters;
+using amorphie.workflow.core.Dtos.Transfer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -53,6 +53,17 @@ public static class DefinitionModule
        .WithDescription("Returns existing workflows with metadata.Query parameter reference is can contain request or order reference of workflow.")
        .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
        .Produces(StatusCodes.Status404NotFound);
+       
+        app.MapGet("/workflow/definition/search/names", getAllWorkflowNameWithFullTextSearch)
+               .WithOpenApi(operation =>
+            {
+                operation.Parameters[5].Description = "Enum :  OrderByDescending=>1,OrderBy=>0";
+                return operation;
+            })
+       .WithSummary("Gets registered workflows")
+       .WithDescription("Returns existing workflows with metadata.Query parameter reference is can contain request or order reference of workflow.")
+       .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
+       .Produces(StatusCodes.Status404NotFound);
 
         app.MapPost("/workflow/definition", saveDefinition)
             .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
@@ -66,8 +77,7 @@ public static class DefinitionModule
                   operation.Responses["201"] = new OpenApiResponse { Description = "New definition created." };
 
                   return operation;
-              })
-              .AddEndpointFilter<SchemaValidationFilter>();
+              });
 
         app.MapPost("/workflow/definition/saveWorkflowWithFlow", saveWorkflowWitFlowAsync)
       .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
@@ -1071,6 +1081,42 @@ CancellationToken cancellationToken
                 ));
 
             return Results.Ok(response);
+        }
+
+        return Results.NoContent();
+    }
+    static async ValueTask<IResult> getAllWorkflowNameWithFullTextSearch(
+           [FromServices] WorkflowDBContext context,
+           [AsParameters] WorkflowSearch workflowSearch,
+   CancellationToken cancellationToken
+           )
+    {
+        var query = context!.Workflows!
+            .Include(d => d.Entities)
+            .Include(x => x.States).ThenInclude(s => s.Transitions).AsQueryable()
+            ;
+
+        if (!string.IsNullOrEmpty(workflowSearch.Keyword))
+        {
+            query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", workflowSearch.Keyword)));
+        }
+
+        if (!string.IsNullOrEmpty(workflowSearch.WorkflowEntities))
+        {
+            query = query.AsNoTracking().Where(p => p.Entities.Any(t => t.Name == workflowSearch.WorkflowEntities));
+        }
+        query = await query.Sort<Workflow>(workflowSearch.SortColumn, workflowSearch.SortDirection);
+        query = query.Skip(workflowSearch.Page * workflowSearch.PageSize)
+            .Take(workflowSearch.PageSize);
+
+        var workflows = await query.Select(s => new SelectDto
+        {
+            Name = s.Name
+        }).ToListAsync(cancellationToken);
+
+        if (workflows.Any())
+        {
+            return Results.Ok(workflows);
         }
 
         return Results.NoContent();
