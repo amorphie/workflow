@@ -11,7 +11,7 @@ public static class ComponentTransferModule
     public static void MapComponentTransferModuleEndpoints(this WebApplication app)
     {
 
-        app.MapPost("/pageComponent/transfer/component/save", ComponentTransferModuleApis.SaveTransferRequestAsync)
+        app.MapPost("/workflow/transfer/pagecomponent/save", ComponentTransferModuleApis.SaveTransferRequestAsync)
        .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
        .Produces(StatusCodes.Status201Created)
        .WithOpenApi(operation =>
@@ -23,7 +23,7 @@ public static class ComponentTransferModule
              return operation;
          });
 
-        app.MapPost("/pageComponent/transfer/component/approve", ComponentTransferModuleApis.ApproveTransferAsync)
+        app.MapPost("/workflow/transfer/pagecomponent/approve", ComponentTransferModuleApis.ApproveTransferAsync)
         .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
@@ -34,7 +34,7 @@ public static class ComponentTransferModule
             operation.Responses["204"].Description = "No request found.";
             return operation;
         });
-        app.MapPost("/pageComponent/transfer/component/cancel", ComponentTransferModuleApis.CancelTransferAsync)
+        app.MapPost("/workflow/transfer/pagecomponent/cancel", ComponentTransferModuleApis.CancelTransferAsync)
         .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .WithOpenApi(operation =>
@@ -49,7 +49,7 @@ public static class ComponentTransferModule
     }
 }
 
-public class ComponentTransferModuleApis
+public static class ComponentTransferModuleApis
 {
     public static async Task<IResult> SaveTransferRequestAsync([FromServices] ComponentTransferService service, [FromBody] DtoPageComponents data, CancellationToken cancellationToken)
     {
