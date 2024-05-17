@@ -4,7 +4,7 @@ WORKDIR /app
 RUN adduser -u 5679 --disabled-password --gecos "" amorphie-workflowuser && chown -R amorphie-workflowuser:amorphie-workflowuser /app
 USER amorphie-workflowuser
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0.4 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0.200 AS build
 WORKDIR /src
 ENV DOTNET_NUGET_SIGNATURE_VERIFICATION=false
 COPY ["./amorphie.workflow.zeebe/amorphie.workflow.zeebe.csproj", "."]
