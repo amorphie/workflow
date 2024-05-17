@@ -2,8 +2,10 @@ using amorphie.core.Extension;
 using amorphie.core.Identity;
 using amorphie.core.Module.minimal_api;
 using amorphie.workflow.service.Db;
+using amorphie.workflow.core.Dtos.Transfer;
 using AutoMapper;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Semver;
@@ -69,7 +71,7 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
             query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", dataSearch.Keyword)));
         }
 
-        var pageComponents = await query.Select(p => p.PageName).ToListAsync(cancellationToken);
+        var pageComponents = await query.Select(p => new SelectDto { Name = p.PageName }).ToListAsync(cancellationToken);
 
         if (pageComponents.Any())
         {
@@ -83,13 +85,13 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
          [FromRoute(Name = "pageName")] string pageName,
         CancellationToken cancellationToken
    )
-    {
-        var query = await context!.PageComponents!.FirstOrDefaultAsync(f => f.PageName == pageName, cancellationToken);
-        if (query != null)
-            return Results.Ok(ObjectMapper.Mapper.Map<dynamic>(query));
-        return Results.NoContent();
-    }
-    protected  async ValueTask<IResult> UpsertMethodWithVersion(
+{
+    var query = await context!.PageComponents!.FirstOrDefaultAsync(f => f.PageName == pageName, cancellationToken);
+    if (query != null)
+        return Results.Ok(ObjectMapper.Mapper.Map<dynamic>(query));
+    return Results.NoContent();
+}
+   protected  async ValueTask<IResult> UpsertMethodWithVersion(
         [FromServices] IMapper mapper,
         [FromServices] VersionService versionService,
         [FromServices] IValidator<PageComponent> validator,
@@ -154,7 +156,5 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
             return Results.Problem("Unexcepted error:" + ex.ToString());
         }
     }
-
-
 
 }
