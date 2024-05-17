@@ -14,6 +14,7 @@ public class WorkflowCreateDto
     public List<StateCreateDtoLegacy>? States { get; set; }
     public bool? IsForbiddenData { get; set; }
     public string? Hash { get; set; }
+    public string? SemVer { get; set; }
     public List<MultilanguageText>? HistoryForms { get; set; }
 
     public List<StateCreateDto>? NewStates { get; set; }
