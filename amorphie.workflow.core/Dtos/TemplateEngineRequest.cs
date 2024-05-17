@@ -27,6 +27,7 @@ namespace amorphie.workflow.core.Dtos
         public string? Identity { get; set; }
         [JsonPropertyNameAttribute("customer")]
         public string? Customer { get; set; }
+        public bool? IsSchribanRender { get; set; }
 
     }
 }

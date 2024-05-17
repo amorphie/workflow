@@ -9,4 +9,5 @@ public class TransferHistory : EntityBase
     public string RequestBody { get; set; } = default!;
     public string TransferringType { get; set; } = default!;
     public TransferStatus TransferStatus { get; set; }
+    public string? SemVer { get; set; } = default!;
 }
