@@ -7,12 +7,15 @@ using amorphie.core.Enums;
 using amorphie.core.Extension;
 using amorphie.core.IBase;
 using amorphie.workflow.core.Dtos;
+using amorphie.workflow.core.Dtos.Definition;
 using amorphie.workflow.core.Dtos.Hierarchy;
+using amorphie.workflow.core.Models.SemanticVersion;
+using amorphie.workflow.service.Db;
 using amorphie.workflow.service.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-
+using Semver;
 public static class DefinitionModule
 {
     public static void MapDefinitionEndpoints(this WebApplication app)
@@ -323,13 +326,15 @@ public static class DefinitionModule
 
 
     }
-    static IResult saveDefinition(
+  async  static Task<IResult> saveDefinition(
       [FromBody] PostWorkflowDefinitionRequest data,
       [FromServices] WorkflowDBContext context,
+      [FromServices] amorphie.workflow.service.Db.VersionService versionService,
+      CancellationToken token,
       [FromHeader(Name = "Language")] string? language = "en-EN"
       )
     {
-        var existingRecord = context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefault(w => w.Name == data.name);
+        var existingRecord =await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name == data.name,token);
         List<WorkflowEntity> entityList = new List<WorkflowEntity>();
         Guid recordId;
         bool recordIdNull = false;
@@ -376,15 +381,14 @@ public static class DefinitionModule
                     Label = s.label
                 }).ToList() : new List<Translation>()
             };
-            context!.Workflows!.Add(newWorkflow);
-            // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
-            context.SaveChanges();
+            newWorkflow.SemVer=new SemVersion(1,0,0).ToString();
+           
+            await context!.Workflows!.AddAsync(newWorkflow,token);
+            
+            await context.SaveChangesAsync(token);
+            await versionService.SaveVersionWorkflow(newWorkflow.Name,newWorkflow.SemVer,token);
             return Results.Created($"/workflow/definition/{data.name}", data);
-            // return new Response<PostWorkflowDefinitionResponse>
-            // {
-            //     Result = new Result(Status.Success, "Success Create"),
-            //     Data = new PostWorkflowDefinitionResponse(newWorkflow.Name),
-            // };
+
         }
         else
         {
@@ -487,8 +491,15 @@ public static class DefinitionModule
             }
 
             if (hasChanges)
-            {
-                context!.SaveChanges();
+            {   if(string.IsNullOrEmpty(existingRecord.SemVer))
+                {
+                    existingRecord.SemVer=new SemVersion(1,0,0).ToString();
+                }
+                SemVersion version= SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
+                version=version.WithMajor(version.Major+1);
+                existingRecord.SemVer=version.ToString();
+                await context!.SaveChangesAsync(token);
+                await versionService.SaveVersionWorkflow(existingRecord.Name,existingRecord.SemVer,token);
                 return Results.Ok();
             }
             else
@@ -499,6 +510,7 @@ public static class DefinitionModule
     }
     static async Task<IResult> saveWorkflowWitFlowAsync(
   [FromServices] WorkflowDBContext context,
+  [FromServices] VersionService versionService,
   [FromBody] PostWorkflowWithFlow data,
   CancellationToken cancellationToken,
   [FromHeader(Name = "Language")] string? language = "en-EN"
@@ -538,11 +550,13 @@ public static class DefinitionModule
                      Language = s.language
                  }).ToList() : new List<Translation>()
             };
-            context!.Workflows!.Add(newWorkflow);
+            newWorkflow.SemVer=new SemVersion(1,0,0).ToString();
+            await context!.Workflows!.AddAsync(newWorkflow,cancellationToken);
 
             await context.SaveChangesAsync(cancellationToken);
-
+            
             var resultState = await InsertStateAndTransitions(request, context, cancellationToken);
+            await versionService.SaveVersionWorkflow(newWorkflow.Name,newWorkflow.SemVer,cancellationToken);
             if (resultState.Status != Status.Success.ToString())
             {
                 return Results.Problem(resultState.Message);
@@ -645,7 +659,15 @@ public static class DefinitionModule
 
             if (hasChanges)
             {
+                if(string.IsNullOrEmpty(existingRecord.SemVer))
+                {
+                    existingRecord.SemVer=new SemVersion(1,0,0).ToString();
+                }
+                SemVersion version= SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
+                version=version.WithMajor(version.Major+1);
+                existingRecord.SemVer=version.ToString();
                 await context!.SaveChangesAsync(cancellationToken);
+                await versionService.SaveVersionWorkflow(existingRecord.Name,existingRecord.SemVer,cancellationToken);
                 return Results.Ok();
             }
             else
@@ -665,6 +687,13 @@ CancellationToken cancellationToken
         var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.RecordId == data.recordId, cancellationToken);
         if (existingRecord.WorkflowStatus != WorkflowStatus.Deactive)
         {
+             if(string.IsNullOrEmpty(existingRecord.SemVer))
+                {
+                    existingRecord.SemVer=new SemVersion(1,0,0).ToString();
+                }
+                SemVersion version= SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
+                version=version.WithMajor(version.Major+1);
+                existingRecord.SemVer=version.ToString();
             existingRecord.WorkflowStatus = WorkflowStatus.Deactive;
             await context.SaveChangesAsync(cancellationToken);
         }
@@ -679,6 +708,13 @@ CancellationToken cancellationToken
         var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.RecordId == data.recordId, cancellationToken);
         if (existingRecord.WorkflowStatus != WorkflowStatus.Active)
         {
+             if(string.IsNullOrEmpty(existingRecord.SemVer))
+                {
+                    existingRecord.SemVer=new SemVersion(1,0,0).ToString();
+                }
+                SemVersion version= SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
+                version=version.WithMajor(version.Major+1);
+                existingRecord.SemVer=version.ToString();
             existingRecord.WorkflowStatus = WorkflowStatus.Active;
             await context.SaveChangesAsync(cancellationToken);
         }
@@ -1133,7 +1169,7 @@ CancellationToken cancellationToken
         }
     }
 
-    static IResult getState(
+    static async Task<IResult> getState(
            [FromServices] WorkflowDBContext context,
            [FromRoute(Name = "definition-name")] string definition,
            [FromQuery(Name = "state-name")] string? state,
@@ -1175,14 +1211,16 @@ CancellationToken cancellationToken
 ;
         return Results.Ok(states);
     }
-    static IResult deleteState(
+    static  async Task<IResult> deleteState(
             [FromServices] WorkflowDBContext context,
+             [FromServices] amorphie.workflow.service.Db.VersionService versionService,
             [FromRoute(Name = "name")] string definition,
               [FromRoute(Name = "state-name")] string state,
+              CancellationToken token,
                [FromHeader(Name = "Language")] string? language = "en-EN"
         )
     {
-        var existingRecord = context.States!.Include(w => w.Titles)
+        var existingRecord =await context.States!.Include(w => w.Titles)
         .Include(w => w.Descriptions)
          .Include(w => w.PublicForms)
           .Include(w => w.UiForms).ThenInclude(s => s.Forms)
@@ -1190,7 +1228,7 @@ CancellationToken cancellationToken
         .Include(w => w.Transitions).ThenInclude(s => s.Pages)
         .Include(w => w.Transitions).ThenInclude(s => s.Forms)
         .Include(w => w.Transitions).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms)
-       .FirstOrDefault(w => w.WorkflowName == definition && w.Name == state)
+       .FirstOrDefaultAsync(w => w.WorkflowName == definition && w.Name == state,token)
        ;
 
 
@@ -1213,12 +1251,17 @@ CancellationToken cancellationToken
                 }
             }
             context!.Remove(existingRecord);
-            // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
-            context.SaveChanges();
-            // return new Response
-            // {
-            //     Result = new Result(Status.Success, "Success"),
-            // };
+            Workflow? workflow=await context.Workflows.FirstOrDefaultAsync(w=>w.Name==definition,token);
+            if(string.IsNullOrEmpty(workflow!.SemVer))
+            {
+                    workflow.SemVer=new SemVersion(1,0,0).ToString();
+            }
+            SemVersion version= SemVersion.Parse(workflow.SemVer, SemVersionStyles.Any);
+            version=version.WithMinor(version.Minor+1);
+            workflow.SemVer=version.ToString();
+            await context.SaveChangesAsync(token);
+
+            await versionService.SaveVersionWorkflow(workflow.Name,version.ToString(),token);
             return Results.Ok();
         }
         else
@@ -1227,28 +1270,30 @@ CancellationToken cancellationToken
         }
 
     }
-    static IResult saveState(
+    static async Task<IResult> saveState(
         [FromServices] WorkflowDBContext context,
+        [FromServices] VersionService versionService,
         [FromRoute(Name = "definitionname")] string definition,
         [FromBody] PostStateDefinitionRequest data,
+        CancellationToken token,
         [FromHeader(Name = "Language")] string? language = "en-EN"
         )
     {
-        var workflowControl = context.Workflows!
-               .FirstOrDefault(w => w.Name == definition)
+        var workflowControl =await context.Workflows!
+               .FirstOrDefaultAsync(w => w.Name == definition,token)
                ;
         if (workflowControl == null)
         {
             return Results.Problem("There is no " + definition + " named flow");
         }
-        var existingRecord = context.States!.Include(s => s.Titles).Include(s => s.Transitions).Include(s => s.PublicForms)
+        var existingRecord =await context.States!.Include(s => s.Titles).Include(s => s.Transitions).Include(s => s.PublicForms)
         .Include(s => s.UiForms).ThenInclude(s => s.Forms)
-               .FirstOrDefault(w => w.WorkflowName == definition && w.Name == data.name)
+               .FirstOrDefaultAsync(w => w.WorkflowName == definition && w.Name == data.name)
                ;
         if (existingRecord == null)
         {
-            var existingRecordControl = context.States!
-               .FirstOrDefault(w => w.Name == data.name)
+            var existingRecordControl =await context.States!
+               .FirstOrDefaultAsync(w => w.Name == data.name)
                ;
             if (existingRecordControl != null)
             {
@@ -1257,8 +1302,8 @@ CancellationToken cancellationToken
             if (data!.transitions!.Any())
             {
                 var controlList = data!.transitions!.Select(s => s.name).ToList();
-                var existingTransitionsControl = context.Transitions!
-                              .FirstOrDefault(w => controlList.Any(a => a == w.Name))
+                var existingTransitionsControl = await context.Transitions!
+                              .FirstOrDefaultAsync(w => controlList.Any(a => a == w.Name),token)
                               ;
                 if (existingTransitionsControl != null)
                 {
@@ -1367,9 +1412,20 @@ CancellationToken cancellationToken
                             }
                         } : new List<Translation>() { }
             };
-            context!.States!.Add(newRecord);
+            if(string.IsNullOrEmpty(workflowControl!.SemVer))
+            {
+                workflowControl.SemVer=new SemVersion(1,0,0).ToString();
+            }
+            
+           
+            await context!.States!.AddAsync(newRecord,token);
+            SemVersion version= SemVersion.Parse(workflowControl.SemVer, SemVersionStyles.Any);
+            version=version.WithMinor(version.Minor+1);
+            workflowControl.SemVer=version.ToString();
+
             // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
-            context!.SaveChanges();
+            await context.SaveChangesAsync(token);
+            await versionService.SaveVersionWorkflow(workflowControl.Name,version.ToString(),token);
             //AutoMapper a alıncak 
             // return new Response<GetStateDefinition>
             // {
@@ -1465,7 +1521,7 @@ CancellationToken cancellationToken
                                 Language = s.language
                             }).ToList()
                         };
-                        context.UiForms.Add(uiForm);
+                        await context.UiForms.AddAsync(uiForm,token);
                         hasChanges = true;
                     }
                     if (uiForm != null)
@@ -1508,21 +1564,21 @@ CancellationToken cancellationToken
             }
             foreach (var req in data.transitions)
             {
-                Transition? existingTransition = context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
+                Transition? existingTransition =await context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
                 .Include(s => s.Page).ThenInclude(t => t.Pages)
                   .Include(s => s.UiForms).ThenInclude(s => s.Forms)
-                .FirstOrDefault(db => db.Name == req.name && db.FromStateName == existingRecord.Name);
+                .FirstOrDefaultAsync(db => db.Name == req.name && db.FromStateName == existingRecord.Name,token);
                 //Kayıdı olmayan Transition ların eklenmesi
                 if (existingTransition == null)
                 {
-                    var existingTransitionsControl = context.Transitions!
-                           .FirstOrDefault(w => req.name == w.Name)
+                    var existingTransitionsControl = await context.Transitions!
+                           .FirstOrDefaultAsync(w => req.name == w.Name,token)
                            ;
                     if (existingTransitionsControl != null)
                     {
                         return Results.Problem("There is already " + existingTransitionsControl.Name + " transition in " + existingTransitionsControl.FromStateName + " state");
                     }
-                    context!.Transitions!.Add(new Transition
+                    await context!.Transitions!.AddAsync(new Transition
                     {
                         Name = req.name,
                         ToStateName = context!.States!.FirstOrDefault(f => f.Name == req.toState) != null ? req.toState : string.Empty,
@@ -1584,7 +1640,7 @@ CancellationToken cancellationToken
                         FromStateName = req.fromState,
                         CreatedAt = DateTime.UtcNow,
                         CreatedByBehalfOf = Guid.NewGuid(),
-                    });
+                    },token);
                     hasChanges = true;
                 }
                 if (existingTransition != null)
@@ -1594,7 +1650,7 @@ CancellationToken cancellationToken
                         existingTransition.FlowName = req.message;
                         //Kayıdı olup update edilmesi gereken transitionlar 
                         // existingTransition.FromStateName = req.fromState!;
-                        existingTransition.ToState = context!.States!.FirstOrDefault(f => f.Name == req.toState);
+                        existingTransition.ToState =await context!.States!.FirstOrDefaultAsync(f => f.Name == req.toState,token);
                         if (existingTransition.ToState != null)
                             existingTransition.ToStateName = req.toState;
                         // existingTransition.FromState = req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!;
@@ -1619,7 +1675,7 @@ CancellationToken cancellationToken
                         }
                         else
                         {
-                            ZeebeMessage? zeebeMessage = context!.ZeebeMessages!.FirstOrDefault(f => f.Name == req.message);
+                            ZeebeMessage? zeebeMessage =await context!.ZeebeMessages!.FirstOrDefaultAsync(f => f.Name == req.message,token);
                             if (zeebeMessage == null)
                             {
 
@@ -1631,7 +1687,7 @@ CancellationToken cancellationToken
                                     Message = req.message!,
                                     Process = definition,
                                 };
-                                context!.ZeebeMessages.Add(flow);
+                                await context!.ZeebeMessages.AddAsync(flow,token);
                                 existingTransition.FlowName = flow.Name;
                                 existingTransition.Flow = flow;
                             }
@@ -1757,7 +1813,7 @@ CancellationToken cancellationToken
                         },
                                     Timeout = req.page!.timeout
                                 };
-                                context.Pages.Add(pageNew);
+                                await context.Pages.AddAsync(pageNew,token);
                                 existingTransition.Page = pageNew;
                                 existingTransition.PageId = pageNew.Id;
                                 hasChanges = true;
@@ -1783,7 +1839,7 @@ CancellationToken cancellationToken
                         },
                                 Timeout = req.page!.timeout
                             };
-                            context.Pages.Add(pageNew);
+                            await context.Pages.AddAsync(pageNew,token);
                             existingTransition.Page = pageNew;
                             existingTransition.PageId = pageNew.Id;
                             hasChanges = true;
@@ -1794,9 +1850,11 @@ CancellationToken cancellationToken
             }
             if (hasChanges)
             {
-                // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
-                context!.SaveChanges();
-
+                SemVersion version= SemVersion.Parse(workflowControl.SemVer, SemVersionStyles.Any);
+                version=version.WithPatch(version.Patch+1);
+                workflowControl.SemVer=version.ToString();
+                await context!.SaveChangesAsync(token);
+                 await versionService.SaveVersionWorkflow(workflowControl.Name,version.ToString(),token);
                 return Results.Ok(new PostStateDefinitionResponse(data.name));
             }
             else

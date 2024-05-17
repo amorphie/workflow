@@ -1,14 +1,17 @@
 using amorphie.core.Extension;
 using amorphie.core.Identity;
 using amorphie.core.Module.minimal_api;
+using amorphie.workflow.service.Db;
 using AutoMapper;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Semver;
 namespace amorphie.workflow.Modules;
 
 public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent, WorkflowDBContext>
 {
+
     public PageComponentModule(WebApplication app) : base(app)
     {
     }
@@ -18,8 +21,7 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
     public override string? UrlFragment => "pageComponent";
     public override void AddRoutes(RouteGroupBuilder routeGroupBuilder)
     {
-        base.AddRoutes(routeGroupBuilder);
-
+        routeGroupBuilder.MapPost("/", UpsertMethodWithVersion);
         routeGroupBuilder.MapGet("search", getAllPageComponentFullTextSearch);
         routeGroupBuilder.MapGet("search/names", getAllPageComponentNameFullTextSearch);
         routeGroupBuilder.MapGet("/page/{pageName}", getPageComponentByPageName);
@@ -87,28 +89,27 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
             return Results.Ok(ObjectMapper.Mapper.Map<dynamic>(query));
         return Results.NoContent();
     }
-    protected override async ValueTask<IResult> UpsertMethod(
+    protected  async ValueTask<IResult> UpsertMethodWithVersion(
         [FromServices] IMapper mapper,
+        [FromServices] VersionService versionService,
         [FromServices] IValidator<PageComponent> validator,
         [FromServices] WorkflowDBContext context,
         [FromServices] IBBTIdentity bbtIdentity,
         [FromBody] DtoPageComponents data,
-        HttpContext httpContext,
         CancellationToken token
         )
     {
         try
         {
 
-            bool IsChange = false;
             string json = string.Empty;
             try
             {
                 json = System.Text.Json.JsonSerializer.Serialize(data.componentJson);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
+                json=string.Empty;
             }
             PageComponent? existingPageComponent = await context.PageComponents.FirstOrDefaultAsync(f => f.PageName == data.pageName, token);
             if (existingPageComponent == null)
@@ -123,31 +124,29 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
                     CreatedByBehalfOf = bbtIdentity.BehalfOfId.Value,
                     ModifiedAt = DateTime.UtcNow,
                     ModifiedBy = bbtIdentity.UserId.Value,
-                    ModifiedByBehalfOf = bbtIdentity.BehalfOfId.Value
-
+                    ModifiedByBehalfOf = bbtIdentity.BehalfOfId.Value,
+                    SemVer=new SemVersion(1,0,0).ToString()
                 };
                 await context.PageComponents.AddAsync(add, token);
-                IsChange = true;
                 await context.SaveChangesAsync(token);
+                await versionService.SaveVersionPageComponent(data.pageName!,add.SemVer,token);
                 return Results.Created($"/{add.Id}", mapper.Map<DtoPageComponents>(add));
             }
-            else
-            {
+
                 existingPageComponent.ComponentJson = json;
                 existingPageComponent.ModifiedAt = DateTime.UtcNow;
                 existingPageComponent.ModifiedBy = bbtIdentity.UserId.Value;
                 existingPageComponent.ModifiedByBehalfOf = bbtIdentity.BehalfOfId.Value;
-                IsChange = true;
-            }
-            if (IsChange)
-            {
+                if(string.IsNullOrEmpty(existingPageComponent.SemVer))
+                {
+                    existingPageComponent.SemVer=new SemVersion(1,0,0).ToString();
+                }
+                SemVersion version= SemVersion.Parse(existingPageComponent.SemVer, SemVersionStyles.Any);
+                version=version.WithPatch(version.Patch+1);
+                existingPageComponent.SemVer=version.ToString();
                 await context.SaveChangesAsync(token);
+                await versionService.SaveVersionPageComponent(existingPageComponent.PageName,existingPageComponent.SemVer,token);
                 return Results.Ok();
-            }
-            else
-            {
-                return Results.NoContent();
-            }
 
         }
         catch (Exception ex)
