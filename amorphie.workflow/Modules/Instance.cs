@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Globalization;
 using amorphie.core.Base;
 using amorphie.core.Enums;
@@ -114,18 +115,18 @@ public static class InstanceModule
             return operation;
         }).AddEndpointFilter<InstanceSchemaValidationFilter>();
 
-        app.MapGet("/workflow/uiform/updatedb", UiFormFill
-      )
-      .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
-      .Produces(StatusCodes.Status404NotFound)
-      .WithOpenApi(operation =>
-      {
+    //     app.MapGet("/workflow/uiform/updatedb", UiFormFill
+    //   )
+    //   .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
+    //   .Produces(StatusCodes.Status404NotFound)
+    //   .WithOpenApi(operation =>
+    //   {
 
 
-          operation.Tags = new List<OpenApiTag> { new() { Name = "UiForm" } };
+    //       operation.Tags = new List<OpenApiTag> { new() { Name = "UiForm" } };
 
-          return operation;
-      });
+    //       return operation;
+    //   });
 
         app.MapGet("/workflow/instance/{instanceId}/transition", getTransitionByInstanceAsync
             )
@@ -174,83 +175,60 @@ public static class InstanceModule
     });
 
     }
-    static async Task<IResult> UiFormFill(
-       [FromServices] WorkflowDBContext dbContext,
-        CancellationToken cancellationToken
- )
-    {
-        bool change = false;
-        var transitions = await dbContext.Transitions.Where(s => !s.UiForms.Any()).Include(s => s.Page).Include(s => s.Forms).Include(s => s.UiForms).ThenInclude(t => t.Forms).ToListAsync(cancellationToken);
-        if (transitions.Any())
-        {
-            foreach (Transition transition in transitions)
-            {
-                if (!transition.UiForms.Any() && transition.Forms.Any())
-                {
-                    change = true;
-                    UiForm uiFormAdd = new UiForm()
-                    {
-                        TypeofUiEnum = transition.TypeofUi != null ? transition.TypeofUi : TypeofUiEnum.Formio,
-                        Forms = transition.Forms.Select(s => new Translation()
-                        {
-                            Language = s.Language,
-                            Label = s.Label
-                        }).ToList(),
-                        TransitionName = transition.Name,
-                        Navigation = transition.Page == null ? NavigationType.PushReplacement : transition.Page.Type == PageType.Popup ? NavigationType.PopUp : NavigationType.PushReplacement,
-                        Id = Guid.NewGuid()
-                    };
-                    dbContext.UiForms.Add(uiFormAdd);
-
-                }
-            }
-        }
-
-        var states = await dbContext.States.Where(s => s.IsPublicForm == true && !s.UiForms.Any()).Include(s => s.PublicForms).Include(s => s.UiForms).ThenInclude(t => t.Forms).ToListAsync(cancellationToken);
-        if (states.Any())
-        {
-            foreach (State state in states)
-            {
-                if (!state.UiForms.Any() && state.PublicForms.Any())
-                {
-                    change = true;
-                    UiForm uiFormAdd = new UiForm()
-                    {
-                        TypeofUiEnum = TypeofUiEnum.FlutterWidget,
-                        Forms = state.PublicForms.Select(s => new Translation()
-                        {
-                            Language = s.Language,
-                            Label = s.Label
-                        }).ToList(),
-                        StateName = state.Name,
-                        Navigation = NavigationType.PushReplacement,
-                        Id = Guid.NewGuid()
-                    };
-                    dbContext.UiForms.Add(uiFormAdd);
-
-                }
-            }
-        }
-
-        if (change)
-            dbContext.SaveChanges();
-        return Results.Ok();
-    }
     static async ValueTask<IResult> InitInstance(
    [FromServices] WorkflowDBContext context,
      [FromRoute(Name = "workflowName")] string workflowName,
      [FromQuery(Name = "suffix")] string? suffix,
+        [FromHeader(Name = "user_reference")] string? userReference,
     CancellationToken cancellationToken
 
 )
     {
-        var currentState = await context.States.Where(w => w.WorkflowName == workflowName && w.Type == StateType.Start
-        && ((string.IsNullOrEmpty(suffix)) || (!string.IsNullOrEmpty(suffix) && w.AllowedSuffix != null && w.AllowedSuffix.Any(a => a.Equals(suffix)))))
-        .Include(s => s.Transitions)
-        .Include(s => s.UiForms)
-        .FirstOrDefaultAsync(cancellationToken);
+        var workflowControl = await context.Workflows.FirstOrDefaultAsync(f => f.Name == workflowName);
+        if (workflowControl == null)
+            return Results.NoContent();
+        State? currentState = null;
+
+        Instance? instance = null;
+        if (workflowControl.IsAllowOneActiveInstance.GetValueOrDefault(false))
+        {
+
+            instance = await context.Instances.OrderByDescending(o=>o.ModifiedAt).FirstOrDefaultAsync(f => f.WorkflowName == workflowName&&userReference==f.UserReference);
+
+
+        }
+        currentState = await context.States.Where(w => ((instance != null && instance.StateName == w.Name) || instance == null && w.Type == StateType.Start) && w.WorkflowName == workflowName
+&& ((string.IsNullOrEmpty(suffix)) || (!string.IsNullOrEmpty(suffix) && w.AllowedSuffix != null && w.AllowedSuffix.Any(a => a.Equals(suffix)))))
+.Include(s => s.Transitions)
+.Include(s => s.UiForms)
+.FirstOrDefaultAsync(cancellationToken);
+
         if (currentState == null)
             return Results.NoContent();
+
+        var initDto = await getRecordWorkflowInit(context, currentState, workflowControl.IsAllowOneActiveInstance, suffix);
+
+        if (instance != null)
+        {
+            initDto.instanceId = instance.Id.ToString();
+        }
+
+        if (initDto.transition.Count == 0)
+        {
+            initDto.transition.Add(new InitTransition
+            {
+                type = currentState.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
+                requireData = currentState.requireData,
+                transition = currentState.Name,
+                hasViewVariant = currentState.UiForms != null && currentState.UiForms.Count() > 1 ? true : false
+            });
+        }
+
+
+        return Results.Ok(initDto);
+    }
+    private static async Task<GetRecordWorkflowInit> getRecordWorkflowInit(WorkflowDBContext context, State currentState, bool? IsAllowOneActiveInstance, string? suffix)
+    {
         var initDto = new GetRecordWorkflowInit()
         {
             state = currentState.Name,
@@ -265,23 +243,13 @@ public static class InstanceModule
             }).ToList(),
         };
 
+
+
         if (!string.IsNullOrEmpty(initDto.initPageName) && !string.IsNullOrEmpty(suffix))
         {
             initDto.initPageName += "-" + suffix;
         }
-        if (initDto.transition.Count == 0)
-        {
-            initDto.transition.Add(new InitTransition
-            {
-                type = currentState.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
-                requireData = currentState.requireData,
-                transition = currentState.Name,
-                hasViewVariant = currentState.UiForms != null && currentState.UiForms.Count() > 1 ? true : false
-            });
-        }
-
-
-        return Results.Ok(initDto);
+        return initDto;
     }
     static async ValueTask<IResult> ViewTransition(
         [FromServices] WorkflowDBContext context,
@@ -697,56 +665,24 @@ public static class InstanceModule
 
   )
     {
-        var instance = await context.Instances!.Include(s => s.Workflow).Include(s => s.State).ThenInclude(s => s.Transitions).Where(s => s.WorkflowName != null)
-   .FirstOrDefaultAsync(w => w.Id == instanceId && w.Workflow!.IsForbiddenData != true, cancellationToken)
-   ;
-        InstanceTransition? instanceTransition;
-        if (instance == null)
-        {
-            return Results.NotFound("Instance:" + instanceId + " not found");
-        }
-
+         List<SignalRResponsePublic> response =await getSignalRData(context,instanceId.ToString(),cancellationToken);
         if (latest == null && latestPayload == null & firstPayload == null && string.IsNullOrEmpty(transitionName))
         {
             latest = true;
         }
         if (latest.HasValue && latest.Value)
         {
-            instanceTransition = await context.InstanceTransitions.Where(w => w.InstanceId == instanceId).OrderByDescending(c => c.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-            if (instanceTransition == null)
-            {
-                return Results.NotFound("Instance does not have a transition");
-            }
-            try
-            {
-                return Results.Ok(System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData));
-            }
-            catch (Exception ex)
-            {
-
-            }
-            return Results.Ok(instanceTransition.EntityData);
+           return Results.Ok(response.FirstOrDefault());
         }
         if (latestPayload.HasValue && latestPayload.Value)
         {
             try
             {
-                instanceTransition = await context.InstanceTransitions.Where(w => w.InstanceId == instanceId).OrderBy(c => c.CreatedAt).Reverse()
-                .Skip(1).FirstOrDefaultAsync(cancellationToken);
-                if (instanceTransition == null)
+                if(response.Count>1)
                 {
-                    return Results.NotFound("Instance does not have last transition");
+                    return Results.Ok(response.Skip(1).FirstOrDefault());
                 }
-                try
-                {
-                    return Results.Ok(System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData));
-                }
-                catch (Exception)
-                {
-
-                    return Results.Ok(instanceTransition.EntityData);
-                }
+                return Results.Ok(response.FirstOrDefault());
 
             }
             catch (Exception ex)
@@ -758,21 +694,7 @@ public static class InstanceModule
         {
             try
             {
-                instanceTransition = await context.InstanceTransitions.Where(w => w.InstanceId == instanceId).OrderBy(c => c.CreatedAt)
-                .FirstOrDefaultAsync(cancellationToken);
-                if (instanceTransition == null)
-                {
-                    return Results.NotFound("Instance does not have a transition");
-                }
-                try
-                {
-                    return Results.Ok(System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData));
-                }
-                catch (Exception)
-                {
-
-                    return Results.Ok(instanceTransition.EntityData);
-                }
+                return Results.Ok(response.OrderBy(o=>o.time).FirstOrDefault());
             }
             catch (Exception ex)
             {
@@ -783,21 +705,9 @@ public static class InstanceModule
         {
             try
             {
-                instanceTransition = await context.InstanceTransitions.Where(w => w.InstanceId == instanceId && transitionName == w.TransitionName)
-                .FirstOrDefaultAsync(cancellationToken);
-                if (instanceTransition == null)
-                {
-                    return Results.NotFound("Transition " + transitionName + " is not found");
-                }
-                try
-                {
-                    return Results.Ok(System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransition.EntityData));
-                }
-                catch (Exception)
-                {
-
-                    return Results.Ok(instanceTransition.EntityData);
-                }
+                string transitionControl="\"transitionName\":\""+transitionName+"\"";
+                response.Where(w=>w.data.Contains(transitionControl)).FirstOrDefault();
+        
             }
             catch (Exception ex)
             {
@@ -815,14 +725,20 @@ public static class InstanceModule
            [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
     )
     {
-        Instance instanceControl = await context.Instances.Include(i => i.Workflow).FirstOrDefaultAsync(f => f.Id.ToString() == instanceId);
-        if (instanceControl == null)
+        List<SignalRResponsePublic> response =await getSignalRData(context,instanceId,cancellationToken);
+        if(!response.Any())
         {
             return Results.NotFound();
         }
-        if (instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
+        return Results.Ok(response);
+
+    }
+    private async static Task<List<SignalRResponsePublic>> getSignalRData (WorkflowDBContext context,string instanceId, CancellationToken cancellationToken)
+    {
+        Instance instanceControl = await context.Instances.Include(i => i.Workflow).FirstOrDefaultAsync(f => f.Id.ToString() == instanceId);
+        if (instanceControl == null||instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
         {
-            return Results.Problem(instanceControl.WorkflowName + " is forbidden to get history");
+            return new List<SignalRResponsePublic>();
         }
         List<amorphie.workflow.core.Models.SignalR.SignalRData> signalrHistoryList = await context.SignalRResponses.Where(w => w.InstanceId == instanceId
              && (w.subject == EventInfos.WorkerCompleted || w.subject == EventInfos.TransitionCompleted)
@@ -831,7 +747,7 @@ public static class InstanceModule
              .OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);
         if (signalrHistoryList == null)
         {
-            return Results.NotFound();
+            return new List<SignalRResponsePublic>();
         }
         if (signalrHistoryList != null && signalrHistoryList.Any())
         {
@@ -842,10 +758,9 @@ public static class InstanceModule
                 temp.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(s.data);
                 return temp;
             }).ToList();
-            return Results.Ok(response);
+            return response;
         }
-        return Results.NotFound();
-
+        return new List<SignalRResponsePublic>();
     }
 }
 

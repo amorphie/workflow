@@ -2,6 +2,7 @@
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
 using amorphie.workflow.core.Models.GatewayMessages;
+using amorphie.workflow.core.Models.SemanticVersion;
 using amorphie.workflow.core.Models.SignalR;
 using amorphie.workflow.core.Models.Transfer;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,7 @@ public class WorkflowDBContext : DbContext
     public DbSet<UiForm> UiForms { get; set; } = default!;
     public DbSet<FlowHeader> FlowHeaders { get; set; } = default!;
     public DbSet<TransferHistory> TransferHistories { get; set; } = default!;
+    public DbSet<SemanticVersion> SemanticVersions { get; set; } = default!;
      public DbSet<HumanTask> HumanTasks { get; set; } = default!;
     public DbSet<TransitionRole> TransitionRoles { get; set; } = default!;
     //Hub Data
@@ -113,7 +115,8 @@ public class WorkflowDBContext : DbContext
                  .HasKey(s => s.Id);
         modelBuilder.Entity<FlowHeader>()
           .HasKey(w => w.Key);
-
+        modelBuilder.Entity<SemanticVersion>().ToTable("SemanticVersions", "transfer")
+        .HasKey(s => s.Id);
 
         modelBuilder.Entity<PageComponent>().HasIndex(item => item.SearchVector).HasMethod("GIN");
         modelBuilder.Entity<PageComponent>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new[] { "PageName" }), true);
