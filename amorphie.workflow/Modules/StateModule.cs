@@ -89,10 +89,11 @@ public static class StateModule
 
     static async Task<IResult> SaveWorkflowAsync(
       [FromServices] IWorkflowService service,
-      [FromBody] WorkflowCreateDto data
+      [FromBody] WorkflowCreateDto data,
+      CancellationToken token
       )
     {
-        var response = await service.SaveAsync(data);
+        var response = await service.SaveAsync(data,token);
         return ApiResult.CreateResult(response);
     }
 
@@ -121,10 +122,11 @@ public static class StateModule
     [FromServices] IStateService service,
     [FromRoute(Name = "workflowName")] string workflowName,
     [FromBody] StateCreateDto data,
+    CancellationToken token,
     [FromHeader(Name = "Language")] string? language = "en-EN"
     )
     {
-        var response = await service.SaveAsync(data, workflowName);
+        var response = await service.SaveAsync(data, workflowName,token);
         return ApiResult.CreateResult(response);
     }
 

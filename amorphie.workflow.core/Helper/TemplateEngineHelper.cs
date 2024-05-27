@@ -32,7 +32,8 @@ namespace amorphie.workflow.core.Helper
                 ItemId = string.Empty,
                 Action = "TemplateEngineForm",
                 Identity = string.Empty,
-                Customer = ""
+                Customer = "",
+                IsSchribanRender=false
             };
             var serializeRequest = JsonSerializer.Serialize(request);
             try
