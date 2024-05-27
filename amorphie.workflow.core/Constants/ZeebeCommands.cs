@@ -1,4 +1,4 @@
-
+namespace amorphie.workflow.core.Constants;
 public static class ZeebeCommands
 {
     public const string Topology = "topology";
