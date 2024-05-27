@@ -9,6 +9,7 @@ using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
 using amorphie.workflow.service.Db.Abstracts;
 using amorphie.workflow.service.Filters;
+using amorphie.workflow.service.Zeebe;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -172,7 +173,20 @@ public static class InstanceModule
         operation.Responses["404"].Description = "No instance found.";
         return operation;
     });
+    
+    app.MapGet("/workflow/instance/cancel/{processInstanceKey}", CancelInstance)
+           .Produces(StatusCodes.Status200OK)
+           .Produces(StatusCodes.Status204NoContent)
+           .WithOpenApi(operation =>
+           {
+               operation.Summary = "Cancel running instance by process instance key";
+               operation.Tags = new List<OpenApiTag> { new() { Name = "InstanceWorkflow" } };
 
+               operation.Responses["200"].Description = "Cancelled";
+               operation.Responses["204"].Description = "No instance found.";
+
+               return operation;
+           });
     }
     static async Task<IResult> UiFormFill(
        [FromServices] WorkflowDBContext dbContext,
@@ -846,6 +860,14 @@ public static class InstanceModule
         }
         return Results.NotFound();
 
+    }
+
+
+    static async Task<IResult> CancelInstance([FromRoute(Name = "processInstanceKey")] long processInstanceKey, [FromServices] IZeebeCommandService zeebeCommandService)
+    {
+        await zeebeCommandService.CancelInstanceAsync(processInstanceKey);
+
+        return Results.Ok();
     }
 }
 
