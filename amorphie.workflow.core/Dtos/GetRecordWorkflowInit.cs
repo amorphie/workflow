@@ -14,6 +14,8 @@ public class GetRecordWorkflowInit
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonPropertyName("init-page-name")]
     public string? initPageName { get; set; }
+     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? instanceId { get; set; }
 }
 public class InstanceStateTransitions : GetRecordWorkflowInit
 {

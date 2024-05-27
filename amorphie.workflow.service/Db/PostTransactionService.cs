@@ -46,7 +46,7 @@ public class PostTransactionService : IPostTransactionService
     private DaprClient _client { get; set; }
 
     private ConsumerPostTransitionRequest _data { get; set; }
-
+    private bool? IsAllowOneActiveInstance { get; set; }
     private List<Instance>? _activeInstances { get; set; }
     private Instance? _activeInstance { get; set; }
     private IConfiguration _configuration { get; set; }
@@ -138,14 +138,7 @@ public class PostTransactionService : IPostTransactionService
     }
     private async Task<IResponse?> TransitionControl(string transitionName)
     {
-        // _entity = entity;
-        // _recordId = recordId;
-        // _transitionName = transitionName;
-        // _user = user;
-        // _behalfOfUser = behalfOfUser;
-        // _data = data;
-        // _headerParameters = headerParameters;
-        // _instanceId=instanceId;
+        IsAllowOneActiveInstance=false;
         var transition = await _dbContext.Transitions.Where(w => w.Name == _transitionName).Include(t => t.Page).ThenInclude(t => t!.Pages)
    .Include(s => s.FromState).ThenInclude(s => s.Workflow).ThenInclude(s => s!.Entities)
     .Include(s => s.ToState).ThenInclude(s => s!.Workflow).ThenInclude(s => s!.Entities)
@@ -160,6 +153,7 @@ public class PostTransactionService : IPostTransactionService
         }
         if (transition != null)
         {
+            IsAllowOneActiveInstance=transition.FromState.Workflow.IsAllowOneActiveInstance;
             _transition = transition;
             return new Response
             {
@@ -180,6 +174,27 @@ public class PostTransactionService : IPostTransactionService
             {
                 Result = new Result(Status.Error, $"{lastInstance.WorkflowName} is deactive flow."),
             };
+        }
+        if(IsAllowOneActiveInstance.GetValueOrDefault(false))
+        {
+             string userReference=string.Empty;
+            try
+            {
+                userReference=_headerParameters.Where(a=>a.Key=="user_reference").FirstOrDefault().Value;
+            }
+            catch(Exception)
+            {
+                userReference=string.Empty;
+            }
+            var activeOnlyOneInstanceControl= await _dbContext.Instances.OrderByDescending(o=>o.ModifiedAt).FirstOrDefaultAsync(f=>f.Id!=id&&f.WorkflowName==_transition.FromState.WorkflowName&&f.UserReference==userReference);
+            if(activeOnlyOneInstanceControl!=null)
+            {
+                 return new Response
+                {
+                    Result = new Result(Status.Error, $"There is an active workflow exists with instanceId: {activeOnlyOneInstanceControl.Id}"),
+                    
+                };
+            }
         }
         if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName) && !(_activeInstances.Count == 0 && _transition.FromState.Type == StateType.Start))
         {

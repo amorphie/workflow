@@ -113,7 +113,6 @@ app.MapStateEndpoints();
 app.MapTransferModuleEndpoints();
 app.MapComponentTransferModuleEndpoints();
 app.MapHumanTaskModuleEndpoints();
-app.MapConsumerEndpoints();
 app.MapAuthorizeEndpoints();
 
 app.MapSchemaValidatorEndpoints();
