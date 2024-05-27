@@ -9,34 +9,53 @@ public class WorkflowService : IWorkflowService
     private readonly WorkflowDBContext _dbContext;
     private readonly DbSet<Workflow> _dbSet;
     private readonly IStateService _stateService;
-    public WorkflowService(WorkflowDBContext dbContext, IStateService stateService)
+    private readonly VersionService _versionService;
+    public WorkflowService(WorkflowDBContext dbContext, IStateService stateService,VersionService versionService)
     {
+        _versionService=versionService;
         _dbContext = dbContext;
         _dbSet = dbContext.Set<Workflow>();
         _stateService = stateService;
     }
 
-    public async Task<Response> SaveAsync(WorkflowCreateDto data)
+    public async Task<Response> SaveAsync(WorkflowCreateDto data, CancellationToken token)
     {
         var existingRecord = await _dbSet
             .Include(s => s.Entities)
             .Include(s => s.HistoryForms)
             .FirstOrDefaultAsync(w => w.Name == data.Name);
 
-
+        Semver.SemVersion version = new Semver.SemVersion(1, 0, 0);
         if (existingRecord == null)
         {
-            Insert(data);
+            await Insert(data);
         }
         else
         {
             Update(data, existingRecord);
         }
-        await _dbContext!.SaveChangesAsync();
+        if (await _dbContext!.SaveChangesAsync() > 0 )
+        {
+            if(existingRecord != null)
+            {
+                if (string.IsNullOrEmpty(existingRecord!.SemVer))
+            {
+                existingRecord.SemVer = version.ToString();
+            } 
+           version = Semver.SemVersion.Parse(existingRecord.SemVer, Semver.SemVersionStyles.Any);
+
+
+            version = version.WithMinor(version.Minor + 1);
+            existingRecord.SemVer = version.ToString();
+            await _dbContext!.SaveChangesAsync();
+            }
+             await _versionService.SaveVersionWorkflow(data.Name,version.ToString(),token);
+            
+        }
         //Save States and Trxs
         if (data.NewStates != null && data.NewStates.Count > 0)
         {
-            await _stateService.SaveBulkAsync(data.NewStates, data.Name);
+            await _stateService.SaveBulkAsync(data.NewStates, data.Name, token);
         }
         else if (data.States != null)
         {
@@ -72,7 +91,7 @@ public class WorkflowService : IWorkflowService
     }
 
 
-    public void Insert(WorkflowCreateDto data)
+    public async Task Insert(WorkflowCreateDto data)
     {
         //Why is this bussines for
 
@@ -96,6 +115,7 @@ public class WorkflowService : IWorkflowService
             Entities = InsertEntityList(data),
             RecordId = recordIdNull ? null : data.RecordId,
             CreatedAt = DateTime.UtcNow,
+            SemVer = new Semver.SemVersion(1, 0, 0).ToString(),
             CreatedByBehalfOf = Guid.NewGuid(),
             HistoryForms = data.HistoryForms != null && data.HistoryForms.Count() > 0 ? data.HistoryForms.Select(s => new Translation
             {
@@ -103,7 +123,8 @@ public class WorkflowService : IWorkflowService
                 Label = s.label
             }).ToList() : new List<Translation>()
         };
-        _dbContext.Workflows!.Add(newWorkflow);
+        await _dbContext.Workflows!.AddAsync(newWorkflow);
+        
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
 
     }

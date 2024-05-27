@@ -2,6 +2,7 @@
 
 using amorphie.core.Base;
 using NpgsqlTypes;
+using Semver;
 
 public class Workflow : EntityBaseWithOutId
 {
@@ -16,6 +17,7 @@ public class Workflow : EntityBaseWithOutId
     public NpgsqlTsVector? SearchVector { get; set; }
     public Guid? RecordId { get; set; }
     public bool? IsForbiddenData { get; set; }
+    public string? SemVer {get;set;}
 
 }
 
