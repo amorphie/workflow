@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -11,9 +12,11 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240521123422_MigrationActiveInstance")]
+    partial class MigrationActiveInstance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -287,9 +290,6 @@ namespace amorphie.workflow.data.Migrations
                         .HasColumnType("tsvector")
                         .HasComputedColumnSql("to_tsvector('english', coalesce(\"PageName\", ''))", true);
 
-                    b.Property<string>("SemVer")
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
                     b.HasIndex("PageId");
@@ -518,9 +518,6 @@ namespace amorphie.workflow.data.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("tsvector")
                         .HasComputedColumnSql("to_tsvector('english', coalesce(\"Name\", ''))", true);
-
-                    b.Property<string>("SemVer")
-                        .HasColumnType("text");
 
                     b.Property<string[]>("Tags")
                         .HasColumnType("text[]");
@@ -1364,50 +1361,6 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("JsonSchemas");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.SemanticVersion.SemanticVersion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("JsonBody")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("SemVer")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("SubjectName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("VersionTable")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SemanticVersions", "transfer");
-                });
-
             modelBuilder.Entity("amorphie.workflow.core.Models.SignalR.SignalRData", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1561,9 +1514,6 @@ namespace amorphie.workflow.data.Migrations
 
                     b.Property<string>("RequestBody")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("SemVer")
                         .HasColumnType("text");
 
                     b.Property<string>("SubjectName")

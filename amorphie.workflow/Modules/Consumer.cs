@@ -1,6 +1,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.IBase;
@@ -54,25 +55,6 @@ public static class ConsumerModule
                 return operation;
             });
 
-        app.MapGet("/workflow/consumer/{entitY}/record/{recordid}/history/{instanceId}", getHistoryDetail)
-            .Produces<GetRecordHistoryDetailResponse>(StatusCodes.Status200OK)
-            .WithOpenApi(operation =>
-            {
-                operation.Summary = "Return the instance with full detailed history.";
-                operation.Tags = new List<OpenApiTag> { new() { Name = "Consumer BFF" } };
-
-                return operation;
-            });
-
-        app.MapGet("/workflow/consumer/transitionNameFix", transitionNameFix)
-       .Produces<GetRecordHistoryDetailResponse>(StatusCodes.Status200OK)
-       .WithOpenApi(operation =>
-       {
-           operation.Summary = "Return the instance with full detailed history.";
-           operation.Tags = new List<OpenApiTag> { new() { Name = "Consumer BFF" } };
-
-           return operation;
-       });
     }
     private static string TemplateEngineFormWithoutJson(string templateName, string entityData, string templateUrlFromVault, string? transitionName)
     {
@@ -83,7 +65,8 @@ public static class ConsumerModule
         }
         return Convert.ToString(responseDynamic);
     }
-    private static dynamic? TemplateEngineForm(string templateName, string entityData, string templateUrlFromVault, string? transitionName, int? json)
+
+     private static dynamic? TemplateEngineForm(string templateName, string entityData, string templateUrlFromVault, string? transitionName, int? json)
     {
         string form = string.Empty;
 
@@ -109,7 +92,8 @@ public static class ConsumerModule
             ItemId = string.Empty,
             Action = "TemplateEngineForm",
             Identity = string.Empty,
-            Customer = ""
+            Customer = "",
+            IsSchribanRender=false
         };
         var serializeRequest = JsonSerializer.Serialize(request);
         try
@@ -131,6 +115,7 @@ public static class ConsumerModule
             return System.Text.Json.JsonSerializer.Deserialize<dynamic>(form);
         else return form;
     }
+   
     private static string ReplaceDropdown(string form)
     {
         //
@@ -158,12 +143,13 @@ public static class ConsumerModule
 
         return form;
     }
-    static IResponse<GetRecordWorkflowAndTransitionsResponse> getTransitions(
+    static async Task<IResponse<GetRecordWorkflowAndTransitionsResponse>> getTransitions(
            [FromServices] WorkflowDBContext dbContext,
            [FromRoute(Name = "entity")] string entity,
            [FromRoute(Name = "recordId")] Guid recordId,
            [FromServices] DaprClient client,
             IConfiguration configuration,
+            CancellationToken token,
            [FromHeader(Name = "Accept-Language")] string language = "tr-TR",
            [FromQuery][Range(0, 1)] int? json = 0
 
@@ -172,7 +158,7 @@ public static class ConsumerModule
         // TODO: Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
         //**************************//
         // load all workflows available to entity
-        var workflows = dbContext.WorkflowEntities!
+        var workflows =await  dbContext.WorkflowEntities!
                 .Where(e => e.Name == entity)
                 .Include(e => e.Workflow)
                     .ThenInclude(w => w.Titles.Where(l => l.Language == language))
@@ -199,8 +185,8 @@ public static class ConsumerModule
                     .ThenInclude(s => s.Transitions)
                     .ThenInclude(t => t.Page)
                     .ThenInclude(t => t.Pages)
-                .ToList();
-        // TODO: Avoid using where after tolist because tolist runs queries and loads data into memory.
+                .ToListAsync(token);
+
 
         if (json == null)
             json = amorphie.workflow.core.Enums.JsonEnum.NotJson.GetHashCode();
@@ -208,19 +194,9 @@ public static class ConsumerModule
         var stateManagerWorkflow = workflows.Where(item => item.IsStateManager == true).FirstOrDefault();
 
         // load all active workflows of record.
-        var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != StatusType.Completed).ToList();
-        //   using var client = new DaprClientBuilder().Build();
-        //         var tokenRequestData=new GetTokenRequest(){
-        //             Scope=string.Empty,
-        //             InstanceId=instanceRecords.FirstOrDefault()!.Id,
-        //         };
-        //  var token =  client.InvokeMethodAsync<GetTokenRequest, string>(HttpMethod.Post, "amorphie-workflow-hub", "security/create-token", tokenRequestData).Result;
-
+        var instanceRecords =await dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId && i.BaseStatus != StatusType.Completed).ToListAsync(token);
 
         var response = new GetRecordWorkflowAndTransitionsResponse();
-        //response.IsStateRecordRegistered = instanceRecords.Count > 0;
-
-        // TODO :  Move this configuration to the vault.
         var templateURL = configuration["templateEngineUrl"]!.ToString();
         string lastTransitionEntitydata = string.Empty;
         if (stateManagerWorkflow != null)
@@ -229,11 +205,11 @@ public static class ConsumerModule
 
             if (stateManagerInstace != null)
             {
-                InstanceTransition lastTransition = dbContext.InstanceTransitions
+                InstanceTransition lastTransition = await dbContext.InstanceTransitions
                 .Where(f => f.InstanceId == stateManagerInstace.Id)
-                .OrderByDescending(o => o.CreatedAt).First();
+                .OrderByDescending(o => o.CreatedAt).FirstAsync(token);
                 lastTransitionEntitydata = lastTransition.EntityData;
-                State? state = dbContext.States.FirstOrDefault(s => s.Name == stateManagerInstace.StateName);
+                State? state = await dbContext.States.FirstOrDefaultAsync(s => s.Name == stateManagerInstace.StateName,token);
                 response.StateManager = workflows.Where(item => item.IsStateManager == true).Select(item =>
                   new GetRecordWorkflowAndTransitionsResponse.StateManagerWorkflow
                   {
@@ -361,23 +337,23 @@ public static class ConsumerModule
     }
 
 
-    static IResponse<GetRecordHistoryResponse> getHistory(
+    static async Task<IResponse<GetRecordHistoryResponse>> getHistory(
          [FromRoute(Name = "entity")] string entity,
          [FromRoute(Name = "recordId")] Guid recordId,
           [FromServices] WorkflowDBContext dbContext,
           IConfiguration configuration,
+           CancellationToken token,
            [FromHeader(Name = "Accept-Language")] string language = "en-EN"
      )
     {
 
         var templateURL = configuration["templateEngineUrl"]!.ToString();
-        // TODO: Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
         var response = new GetRecordHistoryResponse();
         try
         {
             //
-            var instanceRecords = dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId).Include(s => s.Workflow).ThenInclude(t => t.Entities)
-            .Include(s => s.Workflow).ThenInclude(t => t.HistoryForms).ToList();
+            var instanceRecords =await dbContext.Instances.Where(i => i.EntityName == entity && i.RecordId == recordId).Include(s => s.Workflow).ThenInclude(t => t.Entities)
+            .Include(s => s.Workflow).ThenInclude(t => t.HistoryForms).ToListAsync(token);
 
 
 
@@ -471,47 +447,6 @@ public static class ConsumerModule
     }
 
 
-    static IResult getHistoryDetail(
-         [FromRoute(Name = "entity")] string entity,
-         [FromRoute(Name = "recordid")] Guid recordId,
-         [FromRoute(Name = "instanceId")] Guid instanceId,
-           [FromServices] WorkflowDBContext dbContext
-     )
-    {
-
-        //  var instanceTransRecords = dbContext.InstanceTransitions.Include(e => e.Instance)
-        //  .Where(i =>i.InstanceId==instanceId&&i.Instance.EntityName==entity&&i.Instance.RecordId==recordId).ToList();
-        // GetRecordHistoryDetailResponse response= new GetRecordHistoryDetailResponse(instanceTransRecords.Select(s=>new GetRecordHistoryDetailResponse.Transition(
-        //     s.Id,
-        //     "",
-        //     s.FromStateName,
-        //     s.ToStateName,
-        //     "",
-
-        // )).ToList());
-        return Results.Ok();
-    }
-    static IResult transitionNameFix(
-           [FromServices] WorkflowDBContext dbContext
-     )
-    {
-        // TODO: Include a parameter for the cancelation token and convert all ToList objects to ToListAsync with the cancelation token.
-        bool change = false;
-        var InstanceTransitions = dbContext.InstanceTransitions.Include(s => s.FromState).Where(w => w.FromStateName != null && w.ToStateName != null).ToList();
-        foreach (InstanceTransition instanceTransition in InstanceTransitions)
-        {
-            var transition = dbContext.Transitions.FirstOrDefault(f => f.ToStateName == instanceTransition.ToStateName && f.FromStateName == instanceTransition.FromStateName);
-            if (transition != null)
-            {
-                instanceTransition.TransitionName = transition.Name;
-                change = true;
-            }
-        }
-        if (change)
-            dbContext.SaveChanges();
-        return Results.Ok();
-    }
-
     private static void postTransitionNoFlowNotInstance(Transition transition) { }
     private static void postTransitionNoFlowHasInstance(Transition transition) { }
     private static void postTransitionHasFlowHasInstance(Transition transition) { }
@@ -519,6 +454,7 @@ public static class ConsumerModule
 }
 
 // TODO : Move this objects to core project
+
 public record GetRecordWorkflowAndTransitionsResponse
 {
     public StateManagerWorkflow? StateManager { get; set; }

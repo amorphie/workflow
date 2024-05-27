@@ -12,6 +12,7 @@ public class PageComponent : amorphie.core.Base.EntityBase
     public NpgsqlTsVector SearchVector { get; set; }
 
     public string? ComponentJson { get; set; }
+    public string? SemVer { get; set; }
 
 }
 
