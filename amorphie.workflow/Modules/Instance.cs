@@ -742,7 +742,7 @@ public static class InstanceModule
         }
         List<amorphie.workflow.core.Models.SignalR.SignalRData> signalrHistoryList = await context.SignalRResponses.Where(w => w.InstanceId == instanceId
              && (w.subject == EventInfos.WorkerCompleted || w.subject == EventInfos.TransitionCompleted)
-             && w.routeChange == true
+             
              )
              .OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);
         if (signalrHistoryList == null)
