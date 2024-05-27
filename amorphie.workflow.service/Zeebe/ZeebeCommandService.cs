@@ -12,6 +12,7 @@ namespace amorphie.workflow.service.Zeebe
         Task<long> PublishMessage(string message, dynamic variables, string? correlationKey, string? gateway);
         Task<Result> ThrowError(string gateway, long processInstanceKey, long jobKey, string errorCode = "500", string errorMessage = "Bussines Error");
         Task<Result> SetErrorAsVariable(string gateway, long jobKey, string errorCode, string errorMessageString = "Bussines Error");
+        Task<Result> CancelInstanceAsync( long processInstanceKey);
 
     }
 
@@ -98,10 +99,26 @@ namespace amorphie.workflow.service.Zeebe
                 return new Result(Status.Error, $"Problem occurred while setting error as variable. Original error: {errorCode} {errorMessageString} -- ThrowError Exception: {ex}");
             }
 
+        }      
+        public async Task<Result> CancelInstanceAsync( long processInstanceKey)
+        {
+            //TODO: Get gateway from environment
+            string gateway="workflow-zeebe-command";
+            try
+            {
+                await _daprClient.InvokeBindingAsync(gateway, ZeebeCommands.CancelInstance, new CancelInstanceRequest(processInstanceKey));
+                return new Result(Status.Success, "", "");
+            }
+            catch (Exception ex)
+            {
+                return new Result(Status.Error, $"Problem occurred while cancelling instance. Original error:ThrowError Exception: {ex}");
+            }
+
         }
         private record publishMessageResponse(long Key);
         private record publishMessageRequest(string MessageName, string CorrelationKey, string MessageId, string TimeToLive, dynamic Variables);
         private record ThrowErrorRequest(long JobKey, string ErrorCode, string ErrorMessage);
         private record SetVariableRequest(long ElementInstanceKey, dynamic Variables);
+        private sealed record CancelInstanceRequest(long ProcessInstanceKey);
     }
 }
