@@ -16,7 +16,7 @@ public class MFATypeHub : Hub
     {
         _logger.LogInformation($"Client try to  Connect: {Context.ConnectionId}");
 
-        (string HeaderDeviceID,string HeaderToken) = CheckQueryParams();
+        (string HeaderDeviceID,string HeaderToken) = CheckHeaderParams();
 
         string GroupName = HeaderDeviceID + HeaderToken;
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
