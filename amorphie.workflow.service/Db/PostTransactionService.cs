@@ -424,7 +424,7 @@ public class PostTransactionService : IPostTransactionService
         targetObject.TriggeredByBehalfOf = _behalfOfUser;
 
         string updateName = deleteUnAllowedCharecters(_transitionName);
-        variables.Add($"TRX-{_transitionName}", targetObject);
+       // variables.Add($"TRX-{_transitionName}", targetObject);
         variables.Add($"TRX{updateName}", targetObject);
         variables.Add($"Headers", headers);
         return variables;

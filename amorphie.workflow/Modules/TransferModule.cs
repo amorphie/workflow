@@ -45,6 +45,17 @@ public static class TransferModule
             operation.Responses["204"].Description = "No instance found.";
             return operation;
         });
+         app.MapGet("/workflow/transfer/wf/get/transferHistory", TransferModuleApis.GetTransferHistoryAsync)
+        .Produces<amorphie.core.Base.Response<List<string>>>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status204NoContent)
+        .WithOpenApi(operation =>
+        {
+            operation.Summary = "Get Template List From Legacy To New Style Bulk";
+            operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
+            operation.Responses["200"].Description = "wf with its states and routes those which mutated from legacy transitions and states.";
+            operation.Responses["204"].Description = "No instance found.";
+            return operation;
+        });
           app.MapPost("/workflow/transfer/wf/save/templates", TransferModuleApis.SaveTemplatesFromLegacyBulkAsync)
         .Produces<amorphie.core.Base.Response<TemplateEngineTemplateDefinitions>>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
@@ -130,6 +141,11 @@ public class TransferModuleApis
     public static async Task<IResult> GetTemplatesFromLegacyBulkAsync([FromServices] TransferService service, [FromBody] TemplateListRequestModel data,  CancellationToken cancellationToken)
     {
         var response = await service.GetTemplatesFromLegacyBulkAsync(data, cancellationToken);
+        return ApiResult.CreateResult(response);
+    }
+    public static async Task<IResult> GetTransferHistoryAsync([FromServices] TransferService service, [AsParameters] TransferHistoryRequestDto data,  CancellationToken cancellationToken)
+    {
+        var response = await service.GetTransferHistoryAsync(data, cancellationToken);
         return ApiResult.CreateResult(response);
     }
     public static async Task<IResult> SaveTemplatesFromLegacyBulkAsync([FromServices] TransferService service, [FromBody] TemplateEngineTransferModel data, CancellationToken cancellationToken)

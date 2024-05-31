@@ -154,7 +154,7 @@ public static class StateManagerModule
         }
         else
         {
-            targetStateAsState = await dbContext.States.FirstOrDefaultAsync(f => f.Name == targetState
+            targetStateAsState = await dbContext.States.Include(s=>s.Workflow).FirstOrDefaultAsync(f => f.Name == targetState
 
             // && (f.WorkflowName == instance.WorkflowName || (instance.State.Type == StateType.SubWorkflow &&
             // instance.State.SubWorkflowName == f.WorkflowName))
@@ -167,6 +167,34 @@ public static class StateManagerModule
 
             error = true;
             IsTargetState = true;
+            if(instance.WorkflowName!=targetStateAsState.WorkflowName&&targetStateAsState.Workflow!.IsAllowOneActiveInstance.GetValueOrDefault(false))
+            {
+                string? userReference= body.Headers.user_reference;
+             Instance? instanceOne = await dbContext.Instances
+            .Where(i => i.WorkflowName ==targetStateAsState.WorkflowName&&userReference==i.UserReference)
+            .Include(i => i.State)
+                .ThenInclude(s => s.Transitions)
+                .ThenInclude(t => t.ToState)
+                .ThenInclude(t => t!.Workflow)
+                .ThenInclude(t => t!.Entities)
+            .Include(i => i.State)
+                .ThenInclude(s => s.Transitions)
+                .ThenInclude(s => s.Page)
+                .ThenInclude(s => s!.Pages)
+            .Include(i => i.State)
+                .ThenInclude(s => s.Transitions)
+                .ThenInclude(t => t.ToState)
+                .ThenInclude(t => t!.Transitions)
+            .Include(i => i.State)
+                .ThenInclude(s => s.FromStates)
+            .FirstOrDefaultAsync(cancellationToken);   
+                 
+            if(instanceOne!=null)
+            {
+                instance=instanceOne;
+            }
+            
+            }
             transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
                 .ThenInclude(t => t!.Entities).Where(t => t.Name == body.LastTransition
             //    && (instance.WorkflowName == t.ToState!.WorkflowName || (instance.State.Type == StateType.SubWorkflow &&
@@ -281,7 +309,7 @@ public static class StateManagerModule
         targetObject.TriggeredBy = instanceTransition.CreatedBy;
         targetObject.TriggeredByBehalfOf = instanceTransition.CreatedByBehalfOf;
         string updateName = _transitionName.DeleteUnAllowedCharecters();
-        variables.Add($"TRX-{_transitionName}", targetObject);
+        //variables.Add($"TRX-{_transitionName}", targetObject);
         variables.Add($"TRX{updateName}", targetObject);
         return variables;
     }
