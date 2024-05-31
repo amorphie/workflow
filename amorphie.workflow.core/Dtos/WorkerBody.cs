@@ -103,6 +103,7 @@ public class WorkerBodyHeaders
     public string? ACustomer { get; set; }
     public string? XDeviceId { get; set; }
     public string? XRequestId { get; set; }
+    public string? user_reference { get; set; }
 
 }
 public class WorkerBodyTrxDatas
