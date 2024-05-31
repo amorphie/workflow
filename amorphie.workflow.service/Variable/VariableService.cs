@@ -39,7 +39,7 @@ public class VariableService
         targetObject.TriggeredBy = instance.CreatedBy;
         targetObject.TriggeredByBehalfOf = instance.CreatedByBehalfOf;
         string updateName = instance.StateName.DeleteUnAllowedCharecters();
-        variables.Add($"TRX-{instance.StateName}", targetObject);
+        //variables.Add($"TRX-{instance.StateName}", targetObject);
         variables.Add($"TRX{updateName}", targetObject);
         return variables;
     }
