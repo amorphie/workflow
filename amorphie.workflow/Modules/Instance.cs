@@ -206,7 +206,7 @@ public static class InstanceModule
         if (currentState == null)
             return Results.NoContent();
 
-        var initDto = await getRecordWorkflowInit(context, currentState, workflowControl.IsAllowOneActiveInstance, suffix);
+        var initDto =  getRecordWorkflowInit(currentState, suffix);
 
         if (instance != null)
         {
@@ -227,7 +227,7 @@ public static class InstanceModule
 
         return Results.Ok(initDto);
     }
-    private static async Task<GetRecordWorkflowInit> getRecordWorkflowInit(WorkflowDBContext context, State currentState, bool? IsAllowOneActiveInstance, string? suffix)
+    private static  GetRecordWorkflowInit getRecordWorkflowInit(State currentState, string? suffix)
     {
         var initDto = new GetRecordWorkflowInit()
         {
@@ -666,7 +666,7 @@ public static class InstanceModule
   )
     {
          List<SignalRResponsePublic> response =await getSignalRData(context,instanceId.ToString(),cancellationToken);
-        if (latest == null && latestPayload == null & firstPayload == null && string.IsNullOrEmpty(transitionName))
+        if (latest == null && latestPayload == null && firstPayload == null && string.IsNullOrEmpty(transitionName))
         {
             latest = true;
         }
@@ -706,7 +706,7 @@ public static class InstanceModule
             try
             {
                 string transitionControl="\"transitionName\":\""+transitionName+"\"";
-                response.Where(w=>w.data.Contains(transitionControl)).FirstOrDefault();
+                return  Results.Ok(response.Find(w=>w.data.Contains(transitionControl)));
         
             }
             catch (Exception ex)
