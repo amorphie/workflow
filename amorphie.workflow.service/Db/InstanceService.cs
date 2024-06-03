@@ -63,7 +63,7 @@ public partial class InstanceService : IInstanceService
         var headers = await SetHeaders(instanceId, headerParameters);
         _instanceTransitionService.Insert(instance!, request, headers, DateTime.UtcNow, DateTime.UtcNow, user, behalfOfUser);
 
-        _dbContext.SaveChanges();
+        await _dbContext.SaveChangesAsync(cancellationToken);
         if (targetState?.Kind == StateKind.Transition)
         {
             dynamic variables = VariableService.CreateMessageVariables(instance!, request, headers);
@@ -84,7 +84,7 @@ public partial class InstanceService : IInstanceService
         }
         var instance = commitResult.Instance;
         _instanceTransitionService.Insert(instance!, workerBodyTrxDatas.Data!, DateTime.UtcNow, DateTime.UtcNow, workerBodyTrxDatas.TriggeredBy.GetValueOrDefault(Guid.Empty), workerBodyTrxDatas.TriggeredByBehalfOf.GetValueOrDefault(Guid.Empty));
-        _dbContext.SaveChanges();
+        await _dbContext.SaveChangesAsync(cancellationToken);
         return Response.Success("", instance!);
     }
 

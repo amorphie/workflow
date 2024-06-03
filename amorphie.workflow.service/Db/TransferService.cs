@@ -188,7 +188,9 @@ public class TransferService
             RequestBody = JsonSerializer.Serialize(workflowDto),
             SubjectName = workflowDto.Name,
             TransferStatus = TransferStatus.WaitingForApproval,
-            TransferringType = nameof(Workflow)
+            TransferringType = nameof(Workflow),
+            SemVer=workflowDto.SemVer
+            
         };
         _dbContext.TransferHistories.Add(transferHistroy);
         await _dbContext.SaveChangesAsync();
@@ -220,7 +222,7 @@ public class TransferService
             {
                 return Response.Error("Request body must not be modified before save");
             }
-            var saveResponse = await _workflowService.SaveAsync(workflowDto!);
+            var saveResponse = await _workflowService.SaveAsync(workflowDto!,cancellationToken);
             transferHistroy.TransferStatus = TransferStatus.Approved;
         }
         else
@@ -479,6 +481,7 @@ public class TransferService
             Name = workflow.Name,
             Titles = workflow.Titles.Select(title => ManuelMultilanguageMapper.Map(title)).ToList(),
             Tags = workflow.Tags,
+            SemVer=workflow.SemVer,
             RecordId = workflow.RecordId.HasValue ? workflow.RecordId.Value : Guid.Empty,
             Entities = workflow.Entities.Select(e => new WorkflowEntityDto
             {
