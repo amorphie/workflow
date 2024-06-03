@@ -1,4 +1,5 @@
 
+
 using System.Dynamic;
 using System.Text.Json;
 using amorphie.workflow.core.Extensions;
@@ -9,6 +10,7 @@ public class FilterHelper
     {
         if (body.TryConvertToDictionary(out Dictionary<string, object>? pairs) && pairs != null)
         {
+
             var expando = new ExpandoObject();
             var tObjectKeysLower = pairs.Select(x => x.Key);
             var keyToBeStayed = schema.Properties.Where(p => tObjectKeysLower.Contains(p.Key))
@@ -19,6 +21,4 @@ public class FilterHelper
         }
         return body;
     }
-
-    
 }

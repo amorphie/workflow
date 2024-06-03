@@ -1,9 +1,7 @@
 using amorphie.core.Extension;
 using amorphie.core.Identity;
 using amorphie.core.Module.minimal_api;
-
 using amorphie.workflow.service.Db;
-
 using amorphie.workflow.core.Dtos.Transfer;
 using AutoMapper;
 using FluentValidation;
@@ -104,9 +102,8 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
         CancellationToken token
         )
     {
-        try
+   try
         {
-
             string json = string.Empty;
             try
             {
@@ -153,12 +150,12 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
                 await versionService.SaveVersionPageComponent(existingPageComponent.PageName,existingPageComponent.SemVer,token);
                 return Results.Ok();
 
-        }
-        catch (Exception ex)
-        {
-            return Results.Problem("Unexcepted error:" + ex.ToString());
-        }
     }
+    catch (Exception ex)
+    {
+        return Results.Problem("Unexcepted error:" + ex.ToString());
+    }
+}
 
 
 }

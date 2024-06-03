@@ -6,11 +6,13 @@ using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Models.SignalR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Serilog;
 
 namespace amorphie.workflow.hub.Module;
 
 public static class SendSignalrModule
 {
+    private static readonly Serilog.ILogger _logger = Log.ForContext<MFATypeHub>();
     public static void MapSignalrEndpoints(this WebApplication app)
     {
         app.MapPost("/sendMessage", SendMessage);
@@ -42,6 +44,7 @@ public static class SendSignalrModule
         data.routeChange = null;
         var opt = new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
         string jsonString = JsonSerializer.Serialize(data, opt);
+         _logger.Information($"Hub data info: {jsonString}");
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
         await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
@@ -57,9 +60,11 @@ public static class SendSignalrModule
     {
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
         var dbData = PrepareData(data, deviceId, tokenId);
+
         data.routeChange = null;
         var opt = new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
         string jsonString = JsonSerializer.Serialize(data, opt);
+        _logger.Information($"Hub data info: {jsonString}");
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
         await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
