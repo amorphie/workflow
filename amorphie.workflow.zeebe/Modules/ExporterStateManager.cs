@@ -178,7 +178,7 @@ public static class ExporterStateManagerModule
         targetObject.TriggeredBy = instanceTransition.CreatedBy;
         targetObject.TriggeredByBehalfOf = instanceTransition.CreatedByBehalfOf;
         string updateName = deleteUnAllowedCharecters(_transitionName);
-        //variables.Add($"TRX-{_transitionName}", targetObject);
+        variables.Add($"TRX-{_transitionName}", targetObject);
         variables.Add($"TRX{updateName}", targetObject);
         return variables;
     }
