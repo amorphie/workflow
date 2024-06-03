@@ -11,6 +11,7 @@ using System.Text.Json;
 using amorphie.workflow.core.Models.Transfer;
 using amorphie.workflow.core.Dtos.Transfer;
 using System.Diagnostics;
+using amorphie.core.Extension;
 
 namespace amorphie.workflow.service.Db;
 public class TransferService
@@ -269,6 +270,18 @@ public class TransferService
                     HttpResponseMessage response = await clientHttp.PostAsync(transferModel.TransferToUrl, new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json"));
                     if (response.StatusCode == System.Net.HttpStatusCode.OK)
                     {
+                             var transferHistroy = new TransferHistory
+        {
+            Hash = "",
+            RequestBody =serializeRequest,
+            SubjectName = formFrom.name,
+            TransferStatus = TransferStatus.Approved,
+            TransferringType = nameof(TemplateEngineRequest),
+            SemVer=formFrom.semanticVersion
+            
+        };
+        await _dbContext.TransferHistories.AddAsync(transferHistroy);
+        await _dbContext.SaveChangesAsync(cancellationToken);
                         return new Response<TemplateEngineTemplateDefinitions>
                         {
                             Data = formFrom,
@@ -311,6 +324,43 @@ public class TransferService
         return new Response<List<string>>
         {
             Data = templateList.Distinct().ToList(),
+            Result = new Result(amorphie.core.Enums.Status.Success, "")
+        };
+
+    }
+    public async Task<Response<List<TransferHistoryResponseDto>>> GetTransferHistoryAsync(TransferHistoryRequestDto dataSearch, CancellationToken cancellationToken)
+    {
+
+        var query = _dbContext!.TransferHistories!.Where(a=>a.TransferStatus==TransferStatus.Approved).AsQueryable();
+        query = await query.Sort<TransferHistory>(dataSearch.SortColumn ?? "ModifiedAt", dataSearch.SortDirection);
+        query = query.Skip(dataSearch.Page * dataSearch.PageSize)
+        .Take(dataSearch.PageSize);
+        List<TransferHistoryResponseDto> response =new List<TransferHistoryResponseDto>();
+
+        if (!string.IsNullOrEmpty(dataSearch.Keyword))
+        {
+            query = query.AsNoTracking().Where(p =>p.SubjectName==dataSearch.Keyword);
+        }
+        if (!string.IsNullOrEmpty(dataSearch.TransferringType))
+        {
+            query = query.AsNoTracking().Where(p =>p.TransferringType==dataSearch.TransferringType);
+        }
+        if (await query.CountAsync(cancellationToken) > 0)
+        {
+            response =await query.Select(s => new TransferHistoryResponseDto(){
+                CreatedAt=s.CreatedAt,
+                FinishedAt=s.ModifiedAt,
+                 SubjectName=s.SubjectName,
+                  TransferringType=s.TransferringType,
+                  SemVer=s.SemVer,
+                  CreatedBy=s.CreatedBy
+                  
+            }).ToListAsync(cancellationToken);
+
+        }
+        return new Response<List<TransferHistoryResponseDto>>
+        {
+            Data = response,
             Result = new Result(amorphie.core.Enums.Status.Success, "")
         };
 
