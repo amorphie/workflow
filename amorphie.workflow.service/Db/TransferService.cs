@@ -267,9 +267,9 @@ public class TransferService
             {
                     var serializeRequest = JsonSerializer.Serialize(formFrom);
 
-                    // HttpResponseMessage response = await clientHttp.PostAsync(transferModel.TransferToUrl, new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json"));
-                    // if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                    // {
+                    HttpResponseMessage response = await clientHttp.PostAsync(transferModel.TransferToUrl, new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json"));
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
                              var transferHistroy = new TransferHistory
         {
             Hash = "",
@@ -287,7 +287,7 @@ public class TransferService
                             Data = formFrom,
                             Result = new Result(amorphie.core.Enums.Status.Success, string.Empty)
                         };
-                    // }
+                    }
             }
 
 
