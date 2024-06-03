@@ -309,7 +309,7 @@ public static class StateManagerModule
         targetObject.TriggeredBy = instanceTransition.CreatedBy;
         targetObject.TriggeredByBehalfOf = instanceTransition.CreatedByBehalfOf;
         string updateName = _transitionName.DeleteUnAllowedCharecters();
-        //variables.Add($"TRX-{_transitionName}", targetObject);
+        variables.Add($"TRX-{_transitionName}", targetObject);
         variables.Add($"TRX{updateName}", targetObject);
         return variables;
     }
