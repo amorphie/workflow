@@ -44,7 +44,7 @@ public static class SendSignalrModule
         data.routeChange = null;
         var opt = new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
         string jsonString = JsonSerializer.Serialize(data, opt);
-         _logger.Information($"Hub data info: {jsonString}");
+        _logger.Information("Hub data info: {0}",jsonString);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
         await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");
@@ -64,7 +64,7 @@ public static class SendSignalrModule
         data.routeChange = null;
         var opt = new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
         string jsonString = JsonSerializer.Serialize(data, opt);
-        _logger.Information($"Hub data info: {jsonString}");
+        _logger.Information("Hub data info: {0}",jsonString);
         await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
         await SaveSignalRData(dbData, cancellationToken, dbContext);
         return Results.Ok("");

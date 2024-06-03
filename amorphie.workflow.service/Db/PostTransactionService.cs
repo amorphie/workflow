@@ -177,23 +177,10 @@ public class PostTransactionService : IPostTransactionService
         }
         if(IsAllowOneActiveInstance.GetValueOrDefault(false))
         {
-             string userReference=string.Empty;
-            try
+            var response= await IsAllowOneActiveInstanceControl(id);
+            if(response.Result.Status==Status.Error.ToString())
             {
-                userReference=_headerParameters.Where(a=>a.Key=="user_reference").FirstOrDefault().Value;
-            }
-            catch(Exception)
-            {
-                userReference=string.Empty;
-            }
-            var activeOnlyOneInstanceControl= await _dbContext.Instances.OrderByDescending(o=>o.ModifiedAt).FirstOrDefaultAsync(f=>f.Id!=id&&f.WorkflowName==_transition.FromState.WorkflowName&&f.UserReference==userReference);
-            if(activeOnlyOneInstanceControl!=null)
-            {
-                 return new Response
-                {
-                    Result = new Result(Status.Error, $"There is an active workflow exists with instanceId: {activeOnlyOneInstanceControl.Id}"),
-                    
-                };
+                return response;
             }
         }
         if (!_activeInstances.Any(i => i.StateName == _transition.FromStateName) && !(_activeInstances.Count == 0 && _transition.FromState.Type == StateType.Start))
@@ -216,7 +203,39 @@ public class PostTransactionService : IPostTransactionService
             }
 
         }
-        InstanceTransition? lastTrans = null;
+       
+        return await LastTransitionControl(lastInstance);
+    }
+    private async Task<IResponse> IsAllowOneActiveInstanceControl(Guid id)
+    {
+           string? userReference=string.Empty;
+            try
+            {
+                userReference=_headerParameters.FirstOrDefault(a=>a.Key=="user_reference")!.Value;
+            }
+            catch(Exception)
+            {
+                userReference=string.Empty;
+            }
+            var activeOnlyOneInstanceControl= await _dbContext.Instances.OrderByDescending(o=>o.ModifiedAt).FirstOrDefaultAsync(f=>f.Id!=id&&f.WorkflowName==_transition.FromState.WorkflowName&&f.UserReference==userReference);
+            if(activeOnlyOneInstanceControl!=null)
+            {
+                string messageReturn=$"There is an active workflow exists with instanceId: {activeOnlyOneInstanceControl.Id}";
+                 return new Response
+                {
+                    Result = new Result(Status.Error,messageReturn),
+                    
+                };
+            }
+             return new Response
+                {
+                    Result = new Result(Status.Success,string.Empty),
+                    
+                };
+    }
+    private async Task<IResponse> LastTransitionControl(Instance? lastInstance)
+    {
+         InstanceTransition? lastTrans = null;
         if (lastInstance != null)
         {
             lastTrans = await _dbContext.InstanceTransitions.Where(w => w.InstanceId == lastInstance.Id).OrderByDescending(c => c.CreatedAt).FirstOrDefaultAsync();
@@ -226,7 +245,6 @@ public class PostTransactionService : IPostTransactionService
         {
             Result = new Result(Status.Success, "Success"),
         };
-
     }
 
 
