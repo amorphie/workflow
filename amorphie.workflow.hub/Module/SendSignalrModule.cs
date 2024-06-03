@@ -39,15 +39,7 @@ public static class SendSignalrModule
          [FromHeader(Name = "X-Request-Id")] string? requestId
       )
     {
-        httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
-        var dbData = PrepareData(data, deviceId, tokenId);
-        data.routeChange = null;
-        var opt = new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
-        string jsonString = JsonSerializer.Serialize(data, opt);
-        _logger.Information("Hub data info: {0}",jsonString);
-        await hubContext.Clients.Group(deviceId + tokenId).SendAsync("SendMessage", jsonString);
-        await SaveSignalRData(dbData, cancellationToken, dbContext);
-        return Results.Ok("");
+        return await  SendMessageCommon(hubContext,dbContext,httpContext,data,deviceId,tokenId,cancellationToken);
     }
     static async Task<IResult> SendMessagePrivate(IHubContext<MFATypeHub> hubContext,
       [FromServices] WorkflowDBContext dbContext,
@@ -57,6 +49,11 @@ public static class SendSignalrModule
      [FromHeader(Name = "A-Customer")] string? customer,
       [FromHeader(Name = "X-Device-Id")] string? deviceId,
       [FromHeader(Name = "X-Token-Id")] string? tokenId)
+    {
+      return await  SendMessageCommon(hubContext,dbContext,httpContext,data,deviceId,tokenId,cancellationToken);
+    }
+    private async static Task<IResult> SendMessageCommon(IHubContext<MFATypeHub> hubContext,
+     WorkflowDBContext dbContext, HttpContext httpContext, SignalRRequest data,string? deviceId,string? tokenId, CancellationToken cancellationToken)
     {
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, data.id);
         var dbData = PrepareData(data, deviceId, tokenId);
