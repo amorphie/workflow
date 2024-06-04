@@ -50,6 +50,7 @@ namespace amorphie.workflow.hub
                 {
                     state.InitPageName = state.Name;
                 }
+                
                 string eventInfo = EventInfos.WorkerCompleted;
                 PostSignalRData postSignalRData = new PostSignalRData(
                              Guid.Empty,
@@ -83,31 +84,36 @@ namespace amorphie.workflow.hub
                 };
                 dbData = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
                 dbData.data = postSignalRData;
-                //dbData.baseState="New";
-                dbData.baseState = string.Empty;
+                dbData.baseState = await BaseStateControl(dbContext,instanceId);
                 return Results.Ok(dbData);
             }
             dbData.routeChange = null;
 
             dbData = ObjectMapper.Mapper.Map<SignalRResponsePublic>(data);
-            dbData.baseState = core.Constants.StatusTypes.InProgress;
             try
             {
-                PostSignalRData? postSignalRData = JsonSerializer.Deserialize<PostSignalRData>(dbData.data);
-                State? state = await dbContext.States.FirstOrDefaultAsync(f => f.Name == postSignalRData.state, cancellationToken);
-                if (state != null && state.Type == StateType.Finish)
-                {
-
-                    dbData.baseState = core.Constants.StatusTypes.Completed;
-                }
+                dbData.baseState =await BaseStateControl(dbContext,instanceId);
             }
             catch (Exception)
             {
                 dbData.baseState = core.Constants.StatusTypes.InProgress;
             }
-            dbData.baseState = string.Empty;
             dbData.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(dbData.data);
             return Results.Ok(dbData);
+        }
+        private async static Task<string> BaseStateControl(WorkflowDBContext dbContext, string? instanceId)
+        {
+            Instance? instance = await dbContext.Instances.FirstOrDefaultAsync(f => f.Id.ToString() == instanceId);
+            if (instance != null && instance.BaseStatus != amorphie.core.Enums.StatusType.LockedInFlow)
+            {
+                return core.Constants.StatusTypes.Completed;
+            }
+            if(instance==null)
+            {
+                return core.Constants.StatusTypes.New;
+            }
+            return core.Constants.StatusTypes.InProgress;
+
         }
     }
 }
