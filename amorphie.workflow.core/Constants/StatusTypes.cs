@@ -9,4 +9,5 @@ public static class StatusTypes
 {
     public const string InProgress = "InProgress";
     public const string Completed = "Completed";
+    public const string New = "New";
 }
