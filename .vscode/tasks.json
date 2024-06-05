@@ -50,6 +50,18 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "workflow-hzconsumer-build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/amorphie.workflow.hzconsumer/amorphie.workflow.hzconsumer.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "appId": "amorphie-workflow",
             "dependsOn": "workflow-build",
             "appPort": 4201,
@@ -98,6 +110,18 @@
             "metricsPort": 42042
         },
         {
+            "appId": "amorphie-workflow-hzconsumer",
+            "dependsOn": "workflow-hzconsumer-build",
+            "appPort": 4205,
+            "httpPort": 42050,
+            "grpcPort": 42051,
+            "label": "dapr-debug-amorphie-workflow-hzconsumer",
+            "type": "daprd",
+            "componentsPath": "dapr/components",
+            "config": "dapr/config.yaml",
+            "metricsPort": 42052
+        },
+        {
             "appId": "amorphie-workflow",
             "label": "daprd-down-amorphie-workflow",
             "type": "daprd-down"
@@ -115,6 +139,11 @@
         {
             "appId": "amorphie-workflow-redisconsumer",
             "label": "daprd-down-amorphie-workflow-redisconsumer",
+            "type": "daprd-down"
+        },
+        {
+            "appId": "amorphie-workflow-hzconsumer",
+            "label": "daprd-down-amorphie-workflow-hzconsumer",
             "type": "daprd-down"
         }
     ]
