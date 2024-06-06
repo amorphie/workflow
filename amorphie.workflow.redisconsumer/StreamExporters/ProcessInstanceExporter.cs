@@ -1,5 +1,5 @@
 ﻿using amorphie.workflow.core.Constants;
-using amorphie.workflow.core.Models.GatewayMessages;
+using amorphie.workflow.core.Models.Consumer;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using Serilog;
 using StackExchange.Redis;
@@ -74,7 +74,7 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
                 _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
             }
         }
-        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+        //var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
 
     }
     private ProcessInstance StreamToEntity(ProcessInstanceStream stream)
@@ -84,18 +84,9 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
             BpmnProcessId = stream.Value.BpmnProcessId,
             Key = stream.Key,
             Timestamp = stream.Timestamp,
-            ValueType = stream.ValueType,
-            BrokerVersion = stream.BrokerVersion,
-            SourceRecordPosition = stream.SourceRecordPosition,
-            Intent = stream.Intent,
-
-            Position = stream.Position,
+            Intent = stream.Intent ?? "",
             ProcessInstanceKey = stream.Value.ProcessInstanceKey,
             ProcessDefinitionKey = stream.Value.ProcessDefinitionKey,
-            RecordType = stream.RecordType,
-
-            RejectionType = stream.RejectionType,
-            RejectionReason = stream.RejectionReason,
             BpmnElementType = stream.Value.BpmnElementType,
             BpmnEventType = stream.Value.BpmnEventType,
             ElementId = stream.Value.ElementId,
@@ -104,7 +95,6 @@ internal class ProcessInstanceExporter : BaseExporter, IExporter
             ParentProcessInstanceKey = stream.Value.ParentProcessInstanceKey,
             PartitionId = stream.PartitionId,
             Version = stream.Value.Version
-
         };
     }
 }

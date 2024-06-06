@@ -22,8 +22,13 @@ builder.Services.AddSingleton<IDatabase>(cfg =>
 });
 builder.Services.AddDbContext<WorkflowDBContext>(options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")), ServiceLifetime.Singleton, ServiceLifetime.Singleton);
 
-builder.Services.AddHostedService<IndividiualReadWorker>();
-builder.Services.AddHostedService<StreamCleanerWorker>();
+//builder.Services.AddHostedService<IndividiualReadWorker>();
+//builder.Services.AddHostedService<StreamCleanerWorker>();
+
+
+builder.Services.AddHostedService<IndividiualReadWorkerUsingProto>();
+
+
 //Add Bussiness Services
 builder.Services.AddSingleton<IZeebeCommandService, ZeebeCommandService>();
 builder.Services.AddSingleton<IInstanceService, InstanceService>();
