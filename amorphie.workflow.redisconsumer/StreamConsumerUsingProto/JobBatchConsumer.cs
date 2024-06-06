@@ -1,6 +1,9 @@
-﻿using amorphie.workflow.core.Constants;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
+using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Models.Consumer;
+using amorphie.workflow.redisconsumer.StreamExporters;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using amorphie.workflow.service.Db.Abstracts;
 using Microsoft.EntityFrameworkCore;
@@ -8,14 +11,14 @@ using Serilog;
 using StackExchange.Redis;
 
 
-namespace amorphie.workflow.redisconsumer.StreamExporters;
+namespace amorphie.workflow.redisconsumer.StreamConsumerUsingProto;
 
-internal class JobBatchExporter : BaseExporter, IExporter
+internal class JobBatchConsumer : BaseExporter, IExporter
 {
-    private static readonly Serilog.ILogger _logger = Log.ForContext<JobExporter>();
+    private static readonly Serilog.ILogger _logger = Log.ForContext<JobBatchConsumer>();
     private readonly IInstanceService _instanceService;
 
-    public JobBatchExporter(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, IInstanceService instanceService) : base(dbContext, redisDb, consumerName)
+    public JobBatchConsumer(WorkflowDBContext dbContext, IDatabase redisDb, string consumerName, IInstanceService instanceService) : base(dbContext, redisDb, consumerName)
     {
         this.streamName = ZeebeStreamKeys.Streams.JOB;
         this.groupName = ZeebeStreamKeys.Groups.JOB_GROUP;
@@ -25,26 +28,26 @@ internal class JobBatchExporter : BaseExporter, IExporter
 
     public override async Task DoBussiness(StreamEntry[] streamEntries, CancellationToken cancellationToken)
     {
-        var messageToBeDeleted = new List<RedisValue>();
         string? currentProccessId = "";
         foreach (var process in streamEntries)
         {
             try
             {
-                var stream = Deserialize<JobBatchStream>(process);
+                var record = Record.Parser.ParseFrom(process.Values.First().Value);
+                var stream = record.Record_.Unpack<JobBatchRecord>();
+
                 if (stream == null)
                 {
                     continue;
                 }
                 currentProccessId = process.Id;
-                if (stream.Value.Type == ZeebeVariableKeys.AmorphieWorkflowSetState || stream.Value.Jobs == null)
+                if (stream.Type == ZeebeVariableKeys.AmorphieWorkflowSetState || stream.Jobs == null)
                 {
-                    messageToBeDeleted.Add(process.Id);
                     continue;
                 }
-                if (stream.Intent == ZeebeEventKeys.ACTIVATED)
+                if (stream.Metadata.Intent == ZeebeEventKeys.ACTIVATED)
                 {
-                    foreach (var job in stream.Value.Jobs)
+                    foreach (JobRecord job in stream.Jobs)
                     {
                         if (job.Variables == null)
                         {
@@ -54,12 +57,15 @@ internal class JobBatchExporter : BaseExporter, IExporter
                         var savingResult = await dbContext.SaveChangesAsync();
                         if (savingResult > 0)
                         {
-                            messageToBeDeleted.Add(process.Id);
-                            Boolean.TryParse(job.CustomHeaders[ZeebeVariableKeys.Headers.NOTIFY_CLIENT]?.ToString(), out bool notifyClient);
-                            string? targetState = job.CustomHeaders[ZeebeVariableKeys.Headers.TARGET_STATE]?.ToString();
+                            var notifyClient = job.CustomHeaders.Fields.FirstOrDefault(p => p.Key == ZeebeVariableKeys.Headers.NOTIFY_CLIENT).Value?.BoolValue ?? false;
+                            var targetState = job.CustomHeaders.Fields.FirstOrDefault(p => p.Key == ZeebeVariableKeys.Headers.TARGET_STATE).Value?.StringValue;
                             if (notifyClient || !string.IsNullOrEmpty(targetState))
                             {
-                                var workerBody = JsonObjectConverter.JsonToWorkerBody(job.Variables);
+                                var varsAsJson = JsonSerializer.Deserialize<JsonObject>(job.Variables.ToString(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                                if (varsAsJson == null)
+                                    continue;
+                                    
+                                var workerBody = JsonObjectConverter.JsonToWorkerBody(varsAsJson);
                                 var workerBodyTrxDatas = JsonObjectConverter.GetWorkerBodyTrxData(workerBody);
                                 if (notifyClient)
                                 {
@@ -67,17 +73,12 @@ internal class JobBatchExporter : BaseExporter, IExporter
                                 }
                                 if (!string.IsNullOrEmpty(targetState))
                                 {
+
                                     await _instanceService.ChangeInstanceStateAsync(workerBody.InstanceId, targetState, workerBodyTrxDatas, cancellationToken);
                                 }
                             }
                         }
                     }
-                    messageToBeDeleted.Add(process.Id);
-                }
-                else
-                {
-                    //delete the messages which have other Intent's
-                    messageToBeDeleted.Add(process.Id);
                 }
             }
             catch (Exception e)
@@ -85,29 +86,29 @@ internal class JobBatchExporter : BaseExporter, IExporter
                 _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
             }
         }
-        //var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
     }
-    private async Task InsertOrUpdateJobBatchAsync(JobBatchStream stream, JobBatchJobs job, CancellationToken cancellationToken)
+
+    private async Task InsertOrUpdateJobBatchAsync(JobBatchRecord stream, JobRecord job, CancellationToken cancellationToken)
     {
-        var entity = await dbContext.JobBatchs.FirstOrDefaultAsync(s => s.ElementInstanceKey == job.ElementInstanceKey && s.Key == stream.Key, cancellationToken);
+        var entity = await dbContext.JobBatchs.FirstOrDefaultAsync(s => s.ElementInstanceKey == job.ElementInstanceKey && s.Key == stream.Metadata.Key, cancellationToken);
         if (entity != null)
         {
-            entity.EndTimestamp = stream.Timestamp;
-            entity.Intent = stream.Intent;
+            entity.EndTimestamp = stream.Metadata.Timestamp;
+            entity.Intent = stream.Metadata.Intent;
             dbContext.JobBatchs.Update(entity);
         }
         else
         {
             //Start event triggered for the first time
             entity = StreamToEntity(job);
-            entity.Key = stream.Key;
-            entity.Timestamp = stream.Timestamp;
-            entity.Intent = stream.Intent;
+            entity.Key = stream.Metadata.Key;
+            entity.Timestamp = stream.Metadata.Timestamp;
+            entity.Intent = stream.Metadata.Intent;
             dbContext.JobBatchs.Add(entity);
         }
     }
 
-    private JobBatch StreamToEntity(JobBatchJobs job)
+    private JobBatch StreamToEntity(JobRecord job)
     {
         return new JobBatch
         {
@@ -116,15 +117,26 @@ internal class JobBatchExporter : BaseExporter, IExporter
             ProcessInstanceKey = job.ProcessInstanceKey,
         };
     }
-
-    private async Task SendHubMessageAsync(JobBatchJobs job, WorkerBody workerBody, WorkerBodyTrxDatas workerBodyTrxDatas, CancellationToken cancellationToken)
+    private async Task SendHubMessageAsync(JobRecord job, WorkerBody workerBody, WorkerBodyTrxDatas workerBodyTrxDatas, CancellationToken cancellationToken)
     {
         if (RegisteredClients.ClientList.TryGetValue(job.ProcessInstanceKey, out WorkerBodyHeaders? bodyHeaders) && bodyHeaders != null)
         {
-            var url = job.CustomHeaders[ZeebeVariableKeys.Url]?.ToString() ?? "";
-            var pageUrl = job.CustomHeaders[ZeebeVariableKeys.Headers.PAGE_URL]?.ToString() ?? "";
-            var viewSource = job.CustomHeaders[ZeebeVariableKeys.Headers.VIEW_SOURCE]?.ToString() ?? "";
-            var pageLanguage = job.CustomHeaders[ZeebeVariableKeys.Headers.PAGE_LANGUAGE]?.ToString() ?? "en-EN";
+
+            var url = job.CustomHeaders.Fields.FirstOrDefault(p => p.Key == ZeebeVariableKeys.Headers.TARGET_STATE).Value?.StringValue ?? "";
+            var pageUrl = job.CustomHeaders.Fields.FirstOrDefault(p => p.Key == ZeebeVariableKeys.Headers.PAGE_URL).Value?.StringValue ?? "";
+            var viewSource = job.CustomHeaders.Fields.FirstOrDefault(p => p.Key == ZeebeVariableKeys.Headers.VIEW_SOURCE).Value?.StringValue ?? "";
+            var pageLanguage = job.CustomHeaders.Fields.FirstOrDefault(p => p.Key == ZeebeVariableKeys.Headers.PAGE_LANGUAGE).Value?.StringValue ?? "en-EN";
+            // var jobVars = job.Variables;
+            // var lastTransition = jobVars.Fields.FirstOrDefault(p => p.Key == ZeebeVariableKeys.LastTransition).Value?.StringValue ?? "";
+            // var varInstanceId = new Guid(jobVars.Fields.FirstOrDefault(p => p.Key == ZeebeVariableKeys.InstanceId).Value?.StringValue ?? "");
+            // var message = jobVars.Fields.FirstOrDefault(p => p.Key.ToLower() == ZeebeVariableKeys.message).Value?.StringValue ?? "";
+            // var errorCode = jobVars.Fields.FirstOrDefault(p => p.Key.ToLower() == ZeebeVariableKeys.errorCode).Value?.StringValue ?? "";
+
+            // var lastTrx = jobVars.Fields.FirstOrDefault(p => p.Key == "TRX" + lastTransition?.DeleteUnAllowedCharecters()).Value?.StructValue;
+            // var lastTrxData = lastTrx.Fields.FirstOrDefault(p => p.Key == "Data").Value.StructValue.Fields;
+            // var lastTrxDataEntityData = lastTrxData.FirstOrDefault(p => p.Key == "entityData").Value.StructValue;
+            // var lastTrxDataTriggeredBy = lastTrxData.FirstOrDefault(p => p.Key == "triggeredBy").Value?.StringValue ?? "";
+            // var lastTrxDataAdditionalData = lastTrxData.FirstOrDefault(p => p.Key == "additionalData").Value.StructValue;
 
             var registeredInstanceGuid = RegisteredClients.ActiveInstanceList.TryGetValue(job.ProcessInstanceKey, out Guid instanceId) ? instanceId : Guid.Empty;
             var hubData = new PostSignalRData(

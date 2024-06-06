@@ -1,5 +1,5 @@
 using amorphie.core.Base;
-namespace amorphie.workflow.core.Models.GatewayMessages;
+namespace amorphie.workflow.core.Models.Consumer;
 public class MessageSubscription : EntityBase
 {
 
@@ -8,25 +8,15 @@ public class MessageSubscription : EntityBase
     public long Deadline { get; set; }
     public long Key { get; set; }
     public long Timestamp { get; set; }
-    public int Position { get; set; }
+    public long Position { get; set; }
     public string? ValueType { get; set; }
     public int SourceRecordPosition { get; set; }
     public string? Intent { get; set; }
-    public string? RejectionType { get; set; }
-    public string? RejectionReason { get; set; }
-    //public string Authorizations { get; set; } //json
-    public int RecordVersion { get; set; }
-    public string? BrokerVersion { get; set; }
-    public string? RecordType { get; set; }
-
-    public string? TenantId { get; set; }
 
     public string? Variables { get; set; }
     public string BpmnProcessId { get; set; } = default!;
 
     public long ProcessInstanceKey { get; set; }
-    public long ProcessDefinitionKey { get; set; }
-
     public string? ElementId { get; set; }
     public string? MessageName { get; set; }
     public long MessageKey { get; set; }

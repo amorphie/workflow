@@ -1,6 +1,6 @@
 ﻿using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
-using amorphie.workflow.core.Models.GatewayMessages;
+using amorphie.workflow.core.Models.Consumer;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using Serilog;
 using StackExchange.Redis;
@@ -69,7 +69,7 @@ internal class JobExporter : BaseExporter, IExporter
                 _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
             }
         }
-        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+        //var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
     }
 
     private Job StreamToEntity(JobStream stream)

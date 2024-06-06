@@ -1,4 +1,4 @@
-namespace amorphie.workflow.core.Models.GatewayMessages;
+namespace amorphie.workflow.core.Models.Consumer;
 
 public class ProcessInstance
 {
@@ -16,12 +16,5 @@ public class ProcessInstance
     public long ParentElementInstanceKey { get; set; }
     public long Timestamp { get; set; }
     public long EndTimestamp { get; set; }
-    public string ValueType { get; set; } = default!;
-    public string BrokerVersion { get; set; } = default!;
-    public int SourceRecordPosition { get; set; }
     public string Intent { get; set; } = default!;
-    public string RecordType { get; set; } = default!;
-    public string RejectionType { get; set; } = default!;
-    public string RejectionReason { get; set; } = default!;
-    public int Position { get; set; }
 }
