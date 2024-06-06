@@ -1,4 +1,4 @@
-namespace amorphie.workflow.core.Models.GatewayMessages;
+namespace amorphie.workflow.core.Models.Consumer;
 
 public class Variable
 {

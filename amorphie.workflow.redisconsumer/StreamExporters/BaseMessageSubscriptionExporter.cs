@@ -1,7 +1,7 @@
 ﻿using amorphie.core.Base;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
-using amorphie.workflow.core.Models.GatewayMessages;
+using amorphie.workflow.core.Models.Consumer;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using Serilog;
 using StackExchange.Redis;
@@ -90,7 +90,7 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
                 _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
             }
         }
-        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+        //var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
 
     }
     private void RegisterClient(long processInstanceKey, Guid instanceId, string? valueType, JsonObject variables)
@@ -119,21 +119,16 @@ internal class BaseMessageSubscriptionExporter : BaseExporter, IExporter
             Key = stream.Key,
             Timestamp = stream.Timestamp,
             ValueType = stream.ValueType,
-            BrokerVersion = stream.BrokerVersion,
             SourceRecordPosition = stream.SourceRecordPosition,
             Intent = stream.Intent,
             CorrelationKey = stream.Value.CorrelationKey,
             //ElementId = stream.Value.StartEventId,
             MessageName = stream.Value.MessageName,
-            Variables = stream.Value.Variables.ToJsonString(),
+            //Variables being processed in variable exporter no need to duplicate
+            //Variables = stream.Value.Variables.ToJsonString(),
             MessageKey = stream.Value.MessageKey,
             Position = stream.Position,
-            ProcessInstanceKey = stream.Value.ProcessInstanceKey,
-            ProcessDefinitionKey = stream.Value.ProcessDefinitionKey,
-            RecordType = stream.RecordType,
-            RecordVersion = stream.RecordVersion,
-            RejectionType = stream.RejectionType,
-            RejectionReason = stream.RejectionReason,
+            ProcessInstanceKey = stream.Value.ProcessInstanceKey
         };
     }
 }

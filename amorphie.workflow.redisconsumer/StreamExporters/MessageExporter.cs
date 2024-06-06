@@ -1,10 +1,8 @@
-﻿using amorphie.core.Base;
-using amorphie.workflow.core.Constants;
-using amorphie.workflow.core.Models.GatewayMessages;
+﻿using amorphie.workflow.core.Constants;
+using amorphie.workflow.core.Models.Consumer;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using Serilog;
 using StackExchange.Redis;
-using System.Text.Json;
 
 namespace amorphie.workflow.redisconsumer.StreamExporters;
 internal class MessageExporter : BaseExporter, IExporter
@@ -69,7 +67,7 @@ internal class MessageExporter : BaseExporter, IExporter
             }
         }
 
-        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+        //var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
 
 
     }
@@ -77,25 +75,17 @@ internal class MessageExporter : BaseExporter, IExporter
     {
         return new Message
         {
-            //BpmnProcessId = stream.Value.BpmnProcessId,
             Key = stream.Key,
             Timestamp = stream.Timestamp,
             ValueType = stream.ValueType,
-            BrokerVersion = stream.BrokerVersion,
             SourceRecordPosition = stream.SourceRecordPosition,
             Intent = stream.Intent,
             CorrelationKey = stream.Value.CorrelationKey,
             MessageName = stream.Value.MessageName,
-            Variables = stream.Value.Variables.ToJsonString(),
             MessageKey = stream.Value.MessageKey,
             Position = stream.Position,
             ProcessInstanceKey = stream.Value.ProcessInstanceKey,
-            ProcessDefinitionKey = stream.Value.ProcessDefinitionKey,
-            RecordType = stream.RecordType,
-            RecordVersion = stream.RecordVersion,
-            RejectionType = stream.RejectionType,
-            RejectionReason = stream.RejectionReason,
-            //TenantId=stream.Value.TenantId
+            ProcessDefinitionKey = stream.Value.ProcessDefinitionKey
         };
     }
 }

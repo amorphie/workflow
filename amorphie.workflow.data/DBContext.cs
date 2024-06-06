@@ -1,7 +1,7 @@
 ﻿using amorphie.core.Base;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
-using amorphie.workflow.core.Models.GatewayMessages;
+using amorphie.workflow.core.Models.Consumer;
 using amorphie.workflow.core.Models.SemanticVersion;
 using amorphie.workflow.core.Models.SignalR;
 using amorphie.workflow.core.Models.Transfer;
@@ -43,9 +43,9 @@ public class WorkflowDBContext : DbContext
     public DbSet<TransitionRole> TransitionRoles { get; set; } = default!;
     //Hub Data
     public DbSet<SignalRData> SignalRResponses { get; set; } = default!;
-    //Zeebe Exporter DbSets
-
-    public DbSet<Deployment> Deployments { get; set; } = default!;
+    
+    
+    //Zeebe Exporter/Consumer DbSets
     public DbSet<Incident> Incidents { get; set; } = default!;
     public DbSet<Job> Jobs { get; set; } = default!;
     public DbSet<JobBatch> JobBatchs { get; set; } = default!;
@@ -53,6 +53,8 @@ public class WorkflowDBContext : DbContext
     public DbSet<MessageSubscription> MessageSubscriptions { get; set; } = default!;
     public DbSet<ProcessInstance> ProcessInstances { get; set; } = default!;
     public DbSet<Variable> Variables { get; set; } = default!;
+
+
 
     public DbSet<JsonSchema> JsonSchemas { get; set; } = default!;
     public WorkflowDBContext(DbContextOptions options) : base(options) { }
@@ -227,10 +229,7 @@ public class WorkflowDBContext : DbContext
 
 
 
-        //Zeebe Exporter Tables
-
-        modelBuilder.Entity<Deployment>().ToTable("Deployments", "exporter")
-        .HasKey(p => p.ResourceName);
+        //Zeebe Exporter/Consumer Tables
 
         modelBuilder.Entity<Incident>().ToTable("Incidents", "exporter")
         .HasKey(p => p.Key);
