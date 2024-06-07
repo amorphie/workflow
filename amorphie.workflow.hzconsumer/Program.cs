@@ -32,7 +32,7 @@ builder.Host.UseSerilog((_, serviceProvider, loggerConfiguration) =>
         .ReadFrom.Configuration(builder.Configuration);
 });
 var app = builder.Build();
-app.Logger.LogInformation("Starting Amorphie Workflow Redis Consumer application...");
+app.Logger.LogInformation("Starting Amorphie Workflow Hazelcast Consumer application...");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
