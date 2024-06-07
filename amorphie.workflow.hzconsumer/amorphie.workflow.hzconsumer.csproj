@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>dotnet-amorphie.workflow.hazelcastconsumer-44ad9a29-6a95-47dc-b197-c9e266aa0cfa</UserSecretsId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="amorphie.core" Version="1.1.30" />
+		<PackageReference Include="Dapr.AspNetCore" Version="1.13.1" />
+		<PackageReference Include="Dapr.Client" Version="1.13.1" />
+		<PackageReference Include="Google.Protobuf" Version="3.27.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.64.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Hazelcast.Net" Version="5.3.1" />
+		<PackageReference Include="Hazelcast.Net.DependencyInjection" Version="5.3.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.6" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+		<Protobuf Include="Protos\exporter.proto" GrpcServices="Client" />
+
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj" />
+		<ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj" />
+		<ProjectReference Include="..\amorphie.workflow.service\amorphie.workflow.service.csproj" />
+	</ItemGroup>
+</Project>

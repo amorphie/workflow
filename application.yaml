@@ -95,7 +95,7 @@ zeebe:
                 # Redis Stream prefix
                 name: "zeebe"
                 # record serialization format: [protobuf|json]
-                format: "json"
+                format: "protobuf"
 
       elasticsearch:
         className: io.camunda.zeebe.exporter.ElasticsearchExporter
