@@ -1,5 +1,5 @@
 ﻿using amorphie.workflow.core.Constants;
-using amorphie.workflow.core.Models.GatewayMessages;
+using amorphie.workflow.core.Models.Consumer;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using Serilog;
 using StackExchange.Redis;
@@ -34,19 +34,19 @@ public class DeploymentExporter : BaseExporter, IExporter
 
                 var resourceName = stream.Value.Resources.FirstOrDefault()?.ResourceName ?? stream.Value.ProcessesMetadata.FirstOrDefault()?.ResourceName;
 
-                var entity = dbContext.Deployments.FirstOrDefault(p => p.ResourceName == resourceName);
-                if (entity != null)
-                {
-                    entity.Intent = stream.Intent;
-                    entity.Version = stream.RecordVersion;
-                    entity.BpmnProcessId = stream.Value.ProcessesMetadata.FirstOrDefault()?.BpmnProcessId ?? "";
-                    dbContext.Deployments.Update(entity);
-                }
-                else
-                {
-                    entity = StreamToEntity(stream);
-                    dbContext.Deployments.Add(entity);
-                }
+                // var entity = dbContext.Deployments.FirstOrDefault(p => p.ResourceName == resourceName);
+                // if (entity != null)
+                // {
+                //     entity.Intent = stream.Intent;
+                //     entity.Version = stream.RecordVersion;
+                //     entity.BpmnProcessId = stream.Value.ProcessesMetadata.FirstOrDefault()?.BpmnProcessId ?? "";
+                //     dbContext.Deployments.Update(entity);
+                // }
+                // else
+                // {
+                //     entity = StreamToEntity(stream);
+                //     dbContext.Deployments.Add(entity);
+                // }
 
                 var savingResult = await dbContext.SaveChangesAsync();
                 if (savingResult > 0)
@@ -59,23 +59,23 @@ public class DeploymentExporter : BaseExporter, IExporter
                 _logger.Error($"Exception while handling {currentProccessId} proccess id. Ex: {e}");
             }
         }
-        var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
+        //var deletedItemsCount = await DeleteMessagesAsync(messageToBeDeleted, cancellationToken);
 
     }
-    private Deployment StreamToEntity(DeploymentStream stream)
-    {
-        var deployment = new Deployment
-        {
-            BpmnProcessId = "",
-            Intent = stream.Intent,
-            Duplicate = stream.Value.Duplicate,
-            Version = stream.Value.Version,
-        };
-        var resource = stream.Value.Resources.FirstOrDefault();
-        deployment.Resource = resource?.Resource ?? "";
-        deployment.ResourceName = resource?.ResourceName ?? "";
-        return deployment;
+    // private Deployment StreamToEntity(DeploymentStream stream)
+    // {
+    //     var deployment = new Deployment
+    //     {
+    //         BpmnProcessId = "",
+    //         Intent = stream.Intent,
+    //         Duplicate = stream.Value.Duplicate,
+    //         Version = stream.Value.Version,
+    //     };
+    //     var resource = stream.Value.Resources.FirstOrDefault();
+    //     deployment.Resource = resource?.Resource ?? "";
+    //     deployment.ResourceName = resource?.ResourceName ?? "";
+    //     return deployment;
 
-    }
+    // }
 }
 

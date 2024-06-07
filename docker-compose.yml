@@ -26,16 +26,16 @@ services:
       
   zeebe:
     container_name: bbt_zeebe
-    image: camunda/zeebe:8.3.4
+    image: camunda/zeebe:8.4.4
     environment:
       - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_CLASSNAME=io.camunda.zeebe.exporter.ElasticsearchExporter
       - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_URL=http://elastic:9200
       - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_BULK_SIZE=1
       - ZEEBE_LOG_LEVEL=debug
       - ZEEBE_REDIS_REMOTE_ADDRESS=redis://redis:6379
-      - ZEEBE_REDIS_CLEANUP_CYCLE_IN_SECONDS=0
-      - ZEEBE_REDIS_MIN_TIME_TO_LIVE_IN_SECONDS=0
-      - ZEEBE_REDIS_MAX_TIME_TO_LIVE_IN_SECONDS=0
+      - ZEEBE_REDIS_CLEANUP_CYCLE_IN_SECONDS=300
+      - ZEEBE_REDIS_MIN_TIME_TO_LIVE_IN_SECONDS=60
+      - ZEEBE_REDIS_MAX_TIME_TO_LIVE_IN_SECONDS=300
     ports:
       - "26500:26500"
       - "9600:9600"
@@ -48,7 +48,7 @@ services:
 
   operate: 
     container_name: bbt_zeebe_operate
-    image: camunda/operate:8.3.4
+    image: camunda/operate:8.4.4
     platform: linux/amd64
     ports:
       - "8081:8080"
@@ -61,6 +61,26 @@ services:
     depends_on:
       - zeebe
       - elastic
+
+  simple-monitor-postgres:
+    container_name: zeebe-simple-monitor-postgres
+    image: ghcr.io/camunda-community-hub/zeebe-simple-monitor:latest
+    environment:
+      - zeebe.client.broker.gateway-address=zeebe:26500
+      - zeebe-importer=redis
+      - zeebe.client.worker.redis.connection=redis://redis:6379
+      - spring.datasource.url=jdbc:postgresql://postgres:5432/postgres
+      - spring.datasource.username=postgres
+      - spring.datasource.password=postgres
+      - spring.datasource.driverClassName=org.postgresql.Driver
+      - spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+    ports:
+      - "8082:8082"
+    depends_on:
+      - zeebe
+      - postgres
+    networks:
+      - bbt-development
 
   postgres:
     container_name: bbt-postgres
