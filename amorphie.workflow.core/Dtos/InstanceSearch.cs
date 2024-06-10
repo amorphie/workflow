@@ -6,7 +6,8 @@ using amorphie.workflow.core.Enums;
 
 public class InstanceSearch : amorphie.core.Base.DtoSearchBase
 {
-    public GetInstanceStatusType? status { get; set; }
+    public GetInstanceStatusType? Status { get; set; }
     public string[]? KeywordList { get; set; }
+    public string? State {get;set;}
 
 }
