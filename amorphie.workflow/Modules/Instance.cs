@@ -510,7 +510,11 @@ public static class InstanceModule
                       DateTime.UtcNow,
                     instanceTransitionsList.Any(w => w.InstanceId == s.Id) ?
                     System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransitionsList.Where(w => w.InstanceId == s.Id).OrderByDescending(s => s.CreatedAt).FirstOrDefault()!.EntityData) :
+                    null,
+                     instanceTransitionsList.Any(w => w.InstanceId == s.Id) ?
+                    System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransitionsList.Where(w => w.InstanceId == s.Id).OrderByDescending(s => s.CreatedAt).FirstOrDefault()!.AdditionalData) :
                     null
+
                     )
                 ).ToArray());
     }
@@ -518,6 +522,7 @@ public static class InstanceModule
               [FromServices] WorkflowDBContext context,
                 [FromQuery] string? workflowName,
               [AsParameters] InstanceSearch instanceSearch,
+              
       CancellationToken cancellationToken
               )
     {
@@ -548,9 +553,13 @@ public static class InstanceModule
             ;
         if (!string.IsNullOrEmpty(instanceSearch.Keyword))
         {
+            
             query = query.AsNoTracking().Where(p =>p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword))|| p.Instance.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword)));
         } 
-
+        //  if (instanceSearch.KeywordList!=null&&instanceSearch.KeywordList.Any())
+        // {
+        //     query = query.AsNoTracking().Where(p =>EF.Functions.ArrayToTsVector(instanceSearch.KeywordList).Matches(p.SearchVector)|| p.Instance.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword)));
+        // }
         if (await query.CountAsync() > 0)
         {
             var queryList=await query.ToListAsync(cancellationToken);
@@ -594,7 +603,8 @@ public static class InstanceModule
                     ),
                    s.CreatedAt,
                    group.Max(s=>s.CreatedAt),
-                   group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData
+                   System.Text.Json.JsonSerializer.Deserialize<dynamic>(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData),
+                   System.Text.Json.JsonSerializer.Deserialize<dynamic>(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData)
                 ));
                     
                var returnModel =  response.Skip(instanceSearch.Page * instanceSearch.PageSize)
