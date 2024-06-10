@@ -520,7 +520,7 @@ public static class InstanceModule
     }
     static async ValueTask<IResult> getAllInstanceWithFullTextSearch(
               [FromServices] WorkflowDBContext context,
-                [FromQuery] string? workflowName,
+                [FromQuery] string? WorkflowName,
               [AsParameters] InstanceSearch instanceSearch,
               
       CancellationToken cancellationToken
@@ -541,7 +541,8 @@ public static class InstanceModule
         }
 
         var query = context!.InstanceTransitions!.Include(s=>s.Instance).ThenInclude(s => s.Workflow).Where(w => (!isGuidSearch || (isGuidSearch && (guid == w.InstanceId )))
-          && (string.IsNullOrEmpty(workflowName) || (!string.IsNullOrEmpty(workflowName) && workflowName == w.Instance.WorkflowName))
+          && (string.IsNullOrEmpty(WorkflowName) || (!string.IsNullOrEmpty(WorkflowName) && WorkflowName == w.Instance.WorkflowName))
+           && (string.IsNullOrEmpty(instanceSearch.State) || (!string.IsNullOrEmpty(instanceSearch.State) && instanceSearch.State == w.Instance.StateName))
       && w.Instance.Workflow.IsForbiddenData != true)
           .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Titles)
    .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
