@@ -565,6 +565,7 @@ public static class InstanceModule
             }
           
         }
+
         if (await query.CountAsync() > 0)
         {
             var queryList=await query.ToListAsync(cancellationToken);
@@ -611,7 +612,8 @@ public static class InstanceModule
                    System.Text.Json.JsonSerializer.Deserialize<dynamic>(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData),
                    System.Text.Json.JsonSerializer.Deserialize<dynamic>(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData)
                 ));
-                    
+                  var   responseSortModel =await  response.AsQueryable<GetInstanceResponse>().Sort<GetInstanceResponse>(instanceSearch.SortColumn, instanceSearch.SortDirection);
+              response=responseSortModel.AsEnumerable();
                var returnModel =  response.Skip(instanceSearch.Page * instanceSearch.PageSize)
             .Take(instanceSearch.PageSize).ToList();
                 return Results.Ok(returnModel);
