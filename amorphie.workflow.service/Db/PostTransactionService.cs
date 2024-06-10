@@ -82,7 +82,7 @@ public class PostTransactionService : IPostTransactionService
         _behalfOfUser = behalfOfUser;
         _data = data;
         _headerParameters = headerParameters;
-        _cancellationToken=cancellationToken;
+        _cancellationToken = cancellationToken;
         // var transition = _dbContext.Transitions.Find(_transitionName);
         var Control = await TransitionControl(_transitionName);
         if (Control!.Result.Status == Status.Error.ToString())
@@ -109,7 +109,7 @@ public class PostTransactionService : IPostTransactionService
         _headerParameters = headerParameters;
         _instanceId = instanceId;
         _recordId = instanceId;
-        _cancellationToken=cancellationToken;
+        _cancellationToken = cancellationToken;
         ConsumerPostTransitionRequest request = new ConsumerPostTransitionRequest()
         {
             EntityData = data,
@@ -134,11 +134,20 @@ public class PostTransactionService : IPostTransactionService
         if (_activeInstance != null)
             _activeInstances.Add(_activeInstance);
 
-        return await InstanceControl(_activeInstance, _instanceId);
+        if (transitionName == ZeebeVariableKeys.WfAddNoteStart)
+        {
+            return await AddNote();
+        }
+        else
+        {
+            return await InstanceControl(_activeInstance, _instanceId);
+
+        }
+
     }
     private async Task<IResponse?> TransitionControl(string transitionName)
     {
-        IsAllowOneActiveInstance=false;
+        IsAllowOneActiveInstance = false;
         var transition = await _dbContext.Transitions.Where(w => w.Name == _transitionName).Include(t => t.Page).ThenInclude(t => t!.Pages)
    .Include(s => s.FromState).ThenInclude(s => s.Workflow).ThenInclude(s => s!.Entities)
     .Include(s => s.ToState).ThenInclude(s => s!.Workflow).ThenInclude(s => s!.Entities)
@@ -153,7 +162,7 @@ public class PostTransactionService : IPostTransactionService
         }
         if (transition != null)
         {
-            IsAllowOneActiveInstance=transition.FromState.Workflow.IsAllowOneActiveInstance;
+            IsAllowOneActiveInstance = transition.FromState.Workflow.IsAllowOneActiveInstance;
             _transition = transition;
             return new Response
             {
@@ -175,10 +184,10 @@ public class PostTransactionService : IPostTransactionService
                 Result = new Result(Status.Error, $"{lastInstance.WorkflowName} is deactive flow."),
             };
         }
-        if(IsAllowOneActiveInstance.GetValueOrDefault(false))
+        if (IsAllowOneActiveInstance.GetValueOrDefault(false))
         {
-            var response= await IsAllowOneActiveInstanceControl(id);
-            if(response.Result.Status==Status.Error.ToString())
+            var response = await IsAllowOneActiveInstanceControl(id);
+            if (response.Result.Status == Status.Error.ToString())
             {
                 return response;
             }
@@ -203,39 +212,39 @@ public class PostTransactionService : IPostTransactionService
             }
 
         }
-       
+
         return await LastTransitionControl(lastInstance);
     }
     private async Task<IResponse> IsAllowOneActiveInstanceControl(Guid id)
     {
-           string? userReference=string.Empty;
-            try
+        string? userReference = string.Empty;
+        try
+        {
+            userReference = _headerParameters.FirstOrDefault(a => a.Key == "user_reference")!.Value;
+        }
+        catch (Exception)
+        {
+            userReference = string.Empty;
+        }
+        var activeOnlyOneInstanceControl = await _dbContext.Instances.OrderByDescending(o => o.ModifiedAt).FirstOrDefaultAsync(f => f.Id != id && f.WorkflowName == _transition.FromState.WorkflowName && f.UserReference == userReference);
+        if (activeOnlyOneInstanceControl != null)
+        {
+            string messageReturn = $"There is an active workflow exists with instanceId: {activeOnlyOneInstanceControl.Id}";
+            return new Response
             {
-                userReference=_headerParameters.FirstOrDefault(a=>a.Key=="user_reference")!.Value;
-            }
-            catch(Exception)
-            {
-                userReference=string.Empty;
-            }
-            var activeOnlyOneInstanceControl= await _dbContext.Instances.OrderByDescending(o=>o.ModifiedAt).FirstOrDefaultAsync(f=>f.Id!=id&&f.WorkflowName==_transition.FromState.WorkflowName&&f.UserReference==userReference);
-            if(activeOnlyOneInstanceControl!=null)
-            {
-                string messageReturn=$"There is an active workflow exists with instanceId: {activeOnlyOneInstanceControl.Id}";
-                 return new Response
-                {
-                    Result = new Result(Status.Error,messageReturn),
-                    
-                };
-            }
-             return new Response
-                {
-                    Result = new Result(Status.Success,string.Empty),
-                    
-                };
+                Result = new Result(Status.Error, messageReturn),
+
+            };
+        }
+        return new Response
+        {
+            Result = new Result(Status.Success, string.Empty),
+
+        };
     }
     private async Task<IResponse> LastTransitionControl(Instance? lastInstance)
     {
-         InstanceTransition? lastTrans = null;
+        InstanceTransition? lastTrans = null;
         if (lastInstance != null)
         {
             lastTrans = await _dbContext.InstanceTransitions.Where(w => w.InstanceId == lastInstance.Id).OrderByDescending(c => c.CreatedAt).FirstOrDefaultAsync();
@@ -382,7 +391,7 @@ public class PostTransactionService : IPostTransactionService
 
 
 
-        await _dbContext.AddAsync(newInstance,_cancellationToken);
+        await _dbContext.AddAsync(newInstance, _cancellationToken);
 
         await addInstanceTansition(newInstance, started, null);
         await _dbContext.SaveChangesAsync(_cancellationToken);
@@ -408,14 +417,14 @@ public class PostTransactionService : IPostTransactionService
         dynamic variables = createMessageVariables(instanceAtState);
 
 
-        string message=_transition.Flow!.Message;
+        string message = _transition.Flow!.Message;
         await addInstanceTansition(instanceAtState, started, null);
         await _dbContext.SaveChangesAsync(_cancellationToken);
-        HumanTask? humanTask= await _dbContext.HumanTasks.FirstOrDefaultAsync(f=>f.State== instanceAtState.StateName
-        &&f.InstanceId==instanceAtState.Id&&f.Status!=HumanTaskStatus.Completed&&f.Status!=HumanTaskStatus.Denied,_cancellationToken);
-        if(humanTask!=null)
+        HumanTask? humanTask = await _dbContext.HumanTasks.FirstOrDefaultAsync(f => f.State == instanceAtState.StateName
+        && f.InstanceId == instanceAtState.Id && f.Status != HumanTaskStatus.Completed && f.Status != HumanTaskStatus.Denied, _cancellationToken);
+        if (humanTask != null)
         {
-            message=HumanTaskZeebeCommand.humanTaskMessage;
+            message = HumanTaskZeebeCommand.humanTaskMessage;
             variables.Add($"humanTaskMessageValue", _transition.Name);
         }
         _zeebeService.PublishMessage(message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
@@ -471,7 +480,7 @@ public class PostTransactionService : IPostTransactionService
             FinishedAt = finished
         };
 
-       await _dbContext.AddAsync(newInstanceTransition,_cancellationToken);
+        await _dbContext.AddAsync(newInstanceTransition, _cancellationToken);
     }
     private async Task<IResponse> ServiceKontrol(Instance instance, bool hasInstance, DateTime? started)
     {
@@ -570,7 +579,7 @@ public class PostTransactionService : IPostTransactionService
         }
         else
         {
-          await  _dbContext.AddAsync(instance,_cancellationToken);
+            await _dbContext.AddAsync(instance, _cancellationToken);
         }
 
         await addInstanceTansition(instance, started, DateTime.UtcNow);
@@ -689,6 +698,39 @@ public class PostTransactionService : IPostTransactionService
         headers = System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
         _headerDict = headerDict;
         return true;
+    }
+
+    private async Task<IResponse> AddNote()
+    {
+        //TODO: Get the TEXT from EntityData
+        string theText;
+
+        try
+        {
+            theText = _data.EntityData.GetProperty("note").ToString();
+        }
+        catch
+        {
+            return Response.Error("Note property is required");
+        }
+
+        var note = new Note
+        {
+            Text = theText,
+            InstanceId = _instanceId,
+            StateName = _activeInstance!.StateName,
+            CreatedBy = _user,
+            CreatedByBehalfOf = _behalfOfUser,
+            
+
+        };
+        await _dbContext.Notes.AddAsync(note);
+        await _dbContext.SaveChangesAsync();
+
+        return new Response
+        {
+            Result = new Result(Status.Success, "Note added")
+        };
     }
 }
 

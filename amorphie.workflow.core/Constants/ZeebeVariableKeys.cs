@@ -19,6 +19,7 @@ public static class ZeebeVariableKeys
     public const string AmorphieWorkflowSetState = "amorphie-workflow-set-state";
     public const string TypeUserTask = "io.camunda.zeebe:userTask";
     public const string Url = "url";
+    public const string WfAddNoteStart = "wf-add-note-start";
     public static class Headers
     {
         public const string NOTIFY_CLIENT = "NOTIFY_CLIENT";

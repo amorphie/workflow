@@ -1,4 +1,6 @@
 using amorphie.core.Base;
+namespace amorphie.workflow.core.Models;
+
 public class InstanceTransition : EntityBaseLog
 {
     public Instance Instance { get; set; } = default!;
