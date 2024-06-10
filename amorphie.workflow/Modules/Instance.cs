@@ -554,12 +554,16 @@ public static class InstanceModule
         if (!string.IsNullOrEmpty(instanceSearch.Keyword))
         {
             
-            query = query.AsNoTracking().Where(p =>p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword))|| p.Instance.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword)));
+            query = query.AsNoTracking().Where(p =>p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword)));
         } 
-        //  if (instanceSearch.KeywordList!=null&&instanceSearch.KeywordList.Any())
-        // {
-        //     query = query.AsNoTracking().Where(p =>EF.Functions.ArrayToTsVector(instanceSearch.KeywordList).Matches(p.SearchVector)|| p.Instance.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword)));
-        // }
+         if (instanceSearch.KeywordList!=null&&instanceSearch.KeywordList.Any())
+        {
+            foreach(var item in instanceSearch.KeywordList)
+            {
+                query = query.AsNoTracking().Where(p =>p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", item)));
+            }
+          
+        }
         if (await query.CountAsync() > 0)
         {
             var queryList=await query.ToListAsync(cancellationToken);
