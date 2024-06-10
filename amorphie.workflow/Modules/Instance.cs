@@ -535,77 +535,77 @@ public static class InstanceModule
             isGuidSearch = false;
         }
 
-        var query = context!.Instances!.Include(s => s.Workflow).Where(w => (!isGuidSearch || (isGuidSearch && (guid == w.Id || guid == w.RecordId)))
-          && (string.IsNullOrEmpty(workflowName) || (!string.IsNullOrEmpty(workflowName) && workflowName == w.WorkflowName))
-      && w.Workflow.IsForbiddenData != true)
-          .Include(s => s.State).ThenInclude(s => s.Titles)
-   .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
-    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
-    .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.UiForms).ThenInclude(t => t.Forms)
-   .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Titles)
-   .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.HistoryForms)
-   .Include(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Page).ThenInclude(t => t.Pages).AsQueryable()
+        var query = context!.InstanceTransitions!.Include(s=>s.Instance).ThenInclude(s => s.Workflow).Where(w => (!isGuidSearch || (isGuidSearch && (guid == w.InstanceId )))
+          && (string.IsNullOrEmpty(workflowName) || (!string.IsNullOrEmpty(workflowName) && workflowName == w.Instance.WorkflowName))
+      && w.Instance.Workflow.IsForbiddenData != true)
+          .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Titles)
+   .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
+    .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
+    .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.UiForms).ThenInclude(t => t.Forms)
+   .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Titles)
+   .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.HistoryForms)
+   .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Page).ThenInclude(t => t.Pages).AsQueryable()
             ;
-
         if (!string.IsNullOrEmpty(instanceSearch.Keyword))
         {
-            query = query.AsNoTracking().Where(p => p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword)));
-        }
-        query = await query.Sort<Instance>(instanceSearch.SortColumn, instanceSearch.SortDirection);
+            query = query.AsNoTracking().Where(p =>p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword))|| p.Instance.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword)));
+        } 
 
-        var instances = await query.Skip(instanceSearch.Page * instanceSearch.PageSize)
-            .Take(instanceSearch.PageSize).ToListAsync(cancellationToken);
-        var instanceTransitionsList = await context.InstanceTransitions.Where(s => query.Any(q => q.Id == s.InstanceId)).ToListAsync(cancellationToken);
-        if (instances.Count > 0)
+        if (await query.CountAsync() > 0)
         {
-            var response = instances.Select(s => new GetInstanceResponse(
-                   s.EntityName,
-                   s.RecordId.ToString(),
-                   s.Id,
+            var queryList=await query.ToListAsync(cancellationToken);
+            var response =queryList.GroupBy(s=>s.Instance, 
+              (s, group) =>  new GetInstanceResponse(
+                s.EntityName
+                ,s.RecordId.ToString(),
+                          s.Id,
                    s.WorkflowName,
-                   new GetStateDefinition(s.StateName, new amorphie.workflow.core.Dtos.MultilanguageText(
+                   new GetStateDefinition(s.StateName,
+                   
+                    s.State!=null&&s.State.Titles!=null&& s.State.Titles.Any()? new amorphie.workflow.core.Dtos.MultilanguageText(
                     s.State.Titles.FirstOrDefault()!.Language!, s.State.Titles.FirstOrDefault()!.Label
-                    ),
+                    ):null,
+                    
                     s.State.BaseStatus,
                     s.State.Transitions.Select(t => new PostTransitionDefinitionRequest(
                         t.Name,
-                        new amorphie.workflow.core.Dtos.MultilanguageText(
-                            t.Titles.FirstOrDefault()!.Language!, t.Titles.FirstOrDefault()!.Label),
+                      
+                        t.Titles!=null&&t.Titles.Any()?new amorphie.workflow.core.Dtos.MultilanguageText(
+                            t.Titles.FirstOrDefault()!.Language!, t.Titles.FirstOrDefault()!.Label):null,
+
                         t.ToStateName!,
-                        t.UiForms.Any() ? null : t.UiForms.Select(st => new amorphie.workflow.core.Dtos.UiFormDto()
+                        //null,
+                       t.UiForms!=null&&t.UiForms.Any() ? t.UiForms.Select(st => new amorphie.workflow.core.Dtos.UiFormDto()
                         {
                             typeofUi = st.TypeofUiEnum,
                             navigationType = st.Navigation,
                             forms = st.Forms.Select(sf => new amorphie.workflow.core.Dtos.MultilanguageText(
                             sf.Language, sf.Label)).ToArray()
-                        }).ToArray(),
+                        }).ToArray():null,
                         t.FromStateName,
                         t.ServiceName,
                         t.FlowName,
                         null,
-                        t.Page == null ? null :
-                       new PostPageDefinitionRequest(t.Page.Operation, t.Page.Type, t.Page.Pages.Any() ? null : t.Page.Pages!.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).FirstOrDefault(), t.Page.Timeout)
-                       , t.HistoryForms.Any() ? t.HistoryForms.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).ToArray() : null
-                       , t.TypeofUi, t.transitionButtonType
+                          t.Page == null ? null :
+                       new PostPageDefinitionRequest(t.Page.Operation, t.Page.Type, t.Page.Pages!=null&&t.Page.Pages.Any() ? null : t.Page.Pages!.Select(s => new amorphie.workflow.core.Dtos.MultilanguageText(s.Language, s.Label)).FirstOrDefault(), t.Page.Timeout)
+                       ,null
+                       ,t.TypeofUi, t.transitionButtonType
                     )).ToArray()
                     ),
                    s.CreatedAt,
-                      instanceTransitionsList.Any(w => w.InstanceId == s.Id) ?
-                      instanceTransitionsList.Where(w => w.InstanceId == s.Id).OrderByDescending(s => s.CreatedAt).FirstOrDefault()!.CreatedAt :
-                      DateTime.UtcNow,
-                    instanceTransitionsList.Any(w => w.InstanceId == s.Id) ?
-                    System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceTransitionsList.Where(w => w.InstanceId == s.Id).OrderByDescending(s => s.CreatedAt).FirstOrDefault()!.EntityData) :
-                    null
-
-                    )
-                ).ToList();
-
-
-            return Results.Ok(response);
+                   group.Max(s=>s.CreatedAt),
+                   group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData
+                ));
+                    
+               var returnModel =  response.Skip(instanceSearch.Page * instanceSearch.PageSize)
+            .Take(instanceSearch.PageSize).ToList();
+                return Results.Ok(returnModel);
         }
 
-        return Results.NoContent();
+
+         return Results.NoContent();
     }
+
 
     static async Task<IResult> getTransitionByInstanceAsync(
          [FromServices] WorkflowDBContext context,
@@ -665,7 +665,7 @@ public static class InstanceModule
 
   )
     {
-         List<SignalRResponsePublic> response =await getSignalRData(context,instanceId.ToString(),cancellationToken);
+         List<SignalRResponseHistory> response =await getSignalRData(context,instanceId.ToString(),cancellationToken);
         if (latest == null && latestPayload == null && firstPayload == null && string.IsNullOrEmpty(transitionName))
         {
             latest = true;
@@ -725,7 +725,7 @@ public static class InstanceModule
            [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
     )
     {
-        List<SignalRResponsePublic> response =await getSignalRData(context,instanceId,cancellationToken);
+        List<SignalRResponseHistory> response =await getSignalRData(context,instanceId,cancellationToken);
         if(!response.Any())
         {
             return Results.NotFound();
@@ -733,12 +733,12 @@ public static class InstanceModule
         return Results.Ok(response);
 
     }
-    private async static Task<List<SignalRResponsePublic>> getSignalRData (WorkflowDBContext context,string instanceId, CancellationToken cancellationToken)
+    private async static Task<List<SignalRResponseHistory>> getSignalRData (WorkflowDBContext context,string instanceId, CancellationToken cancellationToken)
     {
         Instance instanceControl = await context.Instances.Include(i => i.Workflow).FirstOrDefaultAsync(f => f.Id.ToString() == instanceId);
         if (instanceControl == null||instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
         {
-            return new List<SignalRResponsePublic>();
+            return new List<SignalRResponseHistory>();
         }
         List<amorphie.workflow.core.Models.SignalR.SignalRData> signalrHistoryList = await context.SignalRResponses.Where(w => w.InstanceId == instanceId
              && (w.subject == EventInfos.WorkerCompleted || w.subject == EventInfos.TransitionCompleted)
@@ -747,20 +747,21 @@ public static class InstanceModule
              .OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);
         if (signalrHistoryList == null)
         {
-            return new List<SignalRResponsePublic>();
+            return new List<SignalRResponseHistory>();
         }
         if (signalrHistoryList != null && signalrHistoryList.Any())
         {
 
-            List<SignalRResponsePublic> response = signalrHistoryList.Select(s =>
+            List<SignalRResponseHistory> response = signalrHistoryList.Select(s =>
             {
-                var temp = ObjectMapper.Mapper.Map<SignalRResponsePublic>(s);
+                var temp = ObjectMapper.Mapper.Map<SignalRResponseHistory>(s);
                 temp.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(s.data);
+                temp.userReference=instanceControl.UserReference;
                 return temp;
             }).ToList();
             return response;
         }
-        return new List<SignalRResponsePublic>();
+        return new List<SignalRResponseHistory>();
     }
 }
 

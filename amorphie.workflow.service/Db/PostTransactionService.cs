@@ -413,8 +413,19 @@ public class PostTransactionService : IPostTransactionService
         await _dbContext.SaveChangesAsync(_cancellationToken);
         HumanTask? humanTask= await _dbContext.HumanTasks.FirstOrDefaultAsync(f=>f.State== instanceAtState.StateName
         &&f.InstanceId==instanceAtState.Id&&f.Status!=HumanTaskStatus.Completed&&f.Status!=HumanTaskStatus.Denied,_cancellationToken);
-        if(humanTask!=null)
+        if(humanTask!=null&&
+        (humanTask.AppTransitionName==_transition.Name||humanTask.DenyTransitionName==_transition.Name))
         {
+           
+            if(humanTask.AppTransitionName==_transition.Name)
+            {
+                humanTask.Status=HumanTaskStatus.Completed;
+                 
+            }
+            if(humanTask.DenyTransitionName==_transition.Name)
+            {
+                  humanTask.Status=HumanTaskStatus.Denied;
+            }
             message=HumanTaskZeebeCommand.humanTaskMessage;
             variables.Add($"humanTaskMessageValue", _transition.Name);
         }

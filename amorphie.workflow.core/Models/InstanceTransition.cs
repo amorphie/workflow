@@ -1,4 +1,5 @@
 using amorphie.core.Base;
+using NpgsqlTypes;
 public class InstanceTransition : EntityBaseLog
 {
     public Instance Instance { get; set; } = default!;
@@ -21,5 +22,6 @@ public class InstanceTransition : EntityBaseLog
     public string? TransitionName { get; set; } = default!;
     public DateTime? FinishedAt { get; set; } = default!;
     public DateTime? StartedAt { get; set; } = default!;
+    public NpgsqlTsVector? SearchVector { get; set; }
 
 }
