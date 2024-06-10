@@ -115,18 +115,18 @@ public static class InstanceModule
             return operation;
         }).AddEndpointFilter<InstanceSchemaValidationFilter>();
 
-    //     app.MapGet("/workflow/uiform/updatedb", UiFormFill
-    //   )
-    //   .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
-    //   .Produces(StatusCodes.Status404NotFound)
-    //   .WithOpenApi(operation =>
-    //   {
+        //     app.MapGet("/workflow/uiform/updatedb", UiFormFill
+        //   )
+        //   .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
+        //   .Produces(StatusCodes.Status404NotFound)
+        //   .WithOpenApi(operation =>
+        //   {
 
 
-    //       operation.Tags = new List<OpenApiTag> { new() { Name = "UiForm" } };
+        //       operation.Tags = new List<OpenApiTag> { new() { Name = "UiForm" } };
 
-    //       return operation;
-    //   });
+        //       return operation;
+        //   });
 
         app.MapGet("/workflow/instance/{instanceId}/transition", getTransitionByInstanceAsync
             )
@@ -196,7 +196,7 @@ public static class InstanceModule
         if (workflowControl.IsAllowOneActiveInstance.GetValueOrDefault(false))
         {
 
-            instance = await context.Instances.OrderByDescending(o=>o.ModifiedAt).FirstOrDefaultAsync(f => f.WorkflowName == workflowName&&userReference==f.UserReference);
+            instance = await context.Instances.OrderByDescending(o => o.ModifiedAt).FirstOrDefaultAsync(f => f.WorkflowName == workflowName && userReference == f.UserReference);
 
 
         }
@@ -209,7 +209,7 @@ public static class InstanceModule
         if (currentState == null)
             return Results.NoContent();
 
-        var initDto =  getRecordWorkflowInit(currentState, suffix);
+        var initDto = getRecordWorkflowInit(currentState, suffix);
 
         if (instance != null)
         {
@@ -460,20 +460,21 @@ public static class InstanceModule
     static async ValueTask<amorphie.core.IBase.IResponse> TriggerFlow(
   [FromBody] dynamic body,
   [FromRoute(Name = "transitionName")] string transitionName,
-  [FromServices] WorkflowDBContext context,
-  IConfiguration configuration,
   CancellationToken cancellationToken,
   [FromServices] IPostTransactionService service,
- [FromServices] IInstanceService instanceService,
-
   [FromRoute(Name = "instanceId")] Guid instanceId,
   HttpRequest request,
   [FromHeader(Name = "User")] Guid user,
-  [FromHeader(Name = "Behalf-Of-User")] Guid behalOfUser,
-  [FromHeader(Name = "Accept-Language")] string language = "en-EN"
+  [FromHeader(Name = "Behalf-Of-User")] Guid behalOfUser
 )
     {
         var result = await service.InitWithoutEntity(instanceId, transitionName, user, behalOfUser, body, request.Headers, cancellationToken);
+
+        if (result.Result.Status == Status.Success.ToString() && transitionName == ZeebeVariableKeys.WfAddNoteStart)
+        {
+            return result;
+        }
+
         if (result.Result.Status == Status.Success.ToString())
         {
             result = await service.ExecuteWithoutEntity();
@@ -734,13 +735,13 @@ public static class InstanceModule
         }
         if (latest.HasValue && latest.Value)
         {
-           return Results.Ok(response.FirstOrDefault());
+            return Results.Ok(response.FirstOrDefault());
         }
         if (latestPayload.HasValue && latestPayload.Value)
         {
             try
             {
-                if(response.Count>1)
+                if (response.Count > 1)
                 {
                     return Results.Ok(response.Skip(1).FirstOrDefault());
                 }
@@ -756,7 +757,7 @@ public static class InstanceModule
         {
             try
             {
-                return Results.Ok(response.OrderBy(o=>o.time).FirstOrDefault());
+                return Results.Ok(response.OrderBy(o => o.time).FirstOrDefault());
             }
             catch (Exception ex)
             {
@@ -767,9 +768,9 @@ public static class InstanceModule
         {
             try
             {
-                string transitionControl="\"transitionName\":\""+transitionName+"\"";
-                return  Results.Ok(response.Find(w=>w.data.Contains(transitionControl)));
-        
+                string transitionControl = "\"transitionName\":\"" + transitionName + "\"";
+                return Results.Ok(response.Find(w => w.data.Contains(transitionControl)));
+
             }
             catch (Exception ex)
             {
@@ -798,13 +799,13 @@ public static class InstanceModule
     private async static Task<List<SignalRResponseHistory>> getSignalRData (WorkflowDBContext context,string instanceId, CancellationToken cancellationToken)
     {
         Instance instanceControl = await context.Instances.Include(i => i.Workflow).FirstOrDefaultAsync(f => f.Id.ToString() == instanceId);
-        if (instanceControl == null||instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
+        if (instanceControl == null || instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
         {
             return new List<SignalRResponseHistory>();
         }
         List<amorphie.workflow.core.Models.SignalR.SignalRData> signalrHistoryList = await context.SignalRResponses.Where(w => w.InstanceId == instanceId
              && (w.subject == EventInfos.WorkerCompleted || w.subject == EventInfos.TransitionCompleted)
-             
+
              )
              .OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);
         if (signalrHistoryList == null)
