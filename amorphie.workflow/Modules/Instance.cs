@@ -654,8 +654,8 @@ public static class InstanceModule
                     ),
                    s.CreatedAt,
                    group.Max(s=>s.CreatedAt),
-                   System.Text.Json.JsonSerializer.Deserialize<dynamic>(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData),
-                   System.Text.Json.JsonSerializer.Deserialize<dynamic>(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData)
+                    string.IsNullOrEmpty(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData)?new {}:System.Text.Json.JsonSerializer.Deserialize<dynamic>(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData),
+                   string.IsNullOrEmpty(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData)?new {}:System.Text.Json.JsonSerializer.Deserialize<dynamic>(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData)
                 ));
                   var   responseSortModel =await  response.AsQueryable<GetInstanceResponse>().Sort<GetInstanceResponse>(instanceSearch.SortColumn, instanceSearch.SortDirection);
               response=responseSortModel.AsEnumerable();
