@@ -1905,6 +1905,11 @@ CancellationToken cancellationToken
             }
             if (hasChanges)
             {
+                if(string.IsNullOrEmpty(workflowControl!.SemVer))
+                {
+                    workflowControl.SemVer=new SemVersion(1,0,0).ToString();
+                }
+            
                 SemVersion version= SemVersion.Parse(workflowControl.SemVer, SemVersionStyles.Any);
                 version=version.WithPatch(version.Patch+1);
                 workflowControl.SemVer=version.ToString();
