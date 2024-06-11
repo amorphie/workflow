@@ -19,10 +19,12 @@ public record PostWorkflowDefinitionRequest(
     WorkflowStatus status,
     MultilanguageText[]? historyForms,
     string recordId,
-    bool? IsForbiddenData);
+    bool? IsForbiddenData,bool? IsAllowOneActiveInstance);
 
-public record PostFSMWorkflowDefinitionRequest(string name, MultilanguageText[] title, PostWorkflowEntity[] entities, string[] tags, WorkflowStatus status, MultilanguageText[]? historyForms, string recordId, bool? IsForbiddenData) : PostWorkflowDefinitionRequest(name, title, entities, tags, status, historyForms, recordId, IsForbiddenData);
-public record PostZeebeWorkflowDefinitionRequest(string name, MultilanguageText[] title, PostWorkflowEntity[] entities, string[] tags, WorkflowStatus status, MultilanguageText[]? historyForms, string process, string gateway, string recordId, bool? IsForbiddenData) : PostWorkflowDefinitionRequest(name, title, entities, tags, status, historyForms, recordId, IsForbiddenData);
+public record PostFSMWorkflowDefinitionRequest(string name, MultilanguageText[] title, PostWorkflowEntity[] entities, string[] tags, WorkflowStatus status, MultilanguageText[]? historyForms, string recordId, bool? IsForbiddenData,bool? IsAllowOneActiveInstance) 
+: PostWorkflowDefinitionRequest(name, title, entities, tags, status, historyForms, recordId, IsForbiddenData,IsAllowOneActiveInstance);
+public record PostZeebeWorkflowDefinitionRequest(string name, MultilanguageText[] title, PostWorkflowEntity[] entities, string[] tags, WorkflowStatus status, MultilanguageText[]? historyForms, string process, string gateway, string recordId, bool? IsForbiddenData,bool? IsAllowOneActiveInstance) 
+: PostWorkflowDefinitionRequest(name, title, entities, tags, status, historyForms, recordId, IsForbiddenData,IsAllowOneActiveInstance);
 
 public record PostWorkflowDefinitionResponse(string name);
 
