@@ -382,6 +382,7 @@ public static class DefinitionModule
                     Label = s.label,
                     Language = s.language
                 }).ToList(),
+                IsAllowOneActiveInstance=data.IsAllowOneActiveInstance,
                 IsForbiddenData = data.IsForbiddenData,
                 Entities = entityList,
                 RecordId = recordIdNull ? null : recordId,
@@ -411,6 +412,12 @@ public static class DefinitionModule
                 existingRecord.ModifiedAt = DateTime.UtcNow;
                 existingRecord.Tags = data.tags;
                 existingRecord.WorkflowStatus = data.status;
+            }
+            if(existingRecord.IsAllowOneActiveInstance!=data.IsAllowOneActiveInstance)
+            {
+                hasChanges = true;
+                existingRecord.ModifiedAt = DateTime.UtcNow;
+                existingRecord.IsAllowOneActiveInstance=data.IsAllowOneActiveInstance;
             }
             if (!recordIdNull && existingRecord.RecordId != recordId)
             {

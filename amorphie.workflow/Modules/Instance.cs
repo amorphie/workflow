@@ -179,11 +179,14 @@ public static class InstanceModule
    [FromServices] WorkflowDBContext context,
      [FromRoute(Name = "workflowName")] string workflowName,
      [FromQuery(Name = "suffix")] string? suffix,
+      [FromQuery(Name = "preInstanceId")] string? preInstanceId,
+       [FromQuery(Name = "preWorkflowName")] string? preWorkflowName,
         [FromHeader(Name = "user_reference")] string? userReference,
     CancellationToken cancellationToken
 
 )
     {
+        
         var workflowControl = await context.Workflows.FirstOrDefaultAsync(f => f.Name == workflowName);
         if (workflowControl == null)
             return Results.NoContent();
@@ -223,9 +226,51 @@ public static class InstanceModule
                 hasViewVariant = currentState.UiForms != null && currentState.UiForms.Count() > 1 ? true : false
             });
         }
-
-
+        Response<dynamic> preData=await PreWorkflowData(context,preInstanceId,preWorkflowName,cancellationToken);
+        if(preData.Result.Status!=amorphie.core.Enums.Status.Error.ToString())
+        {
+            initDto.additionalData=preData.Data;
+        }
         return Results.Ok(initDto);
+    }
+    private static async ValueTask<Response<dynamic>> PreWorkflowData(WorkflowDBContext context,string? preInstanceId, string? preWorkflowName,CancellationToken token)
+    {
+        if(string.IsNullOrEmpty(preInstanceId))
+        {
+            return new Response<dynamic>
+        {
+            Result = new Result(amorphie.core.Enums.Status.Error, "")
+        };
+        }
+        List<SignalRResponseHistory> history   =await getSignalRData(context,preInstanceId,token);
+        SignalRResponseHistory? last=history.OrderByDescending(o=>o.time).FirstOrDefault();
+        if(last!=null)
+        {
+        PostSignalRData? postSignalRData = System.Text.Json.JsonSerializer.Deserialize<PostSignalRData>(last.data);
+        if(postSignalRData!=null&&(string.IsNullOrEmpty(preWorkflowName)||postSignalRData.workflowName==preWorkflowName))
+        {
+            dynamic? response=MergeEntityAdditional(postSignalRData.data,postSignalRData.additionalData);
+
+                return new Response<dynamic>
+                {
+                    Data = response,
+                    Result = new Result(amorphie.core.Enums.Status.Success, "")
+                }; 
+        }
+        }
+        return new Response<dynamic>
+        {
+            Result = new Result(amorphie.core.Enums.Status.Error, "")
+        };
+
+    }
+    private static dynamic? MergeEntityAdditional(dynamic entityData,dynamic additionalData)
+    {
+        var jsonEntity = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(entityData);
+        var jsonAdditional = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(additionalData);
+        var jsonArray = new List<Dictionary<string, object>> { jsonEntity, jsonAdditional };
+        string mergedJson = System.Text.Json.JsonSerializer.Serialize(jsonArray);
+        return System.Text.Json.JsonSerializer.Deserialize<dynamic>(mergedJson);
     }
     private static  GetRecordWorkflowInit getRecordWorkflowInit(State currentState, string? suffix)
     {

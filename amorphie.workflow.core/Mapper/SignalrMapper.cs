@@ -14,11 +14,15 @@ namespace amorphie.workflow.core.Mapper
         {
             CreateMap<SignalRRequest, SignalRResponsePrivate>().ReverseMap();
             CreateMap<SignalRRequest, SignalRResponsePublic>().ReverseMap();
+             CreateMap<SignalRRequest, SignalRResponseHistory>().ReverseMap();
             CreateMap<SignalRResponsePrivate, SignalRResponsePublic>().ReverseMap();
             CreateMap<SignalRResponsePrivate, SignalRData>().ForMember(x => x.Id, opt => opt.MapFrom(o => Guid.NewGuid()))
             .ForMember(x => x.InstanceId, opt => opt.MapFrom(o => o.id))
             .ReverseMap();
             CreateMap<SignalRResponsePublic, SignalRData>().ForMember(x => x.Id, opt => opt.MapFrom(o => Guid.NewGuid()))
+            .ForMember(x => x.InstanceId, opt => opt.MapFrom(o => o.id))
+            .ReverseMap();
+             CreateMap<SignalRResponseHistory, SignalRData>().ForMember(x => x.Id, opt => opt.MapFrom(o => Guid.NewGuid()))
             .ForMember(x => x.InstanceId, opt => opt.MapFrom(o => o.id))
             .ReverseMap();
         }
