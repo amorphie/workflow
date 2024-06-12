@@ -107,7 +107,7 @@ CancellationToken token
 
 
             HumanTaskStatus? taskStatus=amorphie.workflow.core.Helper.EnumHelper.GetValueFromDescription<HumanTaskStatus>(Status);
-            var taskList = await context.HumanTasks.Where(w => ((string.IsNullOrEmpty(Assignee)) || (!string.IsNullOrEmpty(Assignee) && w.Assignee == Assignee))
+            var taskList = await context.HumanTasks.Where(w => ((w.Type.GetValueOrDefault(HumanTaskType.SelfSelected)==HumanTaskType.SelfSelected) || (!string.IsNullOrEmpty(Assignee) && w.Assignee == Assignee))
             && w.Status == taskStatus).ToListAsync(token);
             if (taskList.Any())
             {
