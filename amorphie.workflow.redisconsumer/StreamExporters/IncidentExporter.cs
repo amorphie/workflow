@@ -1,5 +1,6 @@
 ﻿using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
+using amorphie.workflow.core.Models;
 using amorphie.workflow.core.Models.Consumer;
 using amorphie.workflow.redisconsumer.StreamObjects;
 using Microsoft.EntityFrameworkCore;

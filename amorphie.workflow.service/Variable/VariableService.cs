@@ -1,6 +1,7 @@
 using System.Dynamic;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Dtos.Consumer;
+using amorphie.workflow.core.Models;
 namespace amorphie.workflow.service.Variable;
 public class VariableService
 {
