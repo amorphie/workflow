@@ -1,5 +1,6 @@
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
+using amorphie.workflow.core.Models;
 using Dapr.Client;
 using Serilog;
 

@@ -2,6 +2,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.IBase;
@@ -17,6 +19,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
+using Namotion.Reflection;
+using Serilog;
 
 
 
@@ -82,7 +86,7 @@ public class PostTransactionService : IPostTransactionService
         _behalfOfUser = behalfOfUser;
         _data = data;
         _headerParameters = headerParameters;
-        _cancellationToken=cancellationToken;
+        _cancellationToken = cancellationToken;
         // var transition = _dbContext.Transitions.Find(_transitionName);
         var Control = await TransitionControl(_transitionName);
         if (Control!.Result.Status == Status.Error.ToString())
@@ -109,7 +113,7 @@ public class PostTransactionService : IPostTransactionService
         _headerParameters = headerParameters;
         _instanceId = instanceId;
         _recordId = instanceId;
-        _cancellationToken=cancellationToken;
+        _cancellationToken = cancellationToken;
         ConsumerPostTransitionRequest request = new ConsumerPostTransitionRequest()
         {
             EntityData = data,
@@ -134,11 +138,20 @@ public class PostTransactionService : IPostTransactionService
         if (_activeInstance != null)
             _activeInstances.Add(_activeInstance);
 
-        return await InstanceControl(_activeInstance, _instanceId);
+        if (transitionName == "wf-add-note-start")
+        {
+            return await AddNote();
+        }
+        else
+        {
+            return await InstanceControl(_activeInstance, _instanceId);
+
+        }
+
     }
     private async Task<IResponse?> TransitionControl(string transitionName)
     {
-        IsAllowOneActiveInstance=false;
+        IsAllowOneActiveInstance = false;
         var transition = await _dbContext.Transitions.Where(w => w.Name == _transitionName).Include(t => t.Page).ThenInclude(t => t!.Pages)
    .Include(s => s.FromState).ThenInclude(s => s.Workflow).ThenInclude(s => s!.Entities)
     .Include(s => s.ToState).ThenInclude(s => s!.Workflow).ThenInclude(s => s!.Entities)
@@ -153,7 +166,7 @@ public class PostTransactionService : IPostTransactionService
         }
         if (transition != null)
         {
-            IsAllowOneActiveInstance=transition.FromState.Workflow.IsAllowOneActiveInstance;
+            IsAllowOneActiveInstance = transition.FromState.Workflow.IsAllowOneActiveInstance;
             _transition = transition;
             return new Response
             {
@@ -175,10 +188,10 @@ public class PostTransactionService : IPostTransactionService
                 Result = new Result(Status.Error, $"{lastInstance.WorkflowName} is deactive flow."),
             };
         }
-        if(IsAllowOneActiveInstance.GetValueOrDefault(false))
+        if (IsAllowOneActiveInstance.GetValueOrDefault(false))
         {
-            var response= await IsAllowOneActiveInstanceControl(id);
-            if(response.Result.Status==Status.Error.ToString())
+            var response = await IsAllowOneActiveInstanceControl(id);
+            if (response.Result.Status == Status.Error.ToString())
             {
                 return response;
             }
@@ -190,7 +203,8 @@ public class PostTransactionService : IPostTransactionService
                 (_transition.FromState.Workflow!.Entities.Any(a => a.IsStateManager == false))
             || (lastInstance.State.Type == StateType.SubWorkflow)
 
-            )) || (_transition.transitionButtonType == TransitionButtonType.Back || _transition.transitionButtonType == TransitionButtonType.Cancel))
+            )) || (_transition.transitionButtonType == TransitionButtonType.Back || _transition.transitionButtonType == TransitionButtonType.Cancel
+            || _transition.transitionButtonType == TransitionButtonType.AddNote))
             {
 
             }
@@ -203,39 +217,39 @@ public class PostTransactionService : IPostTransactionService
             }
 
         }
-       
+
         return await LastTransitionControl(lastInstance);
     }
     private async Task<IResponse> IsAllowOneActiveInstanceControl(Guid id)
     {
-           string? userReference=string.Empty;
-            try
+        string? userReference = string.Empty;
+        try
+        {
+            userReference = _headerParameters.FirstOrDefault(a => a.Key == "user_reference")!.Value;
+        }
+        catch (Exception)
+        {
+            userReference = string.Empty;
+        }
+        var activeOnlyOneInstanceControl = await _dbContext.Instances.OrderByDescending(o => o.ModifiedAt).FirstOrDefaultAsync(f => f.Id != id && f.WorkflowName == _transition.FromState.WorkflowName && f.UserReference == userReference);
+        if (activeOnlyOneInstanceControl != null)
+        {
+            string messageReturn = $"There is an active workflow exists with instanceId: {activeOnlyOneInstanceControl.Id}";
+            return new Response
             {
-                userReference=_headerParameters.FirstOrDefault(a=>a.Key=="user_reference")!.Value;
-            }
-            catch(Exception)
-            {
-                userReference=string.Empty;
-            }
-            var activeOnlyOneInstanceControl= await _dbContext.Instances.OrderByDescending(o=>o.ModifiedAt).FirstOrDefaultAsync(f=>f.Id!=id&&f.WorkflowName==_transition.FromState.WorkflowName&&f.UserReference==userReference);
-            if(activeOnlyOneInstanceControl!=null)
-            {
-                string messageReturn=$"There is an active workflow exists with instanceId: {activeOnlyOneInstanceControl.Id}";
-                 return new Response
-                {
-                    Result = new Result(Status.Error,messageReturn),
-                    
-                };
-            }
-             return new Response
-                {
-                    Result = new Result(Status.Success,string.Empty),
-                    
-                };
+                Result = new Result(Status.Error, messageReturn),
+
+            };
+        }
+        return new Response
+        {
+            Result = new Result(Status.Success, string.Empty),
+
+        };
     }
     private async Task<IResponse> LastTransitionControl(Instance? lastInstance)
     {
-         InstanceTransition? lastTrans = null;
+        InstanceTransition? lastTrans = null;
         if (lastInstance != null)
         {
             lastTrans = await _dbContext.InstanceTransitions.Where(w => w.InstanceId == lastInstance.Id).OrderByDescending(c => c.CreatedAt).FirstOrDefaultAsync();
@@ -300,7 +314,22 @@ public class PostTransactionService : IPostTransactionService
             else
             {
                 mfaType = _transition.FromState.MFAType.GetValueOrDefault(MFATypeEnum.Public).ToString().ToLower();
-                return await hasFlowHasInstance(instanceAtState);
+
+                //not state değil se from state değiştir
+                if (_transition.transitionButtonType == TransitionButtonType.AddNote)
+                {
+                    //son instance transitionı al
+                    // transition namei son transition olarak ayarla,
+                    //_datayı da son instance transition ile update et
+                    // son instance transitionı update et
+                    // böylece create variable da son variable append olmuş olacak
+                    return await hasFlowHasInstanceAddNote(instanceAtState);
+                }
+                else
+                {
+                    //await addInstanceTansition(instanceAtState, started, null);
+                    return await hasFlowHasInstance(instanceAtState);
+                }
             }
         }
     }
@@ -382,7 +411,7 @@ public class PostTransactionService : IPostTransactionService
 
 
 
-        await _dbContext.AddAsync(newInstance,_cancellationToken);
+        await _dbContext.AddAsync(newInstance, _cancellationToken);
 
         await addInstanceTansition(newInstance, started, null);
         await _dbContext.SaveChangesAsync(_cancellationToken);
@@ -408,7 +437,7 @@ public class PostTransactionService : IPostTransactionService
         dynamic variables = createMessageVariables(instanceAtState);
 
 
-        string message=_transition.Flow!.Message;
+        string message = _transition.Flow!.Message;
         await addInstanceTansition(instanceAtState, started, null);
         await _dbContext.SaveChangesAsync(_cancellationToken);
         HumanTask? humanTask= await _dbContext.HumanTasks.FirstOrDefaultAsync(f=>f.State== instanceAtState.StateName
@@ -436,6 +465,68 @@ public class PostTransactionService : IPostTransactionService
         {
             Result = new Result(Status.Success, "Instance Has been Updated"),
         };
+    }
+
+
+    private async Task<IResponse> hasFlowHasInstanceAddNote(Instance instanceAtState)
+    {
+        string tobeAddedNote;
+        try
+        {
+            tobeAddedNote = _data.EntityData.GetProperty("note").ToString();
+        }
+        catch
+        {
+            return Response.Error("Note property is required");
+        }
+        await _dbContext.Entry(_transition).Reference(t => t.ToState).LoadAsync();
+        await _dbContext.Entry(_transition).Reference(t => t.Flow).LoadAsync();
+        // instanceAtState.StateName = _transition.FromStateName!;
+        instanceAtState.ModifiedBy = _user;
+        instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
+        instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+        instanceAtState.BaseStatus = StatusType.LockedInFlow;
+
+        var lastInstanceTransition = await _dbContext.InstanceTransitions.Where(w => w.InstanceId == instanceAtState.Id)
+                    .Include(p => p.Transition)
+                    .OrderByDescending(c => c.CreatedAt).FirstAsync();
+
+        // _transition = lastInstanceTransition.Transition;
+        _transitionName = lastInstanceTransition.TransitionName;
+
+        var entityData = JsonSerializer.Deserialize<JsonObject>(lastInstanceTransition.EntityData);
+        if (entityData != null)
+        {
+
+            if (entityData["note"] == null)
+            {
+                entityData.Add("note", tobeAddedNote);
+            }
+            else
+            {
+                entityData["note"] += " " + tobeAddedNote;
+            }
+            _data.EntityData = entityData;
+            _data.AdditionalData = lastInstanceTransition.AdditionalData;
+            dynamic variables = createMessageVariables(instanceAtState);
+
+            lastInstanceTransition.EntityData = JsonSerializer.Serialize(entityData);
+            await _dbContext.SaveChangesAsync(_cancellationToken);
+
+            _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
+            SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
+            //return Results.Ok();
+            return new Response
+            {
+                Result = new Result(Status.Success, "Instance Has been Updated"),
+            };
+        }
+        else
+        {
+            return Response.Error("Entitydata of previous transition is not type of json.");
+        }
+
+
     }
 
     private dynamic createMessageVariables(Instance instanceAtState)
@@ -482,7 +573,7 @@ public class PostTransactionService : IPostTransactionService
             FinishedAt = finished
         };
 
-       await _dbContext.AddAsync(newInstanceTransition,_cancellationToken);
+        await _dbContext.AddAsync(newInstanceTransition, _cancellationToken);
     }
     private async Task<IResponse> ServiceKontrol(Instance instance, bool hasInstance, DateTime? started)
     {
@@ -581,7 +672,7 @@ public class PostTransactionService : IPostTransactionService
         }
         else
         {
-          await  _dbContext.AddAsync(instance,_cancellationToken);
+            await _dbContext.AddAsync(instance, _cancellationToken);
         }
 
         await addInstanceTansition(instance, started, DateTime.UtcNow);
@@ -700,6 +791,39 @@ public class PostTransactionService : IPostTransactionService
         headers = System.Text.Json.JsonSerializer.Deserialize<dynamic?>(serialize);
         _headerDict = headerDict;
         return true;
+    }
+
+    private async Task<IResponse> AddNote()
+    {
+        //TODO: Get the TEXT from EntityData
+        string theText;
+
+        try
+        {
+            theText = _data.EntityData.GetProperty("note").ToString();
+        }
+        catch
+        {
+            return Response.Error("Note property is required");
+        }
+
+        var note = new Note
+        {
+            Text = theText,
+            InstanceId = _instanceId,
+            StateName = _activeInstance!.StateName,
+            CreatedBy = _user,
+            CreatedByBehalfOf = _behalfOfUser,
+
+
+        };
+        await _dbContext.Notes.AddAsync(note);
+        await _dbContext.SaveChangesAsync();
+
+        return new Response
+        {
+            Result = new Result(Status.Success, "Note added")
+        };
     }
 }
 

@@ -39,12 +39,12 @@ public class WorkflowDBContext : DbContext
     public DbSet<FlowHeader> FlowHeaders { get; set; } = default!;
     public DbSet<TransferHistory> TransferHistories { get; set; } = default!;
     public DbSet<SemanticVersion> SemanticVersions { get; set; } = default!;
-     public DbSet<HumanTask> HumanTasks { get; set; } = default!;
+    public DbSet<HumanTask> HumanTasks { get; set; } = default!;
     public DbSet<TransitionRole> TransitionRoles { get; set; } = default!;
+    public DbSet<Note> Notes { get; set; } = default!;
     //Hub Data
     public DbSet<SignalRData> SignalRResponses { get; set; } = default!;
-    
-    
+
     //Zeebe Exporter/Consumer DbSets
     public DbSet<Incident> Incidents { get; set; } = default!;
     public DbSet<Job> Jobs { get; set; } = default!;
@@ -223,6 +223,12 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<TransferHistory>().ToTable("TransferHistories", "transfer")
         .HasKey(p => p.Id);
 
+
+        modelBuilder.Entity<Note>().ToTable("Notes")
+        .HasKey(p => p.Id);
+        modelBuilder.Entity<Instance>()
+            .HasMany(p => p.Notes)
+            .WithOne();
 
         // modelBuilder.SeedUserResetPassword();
         // modelBuilder.SeedUserLifecycle();
