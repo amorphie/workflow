@@ -75,18 +75,39 @@ public static class TransferModule
 
 [FromServices] WorkflowDBContext context,
 [FromQuery(Name = "assignee")] string? Assignee,
-CancellationToken token
+IConfiguration configuration,
+CancellationToken token,
+[FromQuery] string? type,
+[FromHeader(Name = "role")] string? role,
+[FromHeader(Name = "Accept-Language")] string? language = "en-EN"
 )
     {
         try
         {
             var taskList = await context.HumanTasks.Where(w => w.Assignee == Assignee && w.Status != HumanTaskStatus.Completed
-            && w.Status != HumanTaskStatus.Denied).ToListAsync(token);
-            if (taskList.Any())
+            && w.Status != HumanTaskStatus.Denied).Select(s => new core.Dtos.HumanTasks.HumanTaskDto()
             {
-                return Results.Ok(taskList);
-            }
-            return Results.NoContent();
+                TaskId = s.TaskId,
+                AppTransitionName = s.AppTransitionName,
+                Assignee = s.Assignee,
+                AutoTransaction = s.AutoTransaction,
+                AutoTransactionTimeout = s.AutoTransactionTimeout,
+                AutoTransitionName = s.AutoTransitionName,
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                DenyTransitionName = s.DenyTransitionName,
+                Description = s.Description,
+                DueBy = s.DueBy,
+                InstanceId = s.InstanceId,
+                Metadata = s.Metadata,
+                Name = s.Name,
+                Priority = s.Priority,
+                Roles = s.Roles,
+                State = s.State,
+                Status = s.Status,
+                Type = s.Type
+            }).ToListAsync(token);
+            return await HumanTaskWithView(context, configuration, taskList, language, role, type, token);
 
         }
         catch (Exception ex)
@@ -99,21 +120,46 @@ CancellationToken token
     [FromServices] WorkflowDBContext context,
      [FromQuery(Name = "assignee")] string? Assignee,
       [FromRoute(Name = "status")] string? Status,
-    CancellationToken token
+       IConfiguration configuration,
+        CancellationToken token,
+       [FromQuery] string? type,
+       [FromHeader(Name = "role")] string? role,
+            [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
     )
     {
         try
         {
-
-
-            HumanTaskStatus? taskStatus=amorphie.workflow.core.Helper.EnumHelper.GetValueFromDescription<HumanTaskStatus>(Status);
-            var taskList = await context.HumanTasks.Where(w => ((string.IsNullOrEmpty(Assignee)) || (!string.IsNullOrEmpty(Assignee) && w.Assignee == Assignee))
-            && w.Status == taskStatus).ToListAsync(token);
-            if (taskList.Any())
+            if (string.IsNullOrEmpty(type))
             {
-                return Results.Ok(taskList);
+                type = TypeofUiEnum.FlutterWidget.ToString().ToLower();
             }
-            return Results.NoContent();
+
+            HumanTaskStatus? taskStatus = amorphie.workflow.core.Helper.EnumHelper.GetValueFromDescription<HumanTaskStatus>(Status);
+            var taskList = await context.HumanTasks.Where(w => ((string.IsNullOrEmpty(Assignee)) || (!string.IsNullOrEmpty(Assignee) && w.Assignee == Assignee))
+            && w.Status == taskStatus).Select(s => new core.Dtos.HumanTasks.HumanTaskDto()
+            {
+                TaskId = s.TaskId,
+                AppTransitionName = s.AppTransitionName,
+                Assignee = s.Assignee,
+                AutoTransaction = s.AutoTransaction,
+                AutoTransactionTimeout = s.AutoTransactionTimeout,
+                AutoTransitionName = s.AutoTransitionName,
+                CreatedAt = s.CreatedAt,
+                CreatedBy = s.CreatedBy,
+                DenyTransitionName = s.DenyTransitionName,
+                Description = s.Description,
+                DueBy = s.DueBy,
+                InstanceId = s.InstanceId,
+                Metadata = s.Metadata,
+                Name = s.Name,
+                Priority = s.Priority,
+                Roles = s.Roles,
+                State = s.State,
+                Status = s.Status,
+                
+                Type = s.Type
+            }).ToListAsync(token);
+            return await HumanTaskWithView(context, configuration, taskList, language, role, type, token);
 
         }
         catch (Exception ex)
@@ -121,7 +167,70 @@ CancellationToken token
             return Results.Problem("Unexcepted error:" + ex.ToString());
         }
     }
+    private async static Task<IResult> HumanTaskWithView(WorkflowDBContext context, IConfiguration configuration, List<core.Dtos.HumanTasks.HumanTaskDto?>? taskList,
+     string? language, string? role, string? type, CancellationToken token)
+    {
+        var templateURL = configuration["templateEngineUrl"]!.ToString();
+        List<core.Dtos.HumanTasks.HumanTaskDto?> responseList = new List<core.Dtos.HumanTasks.HumanTaskDto?>();
+        foreach (var item in taskList)
+        {
+            if(!string.IsNullOrEmpty(item.AppTransitionName))
+            {
+                item.ApproveView = await TransitionModel(context, item.AppTransitionName, language, role, type, templateURL, token);
+            }
+            if(!string.IsNullOrEmpty(item.DenyTransitionName))
+            {
+                item.RejectView = await TransitionModel(context, item.DenyTransitionName, language, role, type, templateURL, token);
+            }
+            InstanceTransition? lastTransition = await context.InstanceTransitions.OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(f => f.InstanceId == item.InstanceId, token);
+            if (lastTransition != null)
+            {
+                try
+                {
+                    item.lastEntityData = System.Text.Json.JsonSerializer.Deserialize<dynamic>(lastTransition.EntityData);
+                    item.lastAdditionalData = System.Text.Json.JsonSerializer.Deserialize<dynamic>(lastTransition.AdditionalData);
+                }
+                catch(Exception)
+                {
+                    item.lastEntityData =new {};
+                    item.lastAdditionalData =new {};
+                }
+            }
+            responseList.Add(item);
+        }
+        if (responseList.Any())
+        {
+            return Results.Ok(responseList);
+        }
+        return Results.NoContent();
+    }
+    private async static Task<ViewTransitionModel?> TransitionModel(WorkflowDBContext context, string transitionName, string? language, string? role, string? type, string templateURL, CancellationToken token)
+    {
+          // (( string.IsNullOrEmpty(role)&& f.Role != null&&role == f.Role) || (string.IsNullOrEmpty(f.Role))) &&
+          //&& f.TypeofUiEnum.ToString().ToLower() == type
+        UiForm? appUiForm = await context.UiForms.Include(t => t.Forms)
+        .Where(f=> f.TypeofUiEnum!=null && f.Forms != null && f.Forms.Any() && f.TransitionName == transitionName)
+        .FirstOrDefaultAsync(token);
+        if (appUiForm != null)
+        {
+            amorphie.core.Base.Translation? translation = appUiForm.Forms.Where(s => s.Language == language).FirstOrDefault();
+            if (translation == null)
+            {
+                translation = appUiForm.Forms.FirstOrDefault();
+            }
 
+            return new ViewTransitionModel()
+            {
+                name = translation.Label,
+                type = appUiForm.TypeofUiEnum.ToString(),
+                language = translation.Language,
+                navigation = appUiForm.Navigation.ToString(),
+                body = amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(translation.Label, string.Empty, templateURL, string.Empty, 1)
+            };
+
+        }
+        return null;
+    }
     async static ValueTask<IResult> UpdateTaskStatus(
 
     [FromServices] WorkflowDBContext context,
@@ -197,7 +306,7 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
             var task = await context.HumanTasks.Where(w => w.TaskId == taskId).FirstOrDefaultAsync(token);
             if (task != null)
             {
-                string transitionName = task.AutoTransitionName!=null?task.AutoTransitionName:string.Empty;
+                string transitionName = task.AutoTransitionName != null ? task.AutoTransitionName : string.Empty;
                 bool sendZeebe = false;
                 if (amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(HumanTaskCompleteType.AutoTrigger) != type.ToLower()
                 && task.Type == HumanTaskType.Assigned && user != task.Assignee)
@@ -217,7 +326,7 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
                     sendZeebe = true;
                 }
 
-                await SendZeebeMessage(context,transitionName,task.InstanceId,sendZeebe,zeebeCommandService,token);
+                await SendZeebeMessage(context, transitionName, task.InstanceId, sendZeebe, zeebeCommandService, token);
                 await context.SaveChangesAsync(token);
                 return Results.Ok(task);
             }
@@ -229,34 +338,34 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
             return Results.Problem("Unexcepted error:" + ex.ToString());
         }
     }
-    private static async Task SendZeebeMessage(WorkflowDBContext context,string transitionName,Guid? InstanceId,bool sendZeebe,
-    IZeebeCommandService zeebeCommandService,CancellationToken token)
+    private static async Task SendZeebeMessage(WorkflowDBContext context, string transitionName, Guid? InstanceId, bool sendZeebe,
+    IZeebeCommandService zeebeCommandService, CancellationToken token)
     {
-          Instance? instance = await context.Instances.Where(w => w.Id == InstanceId).FirstOrDefaultAsync(token);
-                if (instance != null)
-                {
-                    dynamic variables = new Dictionary<string, dynamic>();
-                    variables.Add($"humanTaskMessageValue", transitionName);
-                    variables.Add($"LastTransition", transitionName);
-                    Transition? transition = await context.Transitions.FirstOrDefaultAsync(f => f.Name == transitionName, token);
-                    InstanceTransition instanceTransition = new InstanceTransition()
-                    {
-                        InstanceId = instance.Id,
-                        FromStateName = instance.StateName,
-                        ToStateName = transition!.ToStateName!,
-                        EntityData="{}",
-                        HeadersData="{}",
-                        AdditionalData="{}",
-                        TransitionName = transitionName,
-                        StartedAt = DateTime.UtcNow
-                    };
-                    await context.InstanceTransitions.AddAsync(instanceTransition, token);
-                    if (sendZeebe)
-                    {
-                        await zeebeCommandService.PublishMessage(core.Constants.HumanTaskZeebeCommand.humanTaskMessage, variables, instance.Id.ToString());
-                    }
+        Instance? instance = await context.Instances.Where(w => w.Id == InstanceId).FirstOrDefaultAsync(token);
+        if (instance != null)
+        {
+            dynamic variables = new Dictionary<string, dynamic>();
+            variables.Add($"humanTaskMessageValue", transitionName);
+            variables.Add($"LastTransition", transitionName);
+            Transition? transition = await context.Transitions.FirstOrDefaultAsync(f => f.Name == transitionName, token);
+            InstanceTransition instanceTransition = new InstanceTransition()
+            {
+                InstanceId = instance.Id,
+                FromStateName = instance.StateName,
+                ToStateName = transition!.ToStateName!,
+                EntityData = "{}",
+                HeadersData = "{}",
+                AdditionalData = "{}",
+                TransitionName = transitionName,
+                StartedAt = DateTime.UtcNow
+            };
+            await context.InstanceTransitions.AddAsync(instanceTransition, token);
+            if (sendZeebe)
+            {
+                await zeebeCommandService.PublishMessage(core.Constants.HumanTaskZeebeCommand.humanTaskMessage, variables, instance.Id.ToString());
+            }
 
-                }
+        }
     }
     async static ValueTask<IResult> InsertTaskMethod(
 

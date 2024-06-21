@@ -14,6 +14,7 @@ namespace amorphie.workflow.core.Models
         public string? StateName { get; set; }
         public NavigationType? Navigation { get; set; }
         public TypeofUiEnum? TypeofUiEnum { get; set; }
+        public string? Role {get;set;}
         public ICollection<amorphie.core.Base.Translation>? Forms { get; set; } = default!;
     }
 }

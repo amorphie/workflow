@@ -304,6 +304,7 @@ public static class InstanceModule
 
         [FromQuery] string? type,
           [FromQuery] int? json,
+            [FromHeader(Name = "role")] string? role,
         [FromHeader(Name = "Accept-Language")] string language = "en-EN"
     )
     {
@@ -317,7 +318,16 @@ public static class InstanceModule
             if (transition != null)
             {
 
-                uiForm = transition.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
+                // uiForm = transition.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
+                uiForm = transition.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type
+                &&(role==f.Role&&f.Role!=null)
+                );
+                if(uiForm==null)
+                {
+                    uiForm = transition.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type
+                &&(string.IsNullOrEmpty(f.Role))
+                );
+                }
                 return await View(configuration, transitionName, type, typeof(Transition).ToString(), uiForm, language, json, string.Empty, string.Empty);
             }
             if (transition == null)
@@ -339,6 +349,7 @@ public static class InstanceModule
   [FromQuery(Name = "suffix")] string? suffix,
      [FromQuery] string? type,
         [FromQuery] int? json,
+        [FromHeader(Name = "role")] string? role,
      [FromHeader(Name = "Accept-Language")] string language = "en-EN"
  )
     {
@@ -361,7 +372,15 @@ public static class InstanceModule
                     suffix = "-" + suffix;
 
                 }
-                uiForm = state.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type);
+                uiForm = state.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type
+                &&(role==f.Role&&f.Role!=null)
+                );
+                if(uiForm==null)
+                {
+                    uiForm = state.UiForms.FirstOrDefault(f => f.TypeofUiEnum.ToString().ToLower() == type
+                &&(string.IsNullOrEmpty(f.Role))
+                );
+                }
                 return await View(configuration, stateName, type, typeof(State).ToString(), uiForm, language, json, string.Empty, suffix);
             }
             if (state == null)
@@ -416,7 +435,7 @@ public static class InstanceModule
             {
                 if (uiForm == null)
                 {
-                    return Results.NotFound(typeofTable + " does not have " + type + " type");
+                    return Results.NotFound(typeofTable + " does not have " + type + " type under your authority");
                 }
                 form = uiForm.Forms.FirstOrDefault(f => f.Language == language);
                 if (form == null && language != "en-EN")
@@ -457,7 +476,7 @@ public static class InstanceModule
             return Results.BadRequest("Unexpected error:" + ex.ToString());
         }
     }
-    static async ValueTask<amorphie.core.IBase.IResponse> TriggerFlow(
+    static async ValueTask<IResult> TriggerFlow(
   [FromBody] dynamic body,
   [FromRoute(Name = "transitionName")] string transitionName,
   [FromServices] WorkflowDBContext context,
@@ -478,8 +497,12 @@ public static class InstanceModule
         {
             result = await service.ExecuteWithoutEntity();
         }
-
-        return result;
+        if(result.Result.Status == Status.Success.ToString())
+        {   
+            return Results.Ok(result);
+            
+        }
+        return Results.BadRequest(result);
 
     }
     static async Task<IResult> getAllInstance(
