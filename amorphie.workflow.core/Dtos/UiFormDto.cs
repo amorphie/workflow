@@ -11,6 +11,7 @@ namespace amorphie.workflow.core.Dtos
         public TypeofUiEnum? typeofUi { get; set; } = TypeofUiEnum.Formio;
         public MultilanguageText[]? forms { get; set; }
         public NavigationType? navigationType { get; set; } = NavigationType.PushReplacement;
+        public string? role { get; set; }=string.Empty;
 
     }
 }

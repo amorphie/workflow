@@ -1390,6 +1390,7 @@ CancellationToken cancellationToken
                     StateName = data.name,
                     TypeofUiEnum = s.typeofUi,
                     Navigation = s.navigationType,
+                    Role=s.role,
                     Forms = s.forms.Any() ? s.forms.Select(s => new Translation()
                     {
 
@@ -1442,6 +1443,7 @@ CancellationToken cancellationToken
                         TransitionName = x.name,
                         TypeofUiEnum = s.typeofUi,
                         Navigation = s.navigationType,
+                        Role=s.role,
                         Forms = s.forms.Any() ? s.forms.Select(s => new Translation()
                         {
 
@@ -1509,8 +1511,18 @@ CancellationToken cancellationToken
             }
             if (data.allowedSuffix?.Length > 0)
             {
+                if(data.allowedSuffix.Any(d=>!existingRecord.AllowedSuffix.Any(e=>e==d)))
+                {
+                    hasChanges = true;
+                    existingRecord.AllowedSuffix = data.allowedSuffix;
+                }
+
+            }
+             if (data.allowedSuffix?.Length ==0 &&existingRecord.AllowedSuffix.Length>0)
+            {
                 hasChanges = true;
-                existingRecord.AllowedSuffix = data.allowedSuffix;
+                existingRecord.AllowedSuffix =[];
+
 
             }
             if (data.ispublicForm != existingRecord.IsPublicForm)
@@ -1541,35 +1553,42 @@ CancellationToken cancellationToken
                 existingRecord.MFAType = data.mfaType;
                 hasChanges = true;
             }
+            List<amorphie.workflow.core.Models.UiForm?> deletedUiForms=new List<amorphie.workflow.core.Models.UiForm?>();
+
             if (data.publicForms != null && data.publicForms.Any())
             {
                 foreach (var languageForm in data.publicForms)
                 {
-                    // Translation? translation = existingRecord.PublicForms.FirstOrDefault(f => f.Language == languageForm.language);
-                    // if (translation != null && translation.Label != languageForm.label)
-                    // {
-                    //     translation.Label = languageForm.label;
-                    //     hasChanges = true;
-                    // }
-                    // else if (translation == null)
-                    // {
-
-                    //     existingRecord.PublicForms.Add(new Translation()
-                    //     {
-                    //         Label = languageForm.label,
-                    //         Language = languageForm.language
-                    //     });
-                    //     existingRecord.ModifiedAt = DateTime.UtcNow;
-                    //     hasChanges = true;
-                    // }
-                    amorphie.workflow.core.Models.UiForm? uiForm = existingRecord.UiForms.FirstOrDefault(f => languageForm.typeofUi == f.TypeofUiEnum);
+                    amorphie.workflow.core.Models.UiForm? uiForm = existingRecord.UiForms.FirstOrDefault(f => languageForm.typeofUi == f.TypeofUiEnum
+                    &&((string.IsNullOrEmpty(f.Role)&&string.IsNullOrEmpty(languageForm.role))||f.Role==languageForm.role));
+                    // ui form not exist with role
                     if (uiForm == null)
                     {
+                       
+                        amorphie.workflow.core.Models.UiForm? uiFormWithoutRole = existingRecord.UiForms.FirstOrDefault(f =>
+                         languageForm.typeofUi == f.TypeofUiEnum&&!deletedUiForms.Any(a=>a.Id==f.Id));
+
+                        if(uiFormWithoutRole!=null)
+                        {
+                            bool IsRemove=false;
+                             foreach (var languagePF in languageForm.forms)
+                            {
+                                Translation? translation = uiFormWithoutRole.Forms.FirstOrDefault(f => f.Language == languagePF.language);
+                                if (translation?.Label == languagePF.label&&!IsRemove)
+                                {
+                                    deletedUiForms.Add(uiFormWithoutRole);
+                                    context.Remove(uiFormWithoutRole);
+                                    IsRemove=true;
+                                }
+                            }
+                        }
+
                         uiForm = new amorphie.workflow.core.Models.UiForm()
                         {
                             TypeofUiEnum = languageForm.typeofUi,
                             Navigation = languageForm.navigationType,
                             StateName = existingRecord.Name,
+                            Role=languageForm.role,
                             Forms = languageForm.forms.Select(s => new Translation()
                             {
                                 Label = s.label,
@@ -1578,6 +1597,7 @@ CancellationToken cancellationToken
                         };
                         await context.UiForms.AddAsync(uiForm,token);
                         hasChanges = true;
+                       
                     }
                     if (uiForm != null)
                     {
@@ -1816,12 +1836,84 @@ CancellationToken cancellationToken
                     }
                     if (req.form != null)
                     {
-                        // Translation? translation = existingTransition.Forms.FirstOrDefault(f => f.Language == language);
-                        // if (translation != null && translation.Label != req.form.label)
-                        // {
-                        //     translation.Label = req.form.label;
-                        //     hasChanges = true;
-                        // }
+                          foreach (var languageForm in req.form)
+                {
+                    amorphie.workflow.core.Models.UiForm? uiForm = existingTransition.UiForms.FirstOrDefault(f => languageForm.typeofUi == f.TypeofUiEnum
+                    &&((string.IsNullOrEmpty(f.Role)&&string.IsNullOrEmpty(languageForm.role))||f.Role==languageForm.role));
+                    // ui form not exist with role
+                    if (uiForm == null)
+                    {
+                       
+                        amorphie.workflow.core.Models.UiForm? uiFormWithoutRole = existingTransition.UiForms.FirstOrDefault(f =>
+                         languageForm.typeofUi == f.TypeofUiEnum&&!deletedUiForms.Any(a=>a.Id==f.Id));
+
+                        if(uiFormWithoutRole!=null)
+                        {
+                            bool IsRemove=false;
+                             foreach (var languagePF in languageForm.forms)
+                            {
+                                Translation? translation = uiFormWithoutRole.Forms.FirstOrDefault(f => f.Language == languagePF.language);
+                                if (translation?.Label == languagePF.label&&!IsRemove)
+                                {
+                                    deletedUiForms.Add(uiFormWithoutRole);
+                                    context.Remove(uiFormWithoutRole);
+                                    IsRemove=true;
+                                }
+                            }
+                        }
+
+                        uiForm = new amorphie.workflow.core.Models.UiForm()
+                        {
+                            TypeofUiEnum = languageForm.typeofUi,
+                            Navigation = languageForm.navigationType,
+                            StateName = existingTransition.Name,
+                            Role=languageForm.role,
+                            Forms = languageForm.forms.Select(s => new Translation()
+                            {
+                                Label = s.label,
+                                Language = s.language
+                            }).ToList()
+                        };
+                        await context.UiForms.AddAsync(uiForm,token);
+                        hasChanges = true;
+                       
+                    }
+                    if (uiForm != null)
+                    {
+                        if (languageForm.forms != null && languageForm.forms.Any())
+                        {
+                            foreach (var languagePF in languageForm.forms)
+                            {
+                                Translation? translation = uiForm.Forms.FirstOrDefault(f => f.Language == languagePF.language);
+                                if (translation?.Label != languagePF.label)
+                                {
+                                    translation.Label = languagePF.label;
+                                    hasChanges = true;
+                                }
+                                if (translation == null)
+                                {
+
+                                    uiForm.Forms.Add(new Translation()
+                                    {
+                                        Label = languagePF.label,
+                                        Language = languagePF.language
+                                    });
+                                    existingTransition.ModifiedAt = DateTime.UtcNow;
+                                    hasChanges = true;
+                                }
+                            }
+                        }
+                        if (uiForm.Navigation != languageForm.navigationType)
+                        {
+                            hasChanges = true;
+                            uiForm.Navigation = languageForm.navigationType;
+                        }
+
+                    }
+
+
+                }
+
                     }
 
                     if (req!.page != null)
