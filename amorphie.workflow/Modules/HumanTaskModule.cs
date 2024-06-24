@@ -130,7 +130,7 @@ CancellationToken token,
         CancellationToken token,
        //[FromQuery] string? type,
        [FromHeader(Name = "role")] string? role,
-       [FromHeader(Name = "instanceId")] string? instanceId,
+       [FromQuery(Name = "instanceId")] string? instanceId,
             [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
     )
     {
