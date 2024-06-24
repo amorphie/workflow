@@ -15,7 +15,8 @@ public record GetInstanceResponse(
     GetStateDefinition? State,
     DateTime CreatedAt,
     DateTime? LastTransitionAt,
-    dynamic? data
+    dynamic? data,
+    dynamic? additionalData
     );
 
 
