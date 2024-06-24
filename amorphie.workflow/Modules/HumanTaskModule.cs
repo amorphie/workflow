@@ -74,6 +74,7 @@ public static class TransferModule
     async static ValueTask<IResult> GetTask(
 
 [FromServices] WorkflowDBContext context,
+[FromServices] service.Db.HumanTaskService humanTaskService,
 [FromQuery(Name = "assignee")] string? Assignee,
 IConfiguration configuration,
 CancellationToken token,
@@ -107,7 +108,12 @@ CancellationToken token,
                 Status = s.Status,
                 Type = s.Type
             }).ToListAsync(token);
-            return await HumanTaskWithView(context, configuration, taskList, language, role, type, token);
+            var response=await humanTaskService.HumanTaskWithView(taskList,language,role,TypeofUiEnum.FlutterWidget.ToString().ToLower(),token);
+            if(response!=null)
+            {
+                return Results.Ok(response);
+            }
+            return Results.NoContent();
 
         }
         catch (Exception ex)
@@ -116,23 +122,19 @@ CancellationToken token,
         }
     }
     async static ValueTask<IResult> GetTaskByStatus(
-
     [FromServices] WorkflowDBContext context,
+    [FromServices] service.Db.HumanTaskService humanTaskService,
      [FromQuery(Name = "assignee")] string? Assignee,
       [FromRoute(Name = "status")] string? Status,
        IConfiguration configuration,
         CancellationToken token,
-       [FromQuery] string? type,
+       //[FromQuery] string? type,
        [FromHeader(Name = "role")] string? role,
             [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
     )
     {
         try
         {
-            if (string.IsNullOrEmpty(type))
-            {
-                type = TypeofUiEnum.FlutterWidget.ToString().ToLower();
-            }
 
             HumanTaskStatus? taskStatus = amorphie.workflow.core.Helper.EnumHelper.GetValueFromDescription<HumanTaskStatus>(Status);
             var taskList = await context.HumanTasks.Where(w => ((string.IsNullOrEmpty(Assignee)) || (!string.IsNullOrEmpty(Assignee) && w.Assignee == Assignee))
@@ -159,7 +161,12 @@ CancellationToken token,
                 
                 Type = s.Type
             }).ToListAsync(token);
-            return await HumanTaskWithView(context, configuration, taskList, language, role, type, token);
+            var response=await humanTaskService.HumanTaskWithView(taskList,language,role,TypeofUiEnum.FlutterWidget.ToString().ToLower(),token);
+            if(response!=null)
+            {
+                return Results.Ok(response);
+            }
+            return Results.NoContent();
 
         }
         catch (Exception ex)
