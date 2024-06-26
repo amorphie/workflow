@@ -21,8 +21,9 @@ public class Instance : EntityBase
     public amorphie.core.Enums.StatusType BaseStatus { get; set; } = default!;
     public NpgsqlTsVector? SearchVector { get; set; }
     public string? UserReference { get; set; }
-
+    public string? FullName { get; set; }
     public ICollection<Note>? Notes { get; set; }
+
 }
 
 
