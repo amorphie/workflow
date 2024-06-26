@@ -59,7 +59,7 @@ public static class TransferModule
 
              return operation;
          });
-        app.MapGet("/tasks/{taskId}/type/{type}", CompleteTask)
+        app.MapPost("/tasks/{taskId}/type/{type}", CompleteTask)
    .Produces<HumanTask>(StatusCodes.Status200OK)
 
    .WithOpenApi(operation =>
@@ -298,6 +298,7 @@ CancellationToken token,
    [FromServices] IZeebeCommandService zeebeCommandService,
     [FromRoute(Name = "taskId")] Guid? taskId,
     [FromRoute(Name = "type")] string type,
+    [FromBody] dynamic data,
    CancellationToken token
    )
     {
@@ -335,7 +336,7 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
                     sendZeebe = true;
                 }
 
-                await SendZeebeMessage(context, transitionName, task.InstanceId, sendZeebe, zeebeCommandService, token);
+                await SendZeebeMessage(context,data, transitionName, task.InstanceId, sendZeebe, zeebeCommandService, token);
                 await context.SaveChangesAsync(token);
                 return Results.Ok(task);
             }
@@ -347,7 +348,7 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
             return Results.Problem("Unexcepted error:" + ex.ToString());
         }
     }
-    private static async Task SendZeebeMessage(WorkflowDBContext context, string transitionName, Guid? InstanceId, bool sendZeebe,
+    private static async Task SendZeebeMessage(WorkflowDBContext context,dynamic data, string transitionName, Guid? InstanceId, bool sendZeebe,
     IZeebeCommandService zeebeCommandService, CancellationToken token)
     {
         Instance? instance = await context.Instances.Where(w => w.Id == InstanceId).FirstOrDefaultAsync(token);
@@ -371,10 +372,22 @@ amorphie.workflow.core.Helper.EnumHelper.GetDescription<HumanTaskCompleteType>(H
             await context.InstanceTransitions.AddAsync(instanceTransition, token);
             if (sendZeebe)
             {
+                dynamic targetObject = new ExpandoObject();
+                targetObject.Data = data;
+                targetObject.TriggeredBy = Guid.NewGuid();
+                targetObject.TriggeredByBehalfOf = Guid.NewGuid();
+
+                string updateName = deleteUnAllowedCharecters(transitionName);
+                variables.Add($"TRX-{transitionName}", targetObject);
+                variables.Add($"TRX{updateName}", targetObject);
                 await zeebeCommandService.PublishMessage(core.Constants.HumanTaskZeebeCommand.humanTaskMessage, variables, instance.Id.ToString());
             }
 
         }
+    }
+      private static string deleteUnAllowedCharecters(string transitionName)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
     }
     async static ValueTask<IResult> InsertTaskMethod(
 
