@@ -1,15 +1,14 @@
 
 using System.Text.Json.Nodes;
-using amorphie.core.Enums;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Helper;
+using amorphie.workflow.core.Models;
 using amorphie.workflow.service.Db.Abstracts;
 using amorphie.workflow.service.SignalR;
 using amorphie.workflow.service.Variable;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 public static class SimpleStateManagerModule

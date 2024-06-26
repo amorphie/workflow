@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Dtos.Consumer;
+using amorphie.workflow.core.Models;
 using amorphie.workflow.service.Db.Abstracts;
 
 namespace amorphie.workflow.service.Db;

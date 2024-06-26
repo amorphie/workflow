@@ -1,5 +1,8 @@
 using amorphie.core.Base;
 using NpgsqlTypes;
+namespace amorphie.workflow.core.Models;
+
+
 public class InstanceTransition : EntityBaseLog
 {
     public Instance Instance { get; set; } = default!;

@@ -2,7 +2,7 @@
 
 using amorphie.core.Base;
 using NpgsqlTypes;
-
+namespace amorphie.workflow.core.Models;
 public class Instance : EntityBase
 {
     public Workflow Workflow { get; set; } = default!;
@@ -22,6 +22,8 @@ public class Instance : EntityBase
     public NpgsqlTsVector? SearchVector { get; set; }
     public string? UserReference { get; set; }
     public string? FullName { get; set; }
+    public ICollection<Note>? Notes { get; set; }
+
 }
 
 
