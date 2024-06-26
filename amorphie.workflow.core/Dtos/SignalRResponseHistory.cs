@@ -9,4 +9,5 @@ public class SignalRResponseHistory : SignalRResponsePublic
     public string? fromStateName { get; set; }
     public string? toStateName { get; set; }
     public string? userReference { get; set; }
+    public string? userName { get; set; }
 }
