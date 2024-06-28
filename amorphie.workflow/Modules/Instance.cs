@@ -497,13 +497,25 @@ public static class InstanceModule
 
         if (result.Result.Status == Status.Success.ToString())
         {
-            result = await service.ExecuteWithoutEntity();
+            return await service.ExecuteWithoutEntity();
         }
-        if(result.Result.Status == Status.Success.ToString())
-        {   
-            return Results.Ok(result);
-            
+        
+        // if (result.StatusCode.ToString()  == "200")
+        // {
+        //   return await service.ExecuteWithoutEntity();
+        // }
+        // return result;
+        if(result.Data==HttpStatusEnum.Conflict)
+        {
+            result.Data=null;
+            return Results.Conflict(result);
         }
+        if(result.Data==HttpStatusEnum.NotFound)
+        {
+            result.Data=null;
+            return Results.NotFound(result);
+        }
+        result.Data=null;
         return Results.BadRequest(result);
 
     }
@@ -635,7 +647,7 @@ public static class InstanceModule
         {
             foreach(var item in instanceSearch.KeywordList)
             {
-                query = query.AsNoTracking().Where(p =>p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", item)));
+                query = query.AsNoTracking().Where(p =>EF.Functions.JsonContains(p.EntityData, item));
             }
           
         }
@@ -851,6 +863,7 @@ public static class InstanceModule
             {
                 var temp = ObjectMapper.Mapper.Map<SignalRResponseHistory>(s);
                 temp.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(s.data);
+                temp.toStateName=temp.data.state;
                 temp.userReference=instanceControl.UserReference;
                 temp.userName=instanceControl.FullName;
                 return temp;
