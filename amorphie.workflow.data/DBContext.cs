@@ -1,4 +1,4 @@
-﻿using amorphie.core.Base;
+using amorphie.core.Base;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
 using amorphie.workflow.core.Models.Consumer;
