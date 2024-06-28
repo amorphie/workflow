@@ -44,7 +44,6 @@ public class WorkflowDBContext : DbContext
     public DbSet<Note> Notes { get; set; } = default!;
     //Hub Data
     public DbSet<SignalRData> SignalRResponses { get; set; } = default!;
-
     //Zeebe Exporter/Consumer DbSets
     public DbSet<Incident> Incidents { get; set; } = default!;
     public DbSet<Job> Jobs { get; set; } = default!;
