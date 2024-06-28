@@ -219,10 +219,10 @@ public class TransferService
             {
                 return Response.Error($"Transfer request could not be parsed to {nameof(WorkflowCreateDto)}");
             }
-            if (!Md5.Check(workflowDto))
-            {
-                return Response.Error("Request body must not be modified before save");
-            }
+            // if (!Md5.Check(workflowDto))
+            // {
+            //     return Response.Error("Request body must not be modified before save");
+            // }
             var saveResponse = await _workflowService.SaveAsync(workflowDto!,cancellationToken);
             transferHistroy.TransferStatus = TransferStatus.Approved;
         }
