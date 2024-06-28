@@ -1,4 +1,5 @@
 using amorphie.core.Base;
+namespace amorphie.workflow.core.Models;
 
 public class InstanceEvent : EntityBaseLog
 {

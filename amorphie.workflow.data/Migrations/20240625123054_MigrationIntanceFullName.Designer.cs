@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -11,9 +12,11 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240625123054_MigrationIntanceFullName")]
+    partial class MigrationIntanceFullName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -747,7 +750,62 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("Translation");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.Consumer.Incident", b =>
+            modelBuilder.Entity("amorphie.workflow.core.Models.FlowHeader", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ModifiedByBehalfOf")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("FlowHeaders");
+                });
+
+            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Deployment", b =>
+                {
+                    b.Property<string>("ResourceName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BpmnProcessId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Duplicate")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Intent")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Resource")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("ResourceName");
+
+                    b.ToTable("Deployments", "exporter");
+                });
+
+            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Incident", b =>
                 {
                     b.Property<long>("Key")
                         .ValueGeneratedOnAdd()
@@ -787,7 +845,7 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("Incidents", "exporter");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.Consumer.Job", b =>
+            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Job", b =>
                 {
                     b.Property<long>("Key")
                         .ValueGeneratedOnAdd()
@@ -821,7 +879,7 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("Jobs", "exporter");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.Consumer.JobBatch", b =>
+            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.JobBatch", b =>
                 {
                     b.Property<long>("Key")
                         .HasColumnType("bigint");
@@ -861,11 +919,14 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("JobBatchs", "exporter");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.Consumer.Message", b =>
+            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Message", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("BrokerVersion")
+                        .HasColumnType("text");
 
                     b.Property<string>("CorrelationKey")
                         .HasColumnType("text");
@@ -918,6 +979,18 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<long>("ProcessInstanceKey")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("RecordType")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RecordVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionType")
+                        .HasColumnType("text");
+
                     b.Property<int>("SourceRecordPosition")
                         .HasColumnType("integer");
 
@@ -935,7 +1008,7 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("Messages", "exporter");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.Consumer.MessageSubscription", b =>
+            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.MessageSubscription", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -943,6 +1016,9 @@ namespace amorphie.workflow.data.Migrations
 
                     b.Property<string>("BpmnProcessId")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BrokerVersion")
                         .HasColumnType("text");
 
                     b.Property<string>("CorrelationKey")
@@ -987,14 +1063,32 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
-                    b.Property<long>("Position")
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("ProcessDefinitionKey")
                         .HasColumnType("bigint");
 
                     b.Property<long>("ProcessInstanceKey")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("RecordType")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RecordVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionType")
+                        .HasColumnType("text");
+
                     b.Property<int>("SourceRecordPosition")
                         .HasColumnType("integer");
+
+                    b.Property<string>("TenantId")
+                        .HasColumnType("text");
 
                     b.Property<long>("Timestamp")
                         .HasColumnType("bigint");
@@ -1010,7 +1104,7 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("MessageSubscriptions", "exporter");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.Consumer.Process", b =>
+            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Process", b =>
                 {
                     b.Property<long>("Key")
                         .ValueGeneratedOnAdd()
@@ -1033,6 +1127,9 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("InstanceId")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1042,7 +1139,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<Guid?>("ModifiedByBehalfOf")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Resource")
+                    b.Property<string>("ResourceName")
                         .HasColumnType("text");
 
                     b.Property<long>("Timestamp")
@@ -1056,7 +1153,7 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("Process", "exporter");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.Consumer.ProcessInstance", b =>
+            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.ProcessInstance", b =>
                 {
                     b.Property<long>("Key")
                         .ValueGeneratedOnAdd()
@@ -1073,6 +1170,10 @@ namespace amorphie.workflow.data.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("BpmnProcessId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BrokerVersion")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -1099,14 +1200,36 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<int>("PartitionId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
                     b.Property<long>("ProcessDefinitionKey")
                         .HasColumnType("bigint");
 
                     b.Property<long>("ProcessInstanceKey")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("RecordType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionReason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RejectionType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SourceRecordPosition")
+                        .HasColumnType("integer");
+
                     b.Property<long>("Timestamp")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("ValueType")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("Version")
                         .HasColumnType("integer");
@@ -1116,7 +1239,7 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("ProcessInstances", "exporter");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.Consumer.Variable", b =>
+            modelBuilder.Entity("amorphie.workflow.core.Models.GatewayMessages.Variable", b =>
                 {
                     b.Property<long>("Key")
                         .ValueGeneratedOnAdd()
@@ -1148,34 +1271,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasKey("Key");
 
                     b.ToTable("Variables", "exporter");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.FlowHeader", b =>
-                {
-                    b.Property<string>("Key")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Key");
-
-                    b.ToTable("FlowHeaders");
                 });
 
             modelBuilder.Entity("amorphie.workflow.core.Models.HumanTask", b =>
@@ -1243,193 +1338,6 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("HumanTasks");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.Instance", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("BaseStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("EntityName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RecordId")
-                        .HasColumnType("uuid");
-
-                    b.Property<NpgsqlTsVector>("SearchVector")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("tsvector")
-                        .HasComputedColumnSql("to_tsvector('english', coalesce(\"WorkflowName\", '') || ' ' || coalesce(\"ZeebeFlowName\", '') || ' ' || coalesce(\"EntityName\", '') || ' ' || coalesce(\"StateName\", ''))", true);
-
-                    b.Property<string>("StateName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserReference")
-                        .HasColumnType("text");
-
-                    b.Property<string>("WorkflowName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ZeebeFlowName")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SearchVector");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "GIN");
-
-                    b.HasIndex("StateName");
-
-                    b.HasIndex("WorkflowName");
-
-                    b.HasIndex("ZeebeFlowName");
-
-                    b.HasIndex("EntityName", "RecordId", "StateName");
-
-                    b.ToTable("Instances");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.InstanceEvent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AdditionalData")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Duration")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("ExecutedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("InputData")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("InstanceTransitionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("OutputData")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InstanceTransitionId");
-
-                    b.ToTable("InstanceEvents");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.InstanceTransition", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AdditionalData")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("EntityData")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("FinishedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("FormData")
-                        .HasColumnType("text");
-
-                    b.Property<string>("FromStateName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HeadersData")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("InstanceId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("QueryData")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RouteData")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ToStateName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TransitionName")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FromStateName");
-
-                    b.HasIndex("InstanceId");
-
-                    b.HasIndex("ToStateName");
-
-                    b.HasIndex("TransitionName");
-
-                    b.ToTable("InstanceTransitions");
-                });
-
             modelBuilder.Entity("amorphie.workflow.core.Models.JsonSchema", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1469,47 +1377,6 @@ namespace amorphie.workflow.data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("JsonSchemas");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.Note", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("InstanceId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("StateName")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InstanceId");
-
-                    b.ToTable("Notes", (string)null);
                 });
 
             modelBuilder.Entity("amorphie.workflow.core.Models.SemanticVersion.SemanticVersion", b =>
@@ -1815,6 +1682,75 @@ namespace amorphie.workflow.data.Migrations
                     b.ToTable("UiForms");
                 });
 
+            modelBuilder.Entity("Instance", b =>
+                {
+                    b.HasOne("State", "State")
+                        .WithMany()
+                        .HasForeignKey("StateName")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Workflow", "Workflow")
+                        .WithMany()
+                        .HasForeignKey("WorkflowName")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ZeebeMessage", "ZeebeFlow")
+                        .WithMany()
+                        .HasForeignKey("ZeebeFlowName");
+
+                    b.Navigation("State");
+
+                    b.Navigation("Workflow");
+
+                    b.Navigation("ZeebeFlow");
+                });
+
+            modelBuilder.Entity("InstanceEvent", b =>
+                {
+                    b.HasOne("InstanceTransition", "InstanceTransition")
+                        .WithMany()
+                        .HasForeignKey("InstanceTransitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InstanceTransition");
+                });
+
+            modelBuilder.Entity("InstanceTransition", b =>
+                {
+                    b.HasOne("State", "FromState")
+                        .WithMany()
+                        .HasForeignKey("FromStateName")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Instance", "Instance")
+                        .WithMany()
+                        .HasForeignKey("InstanceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("State", "ToState")
+                        .WithMany()
+                        .HasForeignKey("ToStateName")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Transition", "Transition")
+                        .WithMany()
+                        .HasForeignKey("TransitionName");
+
+                    b.Navigation("FromState");
+
+                    b.Navigation("Instance");
+
+                    b.Navigation("ToState");
+
+                    b.Navigation("Transition");
+                });
+
             modelBuilder.Entity("PageComponent", b =>
                 {
                     b.HasOne("Page", null)
@@ -1959,84 +1895,6 @@ namespace amorphie.workflow.data.Migrations
                         .HasForeignKey("WorkflowName_Title");
                 });
 
-            modelBuilder.Entity("amorphie.workflow.core.Models.Instance", b =>
-                {
-                    b.HasOne("State", "State")
-                        .WithMany()
-                        .HasForeignKey("StateName")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Workflow", "Workflow")
-                        .WithMany()
-                        .HasForeignKey("WorkflowName")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ZeebeMessage", "ZeebeFlow")
-                        .WithMany()
-                        .HasForeignKey("ZeebeFlowName");
-
-                    b.Navigation("State");
-
-                    b.Navigation("Workflow");
-
-                    b.Navigation("ZeebeFlow");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.InstanceEvent", b =>
-                {
-                    b.HasOne("amorphie.workflow.core.Models.InstanceTransition", "InstanceTransition")
-                        .WithMany()
-                        .HasForeignKey("InstanceTransitionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("InstanceTransition");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.InstanceTransition", b =>
-                {
-                    b.HasOne("State", "FromState")
-                        .WithMany()
-                        .HasForeignKey("FromStateName")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("amorphie.workflow.core.Models.Instance", "Instance")
-                        .WithMany()
-                        .HasForeignKey("InstanceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("State", "ToState")
-                        .WithMany()
-                        .HasForeignKey("ToStateName")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Transition", "Transition")
-                        .WithMany()
-                        .HasForeignKey("TransitionName");
-
-                    b.Navigation("FromState");
-
-                    b.Navigation("Instance");
-
-                    b.Navigation("ToState");
-
-                    b.Navigation("Transition");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.Note", b =>
-                {
-                    b.HasOne("amorphie.workflow.core.Models.Instance", null)
-                        .WithMany("Notes")
-                        .HasForeignKey("InstanceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("amorphie.workflow.core.Models.StateToState", b =>
                 {
                     b.HasOne("State", "FromState")
@@ -2136,11 +1994,6 @@ namespace amorphie.workflow.data.Migrations
             modelBuilder.Entity("WorkflowEntity", b =>
                 {
                     b.Navigation("InclusiveWorkflows");
-                });
-
-            modelBuilder.Entity("amorphie.workflow.core.Models.Instance", b =>
-                {
-                    b.Navigation("Notes");
                 });
 
             modelBuilder.Entity("amorphie.workflow.core.Models.UiForm", b =>

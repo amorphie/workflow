@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -11,9 +12,11 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240607143654_notetable")]
+    partial class notetable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,205 +24,6 @@ namespace amorphie.workflow.data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("Instance", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("BaseStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("EntityName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FullName")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModifiedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ModifiedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RecordId")
-                        .HasColumnType("uuid");
-
-                    b.Property<NpgsqlTsVector>("SearchVector")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("tsvector")
-                        .HasComputedColumnSql("to_tsvector('english', coalesce(\"WorkflowName\", '') || ' ' || coalesce(\"ZeebeFlowName\", '') || ' ' || coalesce(\"EntityName\", '') || ' ' || coalesce(\"StateName\", ''))", true);
-
-                    b.Property<string>("StateName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserReference")
-                        .HasColumnType("text");
-
-                    b.Property<string>("WorkflowName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ZeebeFlowName")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SearchVector");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "GIN");
-
-                    b.HasIndex("StateName");
-
-                    b.HasIndex("WorkflowName");
-
-                    b.HasIndex("ZeebeFlowName");
-
-                    b.HasIndex("EntityName", "RecordId", "StateName");
-
-                    b.ToTable("Instances");
-                });
-
-            modelBuilder.Entity("InstanceEvent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AdditionalData")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Duration")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("ExecutedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("InputData")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("InstanceTransitionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("OutputData")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InstanceTransitionId");
-
-                    b.ToTable("InstanceEvents");
-                });
-
-            modelBuilder.Entity("InstanceTransition", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AdditionalData")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CreatedByBehalfOf")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("EntityData")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("FinishedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("FormData")
-                        .HasColumnType("text");
-
-                    b.Property<string>("FromStateName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HeadersData")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("InstanceId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("QueryData")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RouteData")
-                        .HasColumnType("text");
-
-                    b.Property<NpgsqlTsVector>("SearchVector")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("tsvector")
-                        .HasComputedColumnSql("to_tsvector('english', coalesce(\"FromStateName\", '') || ' ' || coalesce(\"ToStateName\", '') || ' ' || coalesce(\"EntityData\", '') || ' ' || coalesce(\"AdditionalData\", '') || ' ' || coalesce(\"TransitionName\", ''))", true);
-
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ToStateName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TransitionName")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FromStateName");
-
-                    b.HasIndex("InstanceId");
-
-                    b.HasIndex("SearchVector");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "GIN");
-
-                    b.HasIndex("ToStateName");
-
-                    b.HasIndex("TransitionName");
-
-                    b.ToTable("InstanceTransitions");
-                });
 
             modelBuilder.Entity("Page", b =>
                 {
@@ -1793,9 +1597,6 @@ namespace amorphie.workflow.data.Migrations
 
                     b.Property<int?>("Navigation")
                         .HasColumnType("integer");
-
-                    b.Property<string>("Role")
-                        .HasColumnType("text");
 
                     b.Property<string>("StateName")
                         .HasColumnType("text");

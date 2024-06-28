@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
+using amorphie.workflow.core.Models;
 using amorphie.workflow.core.Models.SignalR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

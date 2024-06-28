@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
+using amorphie.workflow.core.Models;
 using Dapr.Client;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;

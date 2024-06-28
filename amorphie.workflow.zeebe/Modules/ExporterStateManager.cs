@@ -3,6 +3,7 @@ using System.Text.Json;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Helper;
+using amorphie.workflow.core.Models;
 using amorphie.workflow.service.Variable;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;

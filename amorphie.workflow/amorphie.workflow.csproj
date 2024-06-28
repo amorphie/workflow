@@ -22,6 +22,8 @@
     <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.26.0"/>
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.1"/>
     <PackageReference Include="Semver" Version="2.3.0"/>
+    <PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0"/>
+    <PackageReference Include="Microsoft.Toolkit.HighPerformance" Version="7.1.2"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj"/>
