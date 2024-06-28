@@ -12,9 +12,11 @@ using Serilog;
 using Elastic.Apm.NetCoreAll;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using amorphie.core.Middleware.Logging;
+using Prometheus;
 
 using HealthChecks.UI.Client;
 using StackExchange.Redis;
+using amorphie.workflow.hub.Metric;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +36,8 @@ builder.Logging.AddJsonConsole();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(
@@ -50,9 +54,10 @@ builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
 
 builder.Services.AddSignalR(options =>
 {
-    options.MaximumParallelInvocationsPerClient = 50;
-
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30); // Example client timeout
+    options.KeepAliveInterval = TimeSpan.FromSeconds(10); // Example keep-alive interval
 })
+.AddMessagePackProtocol()
 .AddStackExchangeRedis(redis.ToString(), options => {
       options.Configuration.ChannelPrefix = RedisChannel.Literal("amorphie-workflow-hub");
   })
@@ -63,6 +68,10 @@ builder.Services.AddMvc();
 
 builder.Services.AddDbContext<WorkflowDBContext>
     (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
+
+
+builder.Services.AddSingleton<IActiveUser, PrometheusActiveUser>();
+
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
@@ -86,6 +95,11 @@ app.UseSwagger();
 app.MapHealthChecks("/health",new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions{
     ResponseWriter=UIResponseWriter.WriteHealthCheckUIResponse
 });
+
+app.UseHttpMetrics();
+app.MapMetrics();
+
+
 app.UseSwaggerUI();
 app.MapHub<WorkflowHub>("/hubs/workflow");
 app.MapHub<MFATypeHub>("/hubs/genericHub");

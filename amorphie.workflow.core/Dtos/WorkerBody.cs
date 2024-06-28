@@ -26,7 +26,17 @@ public class JsonObjectConverter
         {
             if (workerBody.WorkerBodyTrxDataList!.ContainsKey(item.Key))
                 continue;
-            var value = item.Value.Deserialize<WorkerBodyTrxDatas>(opt) ?? new WorkerBodyTrxDatas();
+                WorkerBodyTrxDatas? value=null;
+                try
+                {
+                     value = item.Value.Deserialize<WorkerBodyTrxDatas>(opt) ?? new WorkerBodyTrxDatas();
+                }
+                catch(Exception)
+                {
+                       throw new Exception(item.Key+" JsonBody is not valid format");
+                }
+           
+            
             workerBody.WorkerBodyTrxDataList.Add(item.Key, value);
         }
         var bodyHeaders = body["Headers"];
@@ -115,9 +125,9 @@ public class WorkerBodyTrxDatas
 public class WorkerBodyTrxInnerDatas
 {
 
-    public dynamic EntityData { get; set; } = default!;
+    public JsonObject EntityData { get; set; } = default!;
     public dynamic? FormData { get; set; }
-    public dynamic? AdditionalData { get; set; }
+    public JsonObject? AdditionalData { get; set; }
     public bool GetSignalRHub { get; set; }
     public dynamic? RouteData { get; set; }
     public dynamic? QueryData { get; set; }

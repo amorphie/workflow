@@ -123,7 +123,7 @@ app.MapTransferModuleEndpoints();
 app.MapComponentTransferModuleEndpoints();
 app.MapHumanTaskModuleEndpoints();
 app.MapAuthorizeEndpoints();
-
+app.MapDMLEndpoints();
 app.MapSchemaValidatorEndpoints();
 try
 {
