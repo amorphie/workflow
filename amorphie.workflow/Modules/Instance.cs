@@ -695,8 +695,8 @@ public static class InstanceModule
                     ),
                    CreatedAt=s.CreatedAt,
                    LastTransitionAt=group.Max(s=>s.CreatedAt),
-                    data=string.IsNullOrEmpty(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData)?new {}:System.Text.Json.JsonSerializer.Deserialize<dynamic>(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData),
-                   additionalData=string.IsNullOrEmpty(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData)?new {}:System.Text.Json.JsonSerializer.Deserialize<dynamic>(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData),
+                    data=string.IsNullOrEmpty(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData)?new {}:JsonParse(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData),
+                   additionalData=string.IsNullOrEmpty(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData)?new {}:JsonParse(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData),
                    humanTasks=null,
                    isHumanTask=context.HumanTasks.FirstOrDefault(f=>f.InstanceId==s.Id&&f.Status==HumanTaskStatus.Pending&&f.State==s.StateName)==null?false:true
 
@@ -712,7 +712,18 @@ public static class InstanceModule
 
          return Results.NoContent();
     }
-
+    private static dynamic JsonParse(string data)
+    {
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<dynamic>(data);
+        }
+        catch(Exception)
+        {
+            return new {};
+        }
+       
+    }
 
     static async Task<IResult> getTransitionByInstanceAsync(
          [FromServices] WorkflowDBContext context,
