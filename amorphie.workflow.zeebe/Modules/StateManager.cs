@@ -74,6 +74,16 @@ public static class StateManagerModule
                 timeout = 0;
             }
         }
+        long? processInstanceKey = 0;
+        try
+        {
+            processInstanceKey = Convert.ToInt64(httpContext.Request.Headers["X-Zeebe-Process-Instance-Key"]);
+        }
+        catch (Exception)
+        {
+            processInstanceKey = 0;
+        }
+
         if (!string.IsNullOrEmpty(notifyClientString))
         {
             try
@@ -154,7 +164,7 @@ public static class StateManagerModule
         }
         else
         {
-            targetStateAsState = await dbContext.States.Include(s=>s.Workflow).FirstOrDefaultAsync(f => f.Name == targetState
+            targetStateAsState = await dbContext.States.Include(s => s.Workflow).FirstOrDefaultAsync(f => f.Name == targetState
 
             // && (f.WorkflowName == instance.WorkflowName || (instance.State.Type == StateType.SubWorkflow &&
             // instance.State.SubWorkflowName == f.WorkflowName))
@@ -167,33 +177,33 @@ public static class StateManagerModule
 
             error = true;
             IsTargetState = true;
-            if(instance.WorkflowName!=targetStateAsState.WorkflowName&&targetStateAsState.Workflow!.IsAllowOneActiveInstance.GetValueOrDefault(false))
+            if (instance.WorkflowName != targetStateAsState.WorkflowName && targetStateAsState.Workflow!.IsAllowOneActiveInstance.GetValueOrDefault(false))
             {
-                string? userReference= body.Headers.user_reference;
-             Instance? instanceOne = await dbContext.Instances
-            .Where(i => i.WorkflowName ==targetStateAsState.WorkflowName&&userReference==i.UserReference)
-            .Include(i => i.State)
-                .ThenInclude(s => s.Transitions)
-                .ThenInclude(t => t.ToState)
-                .ThenInclude(t => t!.Workflow)
-                .ThenInclude(t => t!.Entities)
-            .Include(i => i.State)
-                .ThenInclude(s => s.Transitions)
-                .ThenInclude(s => s.Page)
-                .ThenInclude(s => s!.Pages)
-            .Include(i => i.State)
-                .ThenInclude(s => s.Transitions)
-                .ThenInclude(t => t.ToState)
-                .ThenInclude(t => t!.Transitions)
-            .Include(i => i.State)
-                .ThenInclude(s => s.FromStates)
-            .FirstOrDefaultAsync(cancellationToken);   
-                 
-            if(instanceOne!=null)
-            {
-                instance=instanceOne;
-            }
-            
+                string? userReference = body.Headers.user_reference;
+                Instance? instanceOne = await dbContext.Instances
+               .Where(i => i.WorkflowName == targetStateAsState.WorkflowName && userReference == i.UserReference)
+               .Include(i => i.State)
+                   .ThenInclude(s => s.Transitions)
+                   .ThenInclude(t => t.ToState)
+                   .ThenInclude(t => t!.Workflow)
+                   .ThenInclude(t => t!.Entities)
+               .Include(i => i.State)
+                   .ThenInclude(s => s.Transitions)
+                   .ThenInclude(s => s.Page)
+                   .ThenInclude(s => s!.Pages)
+               .Include(i => i.State)
+                   .ThenInclude(s => s.Transitions)
+                   .ThenInclude(t => t.ToState)
+                   .ThenInclude(t => t!.Transitions)
+               .Include(i => i.State)
+                   .ThenInclude(s => s.FromStates)
+               .FirstOrDefaultAsync(cancellationToken);
+
+                if (instanceOne != null)
+                {
+                    instance = instanceOne;
+                }
+
             }
             transition = await dbContext.Transitions.Include(i => i.ToState).ThenInclude(t => t!.Workflow)
                 .ThenInclude(t => t!.Entities).Where(t => t.Name == body.LastTransition
@@ -214,9 +224,12 @@ public static class StateManagerModule
             return Results.Problem($"Target state is not provided nor defined on transition");
             //throw new ZeebeBussinesException(errorMessage: $"Target state is not provided nor defined on transition");
         }
+        if (processInstanceKey!=null&&processInstanceKey!=0)
+        {
+            instance.ProcessInstanceKey =processInstanceKey;
+        }
 
-
-        InstanceTransition? newInstanceTransition;
+        InstanceTransition ? newInstanceTransition;
         (newInstanceTransition, WorkerBodyTrxDatas? data, string eventInfo) =
         ((InstanceTransition, WorkerBodyTrxDatas, string))await SetInstanceTransition(dbContext, transition, instance, error, body, IsTargetState, targetStateAsState, cancellationToken);
 
@@ -378,16 +391,17 @@ public static class StateManagerModule
 
             string eventInfo = EventInfos.WorkerCompleted;
 
-            HumanTask? humanTask=await dbContext.HumanTasks.FirstOrDefaultAsync(f=>f.State==instance.StateName&&f.InstanceId==instance.Id,cancellationToken);
-            if(humanTask!=null)
+            HumanTask? humanTask = await dbContext.HumanTasks.FirstOrDefaultAsync(f => f.State == instance.StateName && f.InstanceId == instance.Id, cancellationToken);
+            if (humanTask != null)
             {
-                humanTask.Status=HumanTaskStatus.Completed;
-                if(humanTask.DenyTransitionName==transition.Name)
+                humanTask.Status = HumanTaskStatus.Completed;
+                if (humanTask.DenyTransitionName == transition.Name)
                 {
-                     humanTask.Status=HumanTaskStatus.Denied;
+                    humanTask.Status = HumanTaskStatus.Denied;
                 }
             }
             instance.BaseStatus = transition.ToState!.BaseStatus;
+
             if (IsTargetState && targetStateAsState != null)
             {
                 instance.StateName = targetStateAsState.Name;
