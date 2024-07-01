@@ -4,6 +4,7 @@ using amorphie.core.Enums;
 using amorphie.workflow.core.Constants;
 using Dapr.Client;
 using amorphie.workflow.core.Extensions;
+using System.Text.Json.Nodes;
 namespace amorphie.workflow.service.Zeebe
 {
     public interface IZeebeCommandService
@@ -41,8 +42,9 @@ namespace amorphie.workflow.service.Zeebe
             messageData.variables = variables;
             try
             {
-                var messageResult = await _daprClient.InvokeBindingAsync<dynamic, dynamic>(gateway, "publish-message", messageData);
-                return messageResult;
+                JsonObject messageResult = await _daprClient.InvokeBindingAsync<dynamic, JsonObject>(gateway, "publish-message", messageData);
+                long responseValue=Convert.ToInt64(messageResult["key"].ToString()) ;
+                return responseValue;
             }
             catch (Exception)
             {
