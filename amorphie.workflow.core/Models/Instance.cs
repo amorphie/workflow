@@ -23,6 +23,7 @@ public class Instance : EntityBase
     public string? UserReference { get; set; }
     public string? FullName { get; set; }
     public ICollection<Note>? Notes { get; set; }
+    public long? ProcessInstanceKey {get;set;}
 
 }
 

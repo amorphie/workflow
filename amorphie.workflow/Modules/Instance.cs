@@ -647,7 +647,7 @@ public static class InstanceModule
         {
             foreach(var item in instanceSearch.KeywordList)
             {
-                query = query.AsNoTracking().Where(p =>EF.Functions.JsonContains(p.EntityData, item));
+                query = query.AsNoTracking().Where(p =>p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english", instanceSearch.Keyword)));
             }
           
         }
@@ -674,7 +674,7 @@ public static class InstanceModule
                         t.Titles!=null&&t.Titles.Any()?new amorphie.workflow.core.Dtos.MultilanguageText(
                             t.Titles.FirstOrDefault()!.Language!, t.Titles.FirstOrDefault()!.Label):null,
 
-                        t.ToStateName!,
+                        t.ToStateName,
                         //null,
                        t.UiForms!=null&&t.UiForms.Any() ? t.UiForms.Select(st => new amorphie.workflow.core.Dtos.UiFormDto()
                         {
