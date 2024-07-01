@@ -15,19 +15,19 @@ public partial class StateService : IStateService
     private readonly DbSet<State> _dbSet;
     private readonly VersionService _versionService;
 
-    public StateService(WorkflowDBContext dbContext,VersionService versionService)
+    public StateService(WorkflowDBContext dbContext, VersionService versionService)
     {
-        _versionService=versionService;
+        _versionService = versionService;
         _dbContext = dbContext;
         _dbSet = dbContext.Set<State>();
     }
 
-    public async Task<Response> SaveBulkAsync(List<StateCreateDto> states, string workflowName,CancellationToken token)
+    public async Task<Response> SaveBulkAsync(List<StateCreateDto> states, string workflowName, CancellationToken token)
     {
         //First Save States
         foreach (var item in states)
         {
-            var stateSaveResponse = await SaveAsync(item, workflowName,token);
+            var stateSaveResponse = await SaveAsync(item, workflowName, token);
         }
 
         //Than save state routes
@@ -40,7 +40,7 @@ public partial class StateService : IStateService
     }
 
 
-    public async Task<Response> SaveAsync(StateCreateDto data, string workflowName,CancellationToken token)
+    public async Task<Response> SaveAsync(StateCreateDto data, string workflowName, CancellationToken token)
     {
         var existingRecord = await _dbSet
             .Include(s => s.Titles)
@@ -50,11 +50,11 @@ public partial class StateService : IStateService
             .ThenInclude(s => s.Forms)
             .FirstOrDefaultAsync(w => w.WorkflowName == workflowName && w.Name == data.Name)
            ;
-           Workflow? workflow=await _dbContext.Workflows.FirstOrDefaultAsync(f=>f.Name==workflowName);
-           bool minor=true;
+        Workflow? workflow = await _dbContext.Workflows.FirstOrDefaultAsync(f => f.Name == workflowName);
+        bool minor = true;
         if (existingRecord == null)
         {
-            minor=false;
+            minor = false;
             await Insert(data, workflowName);
         }
         else
@@ -63,18 +63,18 @@ public partial class StateService : IStateService
         }
         if (await _dbContext!.SaveChangesAsync() > 0)
         {
-            if(string.IsNullOrEmpty(workflow!.SemVer))
+            if (string.IsNullOrEmpty(workflow!.SemVer))
             {
-                workflow.SemVer=new Semver.SemVersion(1,0,0).ToString();
+                workflow.SemVer = new Semver.SemVersion(1, 0, 0).ToString();
             }
-            Semver.SemVersion version= Semver.SemVersion.Parse(workflow!.SemVer, Semver.SemVersionStyles.Any);
-            if(minor)
+            Semver.SemVersion version = Semver.SemVersion.Parse(workflow!.SemVer, Semver.SemVersionStyles.Any);
+            if (minor)
             {
-              
-            version=version.WithMinor(version.Minor+1);
-            workflow!.SemVer=version.ToString();
-            await _dbContext!.SaveChangesAsync();
-            await _versionService.SaveVersionWorkflow(workflow!.Name,version.ToString(),token);
+
+                version = version.WithMinor(version.Minor + 1);
+                workflow!.SemVer = version.ToString();
+                await _dbContext!.SaveChangesAsync();
+                await _versionService.SaveVersionWorkflow(workflow!.Name, version.ToString(), token);
             }
             return Response.Success("");
         }
@@ -298,10 +298,11 @@ public partial class StateService : IStateService
     }
     private void SaveZeebeMessage(Transition transition, TransitionCreateDtoLegacy trxDto, string workflowName)
     {
-        if (trxDto.Message == null)
+        if (trxDto.Message == null || _dbContext.ZeebeMessages.Local.Any(e => e.Name == trxDto.Message))
         {
             return;
         }
+
         ZeebeMessage? zeebeMessage = _dbContext.ZeebeMessages!.FirstOrDefault(f => f.Name == trxDto.Message);
         if (zeebeMessage == null)
         {

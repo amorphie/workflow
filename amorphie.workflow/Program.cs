@@ -75,7 +75,16 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
 builder.Services.AddDbContext<WorkflowDBContext>
-    (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
+    (
+        options =>
+        {
+            options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data"));
+            if (!(builder.Environment.IsProd() || builder.Environment.IsProduction()))
+            {
+                options.EnableSensitiveDataLogging(true);
+            }
+        }
+    );
 
 //Add Bussiness Services
 builder.Services.AddBussinessServices();
@@ -114,7 +123,7 @@ app.MapTransferModuleEndpoints();
 app.MapComponentTransferModuleEndpoints();
 app.MapHumanTaskModuleEndpoints();
 app.MapAuthorizeEndpoints();
-
+app.MapDMLEndpoints();
 app.MapSchemaValidatorEndpoints();
 try
 {
