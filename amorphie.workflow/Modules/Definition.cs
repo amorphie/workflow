@@ -1511,7 +1511,13 @@ CancellationToken cancellationToken
             }
             if (data.allowedSuffix?.Length > 0)
             {
-                if(data.allowedSuffix.Any(d=>!existingRecord.AllowedSuffix.Any(e=>e==d)))
+                if(existingRecord.AllowedSuffix==null)
+                {
+                      hasChanges = true;
+                    existingRecord.AllowedSuffix = data.allowedSuffix;
+                }
+                if(existingRecord.AllowedSuffix==null||(
+                    existingRecord.AllowedSuffix!=null&&data.allowedSuffix.Any(d=>!existingRecord.AllowedSuffix.Any(e=>e==d))))
                 {
                     hasChanges = true;
                     existingRecord.AllowedSuffix = data.allowedSuffix;
