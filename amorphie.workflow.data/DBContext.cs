@@ -132,7 +132,7 @@ public class WorkflowDBContext : DbContext
         modelBuilder.Entity<Instance>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new[] { "WorkflowName", "ZeebeFlowName", "EntityName", "StateName" }), true);
 
         modelBuilder.Entity<InstanceTransition>().HasIndex(item => item.SearchVector).HasMethod("GIN");
-        modelBuilder.Entity<InstanceTransition>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new[] { "FromStateName", "ToStateName", "EntityData", "AdditionalData", "TransitionName" }), true);
+        modelBuilder.Entity<InstanceTransition>().Property(item => item.SearchVector).HasComputedColumnSql(FullTextSearchHelper.GetTsVectorComputedColumnSql("english", new[] { "FromStateName", "ToStateName", "TransitionName" }), true);
 
 
         modelBuilder.Entity<InstanceTransition>()
