@@ -67,8 +67,16 @@ builder.Services.AddHealthChecks().AddNpgSql(postgreSql).AddRedis(redis.ToString
 builder.Services.AddMvc();
 
 builder.Services.AddDbContext<WorkflowDBContext>
-    (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
-
+    (
+        options =>
+        {
+            options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data"));
+            if (!(builder.Environment.IsProd() || builder.Environment.IsProduction()))
+            {
+                options.EnableSensitiveDataLogging(true);
+            }
+        }
+    );
 
 builder.Services.AddSingleton<IActiveUser, PrometheusActiveUser>();
 
