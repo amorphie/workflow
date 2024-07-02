@@ -1,7 +1,6 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
-using amorphie.core.security.Extensions;
 using amorphie.workflow.core.ExceptionHandler;
 using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.zeebe.Modules;
