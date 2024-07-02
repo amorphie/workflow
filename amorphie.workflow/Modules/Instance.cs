@@ -647,7 +647,7 @@ public static class InstanceModule
         {
             foreach(var item in instanceSearch.KeywordList)
             {
-                query = query.AsNoTracking().Where(p =>p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english",item)));
+                query = query.AsNoTracking().Where(p =>EF.Functions.JsonContains(p.EntityData, item)||EF.Functions.JsonContains(p.AdditionalData, item));
             }
           
         }

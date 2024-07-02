@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using amorphie.core.Base;
 using NpgsqlTypes;
 namespace amorphie.workflow.core.Models;
@@ -13,9 +14,10 @@ public class InstanceTransition : EntityBaseLog
 
     public State ToState { get; set; } = default!;
     public string ToStateName { get; set; } = default!;
-
+     [Column(TypeName = "jsonb")]
     public string EntityData { get; set; } = default!;
     public string? FormData { get; set; } = default!;
+     [Column(TypeName = "jsonb")]
     public string? AdditionalData { get; set; } = default!;
     public string? RouteData { get; set; } = default!;
     public string? QueryData { get; set; } = default!;
