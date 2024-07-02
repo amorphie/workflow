@@ -874,7 +874,7 @@ public static class InstanceModule
             {
                 var temp = ObjectMapper.Mapper.Map<SignalRResponseHistory>(s);
                 temp.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(s.data);
-                temp.toStateName=temp.data.state;
+                //temp.toStateName=temp.data.state;
                 temp.userReference=instanceControl.UserReference;
                 temp.userName=instanceControl.FullName;
                 return temp;
