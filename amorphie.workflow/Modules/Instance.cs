@@ -647,7 +647,7 @@ public static class InstanceModule
         {
             foreach(var item in instanceSearch.KeywordList)
             {
-                query = query.AsNoTracking().Where(p =>p.SearchVector.Matches(EF.Functions.PlainToTsQuery("english",item)));
+                query = query.AsNoTracking().Where(p =>EF.Functions.JsonContains(p.EntityData, item)||EF.Functions.JsonContains(p.AdditionalData, item));
             }
           
         }
@@ -874,7 +874,7 @@ public static class InstanceModule
             {
                 var temp = ObjectMapper.Mapper.Map<SignalRResponseHistory>(s);
                 temp.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(s.data);
-                temp.toStateName=temp.data.state;
+                //temp.toStateName=temp.data.state;
                 temp.userReference=instanceControl.UserReference;
                 temp.userName=instanceControl.FullName;
                 return temp;
