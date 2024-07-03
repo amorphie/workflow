@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -11,9 +12,11 @@ using NpgsqlTypes;
 namespace amorphie.workflow.data.Migrations
 {
     [DbContext(typeof(WorkflowDBContext))]
-    partial class WorkflowDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240628114030_MigrationProcessInstanceKey")]
+    partial class MigrationProcessInstanceKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1177,7 +1180,7 @@ namespace amorphie.workflow.data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("AdditionalData")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1190,7 +1193,7 @@ namespace amorphie.workflow.data.Migrations
 
                     b.Property<string>("EntityData")
                         .IsRequired()
-                        .HasColumnType("jsonb");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("FinishedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1217,7 +1220,7 @@ namespace amorphie.workflow.data.Migrations
                     b.Property<NpgsqlTsVector>("SearchVector")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("tsvector")
-                        .HasComputedColumnSql("to_tsvector('english', coalesce(\"FromStateName\", '') || ' ' || coalesce(\"ToStateName\", '') || ' ' || coalesce(\"TransitionName\", ''))", true);
+                        .HasComputedColumnSql("to_tsvector('english', coalesce(\"FromStateName\", '') || ' ' || coalesce(\"ToStateName\", '') || ' ' || coalesce(\"EntityData\", '') || ' ' || coalesce(\"AdditionalData\", '') || ' ' || coalesce(\"TransitionName\", ''))", true);
 
                     b.Property<DateTime?>("StartedAt")
                         .HasColumnType("timestamp with time zone");
