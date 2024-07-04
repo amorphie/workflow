@@ -471,12 +471,13 @@ public class PostTransactionService : IPostTransactionService
         await _dbContext.AddAsync(newInstance, _cancellationToken);
 
         await addInstanceTansition(newInstance, started, null);
-        await _dbContext.SaveChangesAsync(_cancellationToken);
+         await _dbContext.SaveChangesAsync(_cancellationToken);
         SendSignalRData(newInstance, EventInfos.WorkerStarted, string.Empty);
         long? processKey = await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
         newInstance.ProcessInstanceKey = processKey;
         await _dbContext.SaveChangesAsync(_cancellationToken);
         Response responseWithSucces = new Response
+
         {
             Result = new Result(Status.Success, "Instance Has been Created"),
         };
@@ -511,7 +512,6 @@ public class PostTransactionService : IPostTransactionService
             variables.Add($"humanTaskMessageValue", _transition.Name);
         }
         long? processInstanceKey = await _zeebeService.PublishMessage(message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
-
         SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
         Response responseWithSuccess = new Response
         {
@@ -574,7 +574,7 @@ public class PostTransactionService : IPostTransactionService
             lastInstanceTransition.AdditionalData = JsonSerializer.Serialize(additionalData);
             await _dbContext.SaveChangesAsync(_cancellationToken);
 
-            _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
+            long? processInstanceKey=await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
             SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
 
             Response responseWithSuccess = new Response
