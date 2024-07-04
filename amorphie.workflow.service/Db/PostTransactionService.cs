@@ -138,15 +138,16 @@ public class PostTransactionService : IPostTransactionService
         if (_activeInstance != null)
             _activeInstances.Add(_activeInstance);
 
-        if (transitionName == "wf-add-note-start")
-        {
-            return await AddNote();
-        }
-        else
-        {
-            return await InstanceControl(_activeInstance, _instanceId);
+        //TODO: remove commented if
+        // if (transitionName == "wf-add-note-start")
+        // {
+        //     return await AddNote();
+        // }
+        // else
+        // {
+        return await InstanceControl(_activeInstance, _instanceId);
 
-        }
+        // }
 
     }
     private async Task<IResponse<HttpStatusEnum?>> TransitionControl(string transitionName)
@@ -228,6 +229,14 @@ public class PostTransactionService : IPostTransactionService
                 return responseWithError;
             }
 
+        }
+        if (_transition.transitionButtonType == TransitionButtonType.AddNote && lastInstance == null)
+        {
+            return new Response<HttpStatusEnum?>
+                {
+                    Data = HttpStatusEnum.Conflict,
+                    Result = new Result(Status.Error, $"Instance cannot be started with note adding transition"),
+                };
         }
 
         return await LastTransitionControl(lastInstance);
