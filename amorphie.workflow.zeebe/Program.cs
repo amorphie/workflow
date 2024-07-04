@@ -1,7 +1,6 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
-using amorphie.core.security.Extensions;
 using amorphie.workflow.core.ExceptionHandler;
 using amorphie.workflow.service.Zeebe;
 using amorphie.workflow.zeebe.Modules;
@@ -14,6 +13,7 @@ using Elastic.Apm.NetCoreAll;
 using amorphie.workflow.service.Db;
 using amorphie.core.Middleware.Logging;
 using amorphie.core.Identity;
+using amorphie.core.Extension;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,7 +41,17 @@ builder.Services.AddCors(options =>
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<WorkflowDBContext>
-    (options => options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data")));
+    (
+        options =>
+        {
+            options.UseNpgsql(postgreSql, b => b.MigrationsAssembly("amorphie.workflow.data"));
+            if (!(builder.Environment.IsProd() || builder.Environment.IsProduction()))
+            {
+                options.EnableSensitiveDataLogging(true);
+            }
+        }
+    );
+    
 builder.Services.AddHealthChecks().AddNpgSql(postgreSql);
 builder.Services.AddHttpClient("httpWorkerService")
 .ConfigurePrimaryHttpMessageHandler((c) =>
