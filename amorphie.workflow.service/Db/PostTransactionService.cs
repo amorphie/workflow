@@ -10,6 +10,7 @@ using amorphie.core.IBase;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Dtos.Consumer;
+using amorphie.workflow.core.Dtos.NoteFlow;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
 using amorphie.workflow.service.Zeebe;
@@ -158,9 +159,9 @@ public class PostTransactionService : IPostTransactionService
         if (transition == null)
         {
 
-            Response<HttpStatusEnum?> responseWithError=new Response<HttpStatusEnum?>
+            Response<HttpStatusEnum?> responseWithError = new Response<HttpStatusEnum?>
             {
-                Data=HttpStatusEnum.NotFound,
+                Data = HttpStatusEnum.NotFound,
                 Result = new Result(Status.Error, $"{_transitionName} is not found."),
             };
             return responseWithError;
@@ -169,17 +170,17 @@ public class PostTransactionService : IPostTransactionService
         {
             IsAllowOneActiveInstance = transition.FromState.Workflow.IsAllowOneActiveInstance;
             _transition = transition;
-            Response<HttpStatusEnum?> response= new Response<HttpStatusEnum?>
+            Response<HttpStatusEnum?> response = new Response<HttpStatusEnum?>
             {
-                Data=HttpStatusEnum.Success,
+                Data = HttpStatusEnum.Success,
                 Result = new Result(Status.Success, "Success"),
             };
             return response;
         }
-        
-        Response<HttpStatusEnum?> responseWitherror= new Response<HttpStatusEnum?>
+
+        Response<HttpStatusEnum?> responseWitherror = new Response<HttpStatusEnum?>
         {
-            Data=HttpStatusEnum.NotFound,
+            Data = HttpStatusEnum.NotFound,
             Result = new Result(Status.Error, "Not Found transition"),
         };
         return responseWitherror;
@@ -189,10 +190,10 @@ public class PostTransactionService : IPostTransactionService
     {
         if (lastInstance != null && lastInstance.Workflow.WorkflowStatus == WorkflowStatus.Deactive)
         {
-            Response<HttpStatusEnum?> responseWithError= new Response<HttpStatusEnum?>
+            Response<HttpStatusEnum?> responseWithError = new Response<HttpStatusEnum?>
             {
-                Data=HttpStatusEnum.Error,
-                Result = new Result(Status.Error, lastInstance.WorkflowName+ "is deactive flow."),
+                Data = HttpStatusEnum.Error,
+                Result = new Result(Status.Error, lastInstance.WorkflowName + "is deactive flow."),
             };
             return responseWithError;
         }
@@ -218,10 +219,10 @@ public class PostTransactionService : IPostTransactionService
             }
             else
             {
-                 
-                Response<HttpStatusEnum?> responseWithError= new Response<HttpStatusEnum?>
+
+                Response<HttpStatusEnum?> responseWithError = new Response<HttpStatusEnum?>
                 {
-                    Data=HttpStatusEnum.Conflict,
+                    Data = HttpStatusEnum.Conflict,
                     Result = new Result(Status.Error, $"There is an active workflow exists for {id} at different state."),
                 };
                 return responseWithError;
@@ -245,10 +246,10 @@ public class PostTransactionService : IPostTransactionService
         var activeOnlyOneInstanceControl = await _dbContext.Instances.OrderByDescending(o => o.ModifiedAt).FirstOrDefaultAsync(f => f.Id != id && f.WorkflowName == _transition.FromState.WorkflowName && f.UserReference == userReference);
         if (activeOnlyOneInstanceControl != null)
         {
-            Response<HttpStatusEnum?> responseWithError= new Response<HttpStatusEnum?>
+            Response<HttpStatusEnum?> responseWithError = new Response<HttpStatusEnum?>
             {
-                Data=HttpStatusEnum.Conflict,
-                Result = new Result(Status.Error, "There is an active workflow exists with instanceId:"+activeOnlyOneInstanceControl.Id),
+                Data = HttpStatusEnum.Conflict,
+                Result = new Result(Status.Error, "There is an active workflow exists with instanceId:" + activeOnlyOneInstanceControl.Id),
 
             };
             return responseWithError;
@@ -310,10 +311,10 @@ public class PostTransactionService : IPostTransactionService
             }
             else
             {
-                
-                Response responseWithError= new Response
+
+                Response responseWithError = new Response
                 {
-                    Result = new Result(Status.Error, "There is no active workflow for "+ id+" and also "+ _transition.Name +" is not transition of any start state."),
+                    Result = new Result(Status.Error, "There is no active workflow for " + id + " and also " + _transition.Name + " is not transition of any start state."),
                 };
                 return Results.BadRequest(responseWithError);
             }
@@ -366,15 +367,15 @@ public class PostTransactionService : IPostTransactionService
         {
             if (!_headerDict.TryGetValue("given_name", out FullName))
                 FullName = string.Empty;
-                string? FamilyName=string.Empty;
-                if (!_headerDict.TryGetValue("family_name", out FamilyName))
-                {
-                    FamilyName=string.Empty;
-                }
-                if(!string.IsNullOrEmpty(FamilyName))
-                {
-                   FullName= FullName+ " "+FamilyName;
-                }
+            string? FamilyName = string.Empty;
+            if (!_headerDict.TryGetValue("family_name", out FamilyName))
+            {
+                FamilyName = string.Empty;
+            }
+            if (!string.IsNullOrEmpty(FamilyName))
+            {
+                FullName = FullName + " " + FamilyName;
+            }
         }
         catch (Exception ex)
         {
@@ -425,15 +426,15 @@ public class PostTransactionService : IPostTransactionService
         {
             if (!_headerDict.TryGetValue("given_name", out FullName))
                 FullName = string.Empty;
-                string? FamilyName=string.Empty;
-                if (!_headerDict.TryGetValue("family_name", out FamilyName))
-                {
-                    FamilyName=string.Empty;
-                }
-                if(!string.IsNullOrEmpty(FamilyName))
-                {
-                   FullName= FullName+ " "+FamilyName;
-                }
+            string? FamilyName = string.Empty;
+            if (!_headerDict.TryGetValue("family_name", out FamilyName))
+            {
+                FamilyName = string.Empty;
+            }
+            if (!string.IsNullOrEmpty(FamilyName))
+            {
+                FullName = FullName + " " + FamilyName;
+            }
         }
         catch (Exception ex)
         {
@@ -452,7 +453,7 @@ public class PostTransactionService : IPostTransactionService
             ZeebeFlowName = _transition.FlowName,
             UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
-            FullName=FullName
+            FullName = FullName
         };
         dynamic variables = createMessageVariables(newInstance);
 
@@ -461,12 +462,12 @@ public class PostTransactionService : IPostTransactionService
         await _dbContext.AddAsync(newInstance, _cancellationToken);
 
         await addInstanceTansition(newInstance, started, null);
-         await _dbContext.SaveChangesAsync(_cancellationToken);
-        SendSignalRData(newInstance, EventInfos.WorkerStarted, string.Empty);
-        long? processKey= await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
-        newInstance.ProcessInstanceKey=processKey;
         await _dbContext.SaveChangesAsync(_cancellationToken);
-        Response responseWithSucces= new Response
+        SendSignalRData(newInstance, EventInfos.WorkerStarted, string.Empty);
+        long? processKey = await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
+        newInstance.ProcessInstanceKey = processKey;
+        await _dbContext.SaveChangesAsync(_cancellationToken);
+        Response responseWithSucces = new Response
         {
             Result = new Result(Status.Success, "Instance Has been Created"),
         };
@@ -489,21 +490,21 @@ public class PostTransactionService : IPostTransactionService
 
         string message = _transition.Flow!.Message;
         await addInstanceTansition(instanceAtState, started, null);
-       await _dbContext.SaveChangesAsync(_cancellationToken);
-        HumanTask? humanTask= await _dbContext.HumanTasks.FirstOrDefaultAsync(f=>f.State== instanceAtState.StateName
-        &&f.InstanceId==instanceAtState.Id&&f.Status!=HumanTaskStatus.Completed&&f.Status!=HumanTaskStatus.Denied,_cancellationToken);
-        if(humanTask!=null)
+        await _dbContext.SaveChangesAsync(_cancellationToken);
+        HumanTask? humanTask = await _dbContext.HumanTasks.FirstOrDefaultAsync(f => f.State == instanceAtState.StateName
+        && f.InstanceId == instanceAtState.Id && f.Status != HumanTaskStatus.Completed && f.Status != HumanTaskStatus.Denied, _cancellationToken);
+        if (humanTask != null)
         {
-           
-            
-            humanTask.Status=HumanTaskStatus.Completed;
+
+
+            humanTask.Status = HumanTaskStatus.Completed;
             await _dbContext.SaveChangesAsync(_cancellationToken);
             variables.Add($"humanTaskMessageValue", _transition.Name);
         }
-        long? processInstanceKey=await _zeebeService.PublishMessage(message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
-        
+        long? processInstanceKey = await _zeebeService.PublishMessage(message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
+
         SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
-        Response responseWithSuccess= new Response
+        Response responseWithSuccess = new Response
         {
             Result = new Result(Status.Success, "Instance Has been Updated"),
         };
@@ -513,14 +514,17 @@ public class PostTransactionService : IPostTransactionService
 
     private async Task<IResult> hasFlowHasInstanceAddNote(Instance instanceAtState)
     {
-        string tobeAddedNote;
+        NoteDto tobeAddedNote = new NoteDto();
         try
         {
-            tobeAddedNote = _data.EntityData.GetProperty("note").ToString();
+            //Get Not from transition body (that is EntityData) to write it in additional data
+            tobeAddedNote.Note = _data.EntityData.GetProperty("note").ToString();
+            tobeAddedNote.Name = _user.ToString();
+            tobeAddedNote.Date = DateTime.UtcNow.ToString("dd.MM.yyyy");
         }
         catch
         {
-            Response responseWithError= Response.Error("Note property is required");
+            Response responseWithError = Response.Error("Note property is required");
             return Results.BadRequest(responseWithError);
         }
         await _dbContext.Entry(_transition).Reference(t => t.ToState).LoadAsync();
@@ -536,29 +540,35 @@ public class PostTransactionService : IPostTransactionService
 
         _transitionName = lastInstanceTransition.TransitionName;
 
-        var entityData = JsonSerializer.Deserialize<JsonObject>(lastInstanceTransition.EntityData);
-        if (entityData != null)
+        var additionalData = JsonSerializer.Deserialize<JsonObject>(lastInstanceTransition.AdditionalData);
+        if (additionalData != null)
         {
 
-            if (entityData["note"] == null)
+            if (additionalData["note"] == null)
             {
-                entityData.Add("note", tobeAddedNote);
+                var newNoteList = JsonSerializer.SerializeToNode(new List<NoteDto> { tobeAddedNote });
+                additionalData.Add("note", newNoteList);
             }
             else
             {
-                entityData["note"] += " " + tobeAddedNote;
+
+                var existingNoteList = JsonSerializer.Deserialize<List<NoteDto>>(additionalData["note"]);
+                existingNoteList.Add(tobeAddedNote);
+                additionalData["note"] = JsonSerializer.SerializeToNode(existingNoteList);
             }
-            _data.EntityData = entityData;
-            _data.AdditionalData = lastInstanceTransition.AdditionalData;
+
+
+            _data.EntityData = JsonSerializer.Deserialize<dynamic>(lastInstanceTransition.EntityData)!;
+            _data.AdditionalData = JsonSerializer.Deserialize<dynamic>(additionalData);
             dynamic variables = createMessageVariables(instanceAtState);
 
-            lastInstanceTransition.EntityData = JsonSerializer.Serialize(entityData);
+            lastInstanceTransition.AdditionalData = JsonSerializer.Serialize(additionalData);
             await _dbContext.SaveChangesAsync(_cancellationToken);
 
-            long? processInstanceKey=await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
+            _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
             SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
-            
-            Response responseWithSuccess= new Response
+
+            Response responseWithSuccess = new Response
             {
                 Result = new Result(Status.Success, "Instance Has been Updated"),
             };
@@ -566,9 +576,9 @@ public class PostTransactionService : IPostTransactionService
         }
         else
         {
-            Response responseWithError= Response.Error("Entitydata of previous transition is not type of json.");
+            Response responseWithError = Response.Error("Entitydata of previous transition is not type of json.");
             return Results.BadRequest(responseWithError);
-            
+
         }
 
 
@@ -664,7 +674,7 @@ public class PostTransactionService : IPostTransactionService
                         }
 
                         SendSignalRData(instance, EventInfos.TransitionCompletedWithError, hubMessage);
-                        Response responseWithError= new Response
+                        Response responseWithError = new Response
                         {
                             Result = new Result(Status.Error, hubMessage),
                         };
@@ -675,9 +685,9 @@ public class PostTransactionService : IPostTransactionService
                 catch (Exception ex)
                 {
                     SendSignalRData(instance, EventInfos.TransitionCompletedWithError, string.Empty);
-                    Response responseWithError= new Response
+                    Response responseWithError = new Response
                     {
-                        Result = new Result(Status.Error, "Unexpected error with url:"+_transition.ServiceName),
+                        Result = new Result(Status.Error, "Unexpected error with url:" + _transition.ServiceName),
                     };
                     return Results.BadRequest(responseWithError);
                 }
@@ -687,11 +697,11 @@ public class PostTransactionService : IPostTransactionService
             catch (Exception ex)
             {
                 SendSignalRData(instance, EventInfos.TransitionCompletedWithError, "unexpected error");
-                Response responseWithError= new Response
+                Response responseWithError = new Response
                 {
-                    Result = new Result(Status.Error, "Unexpected error with url:"+_transition.ServiceName),
+                    Result = new Result(Status.Error, "Unexpected error with url:" + _transition.ServiceName),
                 };
-                 return Results.BadRequest(responseWithError);
+                return Results.BadRequest(responseWithError);
             }
         }
         else
@@ -726,12 +736,12 @@ public class PostTransactionService : IPostTransactionService
         await addInstanceTansition(instance, started, DateTime.UtcNow);
         await _dbContext.SaveChangesAsync(_cancellationToken);
         SendSignalRData(instance, EventInfos.TransitionCompleted, string.Empty);
-        
-        Response responseWithSuccess= new Response
+
+        Response responseWithSuccess = new Response
         {
             Result = new Result(Status.Success, "Instance has been updated"),
         };
-         return Results.Ok(responseWithSuccess);
+        return Results.Ok(responseWithSuccess);
     }
     private void SendSignalRData(Instance instance, string eventInfo, string message)
     {
@@ -838,11 +848,11 @@ public class PostTransactionService : IPostTransactionService
         }
         catch
         {
-             Response<HttpStatusEnum?> responseWithError= new Response<HttpStatusEnum?>
-        {
-            Data=HttpStatusEnum.Error,
-            Result = new Result(Status.Error, "Note property is required")
-        };
+            Response<HttpStatusEnum?> responseWithError = new Response<HttpStatusEnum?>
+            {
+                Data = HttpStatusEnum.Error,
+                Result = new Result(Status.Error, "Note property is required")
+            };
             return responseWithError;
         }
 
@@ -859,9 +869,9 @@ public class PostTransactionService : IPostTransactionService
         await _dbContext.Notes.AddAsync(note);
         await _dbContext.SaveChangesAsync();
 
-        Response<HttpStatusEnum?> responseWithSuccess= new Response<HttpStatusEnum?>
+        Response<HttpStatusEnum?> responseWithSuccess = new Response<HttpStatusEnum?>
         {
-            Data=HttpStatusEnum.Success,
+            Data = HttpStatusEnum.Success,
             Result = new Result(Status.Success, "Note added")
         };
         return responseWithSuccess;
