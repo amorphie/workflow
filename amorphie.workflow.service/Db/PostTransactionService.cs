@@ -517,9 +517,9 @@ public class PostTransactionService : IPostTransactionService
         NoteDto tobeAddedNote = new NoteDto();
         try
         {
-            //Get Not from transition body (that is EntityData) to write it in additional data
+            //Get Note from transition body (that is EntityData) and push it in additional data
             tobeAddedNote.Note = _data.EntityData.GetProperty("note").ToString();
-            tobeAddedNote.Name = _user.ToString();
+            tobeAddedNote.CreatedBy = _user.ToString();
             tobeAddedNote.Date = DateTime.UtcNow.ToString("dd.MM.yyyy");
         }
         catch
