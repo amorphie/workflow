@@ -10,7 +10,7 @@ namespace amorphie.workflow.core.Enums
         PageUrl = 2,
         [Description("Html")]
         Html = 4,
-        [Description("Flutter Widget")]
+        [Description("FlutterWidget")]
         FlutterWidget = 8
     }
 }

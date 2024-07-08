@@ -179,10 +179,13 @@ public static class InstanceModule
    [FromServices] WorkflowDBContext context,
      [FromRoute(Name = "workflowName")] string workflowName,
      [FromQuery(Name = "suffix")] string? suffix,
+     [FromQuery(Name = "type")] string? type,
       [FromQuery(Name = "preInstanceId")] string? preInstanceId,
        [FromQuery(Name = "preWorkflowName")] string? preWorkflowName,
         [FromHeader(Name = "user_reference")] string? userReference,
-    CancellationToken cancellationToken
+           [FromHeader(Name = "role")] string? role,
+    CancellationToken cancellationToken,
+        [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
 
 )
     {
@@ -190,6 +193,10 @@ public static class InstanceModule
         var workflowControl = await context.Workflows.FirstOrDefaultAsync(f => f.Name == workflowName);
         if (workflowControl == null)
             return Results.NoContent();
+            if(string.IsNullOrEmpty(type))
+            {
+                type=TypeofUiEnum.FlutterWidget.ToString().ToLower();
+            }
         State? currentState = null;
 
         Instance? instance = null;
@@ -209,7 +216,7 @@ public static class InstanceModule
         if (currentState == null)
             return Results.NoContent();
 
-        var initDto = getRecordWorkflowInit(currentState, suffix);
+        var initDto = getRecordWorkflowInit(currentState, suffix,type,language,role);
 
         if (instance != null)
         {
@@ -272,19 +279,31 @@ public static class InstanceModule
         string mergedJson = System.Text.Json.JsonSerializer.Serialize(jsonArray);
         return System.Text.Json.JsonSerializer.Deserialize<dynamic>(mergedJson);
     }
-    private static  GetRecordWorkflowInit getRecordWorkflowInit(State currentState, string? suffix)
+    private static  GetRecordWorkflowInit getRecordWorkflowInit(State currentState, string? suffix,string type,string language,string role)
     {
+        string navigationType=amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.PushReplacement);
+        UiForm? uiform=currentState.UiForms.FirstOrDefault(s=>s.TypeofUiEnum.ToString().ToLower()==type&&s.Role==role);
+        if(uiform==null)
+        {
+            uiform=currentState.UiForms.FirstOrDefault(s=>s.TypeofUiEnum.ToString().ToLower()==type);
+        }
+        if(uiform!=null)
+        {
+            navigationType=amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(uiform.Navigation.GetValueOrDefault(NavigationType.PushReplacement));
+        }
         var initDto = new GetRecordWorkflowInit()
         {
             state = currentState.Name,
             viewSource = currentState.IsPublicForm == true ? "state" : "transition",
             initPageName = currentState.InitPageName,
+            navigation=navigationType,
             transition = currentState.Transitions.Select(t => new InitTransition()
             {
                 type = currentState.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
                 requireData = currentState.requireData,
                 transition = t.Name,
-                hasViewVariant = currentState.UiForms != null && currentState.UiForms.Count() > 1 ? true : false
+                hasViewVariant = currentState.UiForms != null && currentState.UiForms.Count() > 1 ? true : false,
+                
             }).ToList(),
         };
 
@@ -625,11 +644,53 @@ public static class InstanceModule
             guid = Guid.NewGuid();
             isGuidSearch = false;
         }
+        DateTime startTime=new DateTime(1,1,1901);
+        if(!string.IsNullOrEmpty(instanceSearch.Start))
+        {
+            try
+            {
 
+                startTime = Convert.ToDateTime(instanceSearch.Start);
+
+            }
+            catch (Exception)
+            {
+                startTime = new DateTime(1,1,1901);
+            }
+        }
+        DateTime endTime=new DateTime(31,12,2099);
+        if(!string.IsNullOrEmpty(instanceSearch.End))
+        {
+            try
+            {
+
+                endTime = Convert.ToDateTime(instanceSearch.End);
+
+            }
+            catch (Exception)
+            {
+                endTime = new DateTime(31,12,2099);
+            }
+        }
+        string[] stateList=[];
+        if(!string.IsNullOrEmpty(instanceSearch.State))
+        {
+            try
+            {
+
+                stateList = instanceSearch.State.Split(",");
+
+            }
+            catch (Exception)
+            {
+                 stateList = [];
+            }
+        }
         var query = context!.InstanceTransitions!.Include(s=>s.Instance).ThenInclude(s => s.Workflow).Where(w => (!isGuidSearch || (isGuidSearch && (guid == w.InstanceId )))
           && (string.IsNullOrEmpty(WorkflowName) || (!string.IsNullOrEmpty(WorkflowName) && WorkflowName == w.Instance.WorkflowName))
-           && (string.IsNullOrEmpty(instanceSearch.State) || (!string.IsNullOrEmpty(instanceSearch.State) && instanceSearch.State == w.Instance.StateName))
-      && w.Instance.Workflow.IsForbiddenData != true)
+           && (string.IsNullOrEmpty(instanceSearch.State) || (!string.IsNullOrEmpty(instanceSearch.State) && stateList.Any(a=>a==w.Instance.StateName)))
+      && w.Instance.Workflow.IsForbiddenData != true
+      &&w.Instance.CreatedAt>=startTime&&w.Instance.CreatedAt<=endTime)
           .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Titles)
    .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
     .Include(s=>s.Instance).ThenInclude(s => s.State).ThenInclude(s => s.Transitions).ThenInclude(t => t.Forms)
@@ -698,7 +759,9 @@ public static class InstanceModule
                     data=string.IsNullOrEmpty(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData)?new {}:JsonParse(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.EntityData),
                    additionalData=string.IsNullOrEmpty(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData)?new {}:JsonParse(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData),
                    humanTasks=null,
-                   isHumanTask=context.HumanTasks.FirstOrDefault(f=>f.InstanceId==s.Id&&f.Status==HumanTaskStatus.Pending&&f.State==s.StateName)==null?false:true
+                   isHumanTask=context.HumanTasks.FirstOrDefault(f=>f.InstanceId==s.Id&&f.Status==HumanTaskStatus.Pending&&f.State==s.StateName)==null?false:true,
+                   stateView=s.State.IsPublicForm==false? amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition):
+                    amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
 
         });
            

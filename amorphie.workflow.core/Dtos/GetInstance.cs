@@ -20,6 +20,7 @@ public class GetInstanceResponse
     public dynamic? additionalData {get;set;}
     public List<amorphie.workflow.core.Dtos.HumanTasks.HumanTaskDto>? humanTasks {get;set;}
     public bool? isHumanTask {get;set;}
+    public string? stateView {get;set;}
     };
 
 
