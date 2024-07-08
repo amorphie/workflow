@@ -1872,7 +1872,7 @@ CancellationToken cancellationToken
                         {
                             TypeofUiEnum = languageForm.typeofUi,
                             Navigation = languageForm.navigationType,
-                            StateName = existingTransition.Name,
+                            TransitionName = existingTransition.Name,
                             Role=languageForm.role,
                             Forms = languageForm.forms.Select(s => new Translation()
                             {
