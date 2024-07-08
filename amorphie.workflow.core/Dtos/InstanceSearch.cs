@@ -9,5 +9,7 @@ public class InstanceSearch : amorphie.core.Base.DtoSearchBase
     public GetInstanceStatusType? Status { get; set; }
     public string[]? KeywordList { get; set; }
     public string? State {get;set;}
+    public string? Start {get;set;}
+    public string? End {get;set;}
 
 }
