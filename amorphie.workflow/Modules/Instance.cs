@@ -644,7 +644,7 @@ public static class InstanceModule
             guid = Guid.NewGuid();
             isGuidSearch = false;
         }
-        DateTime startTime=new DateTime(1,1,1901);
+        DateTime startTime=new DateTime(1901,1,1);
         if(!string.IsNullOrEmpty(instanceSearch.Start))
         {
             try
@@ -655,10 +655,10 @@ public static class InstanceModule
             }
             catch (Exception)
             {
-                startTime = new DateTime(1,1,1901);
+                startTime = new DateTime(1901,1,1);
             }
         }
-        DateTime endTime=new DateTime(31,12,2099);
+        DateTime endTime=new DateTime(2099,12,31);
         if(!string.IsNullOrEmpty(instanceSearch.End))
         {
             try
@@ -669,7 +669,7 @@ public static class InstanceModule
             }
             catch (Exception)
             {
-                endTime = new DateTime(31,12,2099);
+                endTime = new DateTime(2099,12,31);
             }
         }
         string[] stateList=[];
