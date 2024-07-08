@@ -862,23 +862,54 @@ public static class InstanceModule
              && (w.subject == EventInfos.WorkerCompleted || w.subject == EventInfos.TransitionCompleted)
 
              )
-             .OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);
+             .OrderBy(o => o.CreatedAt).ToListAsync(cancellationToken);
         if (signalrHistoryList == null)
         {
             return new List<SignalRResponseHistory>();
         }
         if (signalrHistoryList != null && signalrHistoryList.Any())
         {
-
+            string fromStateName=string.Empty;
             List<SignalRResponseHistory> response = signalrHistoryList.Select(s =>
             {
                 var temp = ObjectMapper.Mapper.Map<SignalRResponseHistory>(s);
                 temp.data = System.Text.Json.JsonSerializer.Deserialize<dynamic>(s.data);
+                try
+                {
+                    temp.toStateName=temp.data.GetProperty("state").ToString();
+                }
+                catch(Exception)
+                {
+                    temp.toStateName=string.Empty;
+                }
+                if(!string.IsNullOrEmpty(fromStateName))
+                {
+                     temp.fromStateName=fromStateName;
+                }
+                if(string.IsNullOrEmpty(fromStateName))
+                {
+                try
+                {
+                    string transitionName=temp.data.GetProperty("transition").ToString();
+                    Transition? transition= context.Transitions.FirstOrDefault(f=>f.Name==transitionName);
+                    if(transition!=null)
+                    {
+                        temp.fromStateName=transition.FromStateName;
+                       
+                    }
+                     fromStateName= temp.toStateName;
+                }
+                catch(Exception)
+                {
+                    temp.fromStateName=string.Empty;
+                }
+                }
+              
                 //temp.toStateName=temp.data.state;
                 temp.userReference=instanceControl.UserReference;
                 temp.userName=instanceControl.FullName;
                 return temp;
-            }).ToList();
+            }).OrderByDescending(t=>t.time).ToList();
             return response;
         }
         return new List<SignalRResponseHistory>();
