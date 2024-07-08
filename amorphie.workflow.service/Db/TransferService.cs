@@ -403,9 +403,11 @@ public class TransferService
         }
         if(IsPage)
         {
-                string workflowNameFromPage = "\"workflowName\":\""+workflowName+"\"";
-              templateList.AddRange(await _dbContext.SignalRResponses.Where(w =>w.routeChange==true&&!string.IsNullOrEmpty(w.data)&& 
-              w.data.Contains(workflowNameFromPage)
+             List<string> InstanceIdList=await _dbContext.Instances.Where(w=>w.WorkflowName==workflowName).Select(s=>
+             s.Id.ToString()).ToListAsync(cancellationToken);
+                // string workflowNameFromPage = "\"workflowName\":\""+workflowName+"\"";
+              templateList.AddRange(await _dbContext.SignalRResponses.Where(w =>w.routeChange==true&&!string.IsNullOrEmpty(w.data)
+                &&InstanceIdList.Any(a=>a==w.InstanceId)
               &&!string.IsNullOrEmpty(w.pageUrl))
               .Select(s => s.pageUrl??string.Empty).Distinct().ToListAsync(cancellationToken));
         }
