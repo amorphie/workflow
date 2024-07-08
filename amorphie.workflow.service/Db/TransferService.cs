@@ -405,7 +405,7 @@ public class TransferService
         {
                 string workflowNameFromPage = "\"workflowName\":\""+workflowName+"\"";
               templateList.AddRange(await _dbContext.SignalRResponses.Where(w =>w.routeChange==true&&!string.IsNullOrEmpty(w.data)&& 
-              w.data.Contains("\"viewSource\":\"page\"")&&w.data.Contains(workflowNameFromPage)
+              w.data.Contains(workflowNameFromPage)
               &&!string.IsNullOrEmpty(w.pageUrl))
               .Select(s => s.pageUrl??string.Empty).Distinct().ToListAsync(cancellationToken));
         }
