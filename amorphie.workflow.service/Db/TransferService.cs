@@ -369,6 +369,10 @@ public class TransferService
     {
         return uiForms.Where(s => s.Forms != null).SelectMany(s => s.Forms!).Select(s => s.Label).ToList();
     }
+    private List<string> GetTemplateFromPages(IEnumerable<Page> pages)
+    {
+        return pages.Where(s => s.Pages != null).SelectMany(s => s.Pages!).Select(s => s.Label).ToList();
+    }
     private  async Task<List<string>> GetTemplatesFromLegacyAsync(string workflowName,bool IsPage, CancellationToken cancellationToken)
     {
       
@@ -399,6 +403,9 @@ public class TransferService
                 var uiForms = state.Transitions.Where(s => s.UiForms != null)
                 .SelectMany(s => s.UiForms!).Distinct().ToList();
                 templateList.AddRange(GetTemplateFromUiForms(uiForms));
+                var pages = state.Transitions.Where(s => s.Page != null)
+                .Select(s => s.Page!).Distinct().ToList();
+                 templateList.AddRange(GetTemplateFromPages(pages));
             }
         }
         if(IsPage)
