@@ -273,11 +273,13 @@ public static class InstanceModule
     }
     private static dynamic? MergeEntityAdditional(dynamic entityData,dynamic additionalData)
     {
-        var jsonEntity = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(entityData);
-        var jsonAdditional = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(additionalData);
-        var jsonArray = new List<Dictionary<string, object>> { jsonEntity, jsonAdditional };
-        string mergedJson = System.Text.Json.JsonSerializer.Serialize(jsonArray);
-        return System.Text.Json.JsonSerializer.Deserialize<dynamic>(mergedJson);
+         var jsonData= Newtonsoft.Json.Linq.JObject.Parse(Convert.ToString(entityData));
+            var mergeAdditional= Newtonsoft.Json.Linq.JObject.Parse(Convert.ToString(additionalData));
+            jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
+{
+    MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
+});
+          return  System.Text.Json.JsonSerializer.Deserialize<dynamic>(jsonData.ToString());
     }
     private static  GetRecordWorkflowInit getRecordWorkflowInit(State currentState, string? suffix,string type,string language,string role)
     {
@@ -760,7 +762,7 @@ public static class InstanceModule
                    additionalData=string.IsNullOrEmpty(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData)?new {}:JsonParse(group.OrderByDescending(o=>o.CreatedAt).FirstOrDefault()!.AdditionalData),
                    humanTasks=null,
                    isHumanTask=context.HumanTasks.FirstOrDefault(f=>f.InstanceId==s.Id&&f.Status==HumanTaskStatus.Pending&&f.State==s.StateName)==null?false:true,
-                   stateView=s.State.IsPublicForm==false? amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition):
+                   viewSource=s.State.IsPublicForm==false? amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition):
                     amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
 
         });
