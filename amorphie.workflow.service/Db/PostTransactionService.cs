@@ -21,6 +21,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
 using Namotion.Reflection;
+using Newtonsoft.Json.Linq;
 using Serilog;
 
 
@@ -402,6 +403,7 @@ public class PostTransactionService : IPostTransactionService
             CreatedBy = _user,
             UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
+            InstanceData=_data.EntityData
         };
 
         return await ServiceKontrol(newInstance, false, started);
@@ -462,7 +464,8 @@ public class PostTransactionService : IPostTransactionService
             ZeebeFlowName = _transition.FlowName,
             UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
-            FullName = FullName
+            FullName = FullName,
+            InstanceData=Convert.ToString(_data.EntityData),
         };
         dynamic variables = createMessageVariables(newInstance);
 
@@ -541,7 +544,6 @@ public class PostTransactionService : IPostTransactionService
         instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
         instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
         instanceAtState.BaseStatus = StatusType.LockedInFlow;
-
         var lastInstanceTransition = await _dbContext.InstanceTransitions.Where(w => w.InstanceId == instanceAtState.Id)
                     .Include(p => p.Transition)
                     .OrderByDescending(c => c.CreatedAt).FirstAsync();
@@ -571,6 +573,15 @@ public class PostTransactionService : IPostTransactionService
             dynamic variables = createMessageVariables(instanceAtState);
 
             lastInstanceTransition.AdditionalData = JsonSerializer.Serialize(additionalData);
+     
+           var jsonData= Newtonsoft.Json.Linq.JObject.Parse(instanceAtState.InstanceData);
+            var mergeAdditional= Newtonsoft.Json.Linq.JObject.Parse( lastInstanceTransition.AdditionalData);
+            jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
+{
+
+    MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
+});
+            instanceAtState.InstanceData=jsonData.ToString();
             await _dbContext.SaveChangesAsync(_cancellationToken);
 
             long? processInstanceKey=await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
@@ -600,7 +611,7 @@ public class PostTransactionService : IPostTransactionService
         variables.Add("RecordId", _recordId);
         variables.Add("InstanceId", instanceAtState.Id);
         variables.Add("LastTransition", _transitionName);
-
+        variables.Add("WorkflowData", instanceAtState.InstanceData);
         dynamic targetObject = new ExpandoObject();
         targetObject.Data = _data;
         targetObject.TriggeredBy = _user;
@@ -727,6 +738,14 @@ public class PostTransactionService : IPostTransactionService
             instance.ModifiedByBehalfOf = _behalfOfUser;
             instance.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
             instance.BaseStatus = _transition.ToState!.BaseStatus;
+            var jsonData= Newtonsoft.Json.Linq.JObject.Parse(instance.InstanceData);
+            var mergeAdditional= Newtonsoft.Json.Linq.JObject.Parse(_data.EntityData);
+            jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
+{
+
+    MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
+});
+            instance.InstanceData=jsonData.ToString();
             if (instance.WorkflowName != _transition.ToState.WorkflowName)
             {
                 instance.WorkflowName = _transition.ToState!.WorkflowName!;
