@@ -27,6 +27,8 @@ public class Instance : EntityBase
     public long? ProcessInstanceKey {get;set;}
     [Column(TypeName = "jsonb")]
     public string InstanceData { get; set; } = default!;
+    public string? XDeviceId { get; set; }
+    public string? XTokenId { get; set; }
 
 }
 
