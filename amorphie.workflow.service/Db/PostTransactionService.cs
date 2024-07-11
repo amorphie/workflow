@@ -372,6 +372,36 @@ public class PostTransactionService : IPostTransactionService
         {
             UserReference = string.Empty;
         }
+            string XDeviceId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("X-Device-id", out XDeviceId))
+            {
+                if (!_headerDict.TryGetValue("x-device-id", out XDeviceId))
+                XDeviceId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XDeviceId = string.Empty;
+        }
+         string XTokenId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("X-Token-id", out XTokenId))
+            {
+                if (!_headerDict.TryGetValue("x-token-id", out XTokenId))
+                XTokenId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XTokenId = string.Empty;
+        }
         string? FullName = string.Empty;
         try
         {
@@ -403,7 +433,9 @@ public class PostTransactionService : IPostTransactionService
             CreatedBy = _user,
             UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
-            InstanceData=_data.EntityData
+            InstanceData=_data.EntityData,
+            XDeviceId=XDeviceId,
+            XTokenId=XTokenId
         };
 
         return await ServiceKontrol(newInstance, false, started);
@@ -431,6 +463,34 @@ public class PostTransactionService : IPostTransactionService
         catch (Exception ex)
         {
             UserReference = string.Empty;
+        }
+           string XDeviceId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("xdeviceid", out XDeviceId))
+            {
+                XDeviceId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XDeviceId = string.Empty;
+        }
+         string XTokenId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("xtokenid", out XTokenId))
+            {
+                XTokenId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XTokenId = string.Empty;
         }
         string? FullName = string.Empty;
         try
@@ -466,6 +526,8 @@ public class PostTransactionService : IPostTransactionService
             CreatedByBehalfOf = _behalfOfUser,
             FullName = FullName,
             InstanceData=Convert.ToString(_data.EntityData),
+            XDeviceId=XDeviceId,
+            XTokenId=XTokenId
         };
         dynamic variables = createMessageVariables(newInstance);
 
@@ -745,7 +807,70 @@ public class PostTransactionService : IPostTransactionService
 
     MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
 });
+
+
             instance.InstanceData=jsonData.ToString();
+             string UserReference = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("user_reference", out UserReference))
+                UserReference = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            UserReference = string.Empty;
+        }
+        instance.UserReference=UserReference;
+           string XDeviceId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("xdeviceid", out XDeviceId))
+            {
+                XDeviceId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XDeviceId = string.Empty;
+        }
+         instance.XDeviceId=XDeviceId;
+         string XTokenId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("xtokenid", out XTokenId))
+            {
+                XTokenId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XTokenId = string.Empty;
+        }
+         instance.XTokenId=XTokenId;
+        string? FullName = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("given_name", out FullName))
+                FullName = string.Empty;
+            string? FamilyName = string.Empty;
+            if (!_headerDict.TryGetValue("family_name", out FamilyName))
+            {
+                FamilyName = string.Empty;
+            }
+            if (!string.IsNullOrEmpty(FamilyName))
+            {
+                FullName = FullName + " " + FamilyName;
+            }
+        }
+        catch (Exception ex)
+        {
+            FullName = string.Empty;
+        }
+        instance.FullName=FullName;
             if (instance.WorkflowName != _transition.ToState.WorkflowName)
             {
                 instance.WorkflowName = _transition.ToState!.WorkflowName!;

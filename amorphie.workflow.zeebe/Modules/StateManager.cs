@@ -253,7 +253,7 @@ public static class StateManagerModule
                 }
             }
             bool routeChange = false;
-            if (!string.IsNullOrEmpty(pageUrl))
+            if (!string.IsNullOrEmpty(pageUrl)||body.HubType==HubType.Silent||body.HubType==HubType.Force)
             {
                 routeChange = true;
             }
@@ -294,7 +294,7 @@ public static class StateManagerModule
                                       transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
                                   ),
                                       source = "workflow",
-                                      type = "workflow",
+                                      type =string.IsNullOrEmpty(body.HubType)?HubType.Workflow:body.HubType,
                                       subject = eventInfo,
                                       id = instance.Id.ToString(),
                                       routeChange = routeChange

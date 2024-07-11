@@ -31,6 +31,15 @@ public static class AuthorizeControlModule
 
               return operation;
           });
+               app.MapGet("/workflow/check/instance/withoutMfa/{instanceId}/tckn/{tckn}/device/{xdeviceid}/token/{xtokenid}", CheckAuthWithoutMFAWithDeviceToken)
+
+          .WithOpenApi(operation =>
+          {
+              operation.Summary = "Check Authentication With Instance Id without MFA with xdeviceid and xtokenid";
+              operation.Tags = new List<OpenApiTag> { new() { Name = "Authorize" } };
+
+              return operation;
+          });
         app.MapGet("/workflow/check/transition/{transition}/role/{role}", CheckAuthWithTransition)
 
        .WithOpenApi(operation =>
@@ -92,6 +101,32 @@ public static class AuthorizeControlModule
                 if (instance.UserReference == tckn)
                     return Results.Ok();
                 if (instance.UserReference != tckn)
+                {
+                    return Results.Unauthorized();
+                }
+        }
+        return Results.Unauthorized();
+    }
+       static async Task<IResult> CheckAuthWithoutMFAWithDeviceToken(
+         [FromServices] WorkflowDBContext dbContext,
+          [FromRoute(Name = "instanceId")] Guid instanceId,
+            CancellationToken cancellationToken,
+            [FromRoute(Name = "tckn")] string tckn,
+              [FromRoute(Name = "xdeviceid")] string xdeviceid,
+                [FromRoute(Name = "xtokenid")] string xtokenid
+
+     )
+    {
+        var instance = await dbContext.Instances!.Include(s => s.State).FirstOrDefaultAsync(w => w.Id == instanceId, cancellationToken);
+        if (instance == null)
+        {
+            return Results.Ok();
+        }
+        if (instance != null)
+        {
+                if (instance.UserReference == tckn&&xdeviceid==instance.XDeviceId&&xtokenid==instance.XTokenId)
+                    return Results.Ok();
+                if (instance.UserReference != tckn||xdeviceid!=instance.XDeviceId||xtokenid!=instance.XTokenId)
                 {
                     return Results.Unauthorized();
                 }

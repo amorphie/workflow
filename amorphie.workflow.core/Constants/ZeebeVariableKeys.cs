@@ -7,6 +7,7 @@ public static class ZeebeVariableKeys
     public const string TriggeredByBehalfOf = "TriggeredByBehalfOf";
     public const string InstanceId = "InstanceId";
     public const string PageUrl = "PageUrl";
+    public const string HubType = "HubType";
     public const string HeadersHttp = "Headers";
     public const string UserReference = "user_reference";
     public const string Message = "Message";
