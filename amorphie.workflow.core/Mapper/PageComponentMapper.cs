@@ -7,7 +7,7 @@ using AutoMapper;
 
 namespace amorphie.workflow.core.Mapper;
 
-      public class PageComponentMapper : Profile
+public class PageComponentMapper : Profile
 {
     public PageComponentMapper()
     {
@@ -28,7 +28,10 @@ namespace amorphie.workflow.core.Mapper;
             return new { };
         try
         {
-            return System.Text.Json.JsonSerializer.Deserialize<dynamic>(str);
+            return JsonSerializer.Deserialize<dynamic>(str, new JsonSerializerOptions
+            {
+                MaxDepth = 256
+            }) ?? new { };
         }
         catch (Exception ex)
         {
