@@ -60,7 +60,7 @@ public static class WorkflowLoggingExtension
             loggerConfiguration
                 .ReadFrom.Configuration(builder.Configuration)
                 .Enrich.With(enricher)
-                // .Enrich.WithElasticApmCorrelationInfo()
+                .Enrich.WithElasticApmCorrelationInfo()
                 ;
         });
         builder.Services.AddHttpLoggingInterceptor<HeaderCheckHttpLoggingInterceptor>();
