@@ -109,7 +109,10 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
             string json = string.Empty;
             try
             {
-                json = System.Text.Json.JsonSerializer.Serialize(data.componentJson);
+                json = System.Text.Json.JsonSerializer.Serialize(data.componentJson, new System.Text.Json.JsonSerializerOptions
+                {
+                    MaxDepth = 256
+                });
             }
             catch (Exception)
             {
@@ -199,10 +202,10 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
                     .SelectMany(s => s.Forms).Select(s => s.Label + suffixWith).Distinct().ToListAsync(token));
                 }
             }
-            response.TemplateList.AddRange(await context!.SignalRResponses.Where(s=>s.pageUrl!=null).Select(s=>s.pageUrl).ToListAsync(token));
-            response.TemplateList=response.TemplateList.Distinct().ToList();
+            response.TemplateList.AddRange(await context!.SignalRResponses.Where(s => s.pageUrl != null).Select(s => s.pageUrl).ToListAsync(token));
+            response.TemplateList = response.TemplateList.Distinct().ToList();
             return Results.Ok(response);
-    }
+        }
         catch (Exception ex)
         {
             return Results.Problem("Unexcepted error:" + ex.ToString());

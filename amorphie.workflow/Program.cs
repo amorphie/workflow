@@ -74,6 +74,12 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 .AddNewtonsoftJson(options =>
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.MaxDepth = 256;
+
+});
+
 builder.Services.AddDbContext<WorkflowDBContext>
     (
         options =>
