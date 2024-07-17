@@ -17,6 +17,7 @@ public class JsonObjectConverter
         {
             InstanceId = new Guid(body[ZeebeVariableKeys.InstanceId]?.ToString() ?? ""),
             PageUrl = body[ZeebeVariableKeys.PageUrl]?.ToString() ?? "",
+            HubType= body[ZeebeVariableKeys.HubType]?.ToString() ?? "",
             Message = body[ZeebeVariableKeys.Message]?.Deserialize<string>(opt) ?? body[ZeebeVariableKeys.message]?.Deserialize<string>(opt) ?? "",
             ErrorCode = body[ZeebeVariableKeys.ErrorCode]?.Deserialize<string>(opt) ?? body[ZeebeVariableKeys.errorCode]?.Deserialize<string>(opt) ?? "",
             LastTransition = transitionName
@@ -100,6 +101,7 @@ public class WorkerBody
     public string LastTransition { get; set; } = default!;
     public string PageUrl { get; set; } = default!;
     public string? Message { get; set; }
+    public string? HubType { get; set; }
     public string? ErrorCode { get; set; }
     public Guid InstanceId { get; set; } = default!;
 

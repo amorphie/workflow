@@ -22,6 +22,24 @@ public static class AuthorizeControlModule
 
               return operation;
           });
+           app.MapGet("/workflow/check/instance/withoutMfa/{instanceId}/tckn/{tckn}", CheckAuthWithoutMFA)
+
+          .WithOpenApi(operation =>
+          {
+              operation.Summary = "Check Authentication With Instance Id without MFA";
+              operation.Tags = new List<OpenApiTag> { new() { Name = "Authorize" } };
+
+              return operation;
+          });
+               app.MapGet("/workflow/check/instance/withoutMfa/{instanceId}/tckn/{tckn}/device/{xdeviceid}/token/{xtokenid}", CheckAuthWithoutMFAWithDeviceToken)
+
+          .WithOpenApi(operation =>
+          {
+              operation.Summary = "Check Authentication With Instance Id without MFA with xdeviceid and xtokenid";
+              operation.Tags = new List<OpenApiTag> { new() { Name = "Authorize" } };
+
+              return operation;
+          });
         app.MapGet("/workflow/check/transition/{transition}/role/{role}", CheckAuthWithTransition)
 
        .WithOpenApi(operation =>
@@ -31,14 +49,6 @@ public static class AuthorizeControlModule
 
            return operation;
        });
-        app.MapGet("/workflow/control/fixAllStateToPrivate", fixAllStateToPrivate)
-        .WithOpenApi(operation =>
-        {
-            operation.Summary = "Check Authentication With Instance Id";
-            operation.Tags = new List<OpenApiTag> { new() { Name = "Authorize Control" } };
-
-            return operation;
-        });
 
     }
     static async Task<IResult> CheckAuthWithoutTransition(
@@ -70,6 +80,56 @@ public static class AuthorizeControlModule
                 return Results.Ok();
             }
 
+        }
+        return Results.Unauthorized();
+    }
+        static async Task<IResult> CheckAuthWithoutMFA(
+         [FromServices] WorkflowDBContext dbContext,
+          [FromRoute(Name = "instanceId")] Guid instanceId,
+            CancellationToken cancellationToken,
+            [FromRoute(Name = "tckn")] string tckn
+
+     )
+    {
+        var instance = await dbContext.Instances!.Include(s => s.State).FirstOrDefaultAsync(w => w.Id == instanceId, cancellationToken);
+        if (instance == null)
+        {
+            return Results.Ok();
+        }
+        if (instance != null)
+        {
+                if (instance.UserReference == tckn)
+                    return Results.Ok();
+                if (instance.UserReference != tckn)
+                {
+                    return Results.Unauthorized();
+                }
+        }
+        return Results.Unauthorized();
+    }
+       static async Task<IResult> CheckAuthWithoutMFAWithDeviceToken(
+         [FromServices] WorkflowDBContext dbContext,
+          [FromRoute(Name = "instanceId")] Guid instanceId,
+            CancellationToken cancellationToken,
+            [FromRoute(Name = "tckn")] string tckn,
+              [FromRoute(Name = "xdeviceid")] string xdeviceid,
+                [FromRoute(Name = "xtokenid")] string xtokenid
+
+     )
+    {
+        var instance = await dbContext.Instances!.Include(s => s.State).FirstOrDefaultAsync(w => w.Id == instanceId, cancellationToken);
+        if (instance == null)
+        {
+            return Results.Ok();
+        }
+        if (instance != null)
+        {
+                if (instance.UserReference == tckn&&xdeviceid==instance.XDeviceId&&xtokenid==instance.XTokenId)
+                    return Results.Ok();
+                if (instance.UserReference != tckn||xdeviceid!=instance.XDeviceId||xtokenid!=instance.XTokenId)
+                {
+                    return Results.Unauthorized();
+                }
         }
         return Results.Unauthorized();
     }
@@ -112,33 +172,5 @@ public static class AuthorizeControlModule
         }
         return Results.Unauthorized();
 
-    }
-
-    static async Task<IResult> fixAllStateToPrivate(
-         [FromServices] WorkflowDBContext dbContext,
-            CancellationToken cancellationToken
-
-
-     )
-    {
-        List<string> ExcludeFlows = new List<string>(){
-            "OpenBanking-Register",
-            "user-register",
-            "login",
-            "amorphie-login-mobile",
-            "amorphie-mobile-login",
-            "Amorphie Mobile Login"
-        };
-        bool isUpdate = false;
-        List<State> statesForUpdate = await dbContext.States.Where(w => !ExcludeFlows.Contains(w.WorkflowName) && w.MFAType == null).ToListAsync(cancellationToken);
-        foreach (State stateForUpdate in statesForUpdate)
-        {
-            stateForUpdate.MFAType = core.Enums.MFATypeEnum.Private;
-            isUpdate = true;
-        }
-        if (isUpdate)
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Results.Ok(isUpdate);
     }
 }
