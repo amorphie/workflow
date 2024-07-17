@@ -234,10 +234,10 @@ public class PostTransactionService : IPostTransactionService
         if (_transition.transitionButtonType == TransitionButtonType.AddNote && lastInstance == null)
         {
             return new Response<HttpStatusEnum?>
-                {
-                    Data = HttpStatusEnum.Conflict,
-                    Result = new Result(Status.Error, $"Instance cannot be started with note adding transition"),
-                };
+            {
+                Data = HttpStatusEnum.Conflict,
+                Result = new Result(Status.Error, $"Instance cannot be started with note adding transition"),
+            };
         }
 
         return await LastTransitionControl(lastInstance);
@@ -372,31 +372,31 @@ public class PostTransactionService : IPostTransactionService
         {
             UserReference = string.Empty;
         }
-            string XDeviceId = string.Empty;
+        string XDeviceId = string.Empty;
         try
         {
             if (!_headerDict.TryGetValue("X-Device-id", out XDeviceId))
             {
                 if (!_headerDict.TryGetValue("x-device-id", out XDeviceId))
-                XDeviceId = string.Empty;
+                    XDeviceId = string.Empty;
             }
-            
-                
+
+
         }
         catch (Exception)
         {
             XDeviceId = string.Empty;
         }
-         string XTokenId = string.Empty;
+        string XTokenId = string.Empty;
         try
         {
             if (!_headerDict.TryGetValue("X-Token-id", out XTokenId))
             {
                 if (!_headerDict.TryGetValue("x-token-id", out XTokenId))
-                XTokenId = string.Empty;
+                    XTokenId = string.Empty;
             }
-            
-                
+
+
         }
         catch (Exception)
         {
@@ -433,9 +433,9 @@ public class PostTransactionService : IPostTransactionService
             CreatedBy = _user,
             UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
-            InstanceData=_data.EntityData,
-            XDeviceId=XDeviceId,
-            XTokenId=XTokenId
+            InstanceData = Convert.ToString(_data.EntityData),
+            XDeviceId = XDeviceId,
+            XTokenId = XTokenId
         };
 
         return await ServiceKontrol(newInstance, false, started);
@@ -464,29 +464,29 @@ public class PostTransactionService : IPostTransactionService
         {
             UserReference = string.Empty;
         }
-           string XDeviceId = string.Empty;
+        string XDeviceId = string.Empty;
         try
         {
             if (!_headerDict.TryGetValue("xdeviceid", out XDeviceId))
             {
                 XDeviceId = string.Empty;
             }
-            
-                
+
+
         }
         catch (Exception)
         {
             XDeviceId = string.Empty;
         }
-         string XTokenId = string.Empty;
+        string XTokenId = string.Empty;
         try
         {
             if (!_headerDict.TryGetValue("xtokenid", out XTokenId))
             {
                 XTokenId = string.Empty;
             }
-            
-                
+
+
         }
         catch (Exception)
         {
@@ -525,9 +525,9 @@ public class PostTransactionService : IPostTransactionService
             UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
             FullName = FullName,
-            InstanceData=Convert.ToString(_data.EntityData),
-            XDeviceId=XDeviceId,
-            XTokenId=XTokenId
+            InstanceData = Convert.ToString(_data.EntityData),
+            XDeviceId = XDeviceId,
+            XTokenId = XTokenId
         };
         dynamic variables = createMessageVariables(newInstance);
 
@@ -536,7 +536,7 @@ public class PostTransactionService : IPostTransactionService
         await _dbContext.AddAsync(newInstance, _cancellationToken);
 
         await addInstanceTansition(newInstance, started, null);
-         await _dbContext.SaveChangesAsync(_cancellationToken);
+        await _dbContext.SaveChangesAsync(_cancellationToken);
         SendSignalRData(newInstance, EventInfos.WorkerStarted, string.Empty);
         long? processKey = await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, null, _transition.Flow!.Gateway);
         newInstance.ProcessInstanceKey = processKey;
@@ -635,18 +635,18 @@ public class PostTransactionService : IPostTransactionService
             dynamic variables = createMessageVariables(instanceAtState);
 
             lastInstanceTransition.AdditionalData = JsonSerializer.Serialize(additionalData);
-     
-           var jsonData= Newtonsoft.Json.Linq.JObject.Parse(instanceAtState.InstanceData);
-            var mergeAdditional= Newtonsoft.Json.Linq.JObject.Parse( lastInstanceTransition.AdditionalData);
-            jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
-{
 
-    MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
-});
-            instanceAtState.InstanceData=jsonData.ToString();
+            var jsonData = Newtonsoft.Json.Linq.JObject.Parse(instanceAtState.InstanceData);
+            var mergeAdditional = Newtonsoft.Json.Linq.JObject.Parse(lastInstanceTransition.AdditionalData);
+            jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
+            {
+
+                MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
+            });
+            instanceAtState.InstanceData = jsonData.ToString();
             await _dbContext.SaveChangesAsync(_cancellationToken);
 
-            long? processInstanceKey=await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
+            long? processInstanceKey = await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
             SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
 
             Response responseWithSuccess = new Response
@@ -800,77 +800,77 @@ public class PostTransactionService : IPostTransactionService
             instance.ModifiedByBehalfOf = _behalfOfUser;
             instance.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
             instance.BaseStatus = _transition.ToState!.BaseStatus;
-            var jsonData= Newtonsoft.Json.Linq.JObject.Parse(instance.InstanceData);
-            var mergeAdditional= Newtonsoft.Json.Linq.JObject.Parse(_data.EntityData);
+            var jsonData = Newtonsoft.Json.Linq.JObject.Parse(instance.InstanceData);
+            var mergeAdditional = Newtonsoft.Json.Linq.JObject.Parse(_data.EntityData);
             jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
-{
+            {
 
-    MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
-});
+                MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
+            });
 
 
-            instance.InstanceData=jsonData.ToString();
-             string UserReference = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("user_reference", out UserReference))
+            instance.InstanceData = jsonData.ToString();
+            string UserReference = string.Empty;
+            try
+            {
+                if (!_headerDict.TryGetValue("user_reference", out UserReference))
+                    UserReference = string.Empty;
+            }
+            catch (Exception ex)
+            {
                 UserReference = string.Empty;
-        }
-        catch (Exception ex)
-        {
-            UserReference = string.Empty;
-        }
-        instance.UserReference=UserReference;
-           string XDeviceId = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("xdeviceid", out XDeviceId))
+            }
+            instance.UserReference = UserReference;
+            string XDeviceId = string.Empty;
+            try
+            {
+                if (!_headerDict.TryGetValue("xdeviceid", out XDeviceId))
+                {
+                    XDeviceId = string.Empty;
+                }
+
+
+            }
+            catch (Exception)
             {
                 XDeviceId = string.Empty;
             }
-            
-                
-        }
-        catch (Exception)
-        {
-            XDeviceId = string.Empty;
-        }
-         instance.XDeviceId=XDeviceId;
-         string XTokenId = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("xtokenid", out XTokenId))
+            instance.XDeviceId = XDeviceId;
+            string XTokenId = string.Empty;
+            try
+            {
+                if (!_headerDict.TryGetValue("xtokenid", out XTokenId))
+                {
+                    XTokenId = string.Empty;
+                }
+
+
+            }
+            catch (Exception)
             {
                 XTokenId = string.Empty;
             }
-            
-                
-        }
-        catch (Exception)
-        {
-            XTokenId = string.Empty;
-        }
-         instance.XTokenId=XTokenId;
-        string? FullName = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("given_name", out FullName))
+            instance.XTokenId = XTokenId;
+            string? FullName = string.Empty;
+            try
+            {
+                if (!_headerDict.TryGetValue("given_name", out FullName))
+                    FullName = string.Empty;
+                string? FamilyName = string.Empty;
+                if (!_headerDict.TryGetValue("family_name", out FamilyName))
+                {
+                    FamilyName = string.Empty;
+                }
+                if (!string.IsNullOrEmpty(FamilyName))
+                {
+                    FullName = FullName + " " + FamilyName;
+                }
+            }
+            catch (Exception ex)
+            {
                 FullName = string.Empty;
-            string? FamilyName = string.Empty;
-            if (!_headerDict.TryGetValue("family_name", out FamilyName))
-            {
-                FamilyName = string.Empty;
             }
-            if (!string.IsNullOrEmpty(FamilyName))
-            {
-                FullName = FullName + " " + FamilyName;
-            }
-        }
-        catch (Exception ex)
-        {
-            FullName = string.Empty;
-        }
-        instance.FullName=FullName;
+            instance.FullName = FullName;
             if (instance.WorkflowName != _transition.ToState.WorkflowName)
             {
                 instance.WorkflowName = _transition.ToState!.WorkflowName!;

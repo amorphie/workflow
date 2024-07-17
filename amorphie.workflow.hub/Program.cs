@@ -49,8 +49,9 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.WfAddSeriLogWithHttpLogging<WorkflowLogEnricher>();
 
-builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
+//builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
 
 builder.Services.AddSignalR(options =>
 {
@@ -85,7 +86,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseAllElasticApm(app.Configuration);
 }
-app.UseLoggingHandlerMiddlewares();
+app.WfUseLoggingHandlerMiddlewares();
 
 Log.Information("Amorphie Workflow Hub Starting");
 

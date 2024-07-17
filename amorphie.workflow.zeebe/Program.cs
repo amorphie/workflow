@@ -14,6 +14,8 @@ using amorphie.workflow.service.Db;
 using amorphie.core.Middleware.Logging;
 using amorphie.core.Identity;
 using amorphie.core.Extension;
+using amorphie.workflow.core.Extensions;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,8 +79,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
 });
 
 ////Request and Response logging purpose
+builder.WfAddSeriLogWithHttpLogging<WorkflowLogEnricher>();
 
-builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
+//builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
 
 builder.Services.AddScoped<IBBTIdentity, FakeIdentity>();
 //Add Bussiness Services
@@ -89,7 +92,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseAllElasticApm(app.Configuration);
 }
-app.UseLoggingHandlerMiddlewares();
+app.WfUseLoggingHandlerMiddlewares();
 
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
