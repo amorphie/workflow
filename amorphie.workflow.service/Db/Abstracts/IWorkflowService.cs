@@ -6,6 +6,6 @@ public interface IWorkflowService
 {
     Task<Response> SaveAsync(WorkflowCreateDto data,CancellationToken token);
     Task Insert(WorkflowCreateDto data);
-    void Update(WorkflowCreateDto data, Workflow existingRecord);
+    Task UpdateAsync(WorkflowCreateDto data, Workflow existingRecord);
     Task<Response<Workflow>> GetAsync(string workflowName);
 }
