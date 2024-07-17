@@ -1,5 +1,6 @@
 
 
+using System.ComponentModel.DataAnnotations.Schema;
 using amorphie.core.Base;
 using NpgsqlTypes;
 namespace amorphie.workflow.core.Models;
@@ -24,6 +25,10 @@ public class Instance : EntityBase
     public string? FullName { get; set; }
     public ICollection<Note>? Notes { get; set; }
     public long? ProcessInstanceKey {get;set;}
+    [Column(TypeName = "jsonb")]
+    public string InstanceData { get; set; } = default!;
+    public string? XDeviceId { get; set; }
+    public string? XTokenId { get; set; }
 
 }
 

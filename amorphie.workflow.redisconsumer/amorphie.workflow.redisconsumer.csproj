@@ -19,6 +19,7 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.6" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
 		<PackageReference Include="StackExchange.Redis" Version="2.7.33" />
+		<PackageReference Include="System.Text.Json" Version="8.0.4" />
 		<Protobuf Include="Protos\exporter.proto" GrpcServices="Client" />
 	</ItemGroup>
 
