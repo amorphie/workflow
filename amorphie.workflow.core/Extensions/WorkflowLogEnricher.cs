@@ -62,13 +62,13 @@ public class WorkflowLogEnricher : ILogEventEnricher
                 }
                 else if (Agent.IsConfigured)
                 {
-                    logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
                         "ElasticApmTransactionId", Agent.Tracer.CurrentTransaction.Id));
-                    logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
                         "ElasticApmTraceId", Agent.Tracer.CurrentTransaction.TraceId));
                     if (Agent.Tracer.CurrentSpan != null)
                     {
-                        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                        _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
                             "ElasticApmSpanId", Agent.Tracer.CurrentSpan.Id));
                     }
                 }
@@ -77,19 +77,30 @@ public class WorkflowLogEnricher : ILogEventEnricher
                     AddPropertyIfAbsent("RequestPath", httpContext.Request.Path.Value);
                 }
 
-                if (Agent.IsConfigured)
-                {
-                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceName", Agent.Config.ServiceName));
-                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceVersion", Agent.Config.ServiceVersion));
-                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceNodeName", Agent.Config.ServiceNodeName));
 
-                    if (Agent.Config.GlobalLabels != null)
-                        _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmGlobalLabels", Agent.Config.GlobalLabels));
-                }
             }
             catch (Exception ex)
             {
                 Log.Fatal("TraceIdentifier: {TraceIdentifier}. Log enrichment with httpcontext props failed. Exception: {ex}", httpContext.TraceIdentifier, ex);
+            }
+        }
+        if (Agent.IsConfigured)
+        {
+            _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceName", Agent.Config.ServiceName));
+            _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceVersion", Agent.Config.ServiceVersion));
+            _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceNodeName", Agent.Config.ServiceNodeName));
+
+            if (Agent.Config.GlobalLabels != null)
+                _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmGlobalLabels", Agent.Config.GlobalLabels));
+
+            _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                    "ElasticApmTransactionId", Agent.Tracer.CurrentTransaction.Id));
+            _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                "ElasticApmTraceId", Agent.Tracer.CurrentTransaction.TraceId));
+            if (Agent.Tracer.CurrentSpan != null)
+            {
+                _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                    "ElasticApmSpanId", Agent.Tracer.CurrentSpan.Id));
             }
         }
 
