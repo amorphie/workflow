@@ -24,12 +24,13 @@
     <PackageReference Include="Semver" Version="2.3.0"/>
     <PackageReference Include="System.Runtime.InteropServices.WindowsRuntime" Version="4.3.0"/>
     <PackageReference Include="Microsoft.Toolkit.HighPerformance" Version="7.1.2"/>
+    <PackageReference Include="System.Text.Json" Version="8.0.4"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj"/>
+    <ProjectReference Include="..\amorphie.workflow.data\amorphie.workflow.data.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj"/>
-    <ProjectReference Include="..\amorphie.workflow.service\amorphie.workflow.service.csproj"/>
+    <ProjectReference Include="..\amorphie.workflow.core\amorphie.workflow.core.csproj" />
+    <ProjectReference Include="..\amorphie.workflow.service\amorphie.workflow.service.csproj" />
   </ItemGroup>
 </Project>

@@ -21,6 +21,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
 using Namotion.Reflection;
+using Newtonsoft.Json.Linq;
 using Serilog;
 
 
@@ -371,6 +372,36 @@ public class PostTransactionService : IPostTransactionService
         {
             UserReference = string.Empty;
         }
+            string XDeviceId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("X-Device-id", out XDeviceId))
+            {
+                if (!_headerDict.TryGetValue("x-device-id", out XDeviceId))
+                XDeviceId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XDeviceId = string.Empty;
+        }
+         string XTokenId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("X-Token-id", out XTokenId))
+            {
+                if (!_headerDict.TryGetValue("x-token-id", out XTokenId))
+                XTokenId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XTokenId = string.Empty;
+        }
         string? FullName = string.Empty;
         try
         {
@@ -402,6 +433,9 @@ public class PostTransactionService : IPostTransactionService
             CreatedBy = _user,
             UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
+            InstanceData=_data.EntityData,
+            XDeviceId=XDeviceId,
+            XTokenId=XTokenId
         };
 
         return await ServiceKontrol(newInstance, false, started);
@@ -429,6 +463,34 @@ public class PostTransactionService : IPostTransactionService
         catch (Exception ex)
         {
             UserReference = string.Empty;
+        }
+           string XDeviceId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("xdeviceid", out XDeviceId))
+            {
+                XDeviceId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XDeviceId = string.Empty;
+        }
+         string XTokenId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("xtokenid", out XTokenId))
+            {
+                XTokenId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XTokenId = string.Empty;
         }
         string? FullName = string.Empty;
         try
@@ -462,7 +524,10 @@ public class PostTransactionService : IPostTransactionService
             ZeebeFlowName = _transition.FlowName,
             UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
-            FullName = FullName
+            FullName = FullName,
+            InstanceData=Convert.ToString(_data.EntityData),
+            XDeviceId=XDeviceId,
+            XTokenId=XTokenId
         };
         dynamic variables = createMessageVariables(newInstance);
 
@@ -541,7 +606,6 @@ public class PostTransactionService : IPostTransactionService
         instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
         instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
         instanceAtState.BaseStatus = StatusType.LockedInFlow;
-
         var lastInstanceTransition = await _dbContext.InstanceTransitions.Where(w => w.InstanceId == instanceAtState.Id)
                     .Include(p => p.Transition)
                     .OrderByDescending(c => c.CreatedAt).FirstAsync();
@@ -571,6 +635,15 @@ public class PostTransactionService : IPostTransactionService
             dynamic variables = createMessageVariables(instanceAtState);
 
             lastInstanceTransition.AdditionalData = JsonSerializer.Serialize(additionalData);
+     
+           var jsonData= Newtonsoft.Json.Linq.JObject.Parse(instanceAtState.InstanceData);
+            var mergeAdditional= Newtonsoft.Json.Linq.JObject.Parse( lastInstanceTransition.AdditionalData);
+            jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
+{
+
+    MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
+});
+            instanceAtState.InstanceData=jsonData.ToString();
             await _dbContext.SaveChangesAsync(_cancellationToken);
 
             long? processInstanceKey=await _zeebeService.PublishMessage(_transition.Flow!.Message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
@@ -600,7 +673,7 @@ public class PostTransactionService : IPostTransactionService
         variables.Add("RecordId", _recordId);
         variables.Add("InstanceId", instanceAtState.Id);
         variables.Add("LastTransition", _transitionName);
-
+        variables.Add("WorkflowData", instanceAtState.InstanceData);
         dynamic targetObject = new ExpandoObject();
         targetObject.Data = _data;
         targetObject.TriggeredBy = _user;
@@ -727,6 +800,77 @@ public class PostTransactionService : IPostTransactionService
             instance.ModifiedByBehalfOf = _behalfOfUser;
             instance.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
             instance.BaseStatus = _transition.ToState!.BaseStatus;
+            var jsonData= Newtonsoft.Json.Linq.JObject.Parse(instance.InstanceData);
+            var mergeAdditional= Newtonsoft.Json.Linq.JObject.Parse(_data.EntityData);
+            jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
+{
+
+    MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
+});
+
+
+            instance.InstanceData=jsonData.ToString();
+             string UserReference = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("user_reference", out UserReference))
+                UserReference = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            UserReference = string.Empty;
+        }
+        instance.UserReference=UserReference;
+           string XDeviceId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("xdeviceid", out XDeviceId))
+            {
+                XDeviceId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XDeviceId = string.Empty;
+        }
+         instance.XDeviceId=XDeviceId;
+         string XTokenId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("xtokenid", out XTokenId))
+            {
+                XTokenId = string.Empty;
+            }
+            
+                
+        }
+        catch (Exception)
+        {
+            XTokenId = string.Empty;
+        }
+         instance.XTokenId=XTokenId;
+        string? FullName = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("given_name", out FullName))
+                FullName = string.Empty;
+            string? FamilyName = string.Empty;
+            if (!_headerDict.TryGetValue("family_name", out FamilyName))
+            {
+                FamilyName = string.Empty;
+            }
+            if (!string.IsNullOrEmpty(FamilyName))
+            {
+                FullName = FullName + " " + FamilyName;
+            }
+        }
+        catch (Exception ex)
+        {
+            FullName = string.Empty;
+        }
+        instance.FullName=FullName;
             if (instance.WorkflowName != _transition.ToState.WorkflowName)
             {
                 instance.WorkflowName = _transition.ToState!.WorkflowName!;

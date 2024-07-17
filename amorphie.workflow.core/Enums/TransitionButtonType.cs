@@ -12,5 +12,7 @@ public enum TransitionButtonType
 
     [Description("addnote")]
     AddNote = 8,
+    [Description("invisible")]
+    Invisible = 16,
 
 }

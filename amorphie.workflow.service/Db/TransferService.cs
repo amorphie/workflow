@@ -369,6 +369,10 @@ public class TransferService
     {
         return uiForms.Where(s => s.Forms != null).SelectMany(s => s.Forms!).Select(s => s.Label).ToList();
     }
+    private List<string> GetTemplateFromPages(IEnumerable<Page> pages)
+    {
+        return pages.Where(s => s.Pages != null).SelectMany(s => s.Pages!).Select(s => s.Label).ToList();
+    }
     private  async Task<List<string>> GetTemplatesFromLegacyAsync(string workflowName,bool IsPage, CancellationToken cancellationToken)
     {
       
@@ -399,13 +403,18 @@ public class TransferService
                 var uiForms = state.Transitions.Where(s => s.UiForms != null)
                 .SelectMany(s => s.UiForms!).Distinct().ToList();
                 templateList.AddRange(GetTemplateFromUiForms(uiForms));
+                var pages = state.Transitions.Where(s => s.Page != null)
+                .Select(s => s.Page!).Distinct().ToList();
+                 templateList.AddRange(GetTemplateFromPages(pages));
             }
         }
         if(IsPage)
         {
-                string workflowNameFromPage = "\"workflowName\":\""+workflowName+"\"";
-              templateList.AddRange(await _dbContext.SignalRResponses.Where(w =>w.routeChange==true&&!string.IsNullOrEmpty(w.data)&& 
-              w.data.Contains("\"viewSource\":\"page\"")&&w.data.Contains(workflowNameFromPage)
+             List<string> InstanceIdList=await _dbContext.Instances.Where(w=>w.WorkflowName==workflowName).Select(s=>
+             s.Id.ToString()).ToListAsync(cancellationToken);
+                // string workflowNameFromPage = "\"workflowName\":\""+workflowName+"\"";
+              templateList.AddRange(await _dbContext.SignalRResponses.Where(w =>w.routeChange==true&&!string.IsNullOrEmpty(w.data)
+                &&InstanceIdList.Any(a=>a==w.InstanceId)
               &&!string.IsNullOrEmpty(w.pageUrl))
               .Select(s => s.pageUrl??string.Empty).Distinct().ToListAsync(cancellationToken));
         }

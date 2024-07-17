@@ -18,6 +18,7 @@ public class GetRecordWorkflowInit
     public string? instanceId { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public dynamic? additionalData { get; set; }
+    public string? navigation { get; set; }
 }
 public class InstanceStateTransitions : GetRecordWorkflowInit
 {

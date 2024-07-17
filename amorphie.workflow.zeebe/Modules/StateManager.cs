@@ -253,7 +253,7 @@ public static class StateManagerModule
                 }
             }
             bool routeChange = false;
-            if (!string.IsNullOrEmpty(pageUrl))
+            if (!string.IsNullOrEmpty(pageUrl)||body.HubType==HubType.Silent||body.HubType==HubType.Force)
             {
                 routeChange = true;
             }
@@ -294,7 +294,7 @@ public static class StateManagerModule
                                       transition.transitionButtonType == 0 ? TransitionButtonType.Forward.ToString() : transition.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString()
                                   ),
                                       source = "workflow",
-                                      type = "workflow",
+                                      type =string.IsNullOrEmpty(body.HubType)?HubType.Workflow:body.HubType,
                                       subject = eventInfo,
                                       id = instance.Id.ToString(),
                                       routeChange = routeChange
@@ -317,6 +317,7 @@ public static class StateManagerModule
         variables.Add("RecordId", instanceTransition.Instance.RecordId);
         variables.Add("InstanceId", instanceTransition.InstanceId);
         variables.Add("LastTransition", _transitionName);
+        variables.Add("WorkflowData", instanceTransition.Instance.InstanceData);
         dynamic targetObject = new System.Dynamic.ExpandoObject();
         targetObject.Data = _data.Data;
         targetObject.TriggeredBy = instanceTransition.CreatedBy;
@@ -419,7 +420,19 @@ public static class StateManagerModule
                     instance.EntityName = transition.ToState.Workflow.Entities.FirstOrDefault()!.Name;
                 }
             }
+            var jsonData= Newtonsoft.Json.Linq.JObject.Parse(instance.InstanceData);
+            var mergeEntity= Newtonsoft.Json.Linq.JObject.Parse(newInstanceTransition.EntityData);
+            var mergeAdditional= Newtonsoft.Json.Linq.JObject.Parse(newInstanceTransition.AdditionalData);
+            jsonData.Merge(mergeEntity, new Newtonsoft.Json.Linq.JsonMergeSettings
+{
 
+    MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
+});
+            jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
+{
+    MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
+});
+            instance.InstanceData=jsonData.ToString();
             newInstanceTransition!.FinishedAt = DateTime.Now;
             // dbContext.Add(newInstanceTransition);
             // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
