@@ -13,14 +13,14 @@ using Serilog.Core;
 namespace amorphie.workflow.core.Extensions;
 public static class WorkflowLoggingExtension
 {
-    public static void UseLoggingHandlerMiddlewares(this IApplicationBuilder app)
+    public static void WfUseLoggingHandlerMiddlewares(this IApplicationBuilder app)
     {
         app.UseMiddleware<ExceptionHandlerMiddleware>();
         //Request and Response Logging
         app.UseHttpLogging();
     }
 
-    public static void AddSeriLogWithHttpLogging<TEnricher>(this WebApplicationBuilder builder, List<string>? headersToBeLogged = null) where TEnricher : class, ILogEventEnricher
+    public static void WfAddSeriLogWithHttpLogging<TEnricher>(this WebApplicationBuilder builder, List<string>? headersToBeLogged = null) where TEnricher : class, ILogEventEnricher
     {
         var defaultHeadersToBeLogged = new List<string>
         {
