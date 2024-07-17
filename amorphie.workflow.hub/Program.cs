@@ -17,6 +17,8 @@ using Prometheus;
 using HealthChecks.UI.Client;
 using StackExchange.Redis;
 using amorphie.workflow.hub.Metric;
+using amorphie.workflow.core.Extensions;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
