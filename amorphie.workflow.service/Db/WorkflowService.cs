@@ -2,6 +2,7 @@
 using amorphie.workflow.service.Db.Abstracts;
 using Microsoft.EntityFrameworkCore;
 using amorphie.workflow.core.Dtos.Definition;
+using amorphie.core.Identity;
 
 namespace amorphie.workflow.service.Db;
 public class WorkflowService : IWorkflowService
@@ -10,12 +11,14 @@ public class WorkflowService : IWorkflowService
     private readonly DbSet<Workflow> _dbSet;
     private readonly IStateService _stateService;
     private readonly VersionService _versionService;
-    public WorkflowService(WorkflowDBContext dbContext, IStateService stateService,VersionService versionService)
+    private readonly IBBTIdentity _bbtIdentity;
+    public WorkflowService(WorkflowDBContext dbContext, IStateService stateService, VersionService versionService, IBBTIdentity bbtIdentity)
     {
-        _versionService=versionService;
+        _versionService = versionService;
         _dbContext = dbContext;
         _dbSet = dbContext.Set<Workflow>();
         _stateService = stateService;
+        _bbtIdentity = bbtIdentity;
     }
 
     public async Task<Response> SaveAsync(WorkflowCreateDto data, CancellationToken token)
@@ -32,25 +35,25 @@ public class WorkflowService : IWorkflowService
         }
         else
         {
-            Update(data, existingRecord);
+            await UpdateAsync(data, existingRecord);
         }
-        if (await _dbContext!.SaveChangesAsync() > 0 )
+        if (await _dbContext!.SaveChangesAsync() > 0)
         {
-            if(existingRecord != null)
+            if (existingRecord != null)
             {
                 if (string.IsNullOrEmpty(existingRecord!.SemVer))
-            {
+                {
+                    existingRecord.SemVer = version.ToString();
+                }
+                version = Semver.SemVersion.Parse(existingRecord.SemVer, Semver.SemVersionStyles.Any);
+
+
+                version = version.WithMinor(version.Minor + 1);
                 existingRecord.SemVer = version.ToString();
-            } 
-           version = Semver.SemVersion.Parse(existingRecord.SemVer, Semver.SemVersionStyles.Any);
-
-
-            version = version.WithMinor(version.Minor + 1);
-            existingRecord.SemVer = version.ToString();
-            await _dbContext!.SaveChangesAsync();
+                await _dbContext!.SaveChangesAsync();
             }
-             await _versionService.SaveVersionWorkflow(data.Name,version.ToString(),token);
-            
+            await _versionService.SaveVersionWorkflow(data.Name, version.ToString(), token);
+
         }
         //Save States and Trxs
         if (data.NewStates != null && data.NewStates.Count > 0)
@@ -123,12 +126,17 @@ public class WorkflowService : IWorkflowService
                 Label = s.label
             }).ToList() : new List<Translation>()
         };
+        //Todo:Revizyon gerekli
+        if (_bbtIdentity.UserId != null)
+        {
+            newWorkflow.CreatedBy = _bbtIdentity.UserId.Value;
+        }
         await _dbContext.Workflows!.AddAsync(newWorkflow);
-        
+
         // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
 
     }
-    public void Update(WorkflowCreateDto data, Workflow existingRecord)
+    public async Task UpdateAsync(WorkflowCreateDto data, Workflow existingRecord)
     {
         //Why is this bussines for
         bool recordIdNull = false;
@@ -192,6 +200,9 @@ public class WorkflowService : IWorkflowService
                 }
             }
         }
+
+        var wfEntitiesToBeAdded = data.Entities.Select(p => p.Name).ToList();
+        await _dbContext.WorkflowEntities.Where(p => p.WorkflowName == data.Name && !wfEntitiesToBeAdded.Contains(p.Name)).ExecuteDeleteAsync();
         foreach (var req in data.Entities)
         {
             WorkflowEntity? existingEntity = existingRecord.Entities!.FirstOrDefault(db => db.Name == req.Name);
@@ -201,6 +212,7 @@ public class WorkflowService : IWorkflowService
                 _dbContext.WorkflowEntities!.Add(new WorkflowEntity
                 {
                     Name = req.Name,
+                    WorkflowName = data.Name,
                     //  IsExclusive = req.IsExclusive,
                     IsStateManager = req.IsStateManager,
                     AvailableInStatus = req.AvailableInStatus,
