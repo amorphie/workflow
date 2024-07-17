@@ -60,18 +60,18 @@ public class WorkflowLogEnricher : ILogEventEnricher
                     _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
                                         "ElasticApmSpanId", instanceId));
                 }
-                else if (Agent.IsConfigured)
-                {
-                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                        "ElasticApmTransactionId", Agent.Tracer.CurrentTransaction.Id));
-                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                        "ElasticApmTraceId", Agent.Tracer.CurrentTransaction.TraceId));
-                    if (Agent.Tracer.CurrentSpan != null)
-                    {
-                        _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                            "ElasticApmSpanId", Agent.Tracer.CurrentSpan.Id));
-                    }
-                }
+                // else if (Agent.IsConfigured)
+                // {
+                //     _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                //         "ElasticApmTransactionId", Agent.Tracer.CurrentTransaction.Id));
+                //     _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                //         "ElasticApmTraceId", Agent.Tracer.CurrentTransaction.TraceId));
+                //     if (Agent.Tracer.CurrentSpan != null)
+                //     {
+                //         _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                //             "ElasticApmSpanId", Agent.Tracer.CurrentSpan.Id));
+                //     }
+                // }
                 if (httpContext.Request.Path.HasValue)
                 {
                     AddPropertyIfAbsent("RequestPath", httpContext.Request.Path.Value);
@@ -84,25 +84,25 @@ public class WorkflowLogEnricher : ILogEventEnricher
                 Log.Fatal("TraceIdentifier: {TraceIdentifier}. Log enrichment with httpcontext props failed. Exception: {ex}", httpContext.TraceIdentifier, ex);
             }
         }
-        if (Agent.IsConfigured)
-        {
-            _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceName", Agent.Config.ServiceName));
-            _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceVersion", Agent.Config.ServiceVersion));
-            _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceNodeName", Agent.Config.ServiceNodeName));
+        // if (Agent.IsConfigured)
+        // {
+        //     _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceName", Agent.Config.ServiceName));
+        //     _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceVersion", Agent.Config.ServiceVersion));
+        //     _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmServiceNodeName", Agent.Config.ServiceNodeName));
 
-            if (Agent.Config.GlobalLabels != null)
-                _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmGlobalLabels", Agent.Config.GlobalLabels));
+        //     if (Agent.Config.GlobalLabels != null)
+        //         _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ElasticApmGlobalLabels", Agent.Config.GlobalLabels));
 
-            _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                    "ElasticApmTransactionId", Agent.Tracer.CurrentTransaction.Id));
-            _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                "ElasticApmTraceId", Agent.Tracer.CurrentTransaction.TraceId));
-            if (Agent.Tracer.CurrentSpan != null)
-            {
-                _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                    "ElasticApmSpanId", Agent.Tracer.CurrentSpan.Id));
-            }
-        }
+        //     _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+        //             "ElasticApmTransactionId", Agent.Tracer.CurrentTransaction.Id));
+        //     _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+        //         "ElasticApmTraceId", Agent.Tracer.CurrentTransaction.TraceId));
+        //     if (Agent.Tracer.CurrentSpan != null)
+        //     {
+        //         _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+        //             "ElasticApmSpanId", Agent.Tracer.CurrentSpan.Id));
+        //     }
+        // }
 
         AddPropertyIfAbsent("Environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "None");
         AddPropertyIfAbsent("ApplicationName", Environment.GetEnvironmentVariable("ApplicationName") ?? "None");
