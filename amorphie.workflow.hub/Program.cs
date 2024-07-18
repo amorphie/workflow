@@ -17,6 +17,8 @@ using Prometheus;
 using HealthChecks.UI.Client;
 using StackExchange.Redis;
 using amorphie.workflow.hub.Metric;
+using amorphie.workflow.core.Extensions;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,8 +51,9 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.WfAddSeriLogWithHttpLogging<WorkflowLogEnricher>();
 
-builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
+//builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
 
 builder.Services.AddSignalR(options =>
 {
@@ -85,7 +88,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseAllElasticApm(app.Configuration);
 }
-app.UseLoggingHandlerMiddlewares();
+app.WfUseLoggingHandlerMiddlewares();
 
 Log.Information("Amorphie Workflow Hub Starting");
 
