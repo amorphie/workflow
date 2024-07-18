@@ -800,16 +800,23 @@ public class PostTransactionService : IPostTransactionService
             instance.ModifiedByBehalfOf = _behalfOfUser;
             instance.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
             instance.BaseStatus = _transition.ToState!.BaseStatus;
-            var jsonData = Newtonsoft.Json.Linq.JObject.Parse(instance.InstanceData);
-            var mergeAdditional = Newtonsoft.Json.Linq.JObject.Parse(_data.EntityData);
-            jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
+            //TODO: Bug fix purpose, revision needed 
+            try
             {
+                var jsonData = Newtonsoft.Json.Linq.JObject.Parse(instance.InstanceData);
+                var mergeAdditional = Newtonsoft.Json.Linq.JObject.Parse(_data.EntityData);
+                jsonData.Merge(mergeAdditional, new Newtonsoft.Json.Linq.JsonMergeSettings
+                {
 
-                MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
-            });
+                    MergeArrayHandling = Newtonsoft.Json.Linq.MergeArrayHandling.Union
+                });
+                instance.InstanceData = jsonData.ToString();
+            }
+            catch
+            {
+            }
 
 
-            instance.InstanceData = jsonData.ToString();
             string UserReference = string.Empty;
             try
             {
