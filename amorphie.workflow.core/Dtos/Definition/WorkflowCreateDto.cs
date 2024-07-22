@@ -1,5 +1,4 @@
-﻿using amorphie.workflow.core.Dtos.Definition;
-using amorphie.workflow.core.Dtos.DefinitionLegacy;
+﻿using amorphie.workflow.core.Dtos.DefinitionLegacy;
 
 namespace amorphie.workflow.core.Dtos.Definition;
 
@@ -16,11 +15,6 @@ public class WorkflowCreateDto
     public string? Hash { get; set; }
     public string? SemVer { get; set; }
     public List<MultilanguageText>? HistoryForms { get; set; }
-
-    public List<StateCreateDto>? NewStates { get; set; }
-
-
-
 }
 
 

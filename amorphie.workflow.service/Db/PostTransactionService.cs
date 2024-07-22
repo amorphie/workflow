@@ -168,24 +168,23 @@ public class PostTransactionService : IPostTransactionService
             };
             return responseWithError;
         }
-        if (transition != null)
+        if (string.IsNullOrEmpty(transition.FromStateName) || string.IsNullOrEmpty(transition.ToStateName))
         {
-            IsAllowOneActiveInstance = transition.FromState.Workflow.IsAllowOneActiveInstance;
-            _transition = transition;
-            Response<HttpStatusEnum?> response = new Response<HttpStatusEnum?>
+            return new Response<HttpStatusEnum?>
             {
-                Data = HttpStatusEnum.Success,
-                Result = new Result(Status.Success, "Success"),
+                Data = HttpStatusEnum.NotFound,
+                Result = new Result(Status.Error, $"FromStateName and/or ToStateName for {_transitionName} is not null. Please check the definitions"),
             };
-            return response;
         }
 
-        Response<HttpStatusEnum?> responseWitherror = new Response<HttpStatusEnum?>
+        IsAllowOneActiveInstance = transition.FromState.Workflow.IsAllowOneActiveInstance;
+        _transition = transition;
+        Response<HttpStatusEnum?> response = new Response<HttpStatusEnum?>
         {
-            Data = HttpStatusEnum.NotFound,
-            Result = new Result(Status.Error, "Not Found transition"),
+            Data = HttpStatusEnum.Success,
+            Result = new Result(Status.Success, "Success"),
         };
-        return responseWitherror;
+        return response;
 
     }
     private async Task<IResponse<HttpStatusEnum?>> InstanceControl(Instance? lastInstance, Guid id)
