@@ -22,18 +22,6 @@ public static class TransferModule
             operation.Responses["204"].Description = "No instance found.";
             return operation;
         });
-
-        app.MapGet("/workflow/transfer/wf/{workflowName}/convert", TransferModuleApis.GetDefinitionFromLegacyToNewBulkAsync)
-        .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status204NoContent)
-        .WithOpenApi(operation =>
-        {
-            operation.Summary = "Get Converted Definition From Legacy To New Style Bulk";
-            operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
-            operation.Responses["200"].Description = "wf with its states and routes those which mutated from legacy transitions and states.";
-            operation.Responses["204"].Description = "No instance found.";
-            return operation;
-        });
         app.MapPost("/workflow/transfer/wf/get/templates", TransferModuleApis.GetTemplatesFromLegacyBulkAsync)
         .Produces<amorphie.core.Base.Response<List<string>>>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
@@ -114,13 +102,6 @@ public class TransferModuleApis
         var response = await service.GetDefinitionBulkAsync(workflowName, cancellationToken);
         return ApiResult.CreateResult(response);
     }
-
-    public static async Task<IResult> GetDefinitionFromLegacyToNewBulkAsync([FromServices] TransferService service, [FromRoute(Name = "workflowName")] string workflowName, CancellationToken cancellationToken)
-    {
-        var response = await service.GetDefinitionFromLegacyToNewBulkAsync(workflowName, cancellationToken);
-        return ApiResult.CreateResult(response);
-    }
-
     public static async Task<IResult> SaveTransferRequestAsync([FromServices] TransferService service, [FromBody] WorkflowCreateDto data, CancellationToken cancellationToken)
     {
         var response = await service.SaveTransferRequestAsync(data, cancellationToken);

@@ -14,6 +14,7 @@ using Elastic.Apm.NetCoreAll;
 using amorphie.workflow.service.Db;
 using amorphie.workflow;
 using amorphie.core.Middleware.Logging;
+using amorphie.workflow.core.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
@@ -96,7 +97,7 @@ builder.Services.AddDbContext<WorkflowDBContext>
 builder.Services.AddBussinessServices();
 
 ////Request and Response logging purpose
-builder.AddSeriLogWithHttpLogging<AmorphieLogEnricher>();
+builder.WfAddSeriLogWithHttpLogging<WorkflowLogEnricher>();
 
 
 var app = builder.Build();
@@ -106,11 +107,11 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseAllElasticApm(app.Configuration);
 }
-app.UseLoggingHandlerMiddlewares();
+app.WfUseLoggingHandlerMiddlewares();
 
-using var scope = app.Services.CreateScope();
-var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
-db.Database.Migrate();
+// using var scope = app.Services.CreateScope();
+// var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
+// db.Database.Migrate();
 app.MapHealthChecks("/health");
 
 app.UseCloudEvents();
