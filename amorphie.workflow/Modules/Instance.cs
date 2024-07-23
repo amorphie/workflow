@@ -875,7 +875,7 @@ public static class InstanceModule
     static async Task<IResult> getInstanceDataByUserRefAsync(
       [FromServices] WorkflowDBContext context,
       [FromRoute(Name = "workflowName")] string workflowName,
-       [FromHeader(Name = "user-reference")] string? userReference,
+       [FromHeader(Name = "user_reference")] string? userReference,
       CancellationToken cancellationToken
 
   )
