@@ -8,6 +8,7 @@ using amorphie.workflow.core.Extensions;
 using amorphie.workflow.service.Filters;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
+using Elastic.Apm.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -38,11 +39,28 @@ public static class HttpServiceManagerModule
             return Results.BadRequest("InstanceId not provided nor as a GUID");
         }
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, instanceIdAsString);
+
+
         var url = body.GetProperty("url").ToString();
         if (string.IsNullOrEmpty(url))
         {
+
             throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Input parameter 'url' is mandatory");
         }
+
+        var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction ??
+                                      Elastic.Apm.Agent.Tracer.StartTransaction("HttpWorker", ApiConstants.TypeUnknown);
+        var span = transaction.StartSpan($"HttpWorker-{url}", "");
+
+
+        span.SetLabel("HttpWorker.Url", url);
+        span.SetLabel("InstanceId", instanceIdAsString);
+        // foreach (var result in resultList)
+        // {
+        //     var span = transaction.StartSpan($"Rules-{result.Rule.RuleName}", ApiConstants.TypeUnknown);
+        //     span.SetLabel("Rules.", result.)
+        // }
+
         string? acceptHeadersAsString;
         try
         {
@@ -64,29 +82,31 @@ public static class HttpServiceManagerModule
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                span.CaptureException(ex);
+
                 throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Input parameter 'acceptHeaders' is not allowed format");
             }
         }
 
         string httpMethodName;
         //Note: Exception never occurs
-         try
+        try
         {
             httpMethodName = request.Headers["method"].ToString();
-            
+
             if (string.IsNullOrEmpty(httpMethodName))
             {
-                 httpMethodName=body.GetProperty("method")?.ToString() ?? "GET";
+                httpMethodName = body.GetProperty("method")?.ToString() ?? "GET";
             }
-               
+
         }
         catch
         {
             httpMethodName = "GET";
         }
-	
+
         string failureCodes = "5xx";
         try
         {
@@ -132,14 +152,14 @@ public static class HttpServiceManagerModule
         {
             responseBody = "";
             Log.Fatal("Exception while reading response body: Exception : {Ex}", ex);
-
+            span.CaptureException(ex);
         }
         if (FailureCodesControl(failureCodes, statusCode))
         {
             throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: responseBody);
         }
         var messageVariables = CreateMessageVariables(responseBody, statusCode, content, url);
-
+        span.End();
         return Results.Ok(messageVariables);
     }
     private static bool FailureCodesControl(string failureCodes, string statusCode)
