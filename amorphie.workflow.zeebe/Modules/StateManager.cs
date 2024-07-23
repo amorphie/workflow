@@ -7,6 +7,7 @@ using amorphie.workflow.core.Models;
 using amorphie.workflow.service.Db.Abstracts;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
+using Elastic.Apm.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,15 @@ public static class StateManagerModule
         )
     {
         WorkerBody body = JsonObjectConverter.JsonToWorkerBody(jsonBody);
+
+        var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction ??
+                              Elastic.Apm.Agent.Tracer.StartTransaction("HttpWorker", ApiConstants.TypeUnknown);
+        var span = transaction.StartSpan($"SetState-{body.InstanceId}", "");
+
+
+        span.SetLabel("SetState.Url", body.LastTransition);
+        span.SetLabel("InstanceId", body.InstanceId.ToString());
+
         var targetState = request.Headers["TARGET_STATE"].ToString();
 
         string pageUrl = request.Headers["PAGE_URL"].ToString();
@@ -139,6 +149,8 @@ public static class StateManagerModule
 
         if (instance is null)
         {
+            span.End();
+
             return Results.Problem($"Instance not found with instance id : {body.InstanceId} ");
             //throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
         }
@@ -171,6 +183,8 @@ public static class StateManagerModule
             , cancellationToken);
             if (targetStateAsState == null)
             {
+                span.End();
+
                 return Results.Problem($"Target state is not provided ");
                 //throw new ZeebeBussinesException(errorMessage: $"Target state is not provided ");
             }
@@ -212,15 +226,21 @@ public static class StateManagerModule
             ).Include(i => i.ToState).ThenInclude(t => t!.Transitions).FirstOrDefaultAsync(cancellationToken);
 
         }
+        span.SetLabel("SetState.Url", targetState);
+
         //var transitionData = JsonSerializer.Deserialize<dynamic>(body.GetProperty("LastTransitionData").ToString());
         if (transition is null)
         {
+            span.End();
+
             return Results.Problem($"Transition not found with transition name : {body.LastTransition} ");
             //throw new ZeebeBussinesException(errorMessage: $"Transition not found with transition name : {transitionName} ");
         }
 
         if (!IsTargetState && transition != null && transition.ToStateName is null)
         {
+            span.End();
+
             return Results.Problem($"Target state is not provided nor defined on transition");
             //throw new ZeebeBussinesException(errorMessage: $"Target state is not provided nor defined on transition");
         }
@@ -307,6 +327,7 @@ public static class StateManagerModule
 
             await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
         }
+        span.End();
         return Results.Ok(createMessageVariables(newInstanceTransition, body.LastTransition, data));
     }
     private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, WorkerBodyTrxDatas _data)
