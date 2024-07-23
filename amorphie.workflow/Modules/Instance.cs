@@ -159,7 +159,7 @@ public static class InstanceModule
              return operation;
          });
 
-        app.MapGet("/workflow/instance/userref/{workflowName}/data", getInstanceDataByUserRefAsync
+        app.MapGet("/workflow/instance/user/{workflowName}/data", getInstanceDataByUserRefAsync
          )
          .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
          .Produces(StatusCodes.Status404NotFound)
