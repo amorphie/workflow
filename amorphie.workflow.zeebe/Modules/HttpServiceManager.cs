@@ -42,16 +42,16 @@ public static class HttpServiceManagerModule
 
 
         var url = body.GetProperty("url").ToString();
-        if (string.IsNullOrEmpty(url))
-        {
-
-            throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Input parameter 'url' is mandatory");
-        }
 
         var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction ??
                                       Elastic.Apm.Agent.Tracer.StartTransaction("HttpWorker", ApiConstants.TypeUnknown);
         var span = transaction.StartSpan($"HttpWorker-{url}", "");
 
+        if (string.IsNullOrEmpty(url))
+        {
+            span.End();
+            throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Input parameter 'url' is mandatory");
+        }
 
         span.SetLabel("HttpWorker.Url", url);
         span.SetLabel("InstanceId", instanceIdAsString);
