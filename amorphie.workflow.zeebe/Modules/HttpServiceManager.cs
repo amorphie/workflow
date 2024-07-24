@@ -1,13 +1,10 @@
-using System.Dynamic;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Web;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Extensions;
 using amorphie.workflow.service.Filters;
 using amorphie.workflow.service.Zeebe;
-using Dapr.Client;
 using Elastic.Apm.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -45,16 +42,20 @@ public static class HttpServiceManagerModule
 
         var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction ??
                                       Elastic.Apm.Agent.Tracer.StartTransaction("HttpWorker", ApiConstants.TypeUnknown);
-        var span = transaction.StartSpan($"HttpWorker-{url}", "");
+        transaction.SetLabel(ZeebeVariableKeys.InstanceId, instanceIdAsString);
+        // var span = transaction.StartSpan($"HttpWorker-{url}", "");
+        // span.SetLabel("InstanceId", instanceIdAsString);
 
         if (string.IsNullOrEmpty(url))
         {
-            span.End();
+            // span.End();
             throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Input parameter 'url' is mandatory");
         }
+        transaction.SetLabel(ZeebeVariableKeys.Url, url);
 
-        span.SetLabel("HttpWorker.Url", url);
-        span.SetLabel("InstanceId", instanceIdAsString);
+
+
+        // span.SetLabel("HttpWorker.Url", url);
         // foreach (var result in resultList)
         // {
         //     var span = transaction.StartSpan($"Rules-{result.Rule.RuleName}", ApiConstants.TypeUnknown);
@@ -84,11 +85,14 @@ public static class HttpServiceManagerModule
             }
             catch (Exception ex)
             {
-                span.CaptureException(ex);
+                transaction.CaptureException(ex);
 
                 throw new ZeebeBussinesException(errorCode: "400", errorMessage: "Input parameter 'acceptHeaders' is not allowed format");
             }
+            transaction.SetLabel("acceptHeaders", acceptHeadersAsString);
         }
+
+
 
         string httpMethodName;
         //Note: Exception never occurs
@@ -106,6 +110,8 @@ public static class HttpServiceManagerModule
         {
             httpMethodName = "GET";
         }
+        transaction.SetLabel("httpMethodName", httpMethodName);
+
 
         string failureCodes = "5xx";
         try
@@ -119,6 +125,9 @@ public static class HttpServiceManagerModule
             //failureCodes already has default
         }
 
+        transaction.SetLabel("failureCodes", failureCodes);
+
+
         string content = string.Empty;
         try
         {
@@ -128,6 +137,10 @@ public static class HttpServiceManagerModule
         {
             //content already has default
         }
+
+        transaction.SetLabel("body", content);
+
+
 
         var serialized = new StringContent(content, Encoding.UTF8, "application/json");
         string authorizationHeader = string.Empty;
@@ -152,14 +165,18 @@ public static class HttpServiceManagerModule
         {
             responseBody = "";
             Log.Fatal("Exception while reading response body: Exception : {Ex}", ex);
-            span.CaptureException(ex);
+            transaction.CaptureException(ex);
+
         }
+        transaction.SetLabel("response", responseBody);
+        transaction.SetLabel("statusCode", statusCode);
+
         if (FailureCodesControl(failureCodes, statusCode))
         {
             throw new ZeebeBussinesException(errorCode: statusCode, errorMessage: responseBody);
         }
         var messageVariables = CreateMessageVariables(responseBody, statusCode, content, url);
-        span.End();
+        // span.End();
         return Results.Ok(messageVariables);
     }
     private static bool FailureCodesControl(string failureCodes, string statusCode)

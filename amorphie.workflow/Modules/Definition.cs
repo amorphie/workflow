@@ -1535,7 +1535,7 @@ CancellationToken cancellationToken
                 }
 
             }
-            if (data.allowedSuffix?.Length == 0 && existingRecord.AllowedSuffix.Length > 0)
+            if (data.allowedSuffix?.Length == 0 && existingRecord.AllowedSuffix?.Length > 0)
             {
                 hasChanges = true;
                 existingRecord.AllowedSuffix = [];
