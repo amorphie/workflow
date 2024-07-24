@@ -300,7 +300,7 @@ public static class InstanceModule
     }
     private static GetRecordWorkflowInit getRecordWorkflowInit(State currentState, string? suffix, string type, string language, string role)
     {
-        string navigationType = amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.PushReplacement);
+        string navigationType = amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.Push);
         UiForm? uiform = currentState.UiForms.FirstOrDefault(s => s.TypeofUiEnum.ToString().ToLower() == type && s.Role == role);
         if (uiform == null)
         {
@@ -308,7 +308,7 @@ public static class InstanceModule
         }
         if (uiform != null)
         {
-            navigationType = amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(uiform.Navigation.GetValueOrDefault(NavigationType.PushReplacement));
+            navigationType = amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(uiform.Navigation.GetValueOrDefault(NavigationType.Push));
         }
         var initDto = new GetRecordWorkflowInit()
         {
