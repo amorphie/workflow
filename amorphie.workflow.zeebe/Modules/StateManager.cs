@@ -40,17 +40,19 @@ public static class StateManagerModule
              IConfiguration configuration
         )
     {
-        WorkerBody body = JsonObjectConverter.JsonToWorkerBody(jsonBody);
-
         var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction ??
-                              Elastic.Apm.Agent.Tracer.StartTransaction("HttpWorker", ApiConstants.TypeUnknown);
-        var span = transaction.StartSpan($"SetState-{body.InstanceId}", "");
+                                      Elastic.Apm.Agent.Tracer.StartTransaction("HttpWorker", ApiConstants.TypeUnknown);
+        WorkerBody body = JsonObjectConverter.JsonToWorkerBody(jsonBody);
+        transaction.SetLabel("body", jsonBody.ToJsonString());
 
 
-        span.SetLabel("SetState.Url", body.LastTransition);
-        span.SetLabel("InstanceId", body.InstanceId.ToString());
+        transaction.SetLabel("SetState.Url", body.LastTransition);
+        transaction.SetLabel("InstanceId", body.InstanceId.ToString());
 
         var targetState = request.Headers["TARGET_STATE"].ToString();
+
+        transaction.SetLabel("targetState", targetState);
+
 
         string pageUrl = request.Headers["PAGE_URL"].ToString();
         if (string.IsNullOrEmpty(pageUrl))
@@ -63,6 +65,8 @@ public static class StateManagerModule
         string notifyClientString = request.Headers["NOTIFY_CLIENT"].ToString();
         bool notifyClient = true;
         string pageLanguage = request.Headers["PAGE_LANGUAGE"].ToString();
+
+        transaction.SetLabel("Headers", string.Join(',', request.Headers.Select(p => p.Key + " : " + p.Value)));
 
 
         if (!string.IsNullOrEmpty(pageUrl) && string.IsNullOrEmpty(pageOperationTypeString))
@@ -93,6 +97,7 @@ public static class StateManagerModule
         {
             processInstanceKey = 0;
         }
+
 
         if (!string.IsNullOrEmpty(notifyClientString))
         {
@@ -149,12 +154,15 @@ public static class StateManagerModule
 
         if (instance is null)
         {
-            span.End();
+            // span.End();
 
             return Results.Problem($"Instance not found with instance id : {body.InstanceId} ");
             //throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
         }
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, body.InstanceId.ToString());
+        transaction.SetLabel("WorkflowName", instance.WorkflowName);
+        transaction.SetLabel(ZeebeVariableKeys.LastTransition, body.LastTransition);
+
 
 
 
@@ -183,7 +191,7 @@ public static class StateManagerModule
             , cancellationToken);
             if (targetStateAsState == null)
             {
-                span.End();
+                // span.End();
 
                 return Results.Problem($"Target state is not provided ");
                 //throw new ZeebeBussinesException(errorMessage: $"Target state is not provided ");
@@ -226,12 +234,12 @@ public static class StateManagerModule
             ).Include(i => i.ToState).ThenInclude(t => t!.Transitions).FirstOrDefaultAsync(cancellationToken);
 
         }
-        span.SetLabel("SetState.Url", targetState);
+        // span.SetLabel("SetState.Url", targetState);
 
         //var transitionData = JsonSerializer.Deserialize<dynamic>(body.GetProperty("LastTransitionData").ToString());
         if (transition is null)
         {
-            span.End();
+            // span.End();
 
             return Results.Problem($"Transition not found with transition name : {body.LastTransition} ");
             //throw new ZeebeBussinesException(errorMessage: $"Transition not found with transition name : {transitionName} ");
@@ -239,7 +247,7 @@ public static class StateManagerModule
 
         if (!IsTargetState && transition != null && transition.ToStateName is null)
         {
-            span.End();
+            // span.End();
 
             return Results.Problem($"Target state is not provided nor defined on transition");
             //throw new ZeebeBussinesException(errorMessage: $"Target state is not provided nor defined on transition");
@@ -327,7 +335,7 @@ public static class StateManagerModule
 
             await client.InvokeMethodAsync<string>(responseSignalRMFAType, cancellationToken);
         }
-        span.End();
+        // span.End();
         return Results.Ok(createMessageVariables(newInstanceTransition, body.LastTransition, data));
     }
     private static dynamic createMessageVariables(InstanceTransition instanceTransition, string _transitionName, WorkerBodyTrxDatas _data)
@@ -383,7 +391,7 @@ public static class StateManagerModule
             }
             if (data == null)
             {
-                Log.Warning($"Data is still null for -got-first- {updateName} in {body.WorkerBodyTrxDataList}");
+                Log.Warning($"Data is still null for  {updateName} in {body.WorkerBodyTrxDataList} -got-first-found TRX..Data");
 
                 data = body.WorkerBodyTrxDataList?.FirstOrDefault().Value;
             }
