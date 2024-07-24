@@ -1349,7 +1349,7 @@ CancellationToken cancellationToken
 
         #region Check Type 100 existence
         var startTypeState = await context.States.FirstOrDefaultAsync(p => p.WorkflowName == definition && p.Type == StateType.Start);
-        if (startTypeState != null && startTypeState.Name != data.name)
+        if (startTypeState != null && startTypeState.Name != data.name && data.type == StateType.Start)
         {
             return Results.Problem("There is already start type (100) state exist for " + definition + " named flow");
         }
