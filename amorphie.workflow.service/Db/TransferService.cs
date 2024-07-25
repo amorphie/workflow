@@ -83,7 +83,7 @@ public class TransferService
         };
     }
 
-    public async Task<Response<WorkflowCreateDto>> GetDefinitionBulkAsync(string workflowName,  CancellationToken cancellationToken)
+    public async Task<Response<WorkflowCreateDto>> GetDefinitionBulkAsync(string workflowName, CancellationToken cancellationToken)
     {
         var workflow = await GetWorkflowForLegacyAsync(workflowName, cancellationToken);
 
@@ -95,78 +95,10 @@ public class TransferService
             };
         }
         var workflowDto = SetWorkflowCreateDtoBaseProps(workflow);
-        if (workflow.States.SelectMany(p => p.FromStates).Count() > 0)
-        {
-            workflowDto.NewStates = StateMapper.Map(workflow.States);
-        }
-        else
-        {
-            workflowDto.States = StateMapperLegacy.Map(workflow.States);
-        }
+
+        workflowDto.States = StateMapperLegacy.Map(workflow.States);
+
         workflowDto.Hash = Md5.Generate(workflowDto);
-        return new Response<WorkflowCreateDto>
-        {
-            Data = workflowDto,
-            Result = new Result(amorphie.core.Enums.Status.Success, "")
-        };
-    }
-
-    public async Task<Response<WorkflowCreateDto>> GetDefinitionFromLegacyToNewBulkAsync(string workflowName, CancellationToken cancellationToken)
-    {
-        var workflow = await GetWorkflowForLegacyAsync(workflowName, cancellationToken);
-
-        if (workflow == null)
-        {
-            return new Response<WorkflowCreateDto>
-            {
-                Result = new Result(amorphie.core.Enums.Status.Error, "Workflow Not found")
-            };
-        }
-        var stateNames = workflow.States.Select(s => s.Name).ToList();
-
-        //Add transition as state
-        var transitionFromState = await _dbContext.Transitions
-        .Include(p => p.FromState)
-        .Include(p => p.Titles)
-        .Include(p => p.Forms)
-        .Include(p => p.Flow)
-
-        .Where(p => stateNames.Contains(p.FromStateName) || stateNames.Contains(p.ToStateName)).ToListAsync();
-        List<StateCreateDto> statesList = new List<StateCreateDto>();
-        if (transitionFromState.Any())
-        {
-            foreach (var trx in transitionFromState)
-            {
-                //Trx -> To State
-                var newState = MapStateCreateDtoFromTrx(trx);
-                //From State -> To Trx
-                if (trx.Name != trx.FromStateName)
-                {
-
-                    var fromState = statesList.FirstOrDefault(p => p.Name == trx.FromStateName);
-                    if (fromState == null)
-                    {
-                        fromState = StateMapper.Map(trx.FromState);
-
-                        statesList.Add(fromState);
-                    }
-                    var isDefault = fromState.ToStates.Count == 0;
-                    var stateRouteForFrom = new StateRouteDto(trx.Name!, isDefault);
-                    fromState.ToStates.Add(stateRouteForFrom);
-
-
-                }
-                statesList.Add(newState);
-            }
-        }
-
-        var workflowDto = new WorkflowCreateDto
-        {
-
-            Name = workflow.Name,
-            NewStates = statesList
-        };
-
         return new Response<WorkflowCreateDto>
         {
             Data = workflowDto,
@@ -190,8 +122,8 @@ public class TransferService
             SubjectName = workflowDto.Name,
             TransferStatus = TransferStatus.WaitingForApproval,
             TransferringType = nameof(Workflow),
-            SemVer=workflowDto.SemVer
-            
+            SemVer = workflowDto.SemVer
+
         };
         _dbContext.TransferHistories.Add(transferHistroy);
         await _dbContext.SaveChangesAsync();
@@ -223,7 +155,7 @@ public class TransferService
             // {
             //     return Response.Error("Request body must not be modified before save");
             // }
-            var saveResponse = await _workflowService.SaveAsync(workflowDto!,cancellationToken);
+            var saveResponse = await _workflowService.SaveAsync(workflowDto!, cancellationToken);
             transferHistroy.TransferStatus = TransferStatus.Approved;
         }
         else
@@ -238,7 +170,7 @@ public class TransferService
         try
         {
             var clientHttp = new HttpClient();
-          HttpResponseMessage  responseFrom = await clientHttp.GetAsync(transferModel.TransferFromUrl + "/0/10?query=" + transferModel.TemplateName);
+            HttpResponseMessage responseFrom = await clientHttp.GetAsync(transferModel.TransferFromUrl + "/0/10?query=" + transferModel.TemplateName);
             bool saveFlag = false;
             TemplateEngineTemplateDefinitions? formFrom = null;
             if (responseFrom.StatusCode == System.Net.HttpStatusCode.OK)
@@ -263,31 +195,31 @@ public class TransferService
                 }
 
             }
-            if (saveFlag&&formFrom != null)
+            if (saveFlag && formFrom != null)
             {
-                    var serializeRequest = JsonSerializer.Serialize(formFrom);
+                var serializeRequest = JsonSerializer.Serialize(formFrom);
 
-                    HttpResponseMessage response = await clientHttp.PostAsync(transferModel.TransferToUrl, new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json"));
-                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                HttpResponseMessage response = await clientHttp.PostAsync(transferModel.TransferToUrl, new StringContent(serializeRequest, System.Text.Encoding.UTF8, "application/json"));
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var transferHistroy = new TransferHistory
                     {
-                             var transferHistroy = new TransferHistory
-        {
-            Hash = "",
-            RequestBody =serializeRequest,
-            SubjectName = formFrom.name,
-            TransferStatus = TransferStatus.Approved,
-            TransferringType = nameof(TemplateEngineRequest),
-            SemVer=formFrom.semanticVersion
-            
-        };
-        await _dbContext.TransferHistories.AddAsync(transferHistroy);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-                        return new Response<TemplateEngineTemplateDefinitions>
-                        {
-                            Data = formFrom,
-                            Result = new Result(amorphie.core.Enums.Status.Success, string.Empty)
-                        };
-                    }
+                        Hash = "",
+                        RequestBody = serializeRequest,
+                        SubjectName = formFrom.name,
+                        TransferStatus = TransferStatus.Approved,
+                        TransferringType = nameof(TemplateEngineRequest),
+                        SemVer = formFrom.semanticVersion
+
+                    };
+                    await _dbContext.TransferHistories.AddAsync(transferHistroy);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    return new Response<TemplateEngineTemplateDefinitions>
+                    {
+                        Data = formFrom,
+                        Result = new Result(amorphie.core.Enums.Status.Success, string.Empty)
+                    };
+                }
             }
 
 
@@ -308,15 +240,15 @@ public class TransferService
     public async Task<Response<List<string>>> GetTemplatesFromLegacyBulkAsync(TemplateListRequestModel requestModel, CancellationToken cancellationToken)
     {
         List<string> templateList = new List<string>();
-        if(requestModel.workflowNames!=null&&requestModel.workflowNames.Any())
+        if (requestModel.workflowNames != null && requestModel.workflowNames.Any())
         {
-             foreach(string workflowName in requestModel.workflowNames)
+            foreach (string workflowName in requestModel.workflowNames)
             {
-                templateList.AddRange(await GetTemplatesFromLegacyAsync(workflowName,requestModel.IsPage,cancellationToken));
+                templateList.AddRange(await GetTemplatesFromLegacyAsync(workflowName, requestModel.IsPage, cancellationToken));
             }
         }
-        
-        if(requestModel.extraTemplates!=null&&requestModel.extraTemplates.Any())
+
+        if (requestModel.extraTemplates != null && requestModel.extraTemplates.Any())
         {
             templateList.AddRange(requestModel.extraTemplates);
         }
@@ -331,30 +263,31 @@ public class TransferService
     public async Task<Response<List<TransferHistoryResponseDto>>> GetTransferHistoryAsync(TransferHistoryRequestDto dataSearch, CancellationToken cancellationToken)
     {
 
-        var query = _dbContext!.TransferHistories!.Where(a=>a.TransferStatus==TransferStatus.Approved).AsQueryable();
+        var query = _dbContext!.TransferHistories!.Where(a => a.TransferStatus == TransferStatus.Approved).AsQueryable();
         query = await query.Sort<TransferHistory>(dataSearch.SortColumn ?? "ModifiedAt", dataSearch.SortDirection);
         query = query.Skip(dataSearch.Page * dataSearch.PageSize)
         .Take(dataSearch.PageSize);
-        List<TransferHistoryResponseDto> response =new List<TransferHistoryResponseDto>();
+        List<TransferHistoryResponseDto> response = new List<TransferHistoryResponseDto>();
 
         if (!string.IsNullOrEmpty(dataSearch.Keyword))
         {
-            query = query.AsNoTracking().Where(p =>p.SubjectName==dataSearch.Keyword);
+            query = query.AsNoTracking().Where(p => p.SubjectName == dataSearch.Keyword);
         }
         if (!string.IsNullOrEmpty(dataSearch.TransferringType))
         {
-            query = query.AsNoTracking().Where(p =>p.TransferringType==dataSearch.TransferringType);
+            query = query.AsNoTracking().Where(p => p.TransferringType == dataSearch.TransferringType);
         }
         if (await query.CountAsync(cancellationToken) > 0)
         {
-            response =await query.Select(s => new TransferHistoryResponseDto(){
-                CreatedAt=s.CreatedAt,
-                FinishedAt=s.ModifiedAt,
-                 SubjectName=s.SubjectName,
-                  TransferringType=s.TransferringType,
-                  SemVer=s.SemVer,
-                  CreatedBy=s.CreatedBy
-                  
+            response = await query.Select(s => new TransferHistoryResponseDto()
+            {
+                CreatedAt = s.CreatedAt,
+                FinishedAt = s.ModifiedAt,
+                SubjectName = s.SubjectName,
+                TransferringType = s.TransferringType,
+                SemVer = s.SemVer,
+                CreatedBy = s.CreatedBy
+
             }).ToListAsync(cancellationToken);
 
         }
@@ -373,30 +306,30 @@ public class TransferService
     {
         return pages.Where(s => s.Pages != null).SelectMany(s => s.Pages!).Select(s => s.Label).ToList();
     }
-    private  async Task<List<string>> GetTemplatesFromLegacyAsync(string workflowName,bool IsPage, CancellationToken cancellationToken)
+    private async Task<List<string>> GetTemplatesFromLegacyAsync(string workflowName, bool IsPage, CancellationToken cancellationToken)
     {
-      
+
         var stateList = await GetWorkflowForTemplateLegacyAsync(workflowName, cancellationToken);
-         List<string> templateList = new List<string>();
-        if (stateList == null||!stateList.Any())
+        List<string> templateList = new List<string>();
+        if (stateList == null || !stateList.Any())
         {
             return templateList;
         }
         foreach (State state in stateList)
-        {   
+        {
             if (state.UiForms != null)
             {
-                List<string> uiFormTemplates=GetTemplateFromUiForms(state.UiForms);
-               
-                if(state.AllowedSuffix!=null&&state.AllowedSuffix.Any())
+                List<string> uiFormTemplates = GetTemplateFromUiForms(state.UiForms);
+
+                if (state.AllowedSuffix != null && state.AllowedSuffix.Any())
                 {
                     foreach (string suffix in state.AllowedSuffix)
                     {
-                        string suffixWith="-"+suffix;
-                        uiFormTemplates.AddRange(uiFormTemplates.Select(s=>s+suffixWith).ToList());
+                        string suffixWith = "-" + suffix;
+                        uiFormTemplates.AddRange(uiFormTemplates.Select(s => s + suffixWith).ToList());
                     }
                 }
-                 templateList.AddRange(uiFormTemplates);
+                templateList.AddRange(uiFormTemplates);
             }
             if (state.Transitions != null && state.Transitions.Any())
             {
@@ -405,25 +338,25 @@ public class TransferService
                 templateList.AddRange(GetTemplateFromUiForms(uiForms));
                 var pages = state.Transitions.Where(s => s.Page != null)
                 .Select(s => s.Page!).Distinct().ToList();
-                 templateList.AddRange(GetTemplateFromPages(pages));
+                templateList.AddRange(GetTemplateFromPages(pages));
             }
         }
-        if(IsPage)
+        if (IsPage)
         {
-             List<string> InstanceIdList=await _dbContext.Instances.Where(w=>w.WorkflowName==workflowName).Select(s=>
-             s.Id.ToString()).ToListAsync(cancellationToken);
-                // string workflowNameFromPage = "\"workflowName\":\""+workflowName+"\"";
-              templateList.AddRange(await _dbContext.SignalRResponses.Where(w =>w.routeChange==true&&!string.IsNullOrEmpty(w.data)
-                &&InstanceIdList.Any(a=>a==w.InstanceId)
-              &&!string.IsNullOrEmpty(w.pageUrl))
-              .Select(s => s.pageUrl??string.Empty).Distinct().ToListAsync(cancellationToken));
+            List<string> InstanceIdList = await _dbContext.Instances.Where(w => w.WorkflowName == workflowName).Select(s =>
+            s.Id.ToString()).ToListAsync(cancellationToken);
+            // string workflowNameFromPage = "\"workflowName\":\""+workflowName+"\"";
+            templateList.AddRange(await _dbContext.SignalRResponses.Where(w => w.routeChange == true && !string.IsNullOrEmpty(w.data)
+              && InstanceIdList.Any(a => a == w.InstanceId)
+            && !string.IsNullOrEmpty(w.pageUrl))
+            .Select(s => s.pageUrl ?? string.Empty).Distinct().ToListAsync(cancellationToken));
         }
         return templateList;
     }
-     private async Task<List<State>?> GetWorkflowForTemplateLegacyAsync(string workflowName, CancellationToken cancellationToken)
+    private async Task<List<State>?> GetWorkflowForTemplateLegacyAsync(string workflowName, CancellationToken cancellationToken)
     {
-        return await _dbContext.States.Where(w=>w.WorkflowName==workflowName).Include(s=>s.UiForms).ThenInclude(s=>s.Forms)
-        .Include(s=>s.Transitions).ThenInclude(s=>s.UiForms).ThenInclude(s=>s.Forms).ToListAsync(cancellationToken);
+        return await _dbContext.States.Where(w => w.WorkflowName == workflowName).Include(s => s.UiForms).ThenInclude(s => s.Forms)
+        .Include(s => s.Transitions).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms).ToListAsync(cancellationToken);
     }
     private async Task<Workflow?> GetWorkflowForLegacyAsync(string workflowName, CancellationToken cancellationToken)
     {
@@ -434,6 +367,7 @@ public class TransferService
              .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Forms)
              .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Titles)
              .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Flow)
+             .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms)
              .Include(x => x.States).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms)
              .Include(x => x.States).ThenInclude(s => s.PublicForms)
              .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s!.Pages)
@@ -540,7 +474,7 @@ public class TransferService
             Name = workflow.Name,
             Titles = workflow.Titles.Select(title => ManuelMultilanguageMapper.Map(title)).ToList(),
             Tags = workflow.Tags,
-            SemVer=workflow.SemVer,
+            SemVer = workflow.SemVer,
             RecordId = workflow.RecordId.HasValue ? workflow.RecordId.Value : Guid.Empty,
             Entities = workflow.Entities.Select(e => new WorkflowEntityDto
             {

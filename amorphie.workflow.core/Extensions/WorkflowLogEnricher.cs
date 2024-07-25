@@ -55,10 +55,10 @@ public class WorkflowLogEnricher : ILogEventEnricher
                 if (instanceId != null)
                 {
                     AddPropertyIfAbsent($"correlation.{InstanceId}", instanceId);
-                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                                        "ElasticApmTransactionId", instanceId));
-                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                                        "ElasticApmSpanId", instanceId));
+                    //_logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                    //                    "ElasticApmTransactionId", instanceId));
+                    //_logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                    //                    "ElasticApmSpanId", instanceId));
                 }
                 // else if (Agent.IsConfigured)
                 // {

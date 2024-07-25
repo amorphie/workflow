@@ -58,7 +58,7 @@ public static class DefinitionModule
        .WithDescription("Returns existing workflows with metadata.Query parameter reference is can contain request or order reference of workflow.")
        .Produces<GetWorkflowDefinition[]>(StatusCodes.Status200OK)
        .Produces(StatusCodes.Status404NotFound);
-       
+
         app.MapGet("/workflow/definition/search/names", getAllWorkflowNameWithFullTextSearch)
                .WithOpenApi(operation =>
             {
@@ -338,15 +338,15 @@ public static class DefinitionModule
 
 
     }
-  async  static Task<IResult> saveDefinition(
-      [FromBody] PostWorkflowDefinitionRequest data,
-      [FromServices] WorkflowDBContext context,
-      [FromServices] amorphie.workflow.service.Db.VersionService versionService,
-      CancellationToken token,
-      [FromHeader(Name = "Language")] string? language = "en-EN"
-      )
+    async static Task<IResult> saveDefinition(
+        [FromBody] PostWorkflowDefinitionRequest data,
+        [FromServices] WorkflowDBContext context,
+        [FromServices] amorphie.workflow.service.Db.VersionService versionService,
+        CancellationToken token,
+        [FromHeader(Name = "Language")] string? language = "en-EN"
+        )
     {
-        var existingRecord =await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name == data.name,token);
+        var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.Name == data.name, token);
         List<WorkflowEntity> entityList = new List<WorkflowEntity>();
         Guid recordId;
         bool recordIdNull = false;
@@ -382,7 +382,7 @@ public static class DefinitionModule
                     Label = s.label,
                     Language = s.language
                 }).ToList(),
-                IsAllowOneActiveInstance=data.IsAllowOneActiveInstance,
+                IsAllowOneActiveInstance = data.IsAllowOneActiveInstance,
                 IsForbiddenData = data.IsForbiddenData,
                 Entities = entityList,
                 RecordId = recordIdNull ? null : recordId,
@@ -394,12 +394,12 @@ public static class DefinitionModule
                     Label = s.label
                 }).ToList() : new List<Translation>()
             };
-            newWorkflow.SemVer=new SemVersion(1,0,0).ToString();
-           
-            await context!.Workflows!.AddAsync(newWorkflow,token);
-            
+            newWorkflow.SemVer = new SemVersion(1, 0, 0).ToString();
+
+            await context!.Workflows!.AddAsync(newWorkflow, token);
+
             await context.SaveChangesAsync(token);
-            await versionService.SaveVersionWorkflow(newWorkflow.Name,newWorkflow.SemVer,token);
+            await versionService.SaveVersionWorkflow(newWorkflow.Name, newWorkflow.SemVer, token);
             return Results.Created($"/workflow/definition/{data.name}", data);
 
         }
@@ -413,11 +413,11 @@ public static class DefinitionModule
                 existingRecord.Tags = data.tags;
                 existingRecord.WorkflowStatus = data.status;
             }
-            if(existingRecord.IsAllowOneActiveInstance!=data.IsAllowOneActiveInstance)
+            if (existingRecord.IsAllowOneActiveInstance != data.IsAllowOneActiveInstance)
             {
                 hasChanges = true;
                 existingRecord.ModifiedAt = DateTime.UtcNow;
-                existingRecord.IsAllowOneActiveInstance=data.IsAllowOneActiveInstance;
+                existingRecord.IsAllowOneActiveInstance = data.IsAllowOneActiveInstance;
             }
             if (!recordIdNull && existingRecord.RecordId != recordId)
             {
@@ -510,15 +510,16 @@ public static class DefinitionModule
             }
 
             if (hasChanges)
-            {   if(string.IsNullOrEmpty(existingRecord.SemVer))
+            {
+                if (string.IsNullOrEmpty(existingRecord.SemVer))
                 {
-                    existingRecord.SemVer=new SemVersion(1,0,0).ToString();
+                    existingRecord.SemVer = new SemVersion(1, 0, 0).ToString();
                 }
-                SemVersion version= SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
-                version=version.WithMajor(version.Major+1);
-                existingRecord.SemVer=version.ToString();
+                SemVersion version = SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
+                version = version.WithMajor(version.Major + 1);
+                existingRecord.SemVer = version.ToString();
                 await context!.SaveChangesAsync(token);
-                await versionService.SaveVersionWorkflow(existingRecord.Name,existingRecord.SemVer,token);
+                await versionService.SaveVersionWorkflow(existingRecord.Name, existingRecord.SemVer, token);
                 return Results.Ok();
             }
             else
@@ -569,13 +570,13 @@ public static class DefinitionModule
                      Language = s.language
                  }).ToList() : new List<Translation>()
             };
-            newWorkflow.SemVer=new SemVersion(1,0,0).ToString();
-            await context!.Workflows!.AddAsync(newWorkflow,cancellationToken);
+            newWorkflow.SemVer = new SemVersion(1, 0, 0).ToString();
+            await context!.Workflows!.AddAsync(newWorkflow, cancellationToken);
 
             await context.SaveChangesAsync(cancellationToken);
-            
+
             var resultState = await InsertStateAndTransitions(request, context, cancellationToken);
-            await versionService.SaveVersionWorkflow(newWorkflow.Name,newWorkflow.SemVer,cancellationToken);
+            await versionService.SaveVersionWorkflow(newWorkflow.Name, newWorkflow.SemVer, cancellationToken);
             if (resultState.Status != Status.Success.ToString())
             {
                 return Results.Problem(resultState.Message);
@@ -678,15 +679,15 @@ public static class DefinitionModule
 
             if (hasChanges)
             {
-                if(string.IsNullOrEmpty(existingRecord.SemVer))
+                if (string.IsNullOrEmpty(existingRecord.SemVer))
                 {
-                    existingRecord.SemVer=new SemVersion(1,0,0).ToString();
+                    existingRecord.SemVer = new SemVersion(1, 0, 0).ToString();
                 }
-                SemVersion version= SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
-                version=version.WithMajor(version.Major+1);
-                existingRecord.SemVer=version.ToString();
+                SemVersion version = SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
+                version = version.WithMajor(version.Major + 1);
+                existingRecord.SemVer = version.ToString();
                 await context!.SaveChangesAsync(cancellationToken);
-                await versionService.SaveVersionWorkflow(existingRecord.Name,existingRecord.SemVer,cancellationToken);
+                await versionService.SaveVersionWorkflow(existingRecord.Name, existingRecord.SemVer, cancellationToken);
                 return Results.Ok();
             }
             else
@@ -706,13 +707,13 @@ CancellationToken cancellationToken
         var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.RecordId == data.recordId, cancellationToken);
         if (existingRecord.WorkflowStatus != WorkflowStatus.Deactive)
         {
-             if(string.IsNullOrEmpty(existingRecord.SemVer))
-                {
-                    existingRecord.SemVer=new SemVersion(1,0,0).ToString();
-                }
-                SemVersion version= SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
-                version=version.WithMajor(version.Major+1);
-                existingRecord.SemVer=version.ToString();
+            if (string.IsNullOrEmpty(existingRecord.SemVer))
+            {
+                existingRecord.SemVer = new SemVersion(1, 0, 0).ToString();
+            }
+            SemVersion version = SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
+            version = version.WithMajor(version.Major + 1);
+            existingRecord.SemVer = version.ToString();
             existingRecord.WorkflowStatus = WorkflowStatus.Deactive;
             await context.SaveChangesAsync(cancellationToken);
         }
@@ -727,13 +728,13 @@ CancellationToken cancellationToken
         var existingRecord = await context.Workflows!.Include(s => s.Entities).Include(s => s.HistoryForms).FirstOrDefaultAsync(w => w.RecordId == data.recordId, cancellationToken);
         if (existingRecord.WorkflowStatus != WorkflowStatus.Active)
         {
-             if(string.IsNullOrEmpty(existingRecord.SemVer))
-                {
-                    existingRecord.SemVer=new SemVersion(1,0,0).ToString();
-                }
-                SemVersion version= SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
-                version=version.WithMajor(version.Major+1);
-                existingRecord.SemVer=version.ToString();
+            if (string.IsNullOrEmpty(existingRecord.SemVer))
+            {
+                existingRecord.SemVer = new SemVersion(1, 0, 0).ToString();
+            }
+            SemVersion version = SemVersion.Parse(existingRecord.SemVer, SemVersionStyles.Any);
+            version = version.WithMajor(version.Major + 1);
+            existingRecord.SemVer = version.ToString();
             existingRecord.WorkflowStatus = WorkflowStatus.Active;
             await context.SaveChangesAsync(cancellationToken);
         }
@@ -1253,6 +1254,7 @@ CancellationToken cancellationToken
          forms = st.Forms.Select(sf => new amorphie.workflow.core.Dtos.MultilanguageText(
          sf.Language, sf.Label)).ToArray()
      }).ToArray(),
+     null,
      e.FromStateName!, e.ServiceName, e.FlowName,
      e.Flow != null ? e.Flow.Gateway : null, e.Page == null ? null
      : new PostPageDefinitionRequest(e.Page.Operation, e.Page.Type, e.Page.Pages == null || e.Page.Pages.Count == 0 ? null :
@@ -1266,7 +1268,7 @@ CancellationToken cancellationToken
 ;
         return Results.Ok(states);
     }
-    static  async Task<IResult> deleteState(
+    static async Task<IResult> deleteState(
             [FromServices] WorkflowDBContext context,
              [FromServices] amorphie.workflow.service.Db.VersionService versionService,
             [FromRoute(Name = "name")] string definition,
@@ -1275,7 +1277,7 @@ CancellationToken cancellationToken
                [FromHeader(Name = "Language")] string? language = "en-EN"
         )
     {
-        var existingRecord =await context.States!.Include(w => w.Titles)
+        var existingRecord = await context.States!.Include(w => w.Titles)
         .Include(w => w.Descriptions)
          .Include(w => w.PublicForms)
           .Include(w => w.UiForms).ThenInclude(s => s.Forms)
@@ -1283,7 +1285,7 @@ CancellationToken cancellationToken
         .Include(w => w.Transitions).ThenInclude(s => s.Pages)
         .Include(w => w.Transitions).ThenInclude(s => s.Forms)
         .Include(w => w.Transitions).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms)
-       .FirstOrDefaultAsync(w => w.WorkflowName == definition && w.Name == state,token)
+       .FirstOrDefaultAsync(w => w.WorkflowName == definition && w.Name == state, token)
        ;
 
 
@@ -1306,17 +1308,17 @@ CancellationToken cancellationToken
                 }
             }
             context!.Remove(existingRecord);
-            Workflow? workflow=await context.Workflows.FirstOrDefaultAsync(w=>w.Name==definition,token);
-            if(string.IsNullOrEmpty(workflow!.SemVer))
+            Workflow? workflow = await context.Workflows.FirstOrDefaultAsync(w => w.Name == definition, token);
+            if (string.IsNullOrEmpty(workflow!.SemVer))
             {
-                    workflow.SemVer=new SemVersion(1,0,0).ToString();
+                workflow.SemVer = new SemVersion(1, 0, 0).ToString();
             }
-            SemVersion version= SemVersion.Parse(workflow.SemVer, SemVersionStyles.Any);
-            version=version.WithMinor(version.Minor+1);
-            workflow.SemVer=version.ToString();
+            SemVersion version = SemVersion.Parse(workflow.SemVer, SemVersionStyles.Any);
+            version = version.WithMinor(version.Minor + 1);
+            workflow.SemVer = version.ToString();
             await context.SaveChangesAsync(token);
 
-            await versionService.SaveVersionWorkflow(workflow.Name,version.ToString(),token);
+            await versionService.SaveVersionWorkflow(workflow.Name, version.ToString(), token);
             return Results.Ok();
         }
         else
@@ -1334,20 +1336,30 @@ CancellationToken cancellationToken
         [FromHeader(Name = "Language")] string? language = "en-EN"
         )
     {
-        var workflowControl =await context.Workflows!
-               .FirstOrDefaultAsync(w => w.Name == definition,token)
+        var workflowControl = await context.Workflows!
+               .FirstOrDefaultAsync(w => w.Name == definition, token)
                ;
         if (workflowControl == null)
         {
             return Results.Problem("There is no " + definition + " named flow");
         }
-        var existingRecord =await context.States!.Include(s => s.Titles).Include(s => s.Transitions).Include(s => s.PublicForms)
+        var existingRecord = await context.States!.Include(s => s.Titles).Include(s => s.Transitions).Include(s => s.PublicForms)
         .Include(s => s.UiForms).ThenInclude(s => s.Forms)
                .FirstOrDefaultAsync(w => w.WorkflowName == definition && w.Name == data.name)
                ;
+
+        #region Check Type 100 existence
+        var startTypeState = await context.States.FirstOrDefaultAsync(p => p.WorkflowName == definition && p.Type == StateType.Start);
+        if (startTypeState != null && startTypeState.Name != data.name && data.type == StateType.Start)
+        {
+            return Results.Problem("There is already start type (100) state exist for " + definition + " named flow");
+        }
+        #endregion
+
+
         if (existingRecord == null)
         {
-            var existingRecordControl =await context.States!
+            var existingRecordControl = await context.States!
                .FirstOrDefaultAsync(w => w.Name == data.name)
                ;
             if (existingRecordControl != null)
@@ -1358,7 +1370,7 @@ CancellationToken cancellationToken
             {
                 var controlList = data!.transitions!.Select(s => s.name).ToList();
                 var existingTransitionsControl = await context.Transitions!
-                              .FirstOrDefaultAsync(w => controlList.Any(a => a == w.Name),token)
+                              .FirstOrDefaultAsync(w => controlList.Any(a => a == w.Name), token)
                               ;
                 if (existingTransitionsControl != null)
                 {
@@ -1379,25 +1391,12 @@ CancellationToken cancellationToken
                 SubWorkflowName = string.IsNullOrEmpty(data.subWorkflowName) ? null : data.subWorkflowName,
                 MFAType = data.mfaType,
                 InitPageName = data.type == StateType.Start ? data.initPageName : string.Empty,
-                PublicForms = data.ispublicForm == true && data.publicForms.Any() && data.publicForms.First().forms.Any() ? data.publicForms.FirstOrDefault().forms.Select(s => new Translation()
+                PublicForms = data.ispublicForm == true && data.publicForms?.Count() > 0 && data.publicForms.First().forms?.Count() > 0 ? data.publicForms.FirstOrDefault().forms.Select(s => new Translation()
                 {
 
                     Language = s.language,
                     Label = s.label
                 }).ToList() : null,
-                UiForms = data.ispublicForm == true ? data.publicForms.Select(s => new amorphie.workflow.core.Models.UiForm()
-                {
-                    StateName = data.name,
-                    TypeofUiEnum = s.typeofUi,
-                    Navigation = s.navigationType,
-                    Role=s.role,
-                    Forms = s.forms.Any() ? s.forms.Select(s => new Translation()
-                    {
-
-                        Language = s.language,
-                        Label = s.label
-                    }).ToList() : new List<Translation>() { },
-                }).ToList() : new List<amorphie.workflow.core.Models.UiForm>() { },
                 Transitions = data!.transitions!.Select(x => new Transition
                 {
                     Name = x.name,
@@ -1438,19 +1437,33 @@ CancellationToken cancellationToken
                              Label=x.form!.FirstOrDefault(f=>f.typeofUi==x.typeofUi).forms.FirstOrDefault().label
                             }
                         },
-                    UiForms = x.form == null ? new List<amorphie.workflow.core.Models.UiForm>() { } : x.form.Select(s => new amorphie.workflow.core.Models.UiForm()
+                    UiForms = x.form != null ? x.form.Select(s => new amorphie.workflow.core.Models.UiForm()
                     {
                         TransitionName = x.name,
                         TypeofUiEnum = s.typeofUi,
                         Navigation = s.navigationType,
-                        Role=s.role,
+                        Role = s.role,
                         Forms = s.forms.Any() ? s.forms.Select(s => new Translation()
                         {
 
                             Language = s.language,
                             Label = s.label
                         }).ToList() : new List<Translation>() { }
-                    }).ToList(),
+                    }).ToList()
+                    : x.uiForms != null ? x.uiForms.Select(s => new amorphie.workflow.core.Models.UiForm()
+                    {
+                        TransitionName = x.name,
+                        TypeofUiEnum = s.typeofUi,
+                        Navigation = s.navigationType,
+                        Role = s.role,
+                        Forms = s.forms.Any() ? s.forms.Select(s => new Translation()
+                        {
+
+                            Language = s.language,
+                            Label = s.label
+                        }).ToList() : new List<Translation>() { }
+                    }).ToList() : new List<amorphie.workflow.core.Models.UiForm>() { }
+                    ,
                     HistoryForms = x.historyForms == null ? new List<Translation>() { } : x.historyForms.Select(s => new Translation()
                     {
                         Label = s.label,
@@ -1469,20 +1482,38 @@ CancellationToken cancellationToken
                             }
                         } : new List<Translation>() { }
             };
-            if(string.IsNullOrEmpty(workflowControl!.SemVer))
+            if (newRecord.IsPublicForm == true && data.uiForms != null)
             {
-                workflowControl.SemVer=new SemVersion(1,0,0).ToString();
+
+                newRecord.UiForms = data.uiForms?.Count() > 0 ? data.uiForms.Select(s => new amorphie.workflow.core.Models.UiForm()
+                {
+                    StateName = data.name,
+                    TypeofUiEnum = s.typeofUi,
+                    Navigation = s.navigationType,
+                    Role = s.role,
+                    Forms = s.forms?.Count() > 0 ? s.forms.Select(s => new Translation()
+                    {
+
+                        Language = s.language,
+                        Label = s.label
+                    }).ToList() : new List<Translation>() { },
+                }).ToList() : new List<amorphie.workflow.core.Models.UiForm>() { };
+
             }
-            
-           
-            await context!.States!.AddAsync(newRecord,token);
-            SemVersion version= SemVersion.Parse(workflowControl.SemVer, SemVersionStyles.Any);
-            version=version.WithMinor(version.Minor+1);
-            workflowControl.SemVer=version.ToString();
+            if (string.IsNullOrEmpty(workflowControl!.SemVer))
+            {
+                workflowControl.SemVer = new SemVersion(1, 0, 0).ToString();
+            }
+
+
+            await context!.States!.AddAsync(newRecord, token);
+            SemVersion version = SemVersion.Parse(workflowControl.SemVer, SemVersionStyles.Any);
+            version = version.WithMinor(version.Minor + 1);
+            workflowControl.SemVer = version.ToString();
 
             // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
             await context.SaveChangesAsync(token);
-            await versionService.SaveVersionWorkflow(workflowControl.Name,version.ToString(),token);
+            await versionService.SaveVersionWorkflow(workflowControl.Name, version.ToString(), token);
             //AutoMapper a alıncak 
             // return new Response<GetStateDefinition>
             // {
@@ -1511,23 +1542,23 @@ CancellationToken cancellationToken
             }
             if (data.allowedSuffix?.Length > 0)
             {
-                if(existingRecord.AllowedSuffix==null)
+                if (existingRecord.AllowedSuffix == null)
                 {
-                      hasChanges = true;
+                    hasChanges = true;
                     existingRecord.AllowedSuffix = data.allowedSuffix;
                 }
-                if(existingRecord.AllowedSuffix==null||(
-                    existingRecord.AllowedSuffix!=null&&data.allowedSuffix.Any(d=>!existingRecord.AllowedSuffix.Any(e=>e==d))))
+                if (existingRecord.AllowedSuffix == null || (
+                    existingRecord.AllowedSuffix != null && data.allowedSuffix.Any(d => !existingRecord.AllowedSuffix.Any(e => e == d))))
                 {
                     hasChanges = true;
                     existingRecord.AllowedSuffix = data.allowedSuffix;
                 }
 
             }
-             if (data.allowedSuffix?.Length ==0 &&existingRecord.AllowedSuffix.Length>0)
+            if (data.allowedSuffix?.Length == 0 && existingRecord.AllowedSuffix?.Length > 0)
             {
                 hasChanges = true;
-                existingRecord.AllowedSuffix =[];
+                existingRecord.AllowedSuffix = [];
 
 
             }
@@ -1559,32 +1590,38 @@ CancellationToken cancellationToken
                 existingRecord.MFAType = data.mfaType;
                 hasChanges = true;
             }
-            List<amorphie.workflow.core.Models.UiForm?> deletedUiForms=new List<amorphie.workflow.core.Models.UiForm?>();
-
-            if (data.publicForms != null && data.publicForms.Any())
+            List<amorphie.workflow.core.Models.UiForm?> deletedUiForms = new List<amorphie.workflow.core.Models.UiForm?>();
+            //public forms komple ismi değiştirilecek
+            var tobeManagedUiForms = data.publicForms;
+            if (data.publicForms == null && data.uiForms != null)
             {
-                foreach (var languageForm in data.publicForms)
+                tobeManagedUiForms = data.uiForms;
+            }
+
+            if (tobeManagedUiForms != null && tobeManagedUiForms.Any())
+            {
+                foreach (var languageForm in tobeManagedUiForms)
                 {
                     amorphie.workflow.core.Models.UiForm? uiForm = existingRecord.UiForms.FirstOrDefault(f => languageForm.typeofUi == f.TypeofUiEnum
-                    &&((string.IsNullOrEmpty(f.Role)&&string.IsNullOrEmpty(languageForm.role))||f.Role==languageForm.role));
+                    && ((string.IsNullOrEmpty(f.Role) && string.IsNullOrEmpty(languageForm.role)) || f.Role == languageForm.role));
                     // ui form not exist with role
                     if (uiForm == null)
                     {
-                       
-                        amorphie.workflow.core.Models.UiForm? uiFormWithoutRole = existingRecord.UiForms.FirstOrDefault(f =>
-                         languageForm.typeofUi == f.TypeofUiEnum&&!deletedUiForms.Any(a=>a.Id==f.Id));
 
-                        if(uiFormWithoutRole!=null)
+                        amorphie.workflow.core.Models.UiForm? uiFormWithoutRole = existingRecord.UiForms.FirstOrDefault(f =>
+                         languageForm.typeofUi == f.TypeofUiEnum && !deletedUiForms.Any(a => a.Id == f.Id));
+
+                        if (uiFormWithoutRole != null)
                         {
-                            bool IsRemove=false;
-                             foreach (var languagePF in languageForm.forms)
+                            bool IsRemove = false;
+                            foreach (var languagePF in languageForm.forms)
                             {
                                 Translation? translation = uiFormWithoutRole.Forms.FirstOrDefault(f => f.Language == languagePF.language);
-                                if (translation?.Label == languagePF.label&&!IsRemove)
+                                if (translation?.Label == languagePF.label && !IsRemove)
                                 {
                                     deletedUiForms.Add(uiFormWithoutRole);
                                     context.Remove(uiFormWithoutRole);
-                                    IsRemove=true;
+                                    IsRemove = true;
                                 }
                             }
                         }
@@ -1594,16 +1631,16 @@ CancellationToken cancellationToken
                             TypeofUiEnum = languageForm.typeofUi,
                             Navigation = languageForm.navigationType,
                             StateName = existingRecord.Name,
-                            Role=languageForm.role,
+                            Role = languageForm.role,
                             Forms = languageForm.forms.Select(s => new Translation()
                             {
                                 Label = s.label,
                                 Language = s.language
                             }).ToList()
                         };
-                        await context.UiForms.AddAsync(uiForm,token);
+                        await context.UiForms.AddAsync(uiForm, token);
                         hasChanges = true;
-                       
+
                     }
                     if (uiForm != null)
                     {
@@ -1645,15 +1682,15 @@ CancellationToken cancellationToken
             }
             foreach (var req in data.transitions)
             {
-                Transition? existingTransition =await context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
+                Transition? existingTransition = await context.Transitions.Include(s => s.Titles).Include(s => s.Forms).Include(s => s.Flow)
                 .Include(s => s.Page).ThenInclude(t => t.Pages)
                   .Include(s => s.UiForms).ThenInclude(s => s.Forms)
-                .FirstOrDefaultAsync(db => db.Name == req.name && db.FromStateName == existingRecord.Name,token);
+                .FirstOrDefaultAsync(db => db.Name == req.name && db.FromStateName == existingRecord.Name, token);
                 //Kayıdı olmayan Transition ların eklenmesi
                 if (existingTransition == null)
                 {
                     var existingTransitionsControl = await context.Transitions!
-                           .FirstOrDefaultAsync(w => req.name == w.Name,token)
+                           .FirstOrDefaultAsync(w => req.name == w.Name, token)
                            ;
                     if (existingTransitionsControl != null)
                     {
@@ -1686,18 +1723,32 @@ CancellationToken cancellationToken
                              Label=req.form!.FirstOrDefault(f=>f.typeofUi==req.typeofUi).forms.FirstOrDefault().label
                             }
                         },
-                        UiForms = req.form == null ? new List<amorphie.workflow.core.Models.UiForm>() { } : req.form.Select(s => new amorphie.workflow.core.Models.UiForm()
+                        UiForms = req.form != null ? req.form.Select(s => new amorphie.workflow.core.Models.UiForm()
                         {
                             TransitionName = req.name,
                             TypeofUiEnum = s.typeofUi,
                             Navigation = s.navigationType,
-                            Forms = s.forms.Select(s => new Translation()
+                            Role = s.role,
+                            Forms = s.forms.Any() ? s.forms.Select(s => new Translation()
                             {
 
                                 Language = s.language,
                                 Label = s.label
-                            }).ToList()
-                        }).ToList(),
+                            }).ToList() : new List<Translation>() { }
+                        }).ToList()
+                    : req.uiForms != null ? req.uiForms.Select(s => new amorphie.workflow.core.Models.UiForm()
+                    {
+                        TransitionName = req.name,
+                        TypeofUiEnum = s.typeofUi,
+                        Navigation = s.navigationType,
+                        Role = s.role,
+                        Forms = s.forms.Any() ? s.forms.Select(s => new Translation()
+                        {
+
+                            Language = s.language,
+                            Label = s.label
+                        }).ToList() : new List<Translation>() { }
+                    }).ToList() : new List<amorphie.workflow.core.Models.UiForm>() { },
                         TypeofUi = req.typeofUi,
                         transitionButtonType = req.buttonType,
                         HistoryForms = req.historyForms == null ? new List<Translation>() { } : req.historyForms.Select(s => new Translation
@@ -1721,7 +1772,7 @@ CancellationToken cancellationToken
                         FromStateName = req.fromState,
                         CreatedAt = DateTime.UtcNow,
                         CreatedByBehalfOf = Guid.NewGuid(),
-                    },token);
+                    }, token);
                     hasChanges = true;
                 }
                 if (existingTransition != null)
@@ -1731,7 +1782,7 @@ CancellationToken cancellationToken
                         existingTransition.FlowName = req.message;
                         //Kayıdı olup update edilmesi gereken transitionlar 
                         // existingTransition.FromStateName = req.fromState!;
-                        existingTransition.ToState =await context!.States!.FirstOrDefaultAsync(f => f.Name == req.toState,token);
+                        existingTransition.ToState = await context!.States!.FirstOrDefaultAsync(f => f.Name == req.toState, token);
                         if (existingTransition.ToState != null)
                             existingTransition.ToStateName = req.toState;
                         // existingTransition.FromState = req.fromState!=null?context!.States!.FirstOrDefault(f => f.Name == req.fromState)!:default!;
@@ -1756,7 +1807,7 @@ CancellationToken cancellationToken
                         }
                         else
                         {
-                            ZeebeMessage? zeebeMessage =await context!.ZeebeMessages!.FirstOrDefaultAsync(f => f.Name == req.message,token);
+                            ZeebeMessage? zeebeMessage = await context!.ZeebeMessages!.FirstOrDefaultAsync(f => f.Name == req.message, token);
                             if (zeebeMessage == null)
                             {
 
@@ -1768,7 +1819,7 @@ CancellationToken cancellationToken
                                     Message = req.message!,
                                     Process = definition,
                                 };
-                                await context!.ZeebeMessages.AddAsync(flow,token);
+                                await context!.ZeebeMessages.AddAsync(flow, token);
                                 existingTransition.FlowName = flow.Name;
                                 existingTransition.Flow = flow;
                             }
@@ -1840,85 +1891,90 @@ CancellationToken cancellationToken
 
 
                     }
-                    if (req.form != null)
+                    var trxTobeManagedUiForms = req.form;
+                    if (req.form == null && req.uiForms != null)
                     {
-                          foreach (var languageForm in req.form)
-                {
-                    amorphie.workflow.core.Models.UiForm? uiForm = existingTransition.UiForms.FirstOrDefault(f => languageForm.typeofUi == f.TypeofUiEnum
-                    &&((string.IsNullOrEmpty(f.Role)&&string.IsNullOrEmpty(languageForm.role))||f.Role==languageForm.role));
-                    // ui form not exist with role
-                    if (uiForm == null)
-                    {
-                       
-                        amorphie.workflow.core.Models.UiForm? uiFormWithoutRole = existingTransition.UiForms.FirstOrDefault(f =>
-                         languageForm.typeofUi == f.TypeofUiEnum&&!deletedUiForms.Any(a=>a.Id==f.Id));
-
-                        if(uiFormWithoutRole!=null)
-                        {
-                            bool IsRemove=false;
-                             foreach (var languagePF in languageForm.forms)
-                            {
-                                Translation? translation = uiFormWithoutRole.Forms.FirstOrDefault(f => f.Language == languagePF.language);
-                                if (translation?.Label == languagePF.label&&!IsRemove)
-                                {
-                                    deletedUiForms.Add(uiFormWithoutRole);
-                                    context.Remove(uiFormWithoutRole);
-                                    IsRemove=true;
-                                }
-                            }
-                        }
-
-                        uiForm = new amorphie.workflow.core.Models.UiForm()
-                        {
-                            TypeofUiEnum = languageForm.typeofUi,
-                            Navigation = languageForm.navigationType,
-                            TransitionName = existingTransition.Name,
-                            Role=languageForm.role,
-                            Forms = languageForm.forms.Select(s => new Translation()
-                            {
-                                Label = s.label,
-                                Language = s.language
-                            }).ToList()
-                        };
-                        await context.UiForms.AddAsync(uiForm,token);
-                        hasChanges = true;
-                       
+                        trxTobeManagedUiForms = req.uiForms;
                     }
-                    if (uiForm != null)
+                    if (trxTobeManagedUiForms != null)
                     {
-                        if (languageForm.forms != null && languageForm.forms.Any())
+                        foreach (var languageForm in trxTobeManagedUiForms)
                         {
-                            foreach (var languagePF in languageForm.forms)
+                            amorphie.workflow.core.Models.UiForm? uiForm = existingTransition.UiForms.FirstOrDefault(f => languageForm.typeofUi == f.TypeofUiEnum
+                            && ((string.IsNullOrEmpty(f.Role) && string.IsNullOrEmpty(languageForm.role)) || f.Role == languageForm.role));
+                            // ui form not exist with role
+                            if (uiForm == null)
                             {
-                                Translation? translation = uiForm.Forms.FirstOrDefault(f => f.Language == languagePF.language);
-                                if (translation?.Label != languagePF.label)
-                                {
-                                    translation.Label = languagePF.label;
-                                    hasChanges = true;
-                                }
-                                if (translation == null)
-                                {
 
-                                    uiForm.Forms.Add(new Translation()
+                                amorphie.workflow.core.Models.UiForm? uiFormWithoutRole = existingTransition.UiForms.FirstOrDefault(f =>
+                                 languageForm.typeofUi == f.TypeofUiEnum && !deletedUiForms.Any(a => a.Id == f.Id));
+
+                                if (uiFormWithoutRole != null)
+                                {
+                                    bool IsRemove = false;
+                                    foreach (var languagePF in languageForm.forms)
                                     {
-                                        Label = languagePF.label,
-                                        Language = languagePF.language
-                                    });
-                                    existingTransition.ModifiedAt = DateTime.UtcNow;
-                                    hasChanges = true;
+                                        Translation? translation = uiFormWithoutRole.Forms.FirstOrDefault(f => f.Language == languagePF.language);
+                                        if (translation?.Label == languagePF.label && !IsRemove)
+                                        {
+                                            deletedUiForms.Add(uiFormWithoutRole);
+                                            context.Remove(uiFormWithoutRole);
+                                            IsRemove = true;
+                                        }
+                                    }
                                 }
+
+                                uiForm = new amorphie.workflow.core.Models.UiForm()
+                                {
+                                    TypeofUiEnum = languageForm.typeofUi,
+                                    Navigation = languageForm.navigationType,
+                                    TransitionName = existingTransition.Name,
+                                    Role = languageForm.role,
+                                    Forms = languageForm.forms.Select(s => new Translation()
+                                    {
+                                        Label = s.label,
+                                        Language = s.language
+                                    }).ToList()
+                                };
+                                await context.UiForms.AddAsync(uiForm, token);
+                                hasChanges = true;
+
                             }
+                            if (uiForm != null)
+                            {
+                                if (languageForm.forms != null && languageForm.forms.Any())
+                                {
+                                    foreach (var languagePF in languageForm.forms)
+                                    {
+                                        Translation? translation = uiForm.Forms.FirstOrDefault(f => f.Language == languagePF.language);
+                                        if (translation?.Label != languagePF.label)
+                                        {
+                                            translation.Label = languagePF.label;
+                                            hasChanges = true;
+                                        }
+                                        if (translation == null)
+                                        {
+
+                                            uiForm.Forms.Add(new Translation()
+                                            {
+                                                Label = languagePF.label,
+                                                Language = languagePF.language
+                                            });
+                                            existingTransition.ModifiedAt = DateTime.UtcNow;
+                                            hasChanges = true;
+                                        }
+                                    }
+                                }
+                                if (uiForm.Navigation != languageForm.navigationType)
+                                {
+                                    hasChanges = true;
+                                    uiForm.Navigation = languageForm.navigationType;
+                                }
+
+                            }
+
+
                         }
-                        if (uiForm.Navigation != languageForm.navigationType)
-                        {
-                            hasChanges = true;
-                            uiForm.Navigation = languageForm.navigationType;
-                        }
-
-                    }
-
-
-                }
 
                     }
 
@@ -1966,7 +2022,7 @@ CancellationToken cancellationToken
                         },
                                     Timeout = req.page!.timeout
                                 };
-                                await context.Pages.AddAsync(pageNew,token);
+                                await context.Pages.AddAsync(pageNew, token);
                                 existingTransition.Page = pageNew;
                                 existingTransition.PageId = pageNew.Id;
                                 hasChanges = true;
@@ -1992,7 +2048,7 @@ CancellationToken cancellationToken
                         },
                                 Timeout = req.page!.timeout
                             };
-                            await context.Pages.AddAsync(pageNew,token);
+                            await context.Pages.AddAsync(pageNew, token);
                             existingTransition.Page = pageNew;
                             existingTransition.PageId = pageNew.Id;
                             hasChanges = true;
@@ -2003,16 +2059,16 @@ CancellationToken cancellationToken
             }
             if (hasChanges)
             {
-                if(string.IsNullOrEmpty(workflowControl!.SemVer))
+                if (string.IsNullOrEmpty(workflowControl!.SemVer))
                 {
-                    workflowControl.SemVer=new SemVersion(1,0,0).ToString();
+                    workflowControl.SemVer = new SemVersion(1, 0, 0).ToString();
                 }
-            
-                SemVersion version= SemVersion.Parse(workflowControl.SemVer, SemVersionStyles.Any);
-                version=version.WithPatch(version.Patch+1);
-                workflowControl.SemVer=version.ToString();
+
+                SemVersion version = SemVersion.Parse(workflowControl.SemVer, SemVersionStyles.Any);
+                version = version.WithPatch(version.Patch + 1);
+                workflowControl.SemVer = version.ToString();
                 await context!.SaveChangesAsync(token);
-                 await versionService.SaveVersionWorkflow(workflowControl.Name,version.ToString(),token);
+                await versionService.SaveVersionWorkflow(workflowControl.Name, version.ToString(), token);
                 return Results.Ok(new PostStateDefinitionResponse(data.name));
             }
             else
