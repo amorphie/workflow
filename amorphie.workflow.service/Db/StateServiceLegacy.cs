@@ -122,8 +122,12 @@ public partial class StateService
             trx.FromStateName = trxDto.FromState;
         }
         SaveTitle(trx, trxDto.Titles);
+        
+        if (trxDto.Forms != null && trxDto.Forms.Any())
+        {
+            SaveForm(trx, trxDto.Forms);
+        }
 
-        SaveForm(trx, trxDto.Forms);
         SaveUiForm(trx, trxDto.UiForms);
         SaveZeebeMessage(trx, trxDto, workFlowName);
         UpdatePage(trx, trxDto);
