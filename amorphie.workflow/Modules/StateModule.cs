@@ -113,7 +113,6 @@ public static class StateModule
       [FromServices] IStateService service
       )
     {
-        Log.Error("Error log test");
         var response = await service.GetAsync(workflowName, stateName);
         return ApiResult.CreateResult(response);
     }
