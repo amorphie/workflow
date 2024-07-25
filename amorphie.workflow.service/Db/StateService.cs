@@ -378,7 +378,7 @@ public partial class StateService : IStateService
             if (uiForm == null)
             {
                 uiForm = UiFormMapper.Map(languageForm);
-                uiForm.StateName = transition.Name;
+                uiForm.TransitionName = transition.Name;
                 _dbContext.UiForms.Add(uiForm);
             }
             else
