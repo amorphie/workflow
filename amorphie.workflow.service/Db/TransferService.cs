@@ -367,6 +367,7 @@ public class TransferService
              .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Forms)
              .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Titles)
              .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Flow)
+             .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms)
              .Include(x => x.States).ThenInclude(s => s.UiForms).ThenInclude(s => s.Forms)
              .Include(x => x.States).ThenInclude(s => s.PublicForms)
              .Include(x => x.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.Page).ThenInclude(s => s!.Pages)

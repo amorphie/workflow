@@ -23,7 +23,8 @@ public class TrxMapperLegacy
             ServiceName = transition.ServiceName,
             Message = transition.FlowName,
             Gateway = transition.Flow?.Gateway,
-            Forms = transition.Forms?.Select(t => new core.Dtos.MultilanguageText(t.Language, t.Label)).ToList(),
+            //Forms = transition.Forms?.Select(t => new core.Dtos.MultilanguageText(t.Language, t.Label)).ToList(),
+            UiForms =UiFormMapper.Map(transition.UiForms),
             Titles = transition.Titles?.Select(t => new core.Dtos.MultilanguageText(t.Language, t.Label)).ToList(),
             Page = PageMapper.Map(transition.Page)
         };
