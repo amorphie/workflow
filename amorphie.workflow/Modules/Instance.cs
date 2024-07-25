@@ -614,6 +614,7 @@ public static class InstanceModule
                             forms = st.Forms.Select(sf => new amorphie.workflow.core.Dtos.MultilanguageText(
                             sf.Language, sf.Label)).ToArray()
                         }).ToArray(),
+                        null,
                         t.FromStateName,
                         t.ServiceName,
                         t.FlowName,
@@ -766,6 +767,7 @@ public static class InstanceModule
                            forms = st.Forms.Select(sf => new amorphie.workflow.core.Dtos.MultilanguageText(
                            sf.Language, sf.Label)).ToArray()
                        }).ToArray() : null,
+                       null,
                         t.FromStateName,
                         t.ServiceName,
                         t.FlowName,
