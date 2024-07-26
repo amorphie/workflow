@@ -15,6 +15,7 @@ using amorphie.workflow.service.Db;
 using amorphie.workflow;
 using amorphie.core.Middleware.Logging;
 using amorphie.workflow.core.Extensions;
+using amorphie.workflow.core.ExceptionHandler;
 
 var builder = WebApplication.CreateBuilder(args);
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
@@ -119,6 +120,7 @@ app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
 
+app.UseMiddleware<TraceIdMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
