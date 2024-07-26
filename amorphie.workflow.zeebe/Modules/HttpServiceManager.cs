@@ -43,6 +43,13 @@ public static class HttpServiceManagerModule
         var transaction = Elastic.Apm.Agent.Tracer.CurrentTransaction ??
                                       Elastic.Apm.Agent.Tracer.StartTransaction("HttpWorker", ApiConstants.TypeUnknown);
         transaction.SetLabel(ZeebeVariableKeys.InstanceId, instanceIdAsString);
+
+
+        var outgoingDistributedTracingData = (Elastic.Apm.Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
+        ?? Elastic.Apm.Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData);
+        transaction.SetLabel("outgoingDistributedTracingData", JsonSerializer.Serialize(outgoingDistributedTracingData));
+        transaction.SetLabel("outgoingDistributedTracingData2", outgoingDistributedTracingData?.SerializeToString());
+
         // var span = transaction.StartSpan($"HttpWorker-{url}", "");
         // span.SetLabel("InstanceId", instanceIdAsString);
 
