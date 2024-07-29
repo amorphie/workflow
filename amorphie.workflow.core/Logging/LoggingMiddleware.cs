@@ -71,6 +71,19 @@ public class LoggingMiddleware
         await context.Response.WriteAsync(JsonSerializer.Serialize(errorDto));
     }
 
+    private async Task<string> LogRequest(HttpContext context)
+    {
+        var request = context.Request;
+        var requestLog = new StringBuilder();
+        //requestLog.AppendLine("Incoming Request:");
+        requestLog.AppendLine($"HTTP {request.Method} {request.Path}");
+        requestLog.AppendLine($"Host: {request.Host}");
+        requestLog.AppendLine(await RequestAsTextAsync(context));
+        requestLog.AppendLine($"Content-Type: {request.ContentType}");
+        requestLog.AppendLine($"Content-Length: {request.ContentLength}");
+        return requestLog.ToString();
+    }
+
     private static async Task<string> RequestAsTextAsync(HttpContext httpContext)
     {
         string rawRequestBody = await GetRawBodyAsync(httpContext.Request);
@@ -88,43 +101,24 @@ public class LoggingMiddleware
     private static async Task<string> GetRawBodyAsync(HttpRequest request, Encoding? encoding = null)
     {
         request.EnableBuffering();
-        using var reader = new StreamReader(request.Body, encoding ?? Encoding.UTF8);
+        using var reader = new StreamReader(request.Body, encoding ?? Encoding.UTF8, leaveOpen: true);
         string body = await reader.ReadToEndAsync().ConfigureAwait(false);
         request.Body.Position = 0;
 
         return body;
     }
 
-    private async Task<string> LogRequest(HttpContext context)
-    {
-        var request = context.Request;
-
-        var requestLog = new StringBuilder();
-        requestLog.AppendLine("Incoming Request:");
-        requestLog.AppendLine($"HTTP {request.Method} {request.Path}");
-        requestLog.AppendLine($"Host: {request.Host}");
-        requestLog.AppendLine(await RequestAsTextAsync(context));
-        requestLog.AppendLine($"Content-Type: {request.ContentType}");
-        requestLog.AppendLine($"Content-Length: {request.ContentLength}");
-
-        return requestLog.ToString();
-        //_logger.LogInformation(requestLog.ToString());
-    }
 
     private string LogResponse(HttpContext context, string responseBodyText)
     {
         var response = context.Response;
-
         var responseLog = new StringBuilder();
-        responseLog.AppendLine("Outgoing Response:");
+        //responseLog.AppendLine("Outgoing Response:");
         responseLog.AppendLine($"HTTP {response.StatusCode}");
         responseLog.AppendLine($"Content-Type: {response.ContentType}");
         responseLog.AppendLine($"Content-Length: {response.ContentLength}");
         responseLog.AppendLine($"Response-Body: {responseBodyText}");
-
-
         return responseLog.ToString();
-        //_logger.LogInformation(responseLog.ToString());
     }
     private class ErrorModel
     {
