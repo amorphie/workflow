@@ -173,7 +173,7 @@ public class PostTransactionService : IPostTransactionService
             return new Response<HttpStatusEnum?>
             {
                 Data = HttpStatusEnum.NotFound,
-                Result = new Result(Status.Error, $"FromStateName and/or ToStateName for {_transitionName} is not null. Please check the definitions"),
+                Result = new Result(Status.Error, $"FromStateName and/or ToStateName for {_transitionName} is null. Please check the definitions"),
             };
         }
 
@@ -510,6 +510,10 @@ public class PostTransactionService : IPostTransactionService
         {
             FullName = string.Empty;
         }
+
+        var outgoingDistributedTracingData = (Elastic.Apm.Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
+                ?? Elastic.Apm.Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData)?.SerializeToString();
+
         var newInstance = new Instance
         {
             Id = _instanceId,
@@ -526,7 +530,8 @@ public class PostTransactionService : IPostTransactionService
             FullName = FullName,
             InstanceData = Convert.ToString(_data.EntityData),
             XDeviceId = XDeviceId,
-            XTokenId = XTokenId
+            XTokenId = XTokenId,
+            TraceId = outgoingDistributedTracingData
         };
         dynamic variables = createMessageVariables(newInstance);
 

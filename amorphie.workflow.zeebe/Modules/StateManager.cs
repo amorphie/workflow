@@ -160,6 +160,7 @@ public static class StateManagerModule
             //throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
         }
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, body.InstanceId.ToString());
+        httpContext.Items.Add(ElasticApmKeys.TraceParent, instance.TraceId);
         transaction.SetLabel("WorkflowName", instance.WorkflowName);
         transaction.SetLabel(ZeebeVariableKeys.LastTransition, body.LastTransition);
 

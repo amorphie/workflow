@@ -973,7 +973,7 @@ public static class InstanceModule
     private async static Task<List<SignalRResponseHistory>> getSignalRDataByUserReference(WorkflowDBContext context, string workflowName, string userReference, CancellationToken cancellationToken)
     {
         var instanceControl = await context.Instances.Include(i => i.Workflow)
-        .OrderByDescending(p => p.CreatedAt).FirstOrDefaultAsync(f => f.UserReference == userReference && f.WorkflowName == workflowName && !(f.BaseStatus == StatusType.Passive || f.BaseStatus == StatusType.Completed));
+        .OrderByDescending(p => p.CreatedAt).FirstOrDefaultAsync(f => f.UserReference == userReference && f.WorkflowName == workflowName);
         if (instanceControl == null || instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
         {
             return new List<SignalRResponseHistory>();

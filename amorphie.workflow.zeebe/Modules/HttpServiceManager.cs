@@ -46,9 +46,8 @@ public static class HttpServiceManagerModule
 
 
         var outgoingDistributedTracingData = (Elastic.Apm.Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
-        ?? Elastic.Apm.Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData);
-        transaction.SetLabel("outgoingDistributedTracingData", JsonSerializer.Serialize(outgoingDistributedTracingData));
-        transaction.SetLabel("outgoingDistributedTracingData2", outgoingDistributedTracingData?.SerializeToString());
+        ?? Elastic.Apm.Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData)?.SerializeToString();
+        transaction.SetLabel("outgoingDistributedTracingData", outgoingDistributedTracingData);
 
         // var span = transaction.StartSpan($"HttpWorker-{url}", "");
         // span.SetLabel("InstanceId", instanceIdAsString);
