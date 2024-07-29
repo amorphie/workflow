@@ -1,9 +1,12 @@
+using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Dtos.Definition;
 using amorphie.workflow.core.Dtos.Transfer;
 using amorphie.workflow.core.Enums;
+using amorphie.workflow.core.Models;
 using amorphie.workflow.service.Db;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 namespace amorphie.workflow;
 public static class TransferModule
@@ -11,6 +14,11 @@ public static class TransferModule
 
     public static void MapTransferModuleEndpoints(this WebApplication app)
     {
+        app.MapGet("/workflow/transfer/test/{instanceId}", TransferModuleApis.SetTest)
+        .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status204NoContent);
+
+
         app.MapGet("/workflow/transfer/wf/{workflowName}", TransferModuleApis.GetDefinitionBulkAsync)
         .Produces<WorkflowCreateDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
@@ -33,28 +41,28 @@ public static class TransferModule
             operation.Responses["204"].Description = "No instance found.";
             return operation;
         });
-         app.MapGet("/workflow/transfer/wf/get/transferHistory", TransferModuleApis.GetTransferHistoryAsync)
-        .Produces<amorphie.core.Base.Response<List<string>>>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status204NoContent)
-        .WithOpenApi(operation =>
-        {
-            operation.Summary = "Get Template List From Legacy To New Style Bulk";
-            operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
-            operation.Responses["200"].Description = "wf with its states and routes those which mutated from legacy transitions and states.";
-            operation.Responses["204"].Description = "No instance found.";
-            return operation;
-        });
-          app.MapPost("/workflow/transfer/wf/save/templates", TransferModuleApis.SaveTemplatesFromLegacyBulkAsync)
-        .Produces<amorphie.core.Base.Response<TemplateEngineTemplateDefinitions>>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status204NoContent)
-        .WithOpenApi(operation =>
-        {
-            operation.Summary = "Get Template List From Legacy To New Style Bulk";
-            operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
-            operation.Responses["200"].Description = "wf with its states and routes those which mutated from legacy transitions and states.";
-            operation.Responses["204"].Description = "No instance found.";
-            return operation;
-        });
+        app.MapGet("/workflow/transfer/wf/get/transferHistory", TransferModuleApis.GetTransferHistoryAsync)
+       .Produces<amorphie.core.Base.Response<List<string>>>(StatusCodes.Status200OK)
+       .Produces(StatusCodes.Status204NoContent)
+       .WithOpenApi(operation =>
+       {
+           operation.Summary = "Get Template List From Legacy To New Style Bulk";
+           operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
+           operation.Responses["200"].Description = "wf with its states and routes those which mutated from legacy transitions and states.";
+           operation.Responses["204"].Description = "No instance found.";
+           return operation;
+       });
+        app.MapPost("/workflow/transfer/wf/save/templates", TransferModuleApis.SaveTemplatesFromLegacyBulkAsync)
+      .Produces<amorphie.core.Base.Response<TemplateEngineTemplateDefinitions>>(StatusCodes.Status200OK)
+      .Produces(StatusCodes.Status204NoContent)
+      .WithOpenApi(operation =>
+      {
+          operation.Summary = "Get Template List From Legacy To New Style Bulk";
+          operation.Tags = new List<OpenApiTag> { new() { Name = "V2 Workflow" } };
+          operation.Responses["200"].Description = "wf with its states and routes those which mutated from legacy transitions and states.";
+          operation.Responses["204"].Description = "No instance found.";
+          return operation;
+      });
         app.MapPost("/workflow/transfer/wf/save", TransferModuleApis.SaveTransferRequestAsync)
        .Produces<PostWorkflowDefinitionResponse>(StatusCodes.Status200OK)
        .Produces(StatusCodes.Status201Created)
@@ -97,8 +105,24 @@ public static class TransferModule
 
 public class TransferModuleApis
 {
+    public static async Task<IResult> SetTest([FromServices] WorkflowDBContext dbContext, HttpContext httpContext, [FromRoute(Name = "instanceId")] Guid instanceId, CancellationToken cancellationToken)
+    {
+        throw new Exception("Test");
+        Instance? instance = await dbContext.Instances
+           .Where(i => i.Id == instanceId)
+
+           .FirstOrDefaultAsync(cancellationToken);
+
+        if (instance is null)
+        {
+            return Results.Problem($"Instance not found with instance id : {instanceId} ");
+            //throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
+        }
+        httpContext.Items.Add(ElasticApmKeys.TraceParent, instance.TraceId);
+        return Results.Ok(instance);
+    }
     public static async Task<IResult> GetDefinitionBulkAsync([FromServices] TransferService service, [FromRoute(Name = "workflowName")] string workflowName, CancellationToken cancellationToken)
-    {        
+    {
         var response = await service.GetDefinitionBulkAsync(workflowName, cancellationToken);
         return ApiResult.CreateResult(response);
     }
@@ -119,12 +143,12 @@ public class TransferModuleApis
         var response = await service.ApproveOrCancelTransferOfDefinitionAsync(transferDto, TransferStatus.Cancelled, cancellationToken);
         return ApiResult.CreateResult(response);
     }
-    public static async Task<IResult> GetTemplatesFromLegacyBulkAsync([FromServices] TransferService service, [FromBody] TemplateListRequestModel data,  CancellationToken cancellationToken)
+    public static async Task<IResult> GetTemplatesFromLegacyBulkAsync([FromServices] TransferService service, [FromBody] TemplateListRequestModel data, CancellationToken cancellationToken)
     {
         var response = await service.GetTemplatesFromLegacyBulkAsync(data, cancellationToken);
         return ApiResult.CreateResult(response);
     }
-    public static async Task<IResult> GetTransferHistoryAsync([FromServices] TransferService service, [AsParameters] TransferHistoryRequestDto data,  CancellationToken cancellationToken)
+    public static async Task<IResult> GetTransferHistoryAsync([FromServices] TransferService service, [AsParameters] TransferHistoryRequestDto data, CancellationToken cancellationToken)
     {
         var response = await service.GetTransferHistoryAsync(data, cancellationToken);
         return ApiResult.CreateResult(response);
@@ -134,7 +158,7 @@ public class TransferModuleApis
         var response = await service.SaveTemplatesFromLegacyBulkAsync(data, cancellationToken);
         return ApiResult.CreateResult(response);
     }
-	
+
 
 }
 
