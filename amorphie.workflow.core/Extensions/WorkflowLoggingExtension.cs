@@ -1,6 +1,7 @@
 using amorphie.core.Extension;
 using amorphie.core.Middleware.Logging;
 using amorphie.workflow.core.ExceptionHandler;
+using amorphie.workflow.core.Logging;
 using Elastic.Apm.SerilogEnricher;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpLogging;
@@ -17,7 +18,8 @@ public static class WorkflowLoggingExtension
     {
         app.UseMiddleware<ExceptionHandlerMiddleware>();
         //Request and Response Logging
-        app.UseHttpLogging();
+        //app.UseHttpLogging();
+        app.UseMiddleware<LoggingMiddleware>();
     }
 
     public static void WfAddSeriLogWithHttpLogging<TEnricher>(this WebApplicationBuilder builder, List<string>? headersToBeLogged = null) where TEnricher : class, ILogEventEnricher
@@ -39,17 +41,17 @@ public static class WorkflowLoggingExtension
             defaultHeadersToBeLogged = defaultHeadersToBeLogged.Concat(headersToBeLogged).ToList();
 
 
-        builder.Services.AddHttpLogging(logging =>
-        {
-            //logs just props and headers in prod mode
-            var isProd = builder.Environment.IsProd() || builder.Environment.IsProduction();
-            logging.LoggingFields = isProd ? HttpLoggingFields.RequestScheme : HttpLoggingFields.RequestBody | HttpLoggingFields.ResponseBody | HttpLoggingFields.RequestScheme;
-            defaultHeadersToBeLogged.ForEach(p => logging.RequestHeaders.Add(p));
-            logging.MediaTypeOptions.AddText("application/javascript");
-            logging.RequestBodyLogLimit = 4096;
-            logging.ResponseBodyLogLimit = 4096;
-            logging.CombineLogs = true;
-        });
+        //builder.Services.AddHttpLogging(logging =>
+        //{
+        //    //logs just props and headers in prod mode
+        //    var isProd = builder.Environment.IsProd() || builder.Environment.IsProduction();
+        //    logging.LoggingFields = isProd ? HttpLoggingFields.RequestScheme : HttpLoggingFields.RequestBody | HttpLoggingFields.ResponseBody | HttpLoggingFields.RequestScheme;
+        //    defaultHeadersToBeLogged.ForEach(p => logging.RequestHeaders.Add(p));
+        //    logging.MediaTypeOptions.AddText("application/javascript");
+        //    logging.RequestBodyLogLimit = 4096;
+        //    logging.ResponseBodyLogLimit = 4096;
+        //    logging.CombineLogs = true;
+        //});
         builder.Services.AddHttpContextAccessor();
         builder.Services.TryAddSingleton<ILogEventEnricher, TEnricher>();
 
@@ -60,7 +62,7 @@ public static class WorkflowLoggingExtension
             loggerConfiguration
                 .ReadFrom.Configuration(builder.Configuration)
                 .Enrich.With(enricher)
-                .Enrich.WithElasticApmCorrelationInfo()
+                //.Enrich.WithElasticApmCorrelationInfo()
                 ;
         });
         builder.Services.AddHttpLoggingInterceptor<HeaderCheckHttpLoggingInterceptor>();

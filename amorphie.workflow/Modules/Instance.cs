@@ -300,7 +300,7 @@ public static class InstanceModule
     }
     private static GetRecordWorkflowInit getRecordWorkflowInit(State currentState, string? suffix, string type, string language, string role)
     {
-        string navigationType = amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.PushReplacement);
+        string navigationType = amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.Push);
         UiForm? uiform = currentState.UiForms.FirstOrDefault(s => s.TypeofUiEnum.ToString().ToLower() == type && s.Role == role);
         if (uiform == null)
         {
@@ -308,7 +308,7 @@ public static class InstanceModule
         }
         if (uiform != null)
         {
-            navigationType = amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(uiform.Navigation.GetValueOrDefault(NavigationType.PushReplacement));
+            navigationType = amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(uiform.Navigation.GetValueOrDefault(NavigationType.Push));
         }
         var initDto = new GetRecordWorkflowInit()
         {
@@ -614,6 +614,7 @@ public static class InstanceModule
                             forms = st.Forms.Select(sf => new amorphie.workflow.core.Dtos.MultilanguageText(
                             sf.Language, sf.Label)).ToArray()
                         }).ToArray(),
+                        null,
                         t.FromStateName,
                         t.ServiceName,
                         t.FlowName,
@@ -766,6 +767,7 @@ public static class InstanceModule
                            forms = st.Forms.Select(sf => new amorphie.workflow.core.Dtos.MultilanguageText(
                            sf.Language, sf.Label)).ToArray()
                        }).ToArray() : null,
+                       null,
                         t.FromStateName,
                         t.ServiceName,
                         t.FlowName,
@@ -971,7 +973,7 @@ public static class InstanceModule
     private async static Task<List<SignalRResponseHistory>> getSignalRDataByUserReference(WorkflowDBContext context, string workflowName, string userReference, CancellationToken cancellationToken)
     {
         var instanceControl = await context.Instances.Include(i => i.Workflow)
-        .OrderByDescending(p => p.CreatedAt).FirstOrDefaultAsync(f => f.UserReference == userReference && f.WorkflowName == workflowName && !(f.BaseStatus == StatusType.Passive || f.BaseStatus == StatusType.Completed));
+        .OrderByDescending(p => p.CreatedAt).FirstOrDefaultAsync(f => f.UserReference == userReference && f.WorkflowName == workflowName);
         if (instanceControl == null || instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
         {
             return new List<SignalRResponseHistory>();

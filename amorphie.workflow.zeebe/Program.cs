@@ -53,7 +53,7 @@ builder.Services.AddDbContext<WorkflowDBContext>
             }
         }
     );
-    
+
 builder.Services.AddHealthChecks().AddNpgSql(postgreSql);
 builder.Services.AddHttpClient("httpWorkerService")
 .ConfigurePrimaryHttpMessageHandler((c) =>
@@ -88,10 +88,10 @@ builder.Services.AddScoped<IBBTIdentity, FakeIdentity>();
 builder.Services.AddBussinessServices();
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-if (!app.Environment.IsDevelopment())
-{
-    app.UseAllElasticApm(app.Configuration);
-}
+// if (!app.Environment.IsDevelopment())
+// {
+app.UseAllElasticApm(app.Configuration);
+// }
 app.WfUseLoggingHandlerMiddlewares();
 
 using var scope = app.Services.CreateScope();

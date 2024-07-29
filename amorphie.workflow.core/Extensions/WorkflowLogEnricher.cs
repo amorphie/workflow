@@ -6,6 +6,7 @@ using Serilog;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Elastic.Apm;
+using amorphie.workflow.core.Constants;
 
 namespace amorphie.workflow.core.Extensions;
 
@@ -35,6 +36,7 @@ public class WorkflowLogEnricher : ILogEventEnricher
 
         if (httpContext is not null)
         {
+            //httpContext.Request.Headers.TryAdd(ElasticApmKeys.TraceParent, "00-a6b0d7ffe898e0b07cfe266c4022460b-a44fd136767fd962-01");
             try
             {
                 AddHeaders(httpContext);
@@ -55,10 +57,10 @@ public class WorkflowLogEnricher : ILogEventEnricher
                 if (instanceId != null)
                 {
                     AddPropertyIfAbsent($"correlation.{InstanceId}", instanceId);
-                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                                        "ElasticApmTransactionId", instanceId));
-                    _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                                        "ElasticApmSpanId", instanceId));
+                    //_logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                    //                    "ElasticApmTransactionId", instanceId));
+                    //_logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                    //                    "ElasticApmSpanId", instanceId));
                 }
                 // else if (Agent.IsConfigured)
                 // {
@@ -75,7 +77,16 @@ public class WorkflowLogEnricher : ILogEventEnricher
                 if (httpContext.Request.Path.HasValue)
                 {
                     AddPropertyIfAbsent("RequestPath", httpContext.Request.Path.Value);
+                    if (httpContext.Request.Path.Value.Contains("wf-dummy-start"))
+                    {
+                        _logEvent.RemovePropertyIfPresent("ElasticApmTraceId");
+
+                        _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
+                                    "ElasticApmTraceId", instanceId));
+                    }
                 }
+
+
 
 
             }
