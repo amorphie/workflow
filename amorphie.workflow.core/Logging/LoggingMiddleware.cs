@@ -88,7 +88,21 @@ public class LoggingMiddleware
     {
         string rawRequestBody = await GetRawBodyAsync(httpContext.Request);
 
-        IEnumerable<string> headerLine = httpContext.Request.Headers.Where(h => h.Key != "Authentication").Select(pair => $"{pair.Key} => {string.Join("|", pair.Value.ToList())}");
+        IEnumerable<string> headerLine = httpContext.Request.Headers
+            //.Where(h => h.Key != "Authentication")
+            .Select(
+            pair =>
+            {
+                if (pair.Key == "Authentication")
+                {
+                    return $"{pair.Key} => ***";
+                }
+                else
+                {
+                    return $"{pair.Key} => {string.Join("|", pair.Value.ToList())}";
+                }
+            });
+
         string headerText = string.Join(Environment.NewLine, headerLine);
 
         string message =
