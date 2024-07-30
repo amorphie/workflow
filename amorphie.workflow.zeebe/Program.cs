@@ -88,11 +88,12 @@ builder.Services.AddScoped<IBBTIdentity, FakeIdentity>();
 builder.Services.AddBussinessServices();
 var app = builder.Build();
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-// if (!app.Environment.IsDevelopment())
-// {
-app.UseAllElasticApm(app.Configuration);
-// }
+if (!app.Environment.IsDevelopment())
+{
+    app.UseAllElasticApm(app.Configuration);
+}
 app.WfUseLoggingHandlerMiddlewares();
+app.AddZeebeWorkerMiddleware(zeebeGateway: "workflow-zeebe-command");
 
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
@@ -107,10 +108,9 @@ app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapHealthChecks("/health");
-app.UseWhen(context => context.Request.Path.StartsWithSegments("/amorphie-workflow"), appBuilder =>
-{
-    app.AddZeebeWorkerMiddleware(zeebeGateway: "workflow-zeebe-command");
-});
+// app.UseWhen(context => context.Request.Path.StartsWithSegments("/amorphie-workflow"), appBuilder =>
+// {
+// });
 app.MapStateManagerEndpoints();
 app.MapHttpServiceManagerEndpoints();
 app.MapAccountFlowManagerEndpoints();
