@@ -5,6 +5,7 @@ using amorphie.workflow.core.Logging;
 using Elastic.Apm.SerilogEnricher;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -14,12 +15,14 @@ using Serilog.Core;
 namespace amorphie.workflow.core.Extensions;
 public static class WorkflowLoggingExtension
 {
-    public static void WfUseLoggingHandlerMiddlewares(this IApplicationBuilder app)
+    public static void WfUseLoggingHandlerMiddlewares(this WebApplication app)
     {
         app.UseMiddleware<ExceptionHandlerMiddleware>();
         //Request and Response Logging
         //app.UseHttpLogging();
-        app.UseMiddleware<LoggingMiddleware>();
+        var loggingOptions = new LoggingOptions();
+        app.Configuration.GetSection(LoggingOptions.Logging).Bind(loggingOptions);
+        app.UseMiddleware<LoggingMiddleware>(loggingOptions);
     }
 
     public static void WfAddSeriLogWithHttpLogging<TEnricher>(this WebApplicationBuilder builder, List<string>? headersToBeLogged = null) where TEnricher : class, ILogEventEnricher

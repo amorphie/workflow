@@ -47,9 +47,7 @@ namespace amorphie.workflow.service.Zeebe
                 errorCode = "NonBusinessError";
                 errorMessage = ex.Message + " " + ex.InnerException?.Message;
             }
-            //Logger.ForContext("InstanceId",)
-            Logger.Error($"{errorCode} : {errorMessage} , {ex}");
-
+            Logger.Error(ex,"{ErrorCode} : {ErrorMessage}", errorCode ,errorCode);
 
             var throwResult = await zeebeCommandService.ThrowError(bindingGateway, processInstanceKey, jobKey, errorCode, errorMessage);
             if (throwResult.Status == Status.Success.ToString())
