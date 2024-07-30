@@ -39,11 +39,11 @@ public class WorkflowLogEnricher : ILogEventEnricher
             //httpContext.Request.Headers.TryAdd(ElasticApmKeys.TraceParent, "00-a6b0d7ffe898e0b07cfe266c4022460b-a44fd136767fd962-01");
             try
             {
-                AddHeaders(httpContext);
-                foreach (var query in httpContext.Request.Query)
-                {
-                    AddPropertyIfAbsent($"query.{query.Key}", query.Value);
-                }
+                // AddHeaders(httpContext);
+                // foreach (var query in httpContext.Request.Query)
+                // {
+                //     AddPropertyIfAbsent($"query.{query.Key}", query.Value);
+                // }
                 object? instanceId = null;
                 var instanceIdInRoute = httpContext.Request.RouteValues.FirstOrDefault(route => route.Value != null && InstanceId.Equals(route.Key, StringComparison.OrdinalIgnoreCase));
                 if (instanceIdInRoute.Value != null)
@@ -77,22 +77,12 @@ public class WorkflowLogEnricher : ILogEventEnricher
                 if (httpContext.Request.Path.HasValue)
                 {
                     AddPropertyIfAbsent("RequestPath", httpContext.Request.Path.Value);
-                    if (httpContext.Request.Path.Value.Contains("wf-dummy-start"))
-                    {
-                        _logEvent.RemovePropertyIfPresent("ElasticApmTraceId");
-
-                        _logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(
-                                    "ElasticApmTraceId", instanceId));
-                    }
                 }
-
-
-
 
             }
             catch (Exception ex)
             {
-                Log.Fatal("TraceIdentifier: {TraceIdentifier}. Log enrichment with httpcontext props failed. Exception: {ex}", httpContext.TraceIdentifier, ex);
+                Log.Fatal(ex, "TraceIdentifier: {TraceIdentifier}. Log enrichment with httpcontext props failed", httpContext.TraceIdentifier);
             }
         }
         // if (Agent.IsConfigured)

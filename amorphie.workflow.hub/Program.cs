@@ -88,6 +88,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseAllElasticApm(app.Configuration);
 }
+
 app.WfUseLoggingHandlerMiddlewares();
 
 Log.Information("Amorphie Workflow Hub Starting");

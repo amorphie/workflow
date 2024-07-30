@@ -108,16 +108,9 @@ public class TransferService
 
     public async Task<Response<TransferResultDto>> SaveTransferRequestAsync(WorkflowCreateDto workflowDto, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(workflowDto.Hash))
-        {
-            return new Response<TransferResultDto>
-            {
-                Result = new Result(amorphie.core.Enums.Status.Error, "Hash must be provided")
-            };
-        }
         var transferHistroy = new TransferHistory
         {
-            Hash = workflowDto.Hash,
+            Hash = "",
             RequestBody = JsonSerializer.Serialize(workflowDto),
             SubjectName = workflowDto.Name,
             TransferStatus = TransferStatus.WaitingForApproval,
@@ -151,10 +144,6 @@ public class TransferService
             {
                 return Response.Error($"Transfer request could not be parsed to {nameof(WorkflowCreateDto)}");
             }
-            // if (!Md5.Check(workflowDto))
-            // {
-            //     return Response.Error("Request body must not be modified before save");
-            // }
             var saveResponse = await _workflowService.SaveAsync(workflowDto!, cancellationToken);
             transferHistroy.TransferStatus = TransferStatus.Approved;
         }

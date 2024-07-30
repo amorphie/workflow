@@ -15,18 +15,10 @@ using amorphie.workflow.service.Db;
 using amorphie.workflow;
 using amorphie.core.Middleware.Logging;
 using amorphie.workflow.core.Extensions;
-using amorphie.workflow.core.ExceptionHandler;
-using Dapr.Client;
-using Elastic.Apm.AspNetCore;
-using amorphie.workflow.core.Constants;
-using Microsoft.AspNetCore.Builder.Extensions;
-using amorphie.workflow.core.Logging;
 using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
-
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
-
 var postgreSql = builder.Configuration["workflowdb"];
 
 
@@ -110,35 +102,18 @@ builder.WfAddSeriLogWithHttpLogging<WorkflowLogEnricher>();
 
 var app = builder.Build();
 
-//app.Use(async (context, next) =>
-//{
-//    var parentTrace = "00-a6b0d7ffe898e0b07cfe266c4022460b-a44fd136767fd962-01";
-//    context.Request.Headers.Add(ElasticApmKeys.TraceParent, parentTrace);
-//    context.Response.OnStarting(() =>
-//    {
-//        context.Response.Headers.Add(ElasticApmKeys.TraceParent, parentTrace);
-
-//        context.Response.Headers.Add("X-Developed-By", "Your Name");
-//        return Task.FromResult(0);
-//    });
-
-//    await next();
-//}
-//);
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-//Test amaçlý eklendi. Testler bitince düzenlenecek
+//Test amaï¿½lï¿½ eklendi. Testler bitince dï¿½zenlenecek
 //app.UseMiddleware<TraceIdMiddleware>();
 //app.AddTraceMiddleware(app.Configuration);
 //app.UseMiddleware<ApmMiddleware>();
 
-// if (!app.Environment.IsDevelopment())
-// {
-app.UseAllElasticApm(app.Configuration);
-//app.UseElasticApm(app.Configuration);
+if (!app.Environment.IsDevelopment())
+{
+    app.UseAllElasticApm(app.Configuration);
+}
 
 app.WfUseLoggingHandlerMiddlewares();
-//app.UseMiddleware<LoggingMiddleware>();
-// }
 
 // using var scope = app.Services.CreateScope();
 // var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();

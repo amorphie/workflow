@@ -11,40 +11,42 @@ public class LoggingMiddleware
 
     private readonly RequestDelegate _next;
     private readonly ILogger _logger;
-
-    public LoggingMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
+    private readonly LoggingOptions _loggingOptions;
+    private Stream? originalResponseBody = null;
+    private readonly List<string> redactedHeaders = ["authorization", "authentication", "client_secret", "x-userinfo"];
+    private readonly List<string> ignorePaths = ["/health", "/swagger", "/js", "/css"];
+    public LoggingMiddleware(RequestDelegate next, ILoggerFactory loggerFactory, LoggingOptions loggingOptions)
     {
         _next = next;
         _logger = loggerFactory.CreateLogger<LoggingMiddleware>();
+        _loggingOptions = loggingOptions;
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
         string? requestInfo = null;
         string? responseInfo = null;
-        Stream? originalResponseBody = null;
-        using var newResponseBody = new MemoryStream();
         try
         {
-            requestInfo = await LogRequest(context);
-
-            //Buffer response body
-            originalResponseBody = context.Response.Body;
-            context.Response.Body = newResponseBody;
-
-            await _next(context);
-
-            //Read response body
-            newResponseBody.Seek(0, SeekOrigin.Begin);
-            var responseBodyText = await new StreamReader(newResponseBody).ReadToEndAsync();
-
-            //Rewind and set to originalResponseBody
-            newResponseBody.Seek(0, SeekOrigin.Begin);
-            await newResponseBody.CopyToAsync(originalResponseBody);
-            responseInfo = LogResponse(context, responseBodyText);
-
-            _logger.LogInformation("Request : {Request}, Response : {Response}", requestInfo, responseInfo);
-
+            //if path is ignored do not log
+            if (context.Request.Path.HasValue && ignorePaths.Exists(p => context.Request.Path.Value.Contains(p)))
+            {
+                await _next(context);
+            }
+            else
+            {
+                requestInfo = await LogRequest(context);
+                if (_loggingOptions.LogResponse)
+                {
+                    responseInfo = await InvokeInternalAsync(context);
+                }
+                else
+                {
+                    await _next(context);
+                    responseInfo = LogResponseHeaders(context);
+                }
+                _logger.LogInformation("Request : {Request}, Response : {Response}", requestInfo, responseInfo);
+            }
         }
         catch (Exception ex)
         {
@@ -56,9 +58,33 @@ public class LoggingMiddleware
         }
     }
 
+
+    private async Task<string?> InvokeInternalAsync(HttpContext context)
+    {
+        string? responseInfo = null;
+        using var newResponseBody = new MemoryStream();
+
+        //Buffer response body
+        originalResponseBody = context.Response.Body;
+        context.Response.Body = newResponseBody;
+
+        await _next(context);
+
+        //Read response body
+        newResponseBody.Seek(0, SeekOrigin.Begin);
+        var responseBodyText = await new StreamReader(newResponseBody).ReadToEndAsync();
+
+        //Rewind and set to originalResponseBody
+        newResponseBody.Seek(0, SeekOrigin.Begin);
+        await newResponseBody.CopyToAsync(originalResponseBody);
+
+        responseInfo = $"{LogResponseHeaders(context)} {Environment.NewLine} {LogResponseBody(responseBodyText)}";
+        return responseInfo;
+    }
+
     private async Task HandleExceptionAsync(HttpContext context, Exception ex, string? requestInfo, string? responseInfo)
     {
-        var errorMessage = $"An error occured and logged. Use trace identifier id to find out details";
+        var errorMessage = "An error occured and logged. Use trace identifier id to find out details";
         var errorDto = new ErrorModel
         {
             ErrorMessage = errorMessage,
@@ -67,7 +93,7 @@ public class LoggingMiddleware
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = ex is BadHttpRequestException badEx ? badEx.StatusCode : (int)HttpStatusCode.InternalServerError;
-        _logger.LogError(ex, "TraceIdentifier : {TraceIdentifier}. Exception: {ex}, Request : {Request}, Response : {Response}", context.TraceIdentifier, ex, requestInfo, responseInfo);
+        _logger.LogError(ex, "TraceIdentifier : {TraceIdentifier}. Request : {Request}, Response : {Response}", context.TraceIdentifier, requestInfo, responseInfo);
         await context.Response.WriteAsync(JsonSerializer.Serialize(errorDto));
     }
 
@@ -84,16 +110,13 @@ public class LoggingMiddleware
         return requestLog.ToString();
     }
 
-    private static async Task<string> RequestAsTextAsync(HttpContext httpContext)
+    private async Task<string> RequestAsTextAsync(HttpContext httpContext)
     {
-        string rawRequestBody = await GetRawBodyAsync(httpContext.Request);
-
         IEnumerable<string> headerLine = httpContext.Request.Headers
-            //.Where(h => h.Key != "Authentication")
             .Select(
             pair =>
             {
-                if (pair.Key == "Authentication")
+                if (redactedHeaders.Contains(pair.Key.ToLower()))
                 {
                     return $"{pair.Key} => ***";
                 }
@@ -104,15 +127,17 @@ public class LoggingMiddleware
             });
 
         string headerText = string.Join(Environment.NewLine, headerLine);
-
-        string message =
-          $"Request: {httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.Path}{httpContext.Request.QueryString}{Environment.NewLine}" +
-          $"Headers: {Environment.NewLine}{headerText}{Environment.NewLine}" +
-          $"Content : {Environment.NewLine}{rawRequestBody}";
-
-        return message;
+        var requestLog = new StringBuilder();
+        requestLog.AppendLine($"Request: {httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.Path}{httpContext.Request.QueryString}{Environment.NewLine}");
+        requestLog.AppendLine($"Headers: {Environment.NewLine}{headerText}{Environment.NewLine}");
+        if (_loggingOptions.LogRequest)
+        {
+            string rawRequestBody = await GetRawBodyAsync(httpContext.Request);
+            requestLog.AppendLine($"Content : {Environment.NewLine}{rawRequestBody}");
+        }
+        return requestLog.ToString();
     }
-    private static async Task<string> GetRawBodyAsync(HttpRequest request, Encoding? encoding = null)
+    private async Task<string> GetRawBodyAsync(HttpRequest request, Encoding? encoding = null)
     {
         request.EnableBuffering();
         using var reader = new StreamReader(request.Body, encoding ?? Encoding.UTF8, leaveOpen: true);
@@ -123,16 +148,19 @@ public class LoggingMiddleware
     }
 
 
-    private string LogResponse(HttpContext context, string responseBodyText)
+    private string LogResponseHeaders(HttpContext context)
     {
         var response = context.Response;
         var responseLog = new StringBuilder();
-        //responseLog.AppendLine("Outgoing Response:");
         responseLog.AppendLine($"HTTP {response.StatusCode}");
         responseLog.AppendLine($"Content-Type: {response.ContentType}");
         responseLog.AppendLine($"Content-Length: {response.ContentLength}");
-        responseLog.AppendLine($"Response-Body: {responseBodyText}");
         return responseLog.ToString();
+    }
+
+    private string LogResponseBody(string responseBodyText)
+    {
+        return $"Response-Body: {responseBodyText}";
     }
     private class ErrorModel
     {
