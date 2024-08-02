@@ -17,7 +17,7 @@ public static class WorkflowLoggingExtension
 {
     public static void WfUseLoggingHandlerMiddlewares(this WebApplication app)
     {
-        app.UseMiddleware<ExceptionHandlerMiddleware>();
+        //app.UseMiddleware<ExceptionHandlerMiddleware>();
         //Request and Response Logging
         //app.UseHttpLogging();
         var loggingOptions = new LoggingOptions();
