@@ -12,7 +12,6 @@ public class LoggingMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger _logger;
     private readonly LoggingOptions _loggingOptions;
-    private Stream? originalResponseBody = null;
     private readonly List<string> redactedHeaders = ["authorization", "authentication", "client_secret", "x-userinfo"];
     private readonly List<string> ignorePaths = ["/health", "/swagger", "/js", "/css"];
     public LoggingMiddleware(RequestDelegate next, ILoggerFactory loggerFactory, LoggingOptions loggingOptions)
@@ -24,6 +23,7 @@ public class LoggingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        Stream? originalResponseBody = null;
         string? requestInfo = null;
         string? responseInfo = null;
         try
@@ -38,7 +38,7 @@ public class LoggingMiddleware
                 requestInfo = await LogRequest(context);
                 if (_loggingOptions.LogResponse)
                 {
-                    responseInfo = await InvokeInternalAsync(context);
+                    responseInfo = await InvokeInternalAsync(context, originalResponseBody);
                 }
                 else
                 {
@@ -59,7 +59,7 @@ public class LoggingMiddleware
     }
 
 
-    private async Task<string?> InvokeInternalAsync(HttpContext context)
+    private async Task<string?> InvokeInternalAsync(HttpContext context, Stream originalResponseBody)
     {
         string? responseInfo = null;
         using var newResponseBody = new MemoryStream();
