@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json;
+using amorphie.workflow.core.Helper;
 
 namespace amorphie.workflow.core.Logging;
 
@@ -13,39 +14,47 @@ public static class LoggingHelper
             return string.Empty;
         }
         _redactKeys = redactKeys;
-        var responseAsJson = JsonSerializer.Deserialize<JsonObject>(responseBodyText);
-        if (responseAsJson == null || redactKeys.Length == 0)
+        try
         {
-            return responseBodyText;
-        }
-
-        var keys = responseAsJson.Select(p => p.Key).ToList();
-        foreach (var key in keys)
-        {
-            if (redactKeys.Contains(key))
+            var responseAsJson = JsonSerializer.Deserialize<JsonObject>(responseBodyText);
+            if (responseAsJson == null || redactKeys.Length == 0)
             {
-                responseAsJson[key] = "***";
-                continue;
+                return responseBodyText;
             }
-            if (responseAsJson[key] is not null)
+            var keys = responseAsJson.Select(p => p.Key).ToList();
+            foreach (var key in keys)
             {
-                if (responseAsJson[key]!.GetValueKind() == JsonValueKind.Object)
+                if (redactKeys.Contains(key))
                 {
-                    var innerDict = responseAsJson[key] as IDictionary<string, JsonNode>;
-                    if (innerDict != null)
+                    responseAsJson[key] = "***";
+                    continue;
+                }
+                if (responseAsJson[key] is not null)
+                {
+                    if (responseAsJson[key]!.GetValueKind() == JsonValueKind.Object)
                     {
-                        var decResult = FilterDictionary(innerDict);
-                        responseAsJson[key] = JsonSerializer.Serialize(decResult);
+                        var innerDict = responseAsJson[key] as IDictionary<string, JsonNode>;
+                        if (innerDict != null)
+                        {
+                            var decResult = FilterDictionary(innerDict);
+                            responseAsJson[key] = WfJsonSerializer.Serialize(decResult);
+
+                        }
+                    }
+                    else if (responseAsJson[key]!.GetValueKind() == JsonValueKind.String)
+                    {
+                        responseAsJson[key] = FilterString(key, responseAsJson[key]!.ToString());
                     }
                 }
-                else if (responseAsJson[key]!.GetValueKind() == JsonValueKind.String)
-                {
-                    responseAsJson[key] = FilterString(key, responseAsJson[key]!.ToString());
-                }
             }
-        }
 
-        return JsonSerializer.Serialize(responseAsJson);
+            return JsonSerializer.Serialize(responseAsJson);
+        }
+        catch (Exception)
+        {
+
+            return responseBodyText;
+        }
     }
     public static IDictionary<string, JsonNode> FilterDictionary(IDictionary<string, JsonNode> data)
     {
@@ -55,19 +64,24 @@ public static class LoggingHelper
             if (_redactKeys!.Contains(key))
             {
                 data[key] = "***";
+                continue;
+
             }
-            else if (data[key].GetValueKind() == JsonValueKind.Object)
+            if (data[key] is not null)
             {
-                var innerDict = data[key] as IDictionary<string, JsonNode>;
-                if (innerDict != null)
+                if (data[key].GetValueKind() == JsonValueKind.Object)
                 {
-                    var decResult = FilterDictionary(innerDict);
-                    data[key] = JsonSerializer.Serialize(decResult);
+                    var innerDict = data[key] as IDictionary<string, JsonNode>;
+                    if (innerDict != null)
+                    {
+                        var decResult = FilterDictionary(innerDict);
+                        data[key] = WfJsonSerializer.Serialize(decResult);
+                    }
                 }
-            }
-            else if (data[key].GetValueKind() == JsonValueKind.String)
-            {
-                data[key] = FilterString(key, data[key].ToString());
+                else if (data[key].GetValueKind() == JsonValueKind.String)
+                {
+                    data[key] = FilterString(key, data[key].ToString());
+                }
             }
         }
         return data;

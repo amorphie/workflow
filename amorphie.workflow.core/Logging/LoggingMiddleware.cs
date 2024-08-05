@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 
 namespace amorphie.workflow.core.Logging;
 
@@ -31,7 +30,7 @@ public class LoggingMiddleware
         try
         {
             //if path is ignored do not log
-            if (context.Request.Path.HasValue && ignorePaths.Exists(p => context.Request.Path.Value.Contains(p)))
+            if (context.Request.Path.HasValue && _loggingOptions.IgnorePaths != null && Array.Exists(_loggingOptions.IgnorePaths, context.Request.Path.Value.Contains))
             {
                 await _next(context);
             }

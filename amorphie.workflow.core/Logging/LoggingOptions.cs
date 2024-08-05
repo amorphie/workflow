@@ -6,4 +6,5 @@ public class LoggingOptions
     public bool LogRequest { get; set; } = true;
     public string[]? SanitizeHeaderNames { get; set; }
     public string[]? SanitizeFieldNames { get; set; }
+    public string[]? IgnorePaths { get; set; }
 }
