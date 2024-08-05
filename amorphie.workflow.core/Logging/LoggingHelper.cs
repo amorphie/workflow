@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json;
+using amorphie.workflow.core.Helper;
 
 namespace amorphie.workflow.core.Logging;
 
@@ -13,13 +14,13 @@ public static class LoggingHelper
             return string.Empty;
         }
         _redactKeys = redactKeys;
-        var responseAsJson = JsonSerializer.Deserialize<JsonObject>(responseBodyText);
-        if (responseAsJson == null || redactKeys.Length == 0)
-        {
-            return responseBodyText;
-        }
         try
         {
+            var responseAsJson = JsonSerializer.Deserialize<JsonObject>(responseBodyText);
+            if (responseAsJson == null || redactKeys.Length == 0)
+            {
+                return responseBodyText;
+            }
             var keys = responseAsJson.Select(p => p.Key).ToList();
             foreach (var key in keys)
             {
@@ -36,7 +37,8 @@ public static class LoggingHelper
                         if (innerDict != null)
                         {
                             var decResult = FilterDictionary(innerDict);
-                            responseAsJson[key] = JsonSerializer.Serialize(decResult);
+                            responseAsJson[key] = WfJsonSerializer.Serialize(decResult);
+
                         }
                     }
                     else if (responseAsJson[key]!.GetValueKind() == JsonValueKind.String)
@@ -73,7 +75,7 @@ public static class LoggingHelper
                     if (innerDict != null)
                     {
                         var decResult = FilterDictionary(innerDict);
-                        data[key] = JsonSerializer.Serialize(decResult);
+                        data[key] = WfJsonSerializer.Serialize(decResult);
                     }
                 }
                 else if (data[key].GetValueKind() == JsonValueKind.String)
