@@ -16,8 +16,10 @@ using amorphie.workflow;
 using amorphie.core.Middleware.Logging;
 using amorphie.workflow.core.Extensions;
 using System.Diagnostics;
+using Dapr.Client;
 
 var builder = WebApplication.CreateBuilder(args);
+
 await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
 

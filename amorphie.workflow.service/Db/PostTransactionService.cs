@@ -1,5 +1,3 @@
-
-using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Text;
 using System.Text.Json;
@@ -13,17 +11,13 @@ using amorphie.workflow.core.Dtos.Consumer;
 using amorphie.workflow.core.Dtos.NoteFlow;
 using amorphie.workflow.core.Enums;
 using amorphie.workflow.core.Models;
+using amorphie.workflow.service.Db;
+using amorphie.workflow.service.Filters;
 using amorphie.workflow.service.Zeebe;
 using Dapr.Client;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.OpenApi.Models;
-using Namotion.Reflection;
-using Newtonsoft.Json.Linq;
-using Serilog;
-
 
 
 public interface IPostTransactionService
@@ -61,8 +55,10 @@ public class PostTransactionService : IPostTransactionService
     private dynamic? mfaType { get; set; } = MFATypeEnum.Public.ToString();
     private Dictionary<string, string> _headerDict { get; set; }
     private CancellationToken _cancellationToken { get; set; }
+    protected readonly JsonSchemaService _jsonSchemaService;
 
-    public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService, DaprClient client, IConfiguration configuration)
+
+    public PostTransactionService(WorkflowDBContext dbContext, IZeebeCommandService zeebeService, DaprClient client, IConfiguration configuration, JsonSchemaService jsonSchemaService)
     {
         _dbContext = dbContext;
         _zeebeService = zeebeService;
@@ -76,6 +72,7 @@ public class PostTransactionService : IPostTransactionService
         _transition = default!;
         _data = default!;
         _configuration = configuration;
+        _jsonSchemaService = jsonSchemaService;
     }
 
     public async Task<IResponse<HttpStatusEnum?>> Init(string entity, Guid recordId, string transitionName, Guid user, Guid behalfOfUser, ConsumerPostTransitionRequest data, IHeaderDictionary? headerParameters,
@@ -491,28 +488,10 @@ public class PostTransactionService : IPostTransactionService
         {
             XTokenId = string.Empty;
         }
-        string? FullName = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("given_name", out FullName))
-                FullName = string.Empty;
-            string? FamilyName = string.Empty;
-            if (!_headerDict.TryGetValue("family_name", out FamilyName))
-            {
-                FamilyName = string.Empty;
-            }
-            if (!string.IsNullOrEmpty(FamilyName))
-            {
-                FullName = FullName + " " + FamilyName;
-            }
-        }
-        catch (Exception ex)
-        {
-            FullName = string.Empty;
-        }
+        string? fullName = GetFullNameFromHeader();
 
-        var outgoingDistributedTracingData = (Elastic.Apm.Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
-                ?? Elastic.Apm.Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData)?.SerializeToString();
+        // var outgoingDistributedTracingData = (Elastic.Apm.Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
+        //         ?? Elastic.Apm.Agent.Tracer.CurrentTransaction?.OutgoingDistributedTracingData)?.SerializeToString();
 
         var newInstance = new Instance
         {
@@ -527,11 +506,11 @@ public class PostTransactionService : IPostTransactionService
             ZeebeFlowName = _transition.FlowName,
             UserReference = UserReference,
             CreatedByBehalfOf = _behalfOfUser,
-            FullName = FullName,
+            FullName = fullName,
             InstanceData = Convert.ToString(_data.EntityData),
             XDeviceId = XDeviceId,
-            XTokenId = XTokenId,
-            TraceId = outgoingDistributedTracingData
+            XTokenId = XTokenId
+            // TraceId = outgoingDistributedTracingData
         };
         dynamic variables = createMessageVariables(newInstance);
 
@@ -596,8 +575,8 @@ public class PostTransactionService : IPostTransactionService
         {
             //Get Note from transition body (that is EntityData) and push it in additional data
             tobeAddedNote.Note = _data.EntityData.GetProperty("note").ToString();
-            tobeAddedNote.CreatedBy = _user.ToString();
-            tobeAddedNote.Date = DateTime.UtcNow.ToString("dd.MM.yyyy");
+            tobeAddedNote.CreatedBy = GetFullNameFromHeader();
+            tobeAddedNote.Date = DateTime.UtcNow.ToString();
         }
         catch
         {
@@ -609,7 +588,6 @@ public class PostTransactionService : IPostTransactionService
         instanceAtState.ModifiedBy = _user;
         instanceAtState.ModifiedByBehalfOf = _behalfOfUser;
         instanceAtState.ModifiedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
-        instanceAtState.BaseStatus = StatusType.LockedInFlow;
         var lastInstanceTransition = await _dbContext.InstanceTransitions.Where(w => w.InstanceId == instanceAtState.Id)
                     .Include(p => p.Transition)
                     .OrderByDescending(c => c.CreatedAt).FirstAsync();
@@ -665,8 +643,6 @@ public class PostTransactionService : IPostTransactionService
             return Results.BadRequest(responseWithError);
 
         }
-
-
     }
 
     private dynamic createMessageVariables(Instance instanceAtState)
@@ -679,19 +655,22 @@ public class PostTransactionService : IPostTransactionService
         variables.Add("LastTransition", _transitionName);
         variables.Add("WorkflowData", instanceAtState.InstanceData);
         dynamic targetObject = new ExpandoObject();
+
         targetObject.Data = _data;
         targetObject.TriggeredBy = _user;
         targetObject.TriggeredByBehalfOf = _behalfOfUser;
 
-        string updateName = deleteUnAllowedCharecters(_transitionName);
+        // var jsonSchemaEntity = _jsonSchemaService.GetNjsonSchemaAsync(_transitionName).Result;
+        // if (jsonSchemaEntity != null)
+        // {
+        //     _data.EntityData = FilterHelper.FilterAndEncrypt(_data.EntityData, jsonSchemaEntity, instanceAtState.Id.ToString());
+        // }
+
+        string updateName = _transitionName.DeleteUnAllowedCharecters();
         variables.Add($"TRX-{_transitionName}", targetObject);
         variables.Add($"TRX{updateName}", targetObject);
         variables.Add($"Headers", headers);
         return variables;
-    }
-    private static string deleteUnAllowedCharecters(string transitionName)
-    {
-        return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
     }
     private async Task addInstanceTansition(Instance instance, DateTime? started, DateTime? finished)
     {
@@ -1039,5 +1018,30 @@ public class PostTransactionService : IPostTransactionService
         };
         return responseWithSuccess;
     }
+
+    private string GetFullNameFromHeader()
+    {
+        string? fullName;
+        try
+        {
+            if (!_headerDict.TryGetValue("given_name", out fullName))
+                fullName = string.Empty;
+            string? FamilyName = string.Empty;
+            if (!_headerDict.TryGetValue("family_name", out FamilyName))
+            {
+                FamilyName = string.Empty;
+            }
+            if (!string.IsNullOrEmpty(FamilyName))
+            {
+                fullName = fullName + " " + FamilyName;
+            }
+        }
+        catch
+        {
+            fullName = string.Empty;
+        }
+        return fullName;
+    }
+
 }
 
