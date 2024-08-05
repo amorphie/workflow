@@ -16,32 +16,35 @@ public static class WorkflowLoggingExtension
         //Request and Response Logging
         //app.UseHttpLogging();
         var loggingOptions = new LoggingOptions();
-        app.Configuration.GetSection(LoggingOptions.Logging).Bind(loggingOptions);
-        var sanitizeFieldNames = app.Configuration.GetSection(LoggingOptions.Logging).GetValue<string>(nameof(LoggingOptions.SanitizeFieldNames));
+        var loggingSection =app.Configuration.GetSection(LoggingOptions.Logging);
+        loggingSection.Bind(loggingOptions);
+        var sanitizeFieldNames = loggingSection.GetValue<string>(nameof(LoggingOptions.SanitizeFieldNames));
         loggingOptions.SanitizeFieldNames = sanitizeFieldNames?.Split(',');
-        var sanitizeHeaderNames = app.Configuration.GetSection(LoggingOptions.Logging).GetValue<string>(nameof(LoggingOptions.SanitizeHeaderNames));
+        var sanitizeHeaderNames = loggingSection.GetValue<string>(nameof(LoggingOptions.SanitizeHeaderNames));
         loggingOptions.SanitizeHeaderNames = sanitizeHeaderNames?.Split(',');
+        var ignorePaths = loggingSection.GetValue<string>(nameof(LoggingOptions.IgnorePaths));
+        loggingOptions.IgnorePaths = ignorePaths?.Split(',');
 
         app.UseMiddleware<LoggingMiddleware>(loggingOptions);
     }
 
     public static void WfAddSeriLogWithHttpLogging<TEnricher>(this WebApplicationBuilder builder, List<string>? headersToBeLogged = null) where TEnricher : class, ILogEventEnricher
     {
-        var defaultHeadersToBeLogged = new List<string>
-        {
-            "Content-Type",
-            "Host",
-            "X-Zeebe-Job-Key",
-            "xdeviceid",
-            "X-Device-Id",
-            "xtokenid",
-            "X-Token-Id",
-            "Transfer-Encoding",
-            "X-Forwarded-Host",
-            "X-Forwarded-For"
-        };
-        if (headersToBeLogged != null)
-            defaultHeadersToBeLogged = defaultHeadersToBeLogged.Concat(headersToBeLogged).ToList();
+        // var defaultHeadersToBeLogged = new List<string>
+        // {
+        //     "Content-Type",
+        //     "Host",
+        //     "X-Zeebe-Job-Key",
+        //     "xdeviceid",
+        //     "X-Device-Id",
+        //     "xtokenid",
+        //     "X-Token-Id",
+        //     "Transfer-Encoding",
+        //     "X-Forwarded-Host",
+        //     "X-Forwarded-For"
+        // };
+        // if (headersToBeLogged != null)
+        //     defaultHeadersToBeLogged = defaultHeadersToBeLogged.Concat(headersToBeLogged).ToList();
 
 
         //builder.Services.AddHttpLogging(logging =>
