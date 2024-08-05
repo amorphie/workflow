@@ -160,11 +160,8 @@ public static class StateManagerModule
             //throw new ZeebeBussinesException("500", $"Instance not found with instance id : {instanceId} ");
         }
         httpContext.Items.Add(ZeebeVariableKeys.InstanceId, body.InstanceId.ToString());
-        httpContext.Items.Add(ElasticApmKeys.TraceParent, instance.TraceId);
         transaction.SetLabel("WorkflowName", instance.WorkflowName);
         transaction.SetLabel(ZeebeVariableKeys.LastTransition, body.LastTransition);
-
-
 
 
         bool error = false;
@@ -375,8 +372,6 @@ public static class StateManagerModule
         //TODO : new instace tran null ise forname nesnesi ile birleştir else yi kaldır
         else
         {
-            InstanceTransition? newInstanceTransitionForName = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
-              .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.Transition!.FromStateName == transition.FromStateName, cancellationToken);
             newInstanceTransition = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
              .FirstOrDefaultAsync(f => f.InstanceId == instance.Id, cancellationToken);
 
@@ -387,6 +382,8 @@ public static class StateManagerModule
             }
             if (data == null)
             {
+                InstanceTransition? newInstanceTransitionForName = await dbContext.InstanceTransitions.Include(s => s.Transition).OrderByDescending(o => o.StartedAt)
+             .FirstOrDefaultAsync(f => f.InstanceId == instance.Id && f.Transition!.FromStateName == transition.FromStateName, cancellationToken);
                 updateName = newInstanceTransitionForName!.TransitionName.DeleteUnAllowedCharecters();
                 data = body.WorkerBodyTrxDataList?.GetValueOrDefault($"TRX{updateName}");
             }
@@ -403,8 +400,13 @@ public static class StateManagerModule
         }
         else
         {
+
+
             if (data.Data != null)
             {
+                //Before processing the AdditionalData and EntityData, decode them
+                // DecodeData(body.InstanceId, data.Data);
+
                 newInstanceTransition!.AdditionalData = data.Data.AdditionalData?.ToString();
                 newInstanceTransition!.EntityData = data.Data.EntityData?.ToString() ?? "";
             }
@@ -479,6 +481,17 @@ public static class StateManagerModule
             await dbContext.SaveChangesAsync(cancellationToken);
             return (newInstanceTransition, data, eventInfo);
         }
+    }
+
+    private static void DecodeData(Guid instanceId, WorkerBodyTrxInnerDatas trxData)
+    {
+        var key = instanceId.ToString();
+        if (trxData.AdditionalData != null)
+        {
+            trxData.AdditionalData = AesHelper.DecryptJson(key, trxData.AdditionalData);
+        }
+        trxData.EntityData = AesHelper.DecryptJson(key, trxData.EntityData);
+
     }
 
 }
