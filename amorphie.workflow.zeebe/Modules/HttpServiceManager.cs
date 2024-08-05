@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Extensions;
@@ -246,26 +247,22 @@ public static class HttpServiceManagerModule
         return Encoding.UTF8.GetString(byteArray, 0, byteArray.Length);
     }
 
-    private static async Task<dynamic> FilterBodyAsync(JsonElement body, string url, WorkflowDBContext dbContext)
+    private static async Task<dynamic> FilterBodyAsync(dynamic body, string url, WorkflowDBContext dbContext)
     {
-        if (body.TryConvertToDictionary(out Dictionary<string, object>? pairs) && pairs != null)
+        try
         {
-            try
+            var jsonSchemaEntity = await dbContext.JsonSchemas.FirstOrDefaultAsync(p => p.SubjectName == url);
+            if (jsonSchemaEntity != null)
             {
-                var jsonSchemaEntity = await dbContext.JsonSchemas.FirstOrDefaultAsync(p => p.SubjectName == url);
-                if (jsonSchemaEntity != null)
-                {
-                    return await FilterHelper.FilterResponseAsync(body, await JsonSchema.FromJsonAsync(jsonSchemaEntity.Schema));
-                }
-                else return body;
+                return await FilterHelper.FilterResponseAsync(body, await JsonSchema.FromJsonAsync(jsonSchemaEntity.Schema));
             }
-            catch (Exception ex)
-            {
-                Log.Fatal("HttpManager Exception : while filtering response body. Url : {Url} Exception : {Ex} Body : {Body}", url, ex, body);
-                return body;
-            }
+            else return body;
         }
-        return body;
+        catch (Exception ex)
+        {
+            Log.Fatal("HttpManager Exception : while filtering response body. Url : {Url} Exception : {Ex} Body : {Body}", url, ex, body);
+            return body;
+        }
     }
 
 

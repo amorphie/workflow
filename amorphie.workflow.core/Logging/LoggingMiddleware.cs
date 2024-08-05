@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace amorphie.workflow.core.Logging;
 
@@ -12,8 +13,8 @@ public class LoggingMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger _logger;
     private readonly LoggingOptions _loggingOptions;
-    private Stream? originalResponseBody = null;
-    private readonly List<string> redactedHeaders = ["authorization", "authentication", "client_secret", "x-userinfo"];
+    // private readonly List<string> redactedHeaders = ["authorization", "authentication", "client_secret", "x-userinfo"];
+    // private readonly string[] redactedResponse = ["access_token", "refresh_token", "client_secret", "x-userinfo", "authorization"];
     private readonly List<string> ignorePaths = ["/health", "/swagger", "/js", "/css"];
     public LoggingMiddleware(RequestDelegate next, ILoggerFactory loggerFactory, LoggingOptions loggingOptions)
     {
@@ -24,6 +25,7 @@ public class LoggingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        Stream? originalResponseBody = null;
         string? requestInfo = null;
         string? responseInfo = null;
         try
@@ -38,7 +40,7 @@ public class LoggingMiddleware
                 requestInfo = await LogRequest(context);
                 if (_loggingOptions.LogResponse)
                 {
-                    responseInfo = await InvokeInternalAsync(context);
+                    responseInfo = await InvokeInternalAsync(context, originalResponseBody);
                 }
                 else
                 {
@@ -59,7 +61,7 @@ public class LoggingMiddleware
     }
 
 
-    private async Task<string?> InvokeInternalAsync(HttpContext context)
+    private async Task<string?> InvokeInternalAsync(HttpContext context, Stream originalResponseBody)
     {
         string? responseInfo = null;
         using var newResponseBody = new MemoryStream();
@@ -112,21 +114,7 @@ public class LoggingMiddleware
 
     private async Task<string> RequestAsTextAsync(HttpContext httpContext)
     {
-        IEnumerable<string> headerLine = httpContext.Request.Headers
-            .Select(
-            pair =>
-            {
-                if (redactedHeaders.Contains(pair.Key.ToLower()))
-                {
-                    return $"{pair.Key} => ***";
-                }
-                else
-                {
-                    return $"{pair.Key} => {string.Join("|", pair.Value.ToList())}";
-                }
-            });
-
-        string headerText = string.Join(Environment.NewLine, headerLine);
+        string headerText = RequestHeadersAsText(httpContext);
         var requestLog = new StringBuilder();
         requestLog.AppendLine($"Request: {httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.Path}{httpContext.Request.QueryString}{Environment.NewLine}");
         requestLog.AppendLine($"Headers: {Environment.NewLine}{headerText}{Environment.NewLine}");
@@ -137,6 +125,25 @@ public class LoggingMiddleware
         }
         return requestLog.ToString();
     }
+
+    private string RequestHeadersAsText(HttpContext httpContext)
+    {
+        IEnumerable<string> headerLine = httpContext.Request.Headers
+            .Select(
+            pair =>
+            {
+                if (_loggingOptions.SanitizeHeaderNames?.Contains(pair.Key.ToLower()) == true)
+                {
+                    return $"{pair.Key} => ***";
+                }
+                else
+                {
+                    return $"{pair.Key} => {string.Join("|", pair.Value.ToList())}";
+                }
+            });
+        return string.Join(Environment.NewLine, headerLine);
+    }
+
     private async Task<string> GetRawBodyAsync(HttpRequest request, Encoding? encoding = null)
     {
         request.EnableBuffering();
@@ -160,8 +167,14 @@ public class LoggingMiddleware
 
     private string LogResponseBody(string responseBodyText)
     {
+        if (_loggingOptions.SanitizeFieldNames != null && _loggingOptions.SanitizeFieldNames.Length > 0)
+        {
+            LoggingHelper.FilterResponse(responseBodyText, _loggingOptions.SanitizeFieldNames);
+        }
         return $"Response-Body: {responseBodyText}";
     }
+
+
     private class ErrorModel
     {
         public string? ErrorMessage { get; set; }

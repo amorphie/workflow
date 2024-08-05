@@ -1,14 +1,9 @@
-using amorphie.core.Extension;
-using amorphie.core.Middleware.Logging;
 using amorphie.workflow.core.ExceptionHandler;
 using amorphie.workflow.core.Logging;
-using Elastic.Apm.SerilogEnricher;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
@@ -17,11 +12,16 @@ public static class WorkflowLoggingExtension
 {
     public static void WfUseLoggingHandlerMiddlewares(this WebApplication app)
     {
-        app.UseMiddleware<ExceptionHandlerMiddleware>();
+        //app.UseMiddleware<ExceptionHandlerMiddleware>();
         //Request and Response Logging
         //app.UseHttpLogging();
         var loggingOptions = new LoggingOptions();
         app.Configuration.GetSection(LoggingOptions.Logging).Bind(loggingOptions);
+        var sanitizeFieldNames = app.Configuration.GetSection(LoggingOptions.Logging).GetValue<string>(nameof(LoggingOptions.SanitizeFieldNames));
+        loggingOptions.SanitizeFieldNames = sanitizeFieldNames?.Split(',');
+        var sanitizeHeaderNames = app.Configuration.GetSection(LoggingOptions.Logging).GetValue<string>(nameof(LoggingOptions.SanitizeHeaderNames));
+        loggingOptions.SanitizeHeaderNames = sanitizeHeaderNames?.Split(',');
+
         app.UseMiddleware<LoggingMiddleware>(loggingOptions);
     }
 

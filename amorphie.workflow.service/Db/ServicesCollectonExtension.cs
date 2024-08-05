@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 
 namespace amorphie.workflow.service.Db;
-    public static class ServicesCollectonExtension
+public static class ServicesCollectonExtension
 {
     public static void AddBussinessServices(this IServiceCollection services)
     {
@@ -15,6 +15,8 @@ namespace amorphie.workflow.service.Db;
         services.AddScoped<HumanTaskService>();
         services.AddScoped<ComponentTransferService>();
         services.AddScoped<PageComponentService>();
+        services.AddScoped<NJsonSchema.JsonSchema>();
+        services.AddScoped<JsonSchemaService>();
     }
 }
 

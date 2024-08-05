@@ -56,6 +56,16 @@ public static class SchemaValidator
             return Results.NotFound("Schema data not found");
         }
         var theSchema = await JsonSchema.FromJsonAsync(jsonSchema.Schema);
+
+        foreach (var item in theSchema.Properties)
+        {
+            var a = item.Value.Properties;
+            bool? hasEncryptKey = item.Value.ExtensionData?.TryGetValue("$encrypt", out _);
+            if (hasEncryptKey == true)
+            {
+
+            }
+        }
         var jsonString = jsonData.ToString();
         var errors = theSchema.Validate(jsonString);
         if (errors.Count == 0)
