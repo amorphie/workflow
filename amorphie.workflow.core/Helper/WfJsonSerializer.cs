@@ -15,7 +15,7 @@ public static class WfJsonSerializer
     private static JsonSerializerOptions opt = new JsonSerializerOptions 
     { 
         PropertyNameCaseInsensitive = true,
-        //WriteIndented = true,
+        WriteIndented = true,
         //Encoder = JavaScriptEncoder.Create(GetEncoderSettings())
         //Encoder = JavaScriptEncoder.Create(new TextEncoderSettings(UnicodeRanges.All))
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
