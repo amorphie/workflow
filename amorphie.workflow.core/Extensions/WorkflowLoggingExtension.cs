@@ -26,6 +26,7 @@ public static class WorkflowLoggingExtension
         loggingOptions.IgnorePaths = ignorePaths?.Split(',');
 
         app.UseMiddleware<LoggingMiddleware>(loggingOptions);
+        //app.UseMiddleware<LoggingMiddlewareAsJson>(loggingOptions);
     }
 
     public static void WfAddSeriLogWithHttpLogging<TEnricher>(this WebApplicationBuilder builder, List<string>? headersToBeLogged = null) where TEnricher : class, ILogEventEnricher
