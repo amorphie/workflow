@@ -4,22 +4,21 @@ using amorphie.workflow.core.Helper;
 
 namespace amorphie.workflow.core.Logging;
 
-public static class LoggingHelper
+public static class LoggingHelperAsJson
 {
     private static string[]? _redactKeys;
-    public static string FilterResponse(string responseBodyText, string[] redactKeys)
+    public static JsonObject? FilterResponse(JsonObject responseAsJson, string[] redactKeys)
     {
-        if (string.IsNullOrEmpty(responseBodyText))
+        if (responseAsJson == null)
         {
-            return string.Empty;
+            return null;
         }
         _redactKeys = redactKeys;
         try
         {
-            var responseAsJson = WfJsonSerializer.Deserialize<JsonObject>(responseBodyText);
             if (responseAsJson == null || redactKeys.Length == 0)
             {
-                return responseBodyText;
+                return null;
             }
             var keys = responseAsJson.Select(p => p.Key).ToList();
             foreach (var key in keys)
@@ -49,12 +48,12 @@ public static class LoggingHelper
                 }
             }
 
-            return WfJsonSerializer.Serialize(responseAsJson);
+            return responseAsJson;
         }
         catch (Exception)
         {
 
-            return responseBodyText;
+            return null;
         }
     }
     public static IDictionary<string, JsonNode> FilterDictionary(IDictionary<string, JsonNode> data)

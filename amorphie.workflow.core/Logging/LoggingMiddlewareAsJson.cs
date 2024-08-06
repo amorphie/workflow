@@ -1,12 +1,16 @@
+using amorphie.workflow.core.Helper;
+using Google.Rpc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace amorphie.workflow.core.Logging;
 
-public class LoggingMiddleware
+public class LoggingMiddlewareAsJson
 {
 
     private readonly RequestDelegate _next;
@@ -14,8 +18,8 @@ public class LoggingMiddleware
     private readonly LoggingOptions _loggingOptions;
     // private readonly List<string> redactedHeaders = ["authorization", "authentication", "client_secret", "x-userinfo"];
     // private readonly string[] redactedResponse = ["access_token", "refresh_token", "client_secret", "x-userinfo", "authorization"];
-    //private readonly List<string> ignorePaths = ["/health", "/swagger", "/js", "/css"];
-    public LoggingMiddleware(RequestDelegate next, ILoggerFactory loggerFactory, LoggingOptions loggingOptions)
+    private readonly List<string> ignorePaths = ["/health", "/swagger", "/js", "/css"];
+    public LoggingMiddlewareAsJson(RequestDelegate next, ILoggerFactory loggerFactory, LoggingOptions loggingOptions)
     {
         _next = next;
         _logger = loggerFactory.CreateLogger<LoggingMiddleware>();
@@ -25,8 +29,8 @@ public class LoggingMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         Stream? originalResponseBody = null;
-        string? requestInfo = null;
-        string? responseInfo = null;
+        JsonObject requestInfo = new JsonObject();
+        JsonObject responseInfo = new JsonObject();
         try
         {
             //if path is ignored do not log
@@ -37,6 +41,8 @@ public class LoggingMiddleware
             else
             {
                 requestInfo = await LogRequest(context);
+
+
                 if (_loggingOptions.LogResponse)
                 {
                     responseInfo = await InvokeInternalAsync(context, originalResponseBody);
@@ -46,7 +52,8 @@ public class LoggingMiddleware
                     await _next(context);
                     responseInfo = LogResponseHeaders(context);
                 }
-                _logger.LogInformation("Request : {Request}, Response : {Response}", requestInfo.Replace("\\", ""), responseInfo.Replace("\\",""));
+                _logger.LogInformation("Request : {Request}, Response : {Response}", requestInfo, responseInfo);
+                //_logger.LogInformation("Request : {Request}, Response : {Response}", WfJsonSerializer.Serialize(requestInfo), WfJsonSerializer.Serialize(responseInfo));
             }
         }
         catch (Exception ex)
@@ -60,9 +67,9 @@ public class LoggingMiddleware
     }
 
 
-    private async Task<string?> InvokeInternalAsync(HttpContext context, Stream originalResponseBody)
+    private async Task<JsonObject?> InvokeInternalAsync(HttpContext context, Stream originalResponseBody)
     {
-        string? responseInfo = null;
+        JsonObject responseInfo = new JsonObject();
         using var newResponseBody = new MemoryStream();
 
         //Buffer response body
@@ -78,12 +85,22 @@ public class LoggingMiddleware
         //Rewind and set to originalResponseBody
         newResponseBody.Seek(0, SeekOrigin.Begin);
         await newResponseBody.CopyToAsync(originalResponseBody);
+        var responseBody = LogResponseBody(responseBodyText);
+        responseInfo.Add("Response Headers", LogResponseHeaders(context));
+        if (responseBody != null)
+        {
+            responseInfo.Add("Response", responseBody);
 
-        responseInfo = $"{LogResponseHeaders(context)} {Environment.NewLine} {LogResponseBody(responseBodyText)}";
+        }
+        else
+        {
+            responseInfo.Add("Response", responseBodyText);
+        }
+        //responseInfo = $"{LogResponseHeaders(context)} {Environment.NewLine} {responseBody}";
         return responseInfo;
     }
 
-    private async Task HandleExceptionAsync(HttpContext context, Exception ex, string? requestInfo, string? responseInfo)
+    private async Task HandleExceptionAsync(HttpContext context, Exception ex, JsonObject? requestInfo, JsonObject? responseInfo)
     {
         var errorMessage = "An error occured and logged. Use trace identifier id to find out details";
         var errorDto = new ErrorModel
@@ -98,49 +115,41 @@ public class LoggingMiddleware
         await context.Response.WriteAsync(JsonSerializer.Serialize(errorDto));
     }
 
-    private async Task<string> LogRequest(HttpContext context)
+    private async Task<JsonObject> LogRequest(HttpContext context)
     {
-        var request = context.Request;
-        var requestLog = new StringBuilder();
-        //requestLog.AppendLine("Incoming Request:");
-        requestLog.AppendLine($"HTTP {request.Method} {request.Path}");
-        requestLog.AppendLine($"Host: {request.Host}");
-        requestLog.AppendLine(await RequestAsTextAsync(context));
-        //requestLog.AppendLine($"Content-Type: {request.ContentType}");
-        //requestLog.AppendLine($"Content-Length: {request.ContentLength}");
-        return requestLog.ToString();
-    }
+        JsonObject requestInfo = new JsonObject();
 
-    private async Task<string> RequestAsTextAsync(HttpContext httpContext)
-    {
-        string headerText = RequestHeadersAsText(httpContext);
-        var requestLog = new StringBuilder();
-        requestLog.AppendLine($"Request: {httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.Path}{httpContext.Request.QueryString}{Environment.NewLine}");
-        requestLog.AppendLine($"Headers: {Environment.NewLine}{headerText}{Environment.NewLine}");
+        var request = context.Request;
+        requestInfo.Add("Http", $"{request.Method} {request.Path}");
+        requestInfo.Add("Host", $"{request.Host}");
+        requestInfo.Add("Request", $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}");
+        var headerText = RequestHeaders(context);
+        requestInfo.Add("Headers", headerText);
+
         if (_loggingOptions.LogRequest)
         {
-            string rawRequestBody = await GetRawBodyAsync(httpContext.Request);
-            requestLog.AppendLine($"Content : {Environment.NewLine}{rawRequestBody}");
+            string rawRequestBody = await GetRawBodyAsync(context.Request);
+            requestInfo.Add("Content", rawRequestBody);
         }
-        return requestLog.ToString();
+        return requestInfo;
     }
 
-    private string RequestHeadersAsText(HttpContext httpContext)
+    private JsonObject RequestHeaders(HttpContext httpContext)
     {
-        IEnumerable<string> headerLine = httpContext.Request.Headers
-            .Select(
-            pair =>
+        JsonObject requestHeaders = new JsonObject();
+        foreach (var pair in httpContext.Request.Headers)
+        {
+            if (_loggingOptions.SanitizeHeaderNames?.Contains(pair.Key.ToLower()) == true)
             {
-                if (_loggingOptions.SanitizeHeaderNames?.Contains(pair.Key.ToLower()) == true)
-                {
-                    return $"{pair.Key} => ***";
-                }
-                else
-                {
-                    return $"{pair.Key} => {string.Join("|", pair.Value.ToList()).Replace("\"","")}";
-                }
-            });
-        return string.Join(Environment.NewLine, headerLine);
+                requestHeaders.Add(pair.Key, "***");
+            }
+            else
+            {
+                //requestHeaders.Add(pair.Key, $"{string.Join(",", pair.Value.ToList())}");
+                requestHeaders.Add(pair.Key, pair.Value.ToString().Replace("\"",""));
+            }
+        }
+        return requestHeaders;
     }
 
     private async Task<string> GetRawBodyAsync(HttpRequest request, Encoding? encoding = null)
@@ -154,23 +163,30 @@ public class LoggingMiddleware
     }
 
 
-    private string LogResponseHeaders(HttpContext context)
+    private JsonObject LogResponseHeaders(HttpContext context)
     {
         var response = context.Response;
-        var responseLog = new StringBuilder();
-        responseLog.AppendLine($"HTTP {response.StatusCode}");
-        responseLog.AppendLine($"Content-Type: {response.ContentType}");
-        responseLog.AppendLine($"Content-Length: {response.ContentLength}");
-        return responseLog.ToString();
+        var responseLog = new JsonObject
+        {
+            { "HTTP", response.StatusCode },
+            { "Content-Type", response.ContentType },
+            { "Content-Length", response.ContentLength }
+        };
+        return responseLog;
     }
 
-    private string LogResponseBody(string responseBodyText)
+    private JsonObject LogResponseBody(string responseBodyText)
     {
+        var responseAsJson = WfJsonSerializer.Deserialize<JsonObject>(responseBodyText);
+        if (responseAsJson == null)
+        {
+            return null;
+        }
         if (_loggingOptions.SanitizeFieldNames != null && _loggingOptions.SanitizeFieldNames.Length > 0)
         {
-            responseBodyText = LoggingHelper.FilterResponse(responseBodyText, _loggingOptions.SanitizeFieldNames);
+            responseAsJson = LoggingHelperAsJson.FilterResponse(responseAsJson, _loggingOptions.SanitizeFieldNames);
         }
-        return responseBodyText;
+        return responseAsJson;
     }
 
 
