@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace amorphie.workflow.core.Logging;
 
@@ -97,52 +99,48 @@ public class LoggingMiddleware
 
     private async Task<string> LogRequest(HttpContext context)
     {
+        JsonObject requestInfo = new JsonObject();
         var request = context.Request;
-        var requestLog = new StringBuilder();
-        requestLog.AppendLine($"HTTP {request.Method} {request.Path}");
-        requestLog.AppendLine($"Host: {request.Host}");
-        requestLog.AppendLine(await RequestAsTextAsync(context));
-        requestLog.AppendLine($"Content-Type: {request.ContentType}");
-        return requestLog.ToString();
-    }
+        requestInfo.Add("Http", $"{request.Method} {request.Path}");
+        requestInfo.Add("Host", request.Host.ToString());
+        requestInfo.Add("Content-Type", request.ContentType);
+        requestInfo.Add("Request", $"{context.Request.Scheme}://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}");
 
-    private async Task<string> RequestAsTextAsync(HttpContext httpContext)
-    {
-        string headerText = RequestHeadersAsText(httpContext);
+        requestInfo.Add("Headers", RequestHeaders(context));
+
         var requestLog = new StringBuilder();
-        requestLog.AppendLine($"Request: {httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.Path}{httpContext.Request.QueryString}{Environment.NewLine}");
-        requestLog.AppendLine($"Headers: {Environment.NewLine}{headerText}{Environment.NewLine}");
+        requestLog.AppendLine(requestInfo.ToJsonString());
+
         if (_loggingOptions.LogRequest)
         {
-            string rawRequestBody = await GetRawBodyAsync(httpContext.Request);
-            requestLog.AppendLine($"Content : {Environment.NewLine}{rawRequestBody}");
+            string rawRequestBody = await GetRawBodyAsync(context.Request);
+            requestLog.AppendLine($"Content : {rawRequestBody}");
         }
         return requestLog.ToString();
     }
-
-    private string RequestHeadersAsText(HttpContext httpContext)
+    private JsonObject RequestHeaders(HttpContext httpContext)
     {
-        IEnumerable<string> headerLine = httpContext.Request.Headers
-            .Select(
-            pair =>
+        JsonObject requestHeaders = new JsonObject();
+        foreach (var pair in httpContext.Request.Headers)
+        {
+            if (_loggingOptions.SanitizeHeaderNames?.Contains(pair.Key.ToLower()) == true)
             {
-                if (_loggingOptions.SanitizeHeaderNames?.Contains(pair.Key.ToLower()) == true)
-                {
-                    return $"{pair.Key} => ***";
-                }
-                else
-                {
-                    return $"{pair.Key} => {string.Join("|", pair.Value.ToList()).Replace("\"", "")}";
-                }
-            });
-        return string.Join(Environment.NewLine, headerLine);
+                requestHeaders.Add(pair.Key, "***");
+            }
+            else
+            {
+                //requestHeaders.Add(pair.Key, $"{string.Join(",", pair.Value.ToList())}");
+                requestHeaders.Add(pair.Key, pair.Value.ToString().Replace("\"", ""));
+            }
+        }
+        return requestHeaders;
     }
-
     private async Task<string> GetRawBodyAsync(HttpRequest request, Encoding? encoding = null)
     {
         request.EnableBuffering();
         using var reader = new StreamReader(request.Body, encoding ?? Encoding.UTF8, leaveOpen: true);
-        string body = await reader.ReadToEndAsync().ConfigureAwait(false);
+        string body = await reader.ReadToEndAsync();
+        body = body.Replace("\n", "").Replace("\r", "").Replace(" ", "");
         request.Body.Position = 0;
 
         return body;
