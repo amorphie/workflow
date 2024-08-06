@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -38,7 +37,11 @@ public class LoggingMiddleware
                 requestInfo = await LogRequest(context);
                 if (_loggingOptions.LogResponse)
                 {
-                    responseInfo = await InvokeInternalAsync(context, originalResponseBody);
+                    using var newResponseBody = new MemoryStream();
+                    //Buffer response body
+                    originalResponseBody = context.Response.Body;
+                    context.Response.Body = newResponseBody;
+                    responseInfo = await InvokeInternalAsync(context, originalResponseBody, newResponseBody);
                 }
                 else
                 {
@@ -59,17 +62,10 @@ public class LoggingMiddleware
     }
 
 
-    private async Task<string?> InvokeInternalAsync(HttpContext context, Stream originalResponseBody)
+    private async Task<string?> InvokeInternalAsync(HttpContext context, Stream originalResponseBody, MemoryStream newResponseBody)
     {
         string? responseInfo = null;
-        using var newResponseBody = new MemoryStream();
-
-        //Buffer response body
-        originalResponseBody = context.Response.Body;
-        context.Response.Body = newResponseBody;
-
         await _next(context);
-
         //Read response body
         newResponseBody.Seek(0, SeekOrigin.Begin);
         var responseBodyText = await new StreamReader(newResponseBody).ReadToEndAsync();
