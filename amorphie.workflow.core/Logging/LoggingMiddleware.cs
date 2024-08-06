@@ -12,9 +12,6 @@ public class LoggingMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger _logger;
     private readonly LoggingOptions _loggingOptions;
-    // private readonly List<string> redactedHeaders = ["authorization", "authentication", "client_secret", "x-userinfo"];
-    // private readonly string[] redactedResponse = ["access_token", "refresh_token", "client_secret", "x-userinfo", "authorization"];
-    //private readonly List<string> ignorePaths = ["/health", "/swagger", "/js", "/css"];
     public LoggingMiddleware(RequestDelegate next, ILoggerFactory loggerFactory, LoggingOptions loggingOptions)
     {
         _next = next;
@@ -46,7 +43,7 @@ public class LoggingMiddleware
                     await _next(context);
                     responseInfo = LogResponseHeaders(context);
                 }
-                _logger.LogInformation("Request : {Request}, Response : {Response}", requestInfo.Replace("\\", ""), responseInfo.Replace("\\",""));
+                _logger.LogInformation("Request : {Request}, Response : {Response}", requestInfo, responseInfo);
             }
         }
         catch (Exception ex)
@@ -102,12 +99,10 @@ public class LoggingMiddleware
     {
         var request = context.Request;
         var requestLog = new StringBuilder();
-        //requestLog.AppendLine("Incoming Request:");
         requestLog.AppendLine($"HTTP {request.Method} {request.Path}");
         requestLog.AppendLine($"Host: {request.Host}");
         requestLog.AppendLine(await RequestAsTextAsync(context));
-        //requestLog.AppendLine($"Content-Type: {request.ContentType}");
-        //requestLog.AppendLine($"Content-Length: {request.ContentLength}");
+        requestLog.AppendLine($"Content-Type: {request.ContentType}");
         return requestLog.ToString();
     }
 
@@ -137,7 +132,7 @@ public class LoggingMiddleware
                 }
                 else
                 {
-                    return $"{pair.Key} => {string.Join("|", pair.Value.ToList()).Replace("\"","")}";
+                    return $"{pair.Key} => {string.Join("|", pair.Value.ToList()).Replace("\"", "")}";
                 }
             });
         return string.Join(Environment.NewLine, headerLine);
@@ -160,7 +155,6 @@ public class LoggingMiddleware
         var responseLog = new StringBuilder();
         responseLog.AppendLine($"HTTP {response.StatusCode}");
         responseLog.AppendLine($"Content-Type: {response.ContentType}");
-        responseLog.AppendLine($"Content-Length: {response.ContentLength}");
         return responseLog.ToString();
     }
 
@@ -170,7 +164,7 @@ public class LoggingMiddleware
         {
             responseBodyText = LoggingHelper.FilterResponse(responseBodyText, _loggingOptions.SanitizeFieldNames);
         }
-        return responseBodyText;
+        return $"Response Body : {responseBodyText}";
     }
 
 
