@@ -43,12 +43,12 @@ namespace amorphie.workflow.service.Zeebe
             try
             {
                 JsonObject messageResult = await _daprClient.InvokeBindingAsync<dynamic, JsonObject>(gateway, "publish-message", messageData);
-                long responseValue=Convert.ToInt64(messageResult["key"].ToString()) ;
+                long responseValue = Convert.ToInt64(messageResult["key"].ToString());
                 return responseValue;
             }
             catch (Exception)
             {
-                return 0;
+                throw new Exception("Zeebe is unresponsive");
             }
         }
 

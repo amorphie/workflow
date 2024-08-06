@@ -26,6 +26,7 @@ public class MFATypeHub : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName);
 
         _activeUser.Increment();
+        
         return base.OnConnectedAsync();
     }
     public override Task OnDisconnectedAsync(Exception? exception)
