@@ -7,6 +7,9 @@ namespace amorphie.workflow.core.Token;
 
 public class Md5
 {
+    private Md5()
+    {     
+    }
     public static string Generate(object objectToHash)
     {
         var jResult = JsonSerializer.Serialize(objectToHash);

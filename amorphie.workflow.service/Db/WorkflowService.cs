@@ -56,11 +56,7 @@ public class WorkflowService : IWorkflowService
 
         }
         //Save States and Trxs
-        if (data.NewStates != null && data.NewStates.Count > 0)
-        {
-            await _stateService.SaveBulkAsync(data.NewStates, data.Name, token);
-        }
-        else if (data.States != null)
+        if (data.States != null)
         {
             await _stateService.LegacySaveBulkAsync(data);
         }

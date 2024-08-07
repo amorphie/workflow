@@ -29,6 +29,8 @@ public class Instance : EntityBase
     public string InstanceData { get; set; } = default!;
     public string? XDeviceId { get; set; }
     public string? XTokenId { get; set; }
+    public string? TraceId { get; set; }
+    
 
 }
 

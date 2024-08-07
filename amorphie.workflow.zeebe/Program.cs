@@ -8,10 +8,8 @@ using Dapr.Client;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Serilog.Context;
 using Elastic.Apm.NetCoreAll;
 using amorphie.workflow.service.Db;
-using amorphie.core.Middleware.Logging;
 using amorphie.core.Identity;
 using amorphie.core.Extension;
 using amorphie.workflow.core.Extensions;
@@ -53,7 +51,7 @@ builder.Services.AddDbContext<WorkflowDBContext>
             }
         }
     );
-    
+
 builder.Services.AddHealthChecks().AddNpgSql(postgreSql);
 builder.Services.AddHttpClient("httpWorkerService")
 .ConfigurePrimaryHttpMessageHandler((c) =>
@@ -93,6 +91,7 @@ if (!app.Environment.IsDevelopment())
     app.UseAllElasticApm(app.Configuration);
 }
 app.WfUseLoggingHandlerMiddlewares();
+app.AddZeebeWorkerMiddleware(zeebeGateway: "workflow-zeebe-command");
 
 using var scope = app.Services.CreateScope();
 var db = scope.ServiceProvider.GetRequiredService<WorkflowDBContext>();
@@ -107,10 +106,9 @@ app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapHealthChecks("/health");
-app.UseWhen(context => context.Request.Path.StartsWithSegments("/amorphie-workflow"), appBuilder =>
-{
-    app.AddZeebeWorkerMiddleware(zeebeGateway: "workflow-zeebe-command");
-});
+// app.UseWhen(context => context.Request.Path.StartsWithSegments("/amorphie-workflow"), appBuilder =>
+// {
+// });
 app.MapStateManagerEndpoints();
 app.MapHttpServiceManagerEndpoints();
 app.MapAccountFlowManagerEndpoints();
