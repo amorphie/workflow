@@ -15,10 +15,12 @@ using amorphie.workflow.service.Db;
 using amorphie.workflow;
 using amorphie.core.Middleware.Logging;
 using amorphie.workflow.core.Extensions;
+using System.Diagnostics;
+using Dapr.Client;
 
 var builder = WebApplication.CreateBuilder(args);
-await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 
+await builder.Configuration.AddVaultSecrets("workflow-secretstore", new[] { "workflow-secretstore" });
 var postgreSql = builder.Configuration["workflowdb"];
 
 
@@ -101,12 +103,18 @@ builder.WfAddSeriLogWithHttpLogging<WorkflowLogEnricher>();
 
 
 var app = builder.Build();
+
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+//Test ama�l� eklendi. Testler bitince d�zenlenecek
+//app.UseMiddleware<TraceIdMiddleware>();
+//app.AddTraceMiddleware(app.Configuration);
+//app.UseMiddleware<ApmMiddleware>();
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseAllElasticApm(app.Configuration);
 }
+
 app.WfUseLoggingHandlerMiddlewares();
 
 // using var scope = app.Services.CreateScope();
@@ -132,6 +140,8 @@ app.MapHumanTaskModuleEndpoints();
 app.MapAuthorizeEndpoints();
 app.MapDMLEndpoints();
 app.MapSchemaValidatorEndpoints();
+Serilog.Debugging.SelfLog.Enable(msg => Debug.WriteLine(msg));
+
 try
 {
     app.Logger.LogInformation("Starting Amorphie Workflow application...");

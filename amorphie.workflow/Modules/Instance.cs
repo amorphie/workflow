@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Globalization;
+using System.Text.Json.Nodes;
 using amorphie.core.Base;
 using amorphie.core.Enums;
 using amorphie.core.Extension;
+using amorphie.core.IBase;
 using amorphie.workflow.core.Constants;
 using amorphie.workflow.core.Dtos;
 using amorphie.workflow.core.Enums;
@@ -526,12 +528,9 @@ public static class InstanceModule
   [FromHeader(Name = "Behalf-Of-User")] Guid behalOfUser
 )
     {
-        var result = await service.InitWithoutEntity(instanceId, transitionName, user, behalOfUser, body, request.Headers, cancellationToken);
+        IResponse<HttpStatusEnum?> iresult = await service.InitWithoutEntity(instanceId, transitionName, user, behalOfUser, body, request.Headers, cancellationToken);
+        Response<HttpStatusEnum?>? result = iresult as Response<HttpStatusEnum?>;
 
-        if (result.Result.Status == Status.Success.ToString() && transitionName == ZeebeVariableKeys.WfAddNoteStart)
-        {
-            return result;
-        }
 
         if (result.Result.Status == Status.Success.ToString())
         {
@@ -973,7 +972,7 @@ public static class InstanceModule
     private async static Task<List<SignalRResponseHistory>> getSignalRDataByUserReference(WorkflowDBContext context, string workflowName, string userReference, CancellationToken cancellationToken)
     {
         var instanceControl = await context.Instances.Include(i => i.Workflow)
-        .OrderByDescending(p => p.CreatedAt).FirstOrDefaultAsync(f => f.UserReference == userReference && f.WorkflowName == workflowName && !(f.BaseStatus == StatusType.Passive || f.BaseStatus == StatusType.Completed));
+        .OrderByDescending(p => p.CreatedAt).FirstOrDefaultAsync(f => f.UserReference == userReference && f.WorkflowName == workflowName);
         if (instanceControl == null || instanceControl.Workflow.IsForbiddenData.GetValueOrDefault(false))
         {
             return new List<SignalRResponseHistory>();
