@@ -72,7 +72,6 @@ public static class WorkflowLoggingExtension
                 //.Enrich.WithElasticApmCorrelationInfo()
                 ;
         });
-        builder.Services.AddHttpLoggingInterceptor<HeaderCheckHttpLoggingInterceptor>();
     }
 }
 
