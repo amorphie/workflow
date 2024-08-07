@@ -405,7 +405,10 @@ public static class StateManagerModule
             if (data.Data != null)
             {
                 //Before processing the AdditionalData and EntityData, decode them
-                // DecodeData(body.InstanceId, data.Data);
+                if (body.HasAnyEncryption)
+                {
+                    DecodeData(body.InstanceId, data.Data);
+                }
 
                 newInstanceTransition!.AdditionalData = data.Data.AdditionalData?.ToString();
                 newInstanceTransition!.EntityData = data.Data.EntityData?.ToString() ?? "";

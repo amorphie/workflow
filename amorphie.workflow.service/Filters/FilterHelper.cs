@@ -22,8 +22,9 @@ public class FilterHelper
         }
         return body;
     }
-    public static dynamic FilterAndEncrypt(JsonElement body, NJsonSchema.JsonSchema schema, string instanceId)
+    public static (dynamic, bool) FilterAndEncrypt(JsonElement body, NJsonSchema.JsonSchema schema, string instanceId)
     {
+        bool hasAnyEncryption = false;
         if (body.TryConvertToDictionary(out Dictionary<string, object>? pairs) && pairs != null)
         {
 
@@ -45,6 +46,7 @@ public class FilterHelper
                         var key = AesHelper.CreateAesKey(instanceId);
                         var encrypted = AesHelper.EncryptString(key, value);
                         tNewObject[item.Key] = encrypted;
+                        hasAnyEncryption = true;
 
                     }
                 }
@@ -52,8 +54,8 @@ public class FilterHelper
             var ser = WfJsonSerializer.Serialize(tNewObject);
             var des = WfJsonSerializer.Deserialize<object>(ser);
 
-            return des ?? body;
+            return (des ?? body, hasAnyEncryption);
         }
-        return body;
+        return (body, hasAnyEncryption);
     }
 }

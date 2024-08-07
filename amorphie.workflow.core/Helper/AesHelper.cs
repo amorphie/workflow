@@ -7,14 +7,14 @@ namespace amorphie.workflow.core.Helper;
 public static class AesHelper
 {
 
-    private const string encryptPrefix = "encrypted_";
+    private const string encryptPrefix = "$encrypt_";
 
     public static string EncryptString(string key, string plainText)
     {
         using (Aes aes = Aes.Create())
         {
 
-            aes.Key = Encoding.UTF8.GetBytes(key);
+            aes.Key = CreateAesKeyAsByte(key);
 
             ICryptoTransform encryptor = aes.CreateEncryptor();
 
@@ -47,7 +47,7 @@ public static class AesHelper
 
         using (Aes aes = Aes.Create())
         {
-            aes.Key = Encoding.UTF8.GetBytes(key);
+            aes.Key = CreateAesKeyAsByte(key);
             aes.IV = iv;
             ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 
@@ -59,45 +59,58 @@ public static class AesHelper
     }
     public static string CreateAesKey(string key)
     {
-        var keyByte = Encoding.ASCII.GetBytes(key);
+        byte[] bytes = CreateAesKeyAsByte(key);
+        return Encoding.ASCII.GetString(bytes);
+    }
+
+    public static byte[] CreateAesKeyAsByte(string key)
+    {
+        var keyByte = Encoding.UTF8.GetBytes(key);
         byte[] bytes = new byte[16];
         Array.Copy(keyByte, bytes, 16);
-        return Convert.ToBase64String(bytes);
+        return bytes;
     }
 
 
-    public static JsonObject DecryptJson(string key, JsonObject data)
+    public static JsonObject DecryptJson(string aesKey, JsonObject data)
     {
-        var dict = data.ToDictionary();
-        var keys = dict.Keys;
-        foreach (var item in keys)
+        var dataKeys = data.Where(p => p.Value != null).Select(p => p.Key).ToList();
+        foreach (var dataKey in dataKeys)
         {
-            if (data[item].GetValueKind() == JsonValueKind.Object)
+            if (data[dataKey]!.GetValueKind() == JsonValueKind.Object)
             {
-                var decResult = DecryptDict(key, data[item] as IDictionary<string, JsonNode>);
-                data[item] = JsonSerializer.Serialize(decResult);
+                if (data[dataKey] is IDictionary<string, JsonNode> innerDict)
+                {
+                    var decResult = DecryptDict(aesKey, innerDict);
+                    data[dataKey] = decResult as JsonObject;
+                }
             }
-            else if (data[item].GetValueKind() == JsonValueKind.String)
+            else if (data[dataKey]!.GetValueKind() == JsonValueKind.String)
             {
-                data[item] = DecryptString(key, data[item].ToString());
+                data[dataKey] = DecryptString(aesKey, data[dataKey]!.ToString());
             }
         }
-
         return data;
     }
-    public static IDictionary<string, JsonNode> DecryptDict(string key, IDictionary<string, JsonNode> data)
+    public static IDictionary<string, JsonNode> DecryptDict(string aesKey, IDictionary<string, JsonNode> data)
     {
-        var keys = data.Keys.ToList();
-        foreach (var item in keys)
+        var dataKeys = data.Where(p => p.Value != null).Select(p => p.Key).ToList();
+        foreach (var dataKey in dataKeys)
         {
-            if (data[item].GetValueKind() == JsonValueKind.Object)
+            if (data[dataKey].GetValueKind() == JsonValueKind.Object)
             {
-                var decResult = DecryptDict(key, data[item] as IDictionary<string, JsonNode>);
-                data[item] = JsonSerializer.Serialize(decResult);
-            }
-            else if (data[item].GetValueKind() == JsonValueKind.String)
-            {
-                data[item] = DecryptString(key, data[item].ToString());
+                if (data[dataKey] is IDictionary<string, JsonNode> innerDict)
+                {
+                    var decResult = DecryptDict(aesKey, innerDict);
+                    if (decResult is JsonObject decryptResult)
+                    {
+                        data[dataKey] = decryptResult;
+                    }
+                }
+                else if (data[dataKey].GetValueKind() == JsonValueKind.String)
+                {
+                    data[dataKey] = DecryptString(aesKey, data[dataKey].ToString());
+                }
             }
         }
         return data;
