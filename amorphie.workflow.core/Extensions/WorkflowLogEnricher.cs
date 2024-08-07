@@ -7,6 +7,8 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using Elastic.Apm;
 using amorphie.workflow.core.Constants;
+using Google.Protobuf.WellKnownTypes;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace amorphie.workflow.core.Extensions;
 
@@ -76,7 +78,7 @@ public class WorkflowLogEnricher : ILogEventEnricher
                 // }
                 if (httpContext.Request.Path.HasValue)
                 {
-                    AddPropertyIfAbsent("RequestPath", httpContext.Request.Path.Value);
+                    _logEvent.AddOrUpdateProperty(_propertyFactory.CreateProperty("RequestPath", $"{httpContext.Request.Path.Value}&{httpContext.Request.QueryString}", true));
                 }
 
             }
