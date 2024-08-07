@@ -17,27 +17,32 @@ public class JsonObjectConverter
         {
             InstanceId = new Guid(body[ZeebeVariableKeys.InstanceId]?.ToString() ?? ""),
             PageUrl = body[ZeebeVariableKeys.PageUrl]?.ToString() ?? "",
-            HubType= body[ZeebeVariableKeys.HubType]?.ToString() ?? "",
+            HubType = body[ZeebeVariableKeys.HubType]?.ToString() ?? "",
             Message = body[ZeebeVariableKeys.Message]?.Deserialize<string>(opt) ?? body[ZeebeVariableKeys.message]?.Deserialize<string>(opt) ?? "",
             ErrorCode = body[ZeebeVariableKeys.ErrorCode]?.Deserialize<string>(opt) ?? body[ZeebeVariableKeys.errorCode]?.Deserialize<string>(opt) ?? "",
             LastTransition = transitionName
         };
+        if (bool.TryParse(body[ZeebeVariableKeys.HasAnyEncryption]?.ToString(), out bool hasEncryption))
+        {
+            workerBody.HasAnyEncryption = hasEncryption;
+        }
+
 
         foreach (var item in body.Where(p => p.Key.StartsWith("TRX")))
         {
             if (workerBody.WorkerBodyTrxDataList!.ContainsKey(item.Key))
                 continue;
-                WorkerBodyTrxDatas? value=null;
-                try
-                {
-                     value = item.Value.Deserialize<WorkerBodyTrxDatas>(opt) ?? new WorkerBodyTrxDatas();
-                }
-                catch(Exception)
-                {
-                       throw new Exception(item.Key+" JsonBody is not valid format");
-                }
-           
-            
+            WorkerBodyTrxDatas? value = null;
+            try
+            {
+                value = item.Value.Deserialize<WorkerBodyTrxDatas>(opt) ?? new WorkerBodyTrxDatas();
+            }
+            catch (Exception)
+            {
+                throw new Exception(item.Key + " JsonBody is not valid format");
+            }
+
+
             workerBody.WorkerBodyTrxDataList.Add(item.Key, value);
         }
         var bodyHeaders = body["Headers"];
@@ -104,6 +109,7 @@ public class WorkerBody
     public string? HubType { get; set; }
     public string? ErrorCode { get; set; }
     public Guid InstanceId { get; set; } = default!;
+    public bool HasAnyEncryption { get; set; } = false;
 
     public WorkerBodyHeaders? Headers { get; set; } = new();
     public Dictionary<string, WorkerBodyTrxDatas>? WorkerBodyTrxDataList { get; set; } = [];

@@ -660,11 +660,14 @@ public class PostTransactionService : IPostTransactionService
         targetObject.TriggeredBy = _user;
         targetObject.TriggeredByBehalfOf = _behalfOfUser;
 
-        // var jsonSchemaEntity = _jsonSchemaService.GetNjsonSchemaAsync(_transitionName).Result;
-        // if (jsonSchemaEntity != null)
-        // {
-        //     _data.EntityData = FilterHelper.FilterAndEncrypt(_data.EntityData, jsonSchemaEntity, instanceAtState.Id.ToString());
-        // }
+        var jsonSchemaEntity = _jsonSchemaService.GetNjsonSchemaAsync(_transitionName).Result;
+        if (jsonSchemaEntity != null)
+        {
+            (dynamic, bool) filterAndEncryptResult = FilterHelper.FilterAndEncrypt(_data.EntityData, jsonSchemaEntity, instanceAtState.Id.ToString());
+            _data.EntityData = filterAndEncryptResult.Item1;
+            variables.Add(ZeebeVariableKeys.HasAnyEncryption, filterAndEncryptResult.Item2);
+
+        }
 
         string updateName = _transitionName.DeleteUnAllowedCharecters();
         variables.Add($"TRX-{_transitionName}", targetObject);

@@ -21,6 +21,7 @@ public static class ZeebeVariableKeys
     public const string TypeUserTask = "io.camunda.zeebe:userTask";
     public const string Url = "url";
     public const string WfAddNoteStart = "wf-add-note-start";
+    public const string HasAnyEncryption = "HasAnyEncryption";
     public static class Headers
     {
         public const string NOTIFY_CLIENT = "NOTIFY_CLIENT";
