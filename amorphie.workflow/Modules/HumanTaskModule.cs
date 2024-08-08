@@ -85,7 +85,8 @@ CancellationToken token,
     {
         try
         {
-            var taskList = await context.HumanTasks.Where(w => w.Assignee == Assignee && w.Status != HumanTaskStatus.Completed
+            DateTime now=DateTime.UtcNow;
+            var taskList = await context.HumanTasks.Where(w => (w.Assignee == Assignee||(w.ClaimBy==Assignee&&w.ClaimDueDate>=now)) && w.Status != HumanTaskStatus.Completed
             && w.Status != HumanTaskStatus.Denied).Select(s => new core.Dtos.HumanTasks.HumanTaskDto()
             {
                 TaskId = s.TaskId,
@@ -106,7 +107,9 @@ CancellationToken token,
                 Roles = s.Roles,
                 State = s.State,
                 Status = s.Status,
-                Type = s.Type
+                Type = s.Type,
+                ClaimBy=s.ClaimBy,
+                ClaimDueDate=s.ClaimDueDate
             }).ToListAsync(token);
             var response=await humanTaskService.HumanTaskWithView(taskList,language,role,TypeofUiEnum.FlutterWidget.ToString().ToLower(),token);
             if(response!=null)
@@ -136,9 +139,9 @@ CancellationToken token,
     {
         try
         {
-
+            DateTime now=DateTime.UtcNow;
             HumanTaskStatus? taskStatus = amorphie.workflow.core.Helper.EnumHelper.GetValueFromDescription<HumanTaskStatus>(Status);
-            var taskList = await context.HumanTasks.Where(w => ((string.IsNullOrEmpty(Assignee)) || (!string.IsNullOrEmpty(Assignee) && w.Assignee == Assignee))
+            var taskList = await context.HumanTasks.Where(w => ((string.IsNullOrEmpty(Assignee)) || (!string.IsNullOrEmpty(Assignee) && (w.Assignee == Assignee||(w.ClaimBy==Assignee&&w.ClaimDueDate>=now))))
             && w.Status == taskStatus
             &&((string.IsNullOrEmpty(instanceId)) || (!string.IsNullOrEmpty(instanceId) && w.InstanceId.ToString() == instanceId))).Select(s => new core.Dtos.HumanTasks.HumanTaskDto()
             {
@@ -176,70 +179,6 @@ CancellationToken token,
             return Results.Problem("Unexcepted error:" + ex.ToString());
         }
     }
-    private async static Task<IResult> HumanTaskWithView(WorkflowDBContext context, IConfiguration configuration, List<core.Dtos.HumanTasks.HumanTaskDto?>? taskList,
-     string? language, string? role, string? type, CancellationToken token)
-    {
-        var templateURL = configuration["templateEngineUrl"]!.ToString();
-        List<core.Dtos.HumanTasks.HumanTaskDto?> responseList = new List<core.Dtos.HumanTasks.HumanTaskDto?>();
-        foreach (var item in taskList)
-        {
-            if(!string.IsNullOrEmpty(item.AppTransitionName))
-            {
-                item.ApproveView = await TransitionModel(context, item.AppTransitionName, language, role, type, templateURL, token);
-            }
-            if(!string.IsNullOrEmpty(item.DenyTransitionName))
-            {
-                item.RejectView = await TransitionModel(context, item.DenyTransitionName, language, role, type, templateURL, token);
-            }
-            InstanceTransition? lastTransition = await context.InstanceTransitions.OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(f => f.InstanceId == item.InstanceId, token);
-            if (lastTransition != null)
-            {
-                try
-                {
-                    item.lastEntityData = System.Text.Json.JsonSerializer.Deserialize<dynamic>(lastTransition.EntityData);
-                    item.lastAdditionalData = System.Text.Json.JsonSerializer.Deserialize<dynamic>(lastTransition.AdditionalData);
-                }
-                catch(Exception)
-                {
-                    item.lastEntityData =new {};
-                    item.lastAdditionalData =new {};
-                }
-            }
-            responseList.Add(item);
-        }
-        if (responseList.Any())
-        {
-            return Results.Ok(responseList);
-        }
-        return Results.NoContent();
-    }
-    private async static Task<ViewTransitionModel?> TransitionModel(WorkflowDBContext context, string transitionName, string? language, string? role, string? type, string templateURL, CancellationToken token)
-    {
-          // (( string.IsNullOrEmpty(role)&& f.Role != null&&role == f.Role) || (string.IsNullOrEmpty(f.Role))) &&
-          //&& f.TypeofUiEnum.ToString().ToLower() == type
-        UiForm? appUiForm = await context.UiForms.Include(t => t.Forms)
-        .Where(f=> f.TypeofUiEnum!=null && f.Forms != null && f.Forms.Any() && f.TransitionName == transitionName)
-        .FirstOrDefaultAsync(token);
-        if (appUiForm != null)
-        {
-            amorphie.core.Base.Translation? translation = appUiForm.Forms.Where(s => s.Language == language).FirstOrDefault();
-            if (translation == null)
-            {
-                translation = appUiForm.Forms.FirstOrDefault();
-            }
-
-            return new ViewTransitionModel()
-            {
-                name = translation.Label,
-                type = appUiForm.TypeofUiEnum.ToString(),
-                language = translation.Language,
-                navigation = appUiForm.Navigation.ToString(),
-                body = amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(translation.Label, string.Empty, templateURL, string.Empty, 1)
-            };
-
-        }
-        return null;
-    }
     async static ValueTask<IResult> UpdateTaskStatus(
 
     [FromServices] WorkflowDBContext context,
@@ -254,8 +193,7 @@ CancellationToken token,
             HumanTask? task = await context.HumanTasks.Where(w => w.TaskId == taskId).FirstOrDefaultAsync(token);
             if (task != null)
             {
-                UpdateTask(task, data);
-                await context.SaveChangesAsync(token);
+                await UpdateTask(task, data,context,token);
 
                 return Results.Ok();
             }
@@ -267,11 +205,23 @@ CancellationToken token,
             return Results.Problem("Unexcepted error:" + ex.ToString());
         }
     }
-    private static void UpdateTask(HumanTask dbModel, HumanTask updateModel)
+    private static async Task UpdateTask(HumanTask dbModel, HumanTask updateModel,WorkflowDBContext context, CancellationToken token)
     {
         if (updateModel.Priority != null)
         {
             dbModel.Priority = updateModel.Priority;
+        }
+         if ((dbModel.ClaimBy ==null||(dbModel.ClaimDueDate!=null&&dbModel.ClaimDueDate<=DateTime.UtcNow))&&updateModel.ClaimBy!=null)
+        {
+            dbModel.ClaimBy = updateModel.ClaimBy;
+            if(updateModel.ClaimDueDate==null)
+            {
+                dbModel.ClaimDueDate=DateTime.UtcNow.AddDays(3);
+            }
+            if(updateModel.ClaimDueDate!=null)
+            {
+                dbModel.ClaimDueDate=updateModel.ClaimDueDate;
+            }
         }
         if (!string.IsNullOrEmpty(updateModel.Assignee))
         {
@@ -290,6 +240,7 @@ CancellationToken token,
             dbModel.DueBy = updateModel.DueBy;
         }
         dbModel.Name = updateModel.Name;
+        await context.SaveChangesAsync(token);
     }
 
     async static ValueTask<IResult> CompleteTask(

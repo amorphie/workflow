@@ -25,14 +25,6 @@ namespace amorphie.workflow.service.Db
         List<core.Dtos.HumanTasks.HumanTaskDto?> responseList = new List<core.Dtos.HumanTasks.HumanTaskDto?>();
         foreach (var item in taskList)
         {
-            if(!string.IsNullOrEmpty(item.AppTransitionName))
-            {
-                item.ApproveView = await TransitionModel(item.AppTransitionName, language, role, type, templateURL, token);
-            }
-            if(!string.IsNullOrEmpty(item.DenyTransitionName))
-            {
-                item.RejectView = await TransitionModel( item.DenyTransitionName, language, role, type, templateURL, token);
-            }
             InstanceTransition? lastTransition = await _context.InstanceTransitions.OrderByDescending(o => o.CreatedAt).FirstOrDefaultAsync(f => f.InstanceId == item.InstanceId, token);
             if (lastTransition != null)
             {
@@ -50,38 +42,6 @@ namespace amorphie.workflow.service.Db
             responseList.Add(item);
         }
         return responseList;
-        // if (responseList.Any())
-        // {
-        //     return responseList;
-        // }
-        // return Results.NoContent();
-    }
-    private async  Task<ViewTransitionModel?> TransitionModel( string transitionName, string? language, string? role, string? type, string templateURL, CancellationToken token)
-    {
-          // (( string.IsNullOrEmpty(role)&& f.Role != null&&role == f.Role) || (string.IsNullOrEmpty(f.Role))) &&
-          //&& f.TypeofUiEnum.ToString().ToLower() == type
-        UiForm? appUiForm = await _context.UiForms.Include(t => t.Forms)
-        .Where(f=> f.TypeofUiEnum!=null && f.Forms != null && f.Forms.Any() && f.TransitionName == transitionName)
-        .FirstOrDefaultAsync(token);
-        if (appUiForm != null)
-        {
-            amorphie.core.Base.Translation? translation = appUiForm.Forms.Where(s => s.Language == language).FirstOrDefault();
-            if (translation == null)
-            {
-                translation = appUiForm.Forms.FirstOrDefault();
-            }
-
-            return new ViewTransitionModel()
-            {
-                name = translation.Label,
-                type = appUiForm.TypeofUiEnum.ToString(),
-                language = translation.Language,
-                navigation = appUiForm.Navigation.ToString(),
-                body = amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(translation.Label, string.Empty, templateURL, string.Empty, 1)
-            };
-
-        }
-        return null;
     }
    
     }

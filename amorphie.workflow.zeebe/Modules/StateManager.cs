@@ -344,7 +344,15 @@ public static class StateManagerModule
         variables.Add("RecordId", instanceTransition.Instance.RecordId);
         variables.Add("InstanceId", instanceTransition.InstanceId);
         variables.Add("LastTransition", _transitionName);
-        variables.Add("WorkflowData", instanceTransition.Instance.InstanceData);
+        try
+        {
+            dynamic workflowData= System.Text.Json.JsonSerializer.Deserialize<dynamic>( instanceTransition.Instance.InstanceData);
+            variables.Add("WorkflowData", workflowData);
+        }
+        catch(Exception)
+        {
+            variables.Add("WorkflowData", instanceTransition.Instance.InstanceData);
+        }
         dynamic targetObject = new System.Dynamic.ExpandoObject();
         targetObject.Data = _data.Data;
         targetObject.TriggeredBy = instanceTransition.CreatedBy;

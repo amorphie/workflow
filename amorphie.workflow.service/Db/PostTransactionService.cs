@@ -358,65 +358,12 @@ public class PostTransactionService : IPostTransactionService
     {
 
         _dbContext.Entry(_transition).Reference(t => t.ToState).Load();
-        string UserReference = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("user_reference", out UserReference))
-                UserReference = string.Empty;
-        }
-        catch (Exception)
-        {
-            UserReference = string.Empty;
-        }
-        string XDeviceId = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("X-Device-id", out XDeviceId))
-            {
-                if (!_headerDict.TryGetValue("x-device-id", out XDeviceId))
-                    XDeviceId = string.Empty;
-            }
+        string UserReference = GetUserReferenceFromHeader();
+        string XDeviceId =GetXDeviceFromHeader();
 
+        string XTokenId = GetXTokenFromHeader();
+        string? FullName = GetFullNameFromHeader();
 
-        }
-        catch (Exception)
-        {
-            XDeviceId = string.Empty;
-        }
-        string XTokenId = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("X-Token-id", out XTokenId))
-            {
-                if (!_headerDict.TryGetValue("x-token-id", out XTokenId))
-                    XTokenId = string.Empty;
-            }
-
-
-        }
-        catch (Exception)
-        {
-            XTokenId = string.Empty;
-        }
-        string? FullName = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("given_name", out FullName))
-                FullName = string.Empty;
-            string? FamilyName = string.Empty;
-            if (!_headerDict.TryGetValue("family_name", out FamilyName))
-            {
-                FamilyName = string.Empty;
-            }
-            if (!string.IsNullOrEmpty(FamilyName))
-            {
-                FullName = FullName + " " + FamilyName;
-            }
-        }
-        catch (Exception ex)
-        {
-            FullName = string.Empty;
-        }
         //Create an instace for request.
         var newInstance = new Instance
         {
@@ -450,44 +397,10 @@ public class PostTransactionService : IPostTransactionService
     {
         DateTime started = DateTime.UtcNow;
         _dbContext.Entry(_transition).Reference(t => t.Flow).Load();
-        string UserReference = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("user_reference", out UserReference))
-                UserReference = string.Empty;
-        }
-        catch (Exception ex)
-        {
-            UserReference = string.Empty;
-        }
-        string XDeviceId = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("xdeviceid", out XDeviceId))
-            {
-                XDeviceId = string.Empty;
-            }
+        string UserReference = GetUserReferenceFromHeader();
+        string XDeviceId =GetXDeviceFromHeader();
 
-
-        }
-        catch (Exception)
-        {
-            XDeviceId = string.Empty;
-        }
-        string XTokenId = string.Empty;
-        try
-        {
-            if (!_headerDict.TryGetValue("xtokenid", out XTokenId))
-            {
-                XTokenId = string.Empty;
-            }
-
-
-        }
-        catch (Exception)
-        {
-            XTokenId = string.Empty;
-        }
+        string XTokenId = GetXTokenFromHeader();
         string? fullName = GetFullNameFromHeader();
 
         // var outgoingDistributedTracingData = (Elastic.Apm.Agent.Tracer.CurrentSpan?.OutgoingDistributedTracingData
@@ -543,7 +456,11 @@ public class PostTransactionService : IPostTransactionService
         instanceAtState.BaseStatus = StatusType.LockedInFlow;
 
         dynamic variables = createMessageVariables(instanceAtState);
+        instanceAtState.UserReference = GetUserReferenceFromHeader();
+        instanceAtState.XDeviceId =GetXDeviceFromHeader();
 
+        instanceAtState.XTokenId = GetXTokenFromHeader();
+        instanceAtState.FullName = GetFullNameFromHeader();
 
         string message = _transition.Flow!.Message;
         await addInstanceTansition(instanceAtState, started, null);
@@ -553,10 +470,22 @@ public class PostTransactionService : IPostTransactionService
         if (humanTask != null)
         {
 
-
-            humanTask.Status = HumanTaskStatus.Completed;
-            await _dbContext.SaveChangesAsync(_cancellationToken);
-            variables.Add($"humanTaskMessageValue", _transition.Name);
+            if(humanTask.Assignee==instanceAtState.UserReference||(humanTask.ClaimBy==instanceAtState.UserReference&&humanTask.ClaimDueDate>=DateTime.UtcNow)
+            ||(humanTask.Assignee==null&&(humanTask.ClaimDueDate<=DateTime.UtcNow||humanTask.ClaimBy==null)))
+            {
+                humanTask.Status = HumanTaskStatus.Completed;
+                await _dbContext.SaveChangesAsync(_cancellationToken);
+                variables.Add($"humanTaskMessageValue", _transition.Name);
+            }
+            if(humanTask.Status != HumanTaskStatus.Completed)
+            {
+                Response responseWithError = new Response
+        {
+            Result = new Result(Status.Error, "Instance Can not be Continued by "+instanceAtState.UserReference),
+        };
+        return Results.Ok(responseWithError);
+            }
+            
         }
         long? processInstanceKey = await _zeebeService.PublishMessage(message, variables, instanceAtState.Id.ToString(), _transition.Flow!.Gateway);
         SendSignalRData(instanceAtState, EventInfos.WorkerStarted, string.Empty);
@@ -653,7 +582,15 @@ public class PostTransactionService : IPostTransactionService
         variables.Add("RecordId", _recordId);
         variables.Add("InstanceId", instanceAtState.Id);
         variables.Add("LastTransition", _transitionName);
-        variables.Add("WorkflowData", instanceAtState.InstanceData);
+        try
+        {
+            dynamic workflowData = System.Text.Json.JsonSerializer.Deserialize<dynamic>(instanceAtState.InstanceData);
+            variables.Add("WorkflowData", workflowData);
+        }
+        catch (Exception)
+        {
+            variables.Add("WorkflowData", instanceAtState.InstanceData);
+        }
         dynamic targetObject = new ExpandoObject();
 
         targetObject.Data = _data;
@@ -800,67 +737,11 @@ public class PostTransactionService : IPostTransactionService
             }
 
 
-            string UserReference = string.Empty;
-            try
-            {
-                if (!_headerDict.TryGetValue("user_reference", out UserReference))
-                    UserReference = string.Empty;
-            }
-            catch (Exception ex)
-            {
-                UserReference = string.Empty;
-            }
-            instance.UserReference = UserReference;
-            string XDeviceId = string.Empty;
-            try
-            {
-                if (!_headerDict.TryGetValue("xdeviceid", out XDeviceId))
-                {
-                    XDeviceId = string.Empty;
-                }
 
-
-            }
-            catch (Exception)
-            {
-                XDeviceId = string.Empty;
-            }
-            instance.XDeviceId = XDeviceId;
-            string XTokenId = string.Empty;
-            try
-            {
-                if (!_headerDict.TryGetValue("xtokenid", out XTokenId))
-                {
-                    XTokenId = string.Empty;
-                }
-
-
-            }
-            catch (Exception)
-            {
-                XTokenId = string.Empty;
-            }
-            instance.XTokenId = XTokenId;
-            string? FullName = string.Empty;
-            try
-            {
-                if (!_headerDict.TryGetValue("given_name", out FullName))
-                    FullName = string.Empty;
-                string? FamilyName = string.Empty;
-                if (!_headerDict.TryGetValue("family_name", out FamilyName))
-                {
-                    FamilyName = string.Empty;
-                }
-                if (!string.IsNullOrEmpty(FamilyName))
-                {
-                    FullName = FullName + " " + FamilyName;
-                }
-            }
-            catch (Exception ex)
-            {
-                FullName = string.Empty;
-            }
-            instance.FullName = FullName;
+            instance.UserReference = GetUserReferenceFromHeader();
+            instance.XDeviceId = GetXDeviceFromHeader();
+            instance.XTokenId = GetXTokenFromHeader();
+            instance.FullName = GetFullNameFromHeader();
             if (instance.WorkflowName != _transition.ToState.WorkflowName)
             {
                 instance.WorkflowName = _transition.ToState!.WorkflowName!;
@@ -1018,7 +899,56 @@ public class PostTransactionService : IPostTransactionService
         };
         return responseWithSuccess;
     }
+    private string GetXTokenFromHeader()
+    {
+        string XTokenId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("xtokenid", out XTokenId))
+            {
+                XTokenId = string.Empty;
+            }
 
+
+        }
+        catch (Exception)
+        {
+            XTokenId = string.Empty;
+        }
+        return XTokenId;
+    }
+    private string GetXDeviceFromHeader()
+    {
+        string XDeviceId = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("xdeviceid", out XDeviceId))
+            {
+                XDeviceId = string.Empty;
+            }
+
+
+        }
+        catch (Exception)
+        {
+            XDeviceId = string.Empty;
+        }
+        return XDeviceId;
+    }
+    private string GetUserReferenceFromHeader()
+    {
+        string UserReference = string.Empty;
+        try
+        {
+            if (!_headerDict.TryGetValue("user_reference", out UserReference))
+                UserReference = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            UserReference = string.Empty;
+        }
+        return UserReference;
+    }
     private string GetFullNameFromHeader()
     {
         string? fullName;

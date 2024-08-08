@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Semver;
 using amorphie.workflow.core.Models.SignalR;
+using amorphie.workflow.core.Models.SemanticVersion;
+using System.Text.Json;
 namespace amorphie.workflow.Modules;
 
 public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent, WorkflowDBContext>
@@ -28,6 +30,7 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
         routeGroupBuilder.MapGet("search", getAllPageComponentFullTextSearch);
         routeGroupBuilder.MapGet("search/names", getAllPageComponentNameFullTextSearch);
         routeGroupBuilder.MapGet("/page/{pageName}", getPageComponentByPageName);
+        routeGroupBuilder.MapGet("/page/{pageName}/withVersion", getPageComponentByPageNameWithVersion);
         routeGroupBuilder.MapGet("/getAllPagesInWorkflow", GetAllPages);
     }
 
@@ -85,22 +88,78 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
     async ValueTask<IResult> getPageComponentByPageName(
         [FromServices] WorkflowDBContext context,
          [FromRoute(Name = "pageName")] string pageName,
+           [FromQuery(Name = "semVer")] string? semVer,
         CancellationToken cancellationToken
    )
     {
-        var query = await context!.PageComponents!.FirstOrDefaultAsync(f => f.PageName == pageName, cancellationToken);
-        if (query != null)
-            return Results.Ok(ObjectMapper.Mapper.Map<dynamic>(query));
+        core.Dtos.DtoPageComponentWithVersion? response=await GetPageComponentWithVersion(context,pageName,semVer,cancellationToken);
+        if(response!=null)
+        {
+             return Results.Ok(JsonSerializer.Deserialize<dynamic>(response.componentJson, new JsonSerializerOptions
+            {
+                MaxDepth = 256
+            }) ?? new { });
+        }
+        return Results.NoContent();
+    }
+    async ValueTask<IResult> getPageComponentByPageNameWithVersion(
+    [FromServices] WorkflowDBContext context,
+     [FromRoute(Name = "pageName")] string pageName,
+     [FromQuery(Name = "semVer")] string? semVer,
+    CancellationToken cancellationToken
+)
+    {
+        core.Dtos.DtoPageComponentWithVersion? response=await GetPageComponentWithVersion(context,pageName,semVer,cancellationToken);
+        if(response!=null)
+        {
+            //response.componentJson=ObjectMapper.Mapper.Map<dynamic>(response.componentJson);
+               response.componentJson =JsonSerializer.Deserialize<dynamic>(response.componentJson, new JsonSerializerOptions
+            {
+                MaxDepth = 256
+            }) ?? new { };
+             return Results.Ok(response);
+        }
         return Results.NoContent();
     }
 
+    private async Task<core.Dtos.DtoPageComponentWithVersion?> GetPageComponentWithVersion(WorkflowDBContext context, string pageName, string? semVer,
+        CancellationToken cancellationToken)
+    {
+        var query = await context!.PageComponents!.FirstOrDefaultAsync(f => f.PageName == pageName, cancellationToken);
+        if (query != null)
+        {
+            if (string.IsNullOrEmpty(semVer))
+            {
+                return ObjectMapper.Mapper.Map<core.Dtos.DtoPageComponentWithVersion>(query);
+            }
+            if (string.IsNullOrEmpty(query.SemVer))
+            {
+                query.SemVer = new SemVersion(1, 0, 0).ToString();
+            }
+            string[] semverWithPlusAll = query.SemVer.Split('+');
+            string semverWithoutPlus = semverWithPlusAll[0];
+            if (semverWithoutPlus == semVer)
+                return ObjectMapper.Mapper.Map<core.Dtos.DtoPageComponentWithVersion>(query);
+            string semVerPlus = semVer + "+";
+            SemanticVersion? semanticVersion = await context!.SemanticVersions.Where(w => w.SubjectName == pageName && (w.SemVer == semVer || w.SemVer.StartsWith(semVerPlus)))
+            .OrderByDescending(o => o.SemVer).FirstOrDefaultAsync(cancellationToken);
+            if (semanticVersion != null)
+            {
+                return ObjectMapper.Mapper.Map<core.Dtos.DtoPageComponentWithVersion>(semanticVersion);
+                
+            }
+
+        }
+
+        return null;
+    }
     protected async ValueTask<IResult> UpsertMethodWithVersion(
          [FromServices] IMapper mapper,
          [FromServices] VersionService versionService,
          [FromServices] IValidator<PageComponent> validator,
          [FromServices] WorkflowDBContext context,
          [FromServices] IBBTIdentity bbtIdentity,
-         [FromBody] DtoPageComponents data,
+         [FromBody] core.Dtos.DtoPageComponentWithVersion data,
          CancellationToken token
          )
     {
@@ -119,9 +178,10 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
                 json = string.Empty;
             }
             PageComponent? existingPageComponent = await context.PageComponents.FirstOrDefaultAsync(f => f.PageName == data.pageName, token);
+            PageComponent add = new PageComponent();
             if (existingPageComponent == null)
             {
-                PageComponent add = new PageComponent()
+                add = new PageComponent()
                 {
 
                     PageName = data.pageName,
@@ -132,7 +192,7 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
                     ModifiedAt = DateTime.UtcNow,
                     ModifiedBy = bbtIdentity.UserId.Value,
                     ModifiedByBehalfOf = bbtIdentity.BehalfOfId.Value,
-                    SemVer = new SemVersion(1, 0, 0).ToString()
+                    SemVer = string.IsNullOrEmpty(data.semVer) ? new SemVersion(1, 0, 0).ToString() : data.semVer
                 };
                 await context.PageComponents.AddAsync(add, token);
                 await context.SaveChangesAsync(token);
@@ -148,9 +208,27 @@ public class PageComponentModule : BaseBBTRoute<DtoPageComponents, PageComponent
             {
                 existingPageComponent.SemVer = new SemVersion(1, 0, 0).ToString();
             }
-            SemVersion version = SemVersion.Parse(existingPageComponent.SemVer, SemVersionStyles.Any);
-            version = version.WithPatch(version.Patch + 1);
-            existingPageComponent.SemVer = version.ToString();
+            SemVersion oldVersion = SemVersion.Parse(existingPageComponent.SemVer, SemVersionStyles.Any);
+            if (string.IsNullOrEmpty(data.semVer))
+            {
+
+
+                SemVersion version = oldVersion.WithPatch(oldVersion.Patch + 1);
+                existingPageComponent.SemVer = version.ToString();
+            }
+            if (!string.IsNullOrEmpty(data.semVer))
+            {
+                SemVersion version = SemVersion.Parse(data.semVer, SemVersionStyles.Any);
+                oldVersion = SemVersion.Parse(existingPageComponent.SemVer, SemVersionStyles.Any);
+                int test=oldVersion.CompareSortOrderTo(version);
+                if (test >= 0)
+                {
+                    return Results.Problem("Please check the version, your version is " + version.ToString() + " can not be equal or older than " + oldVersion.ToString());
+                }
+                existingPageComponent.SemVer = data.semVer;
+
+            }
+
             await context.SaveChangesAsync(token);
             await versionService.SaveVersionPageComponent(existingPageComponent.PageName, existingPageComponent.SemVer, token);
             return Results.Ok();

@@ -5,7 +5,7 @@ namespace amorphie.workflow.core.Helper;
 
 public static class TemplateEngineHelper
 {
-    public static dynamic? TemplateEngineForm(string templateName, string entityData, string templateUrlFromVault, string? transitionName, int? json)
+    public static dynamic? TemplateEngineForm(string templateName, string entityData, string templateUrlFromVault, string versionListUrl, string? transitionName, int? json, string? semVer)
     {
         var jsonOptions = new System.Text.Json.JsonSerializerOptions { MaxDepth = 256 };
         var newtonSoftOpt = new Newtonsoft.Json.JsonSerializerSettings { MaxDepth = 256 };
@@ -21,6 +21,7 @@ public static class TemplateEngineHelper
         }
 
 
+
         amorphie.workflow.core.Dtos.TemplateEngineRequest request = new amorphie.workflow.core.Dtos.TemplateEngineRequest()
         {
             RenderId = Guid.NewGuid(),
@@ -34,6 +35,18 @@ public static class TemplateEngineHelper
             Customer = "",
             IsSchribanRender = false
         };
+
+        if (!string.IsNullOrEmpty(semVer))
+        {
+            versionListUrl = versionListUrl + "?query=" + templateName;
+            var responseForVersionList = clientHttp.GetAsync(versionListUrl).Result;
+            var twiceSerialize = responseForVersionList!.Content!.ReadAsStringAsync().Result;
+            Dtos.TemplateEngineSemVerListResponse templateEngineSemVerListResponse
+              = Newtonsoft.Json.JsonConvert.DeserializeObject<Dtos.TemplateEngineSemVerListResponse>(twiceSerialize, newtonSoftOpt)!;
+            string semVerPlus = semVer + "+";
+            Dtos.TemplateDefinitionNames templateDefinition = templateEngineSemVerListResponse.templateDefinitionNames.FirstOrDefault();
+            request.SemVer = templateDefinition.SemanticVersions.Where(w => w == semVer || w.StartsWith(semVerPlus)).OrderByDescending(o => o).FirstOrDefault();
+        }
         var serializeRequest = JsonSerializer.Serialize(request, jsonOptions);
         try
         {
@@ -56,7 +69,7 @@ public static class TemplateEngineHelper
     }
     public static string TemplateEngineFormWithoutJson(string templateName, string entityData, string templateUrlFromVault, string? transitionName)
     {
-        var responseDynamic = TemplateEngineForm(templateName, entityData, templateUrlFromVault, transitionName, amorphie.workflow.core.Enums.JsonEnum.NotJson.GetHashCode());
+        var responseDynamic = TemplateEngineForm(templateName, entityData, templateUrlFromVault, string.Empty, transitionName, amorphie.workflow.core.Enums.JsonEnum.NotJson.GetHashCode(), string.Empty);
         if (responseDynamic == null)
         {
             return string.Empty;
