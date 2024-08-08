@@ -72,6 +72,15 @@ public static class AesHelper
     }
 
 
+    public static JsonObject DecryptJsonToNewObject(string aesKey, JsonObject data)
+    {
+        if (data.DeepClone() is JsonObject newData)
+        {
+            return DecryptJson(aesKey, newData);
+        }
+        return data;
+    }
+
     public static JsonObject DecryptJson(string aesKey, JsonObject data)
     {
         var dataKeys = data.Where(p => p.Value != null).Select(p => p.Key).ToList();

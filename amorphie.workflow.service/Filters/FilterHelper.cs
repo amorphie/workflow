@@ -43,11 +43,9 @@ public class FilterHelper
                     var value = tNewObject[item.Key].ToString();
                     if (!string.IsNullOrEmpty(value))
                     {
-                        var key = AesHelper.CreateAesKey(instanceId);
-                        var encrypted = AesHelper.EncryptString(key, value);
+                        var encrypted = AesHelper.EncryptString(instanceId, value);
                         tNewObject[item.Key] = encrypted;
                         hasAnyEncryption = true;
-
                     }
                 }
             }

@@ -407,11 +407,15 @@ public static class StateManagerModule
                 //Before processing the AdditionalData and EntityData, decode them
                 if (body.HasAnyEncryption)
                 {
-                    DecodeData(body.InstanceId, data.Data);
+                    newInstanceTransition!.AdditionalData = DecodeData(body.InstanceId, data.Data.AdditionalData)?.ToString();
+                    newInstanceTransition!.EntityData = DecodeData(body.InstanceId, data.Data.EntityData)?.ToString() ?? "";
+                }
+                else
+                {
+                    newInstanceTransition!.AdditionalData = data.Data.AdditionalData?.ToString();
+                    newInstanceTransition!.EntityData = data.Data.EntityData?.ToString() ?? "";
                 }
 
-                newInstanceTransition!.AdditionalData = data.Data.AdditionalData?.ToString();
-                newInstanceTransition!.EntityData = data.Data.EntityData?.ToString() ?? "";
             }
 
             if (!IsTargetState || targetStateAsState == null)
@@ -485,16 +489,15 @@ public static class StateManagerModule
             return (newInstanceTransition, data, eventInfo);
         }
     }
-
-    private static void DecodeData(Guid instanceId, WorkerBodyTrxInnerDatas trxData)
+    private static JsonObject? DecodeData(Guid instanceId, JsonObject? decodeObject)
     {
         var key = instanceId.ToString();
-        if (trxData.AdditionalData != null)
+        if (decodeObject is not null)
         {
-            trxData.AdditionalData = AesHelper.DecryptJson(key, trxData.AdditionalData);
+            var decodeResult = AesHelper.DecryptJsonToNewObject(key, decodeObject);
+            return decodeResult;
         }
-        trxData.EntityData = AesHelper.DecryptJson(key, trxData.EntityData);
-
+        return decodeObject;
     }
 
 }
