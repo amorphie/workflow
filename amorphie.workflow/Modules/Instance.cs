@@ -341,7 +341,7 @@ public static class InstanceModule
          IConfiguration configuration,
         CancellationToken cancellationToken,
         [FromRoute(Name = "transitionName")] string transitionName,
-
+ [FromQuery] string? semVer,
         [FromQuery] string? type,
           [FromQuery] int? json,
             [FromHeader(Name = "role")] string? role,
@@ -368,7 +368,7 @@ public static class InstanceModule
                 && (string.IsNullOrEmpty(f.Role))
                 );
                 }
-                return await View(configuration, transitionName, type, typeof(Transition).ToString(), uiForm, language, json, string.Empty, string.Empty);
+                return await View(configuration, transitionName, type, typeof(Transition).ToString(), uiForm, language, json, string.Empty, string.Empty,semVer);
             }
             if (transition == null)
             {
@@ -387,6 +387,7 @@ public static class InstanceModule
      CancellationToken cancellationToken,
      [FromRoute(Name = "stateName")] string stateName,
   [FromQuery(Name = "suffix")] string? suffix,
+  [FromQuery] string? semVer,
      [FromQuery] string? type,
         [FromQuery] int? json,
         [FromHeader(Name = "role")] string? role,
@@ -422,7 +423,7 @@ public static class InstanceModule
                 && (string.IsNullOrEmpty(f.Role))
                 );
                 }
-                return await View(configuration, stateName, type, typeof(State).ToString(), uiForm, language, json, string.Empty, suffix);
+              return await View(configuration, stateName, type, typeof(State).ToString(), uiForm, language, json, string.Empty, suffix,semVer);
             }
             if (state == null)
             {
@@ -443,6 +444,7 @@ public static class InstanceModule
 
  [FromQuery] string? type,
     [FromQuery] int? json,
+    [FromQuery] string? semVer,
     [FromHeader(Name = "InstanceId")] string instanceId,
  [FromHeader(Name = "Accept-Language")] string language = "en-EN"
 )
@@ -456,7 +458,7 @@ public static class InstanceModule
             // return Results.BadRequest("There is no " + pageName + " page for " + instanceId);
             if (pageControl != null)
                 navigation = pageControl.navigationType;
-            return await View(configuration, pageName, type, typeof(Page).ToString(), null, language, json, navigation, string.Empty);
+            return await View(configuration, pageName, type, typeof(Page).ToString(), null, language, json, navigation, string.Empty,semVer);
 
         }
         catch (Exception ex)
@@ -465,7 +467,7 @@ public static class InstanceModule
         }
     }
     private static async ValueTask<IResult> View(IConfiguration configuration,
-        string name, string type, string typeofTable, UiForm? uiForm, string? language, int? json, string navigation, string suffix)
+        string name, string type, string typeofTable, UiForm? uiForm, string? language, int? json, string navigation, string suffix,string? semVer)
     {
         try
         {
@@ -498,7 +500,7 @@ public static class InstanceModule
                 isPage = true;
             }
             var templateURL = configuration["templateEngineUrl"]!.ToString();
-
+            var versionListUrl=configuration["templateVersionListUrl"]!.ToString();
             return Results.Ok(new ViewTransitionModel()
             {
                 name = isPage ? name : form.Label + suffix,
@@ -506,11 +508,10 @@ public static class InstanceModule
                 language = isPage ? language : form.Language,
                 navigation = isPage ? navigation : uiForm.Navigation.ToString(),
                 data = "latest",
-                body = isPage ? amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(name, string.Empty, templateURL, string.Empty, json)
+                body = isPage ? amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(name, string.Empty, templateURL,versionListUrl, string.Empty, json,semVer)
                 : string.Equals(type, TypeofUiEnum.PageUrl.ToString(), StringComparison.OrdinalIgnoreCase) ? form.Label
-                : amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(form.Label + suffix, string.Empty, templateURL, string.Empty, json)
+                : amorphie.workflow.core.Helper.TemplateEngineHelper.TemplateEngineForm(form.Label + suffix, string.Empty, templateURL,versionListUrl, string.Empty, json,semVer)
             });
-
         }
         catch (Exception ex)
         {
@@ -814,6 +815,8 @@ public static class InstanceModule
     static async Task<IResult> getTransitionByInstanceAsync(
          [FromServices] WorkflowDBContext context,
          [FromRoute(Name = "instanceId")] Guid instanceId,
+         [FromHeader(Name = "role")] string? role,
+
          CancellationToken cancellationToken,
             [FromHeader(Name = "Accept-Language")] string? language = "en-EN"
      )
@@ -822,27 +825,31 @@ public static class InstanceModule
         .Include(s => s.State).ThenInclude(s => s.SubWorkflow).ThenInclude(s => s.States).ThenInclude(s => s.Transitions).ThenInclude(s => s.UiForms)
    .FirstOrDefaultAsync(w => w.Id == instanceId, cancellationToken)
    ;
+        var transitionRoleList=await context.TransitionRoles.ToListAsync(cancellationToken);
+        
         if (instance == null)
         {
             return Results.NotFound();
         }
         if (instance != null)
         {
+            List<Transition> transitionList=new List<Transition>();
+            if( instance.State.Type != StateType.SubWorkflow)
+            {
+                transitionList=await TransitionListCheckRole(role,instance.State.Transitions.ToList(),context,cancellationToken);
+            }
+             if( instance.State.Type == StateType.SubWorkflow)
+            {
+                transitionList=await TransitionListCheckRole(role, instance.State.SubWorkflow?.States.Where(w => w.Type == StateType.Start)
+                              .FirstOrDefault()?.Transitions.ToList(),context,cancellationToken);
+            }
             return Results.Ok(
                           new InstanceStateTransitions()
                           {
                               state = instance.StateName,
                               baseState = instance.BaseStatus.ToString(),
                               viewSource = instance.State.IsPublicForm == true ? "state" : "transition",
-                              transition = instance.State.Type != StateType.SubWorkflow ? instance.State.Transitions.Select(t => new InitTransition()
-                              {
-                                  requireData = t.requireData,
-                                  transition = t.Name,
-                                  type = t.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
-                                  hasViewVariant = t.UiForms.Any() && t.UiForms.Count() > 1 ? true : false
-                              }).ToList() :
-                              instance.State.SubWorkflow?.States.Where(w => w.Type == StateType.Start)
-                              .FirstOrDefault()?.Transitions.Select(t => new InitTransition()
+                              transition = transitionList.Select(t => new InitTransition()
                               {
                                   requireData = t.requireData,
                                   transition = t.Name,
@@ -856,6 +863,35 @@ public static class InstanceModule
         }
         return Results.NotFound();
 
+    }
+    private static async Task<List<Transition>> TransitionListCheckRole(string role,List<Transition> transitions ,WorkflowDBContext context,
+    CancellationToken cancellationToken)
+    {
+        List<string> transitionNameList=transitions.Select(s=>s.Name).ToList();
+        List<Transition> response=new List<Transition>();
+        List<TransitionRole> transitionRoleList=await context.TransitionRoles.Where(w=>transitionNameList.Any(a=>a==w.TransitionName)).ToListAsync(cancellationToken);
+        if(transitionRoleList==null||transitionRoleList.Count==0)
+        {
+            return transitions.ToList();
+        }
+        foreach(Transition item in transitions)
+        {
+         List<TransitionRole> roleListForOneTransition=   transitionRoleList.Where(a=>a.TransitionName==item.Name).ToList();
+          if(roleListForOneTransition!=null&&roleListForOneTransition.Count>=0)
+         {
+            TransitionRole? allowedRole=roleListForOneTransition.FirstOrDefault(f=>f.Role==role);
+            if(allowedRole!=null)
+            {
+                 response.Add(item);
+            }
+         }
+         if(roleListForOneTransition==null||roleListForOneTransition.Count==0)
+         {
+            response.Add(item);
+         }
+
+        }
+        return response;
     }
     static async Task<IResult> getInstanceDataAsync(
       [FromServices] WorkflowDBContext context,

@@ -26,5 +26,7 @@ public class HumanTask
     public string? DenyTransitionName { get; set; }
     public string? AutoTransitionName { get; set; }
     public string? Metadata { get; set; }
+    public string? ClaimBy {get;set;}
+    public DateTime? ClaimDueDate {get;set;}
 
 }

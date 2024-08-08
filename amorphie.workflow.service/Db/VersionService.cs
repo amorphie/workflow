@@ -44,9 +44,9 @@ namespace amorphie.workflow.service.Db
             string pageComponent=string.Empty;
             SemanticVersion semanticVersion=new SemanticVersion(){
                 SubjectName=pageName,
-                JsonBody=JsonSerializer.Serialize(query),
+                JsonBody=query.ComponentJson,
                 SemVer=version,
-                VersionTable=VersionTable.Workflow,
+                VersionTable=VersionTable.PageComponent,
                 CreatedAt=DateTime.UtcNow
             };
             return await SaveVersion(semanticVersion,cancellationToken);
