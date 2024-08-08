@@ -59,14 +59,16 @@ builder.Services.AddSignalR(options =>
 {
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(30); // Example client timeout
     options.KeepAliveInterval = TimeSpan.FromSeconds(10); // Example keep-alive interval
+    options.EnableDetailedErrors = true;
 })
 .AddMessagePackProtocol()
-.AddStackExchangeRedis(redis.ToString(), options => {
-      options.Configuration.ChannelPrefix = RedisChannel.Literal("amorphie-workflow-hub");
-  })
+.AddStackExchangeRedis(redis.ToString(), options =>
+{
+    options.Configuration.ChannelPrefix = RedisChannel.Literal("amorphie-workflow-hub");
+})
 ;
 
-builder.Services.AddHealthChecks().AddNpgSql(postgreSql).AddRedis(redis.ToString(),"Redis", HealthStatus.Unhealthy,null, TimeSpan.FromSeconds(15)).AddSignalRHub(signalrHealthAdress.ToString());;
+builder.Services.AddHealthChecks().AddNpgSql(postgreSql).AddRedis(redis.ToString(), "Redis", HealthStatus.Unhealthy, null, TimeSpan.FromSeconds(15)).AddSignalRHub(signalrHealthAdress.ToString()); ;
 builder.Services.AddMvc();
 
 builder.Services.AddDbContext<WorkflowDBContext>
@@ -104,8 +106,9 @@ app.UseRouting();
 app.MapSubscribeHandler();
 app.UseCors();
 app.UseSwagger();
-app.MapHealthChecks("/health",new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions{
-    ResponseWriter=UIResponseWriter.WriteHealthCheckUIResponse
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
 });
 
 app.UseHttpMetrics();
