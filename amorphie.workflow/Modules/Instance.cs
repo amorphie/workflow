@@ -160,7 +160,20 @@ public static class InstanceModule
              operation.Responses["404"].Description = "No instance found.";
              return operation;
          });
+         app.MapGet("/workflow/getnewGuid", getNewGuid
+         )
+         .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
+         .Produces(StatusCodes.Status404NotFound)
+         .WithOpenApi(operation =>
+         {
+             operation.Summary = "Returns guid";
+        
+             operation.Tags = new List<OpenApiTag> { new() { Name = "GetNewGuid" } };
 
+             operation.Responses["200"].Description = "Guid returned.";
+             operation.Responses["404"].Description = "No guid found.";
+             return operation;
+         });
         app.MapGet("/workflow/instance/user/{workflowName}/data", getInstanceDataByUserRefAsync
          )
          .Produces<GetInstanceResponse[]>(StatusCodes.Status200OK)
@@ -336,6 +349,25 @@ public static class InstanceModule
         }
         return initDto;
     }
+    static  IResult getNewGuid(
+        [FromServices] WorkflowDBContext context,
+         IConfiguration configuration,
+        CancellationToken cancellationToken
+
+    )
+    {
+        try
+        {
+            string guid=Guid.NewGuid().ToString();
+           return Results.Ok(guid);      
+           }
+        catch(Exception)
+        {
+
+        }
+        return Results.NotFound();      
+        }
+
     static async ValueTask<IResult> ViewTransition(
         [FromServices] WorkflowDBContext context,
          IConfiguration configuration,
