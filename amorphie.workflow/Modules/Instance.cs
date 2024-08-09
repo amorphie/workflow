@@ -789,7 +789,7 @@ public static class InstanceModule
                     ) : null,
 
                     s.State.BaseStatus,
-                    s.State.Transitions.Select(t => new PostTransitionDefinitionRequest(
+                    (TransitionListCheckRoleWithoutAsync(role,s.State.Transitions.ToList(),context)).Select(t => new PostTransitionDefinitionRequest(
                         t.Name,
 
                         t.Titles != null && t.Titles.Any() ? new amorphie.workflow.core.Dtos.MultilanguageText(
@@ -930,6 +930,35 @@ public static class InstanceModule
         }
         return response;
     }
+    private static  List<Transition> TransitionListCheckRoleWithoutAsync(string role,List<Transition> transitions ,WorkflowDBContext context)
+    {
+        List<string> transitionNameList=transitions.Select(s=>s.Name).ToList();
+        List<Transition> response=new List<Transition>();
+        List<TransitionRole> transitionRoleList= context.TransitionRoles.Where(w=>transitionNameList.Any(a=>a==w.TransitionName)).ToList();
+        if(transitionRoleList==null||transitionRoleList.Count==0)
+        {
+            return transitions.ToList();
+        }
+        foreach(Transition item in transitions)
+        {
+         List<TransitionRole> roleListForOneTransition=   transitionRoleList.Where(a=>a.TransitionName==item.Name).ToList();
+          if(roleListForOneTransition!=null&&roleListForOneTransition.Count>=0)
+         {
+            TransitionRole? allowedRole=roleListForOneTransition.FirstOrDefault(f=>f.Role==role);
+            if(allowedRole!=null)
+            {
+                 response.Add(item);
+            }
+         }
+         if(roleListForOneTransition==null||roleListForOneTransition.Count==0)
+         {
+            response.Add(item);
+         }
+
+        }
+        return response;
+    }
+
     static async Task<IResult> getInstanceDataAsync(
       [FromServices] WorkflowDBContext context,
       [FromRoute(Name = "instanceId")] Guid instanceId,
