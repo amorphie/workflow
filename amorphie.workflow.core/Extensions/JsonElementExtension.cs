@@ -1,16 +1,17 @@
 using System.Collections;
 using System.Dynamic;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 namespace amorphie.workflow.core.Extensions;
 public static class JsonElementExtension
 {
-    public static bool TryConvertToDictionary(this JsonElement obj, out Dictionary<string, object>? pairs)
+    public static bool TryConvertToJsonObject(this JsonElement obj, out JsonObject? pairs)
     {
         try
         {
             if (obj.ValueKind == JsonValueKind.Object)
             {
-                pairs = obj.Deserialize<Dictionary<string, object>>();
+                pairs = obj.Deserialize<JsonObject>();
                 return true;
             }
         }
