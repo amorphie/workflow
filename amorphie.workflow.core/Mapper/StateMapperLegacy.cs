@@ -23,7 +23,8 @@ public class StateMapperLegacy
             UiForms = UiFormMapper.Map(state.UiForms),
             SubWorkflowName = state.SubWorkflowName,
             Titles = state.Titles?.Select(t => new core.Dtos.MultilanguageText(t.Language, t.Label)).ToList(),
-            PublicForms = state.PublicForms?.Select(t => new core.Dtos.MultilanguageText(t.Language, t.Label)).ToList()
+            PublicForms = state.PublicForms?.Select(t => new core.Dtos.MultilanguageText(t.Language, t.Label)).ToList(),
+            AllowedSuffix = state.AllowedSuffix,
         };
     }
 
@@ -41,6 +42,7 @@ public class StateMapperLegacy
             SubWorkflowName = data.SubWorkflowName,
             MFAType = data.MfaType,
             InitPageName = data.Type == StateType.Start ? data.InitPageName : string.Empty,
+            AllowedSuffix = stateDto.AllowedSuffix
         };
         //Todo: Remove public forms
 

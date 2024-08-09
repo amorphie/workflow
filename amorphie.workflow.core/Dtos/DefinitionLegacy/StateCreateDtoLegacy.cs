@@ -15,6 +15,7 @@ public class StateCreateDtoLegacy
     public MFATypeEnum? MfaType { get; set; }
     public string? SubWorkflowName { get; set; }
     public string? InitPageName { get; set; }
+    public string[]? AllowedSuffix { get; set; }
 
 }
 

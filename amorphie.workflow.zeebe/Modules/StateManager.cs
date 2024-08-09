@@ -256,8 +256,8 @@ public static class StateManagerModule
         }
 
         InstanceTransition? newInstanceTransition;
-        (newInstanceTransition, WorkerBodyTrxDatas? data, string eventInfo) =
-        ((InstanceTransition, WorkerBodyTrxDatas, string))await SetInstanceTransition(dbContext, transition, instance, error, body, IsTargetState, targetStateAsState, cancellationToken);
+        (newInstanceTransition, WorkerBodyTrxDatas data, string eventInfo, JsonObject? decodedVariables) =
+            await SetInstanceTransition(dbContext, transition!, instance, error, body, IsTargetState, targetStateAsState, cancellationToken);
 
         if (notifyClient)
         {
@@ -299,7 +299,7 @@ public static class StateManagerModule
                                       eventInfo,
                                       instance.Id,
                                       instance.EntityName,
-                                      data.Data?.EntityData,
+                                      data: decodedVariables?[nameof(data.Data.EntityData)] ?? data.Data?.EntityData,
                                       DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
                                       IsTargetState && targetStateAsState != null ? targetStateAsState.Name : transition.ToStateName,
                                       transition.Name,
@@ -310,9 +310,9 @@ public static class StateManagerModule
                                       transition.Page == null ? null :
                                       new PostPageSignalRData(transition.Page.Operation.ToString(), pageTypeStringBYTransition, transition.Page.Pages == null || transition.Page.Pages.Count == 0 ? null : new MultilanguageText(transition.Page.Pages!.FirstOrDefault()!.Language, transition.Page.Pages!.FirstOrDefault()!.Label),
                                       transition.Page.Timeout),
-                                      message: body.Message,
-                                      errorCode: body.ErrorCode,
-                                      data.Data?.AdditionalData,
+                                      message: body.Message ?? "",
+                                      errorCode: body.ErrorCode ?? "",
+                                      additionalData: decodedVariables?[nameof(data.Data.AdditionalData)] ?? data.Data?.AdditionalData,
                                       instance.WorkflowName,
                                       string.IsNullOrEmpty(viewSource) ? transition.ToState.IsPublicForm == true ? amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.State)
                                        : amorphie.workflow.core.Helper.EnumHelper.GetDescription<ViewSourceEnum>((ViewSourceEnum)ViewSourceEnum.Transition) : viewSource.ToLower(),
@@ -366,7 +366,7 @@ public static class StateManagerModule
     // {
     //     return System.Text.RegularExpressions.Regex.Replace(transitionName, "[^A-Za-z0-9]", "", System.Text.RegularExpressions.RegexOptions.Compiled);
     // }
-    private static async Task<(InstanceTransition, WorkerBodyTrxDatas?, string)> SetInstanceTransition(WorkflowDBContext dbContext, Transition transition, Instance instance, bool error, WorkerBody body, bool IsTargetState, State? targetStateAsState, CancellationToken cancellationToken)
+    private static async Task<(InstanceTransition, WorkerBodyTrxDatas, string, JsonObject?)> SetInstanceTransition(WorkflowDBContext dbContext, Transition transition, Instance instance, bool error, WorkerBody body, bool IsTargetState, State? targetStateAsState, CancellationToken cancellationToken)
     {
 
         InstanceTransition? newInstanceTransition;
@@ -409,14 +409,19 @@ public static class StateManagerModule
         else
         {
 
-
+            JsonObject? decodedVariables = null;
             if (data.Data != null)
             {
                 //Before processing the AdditionalData and EntityData, decode them
                 if (body.HasAnyEncryption)
                 {
-                    newInstanceTransition!.AdditionalData = DecodeData(body.InstanceId, data.Data.AdditionalData)?.ToString();
-                    newInstanceTransition!.EntityData = DecodeData(body.InstanceId, data.Data.EntityData)?.ToString() ?? "";
+                    decodedVariables = new JsonObject
+                    {
+                        { nameof(data.Data.AdditionalData), DecodeData(body.InstanceId, data.Data.AdditionalData) },
+                        { nameof(data.Data.EntityData), DecodeData(body.InstanceId, data.Data.EntityData) }
+                    };
+                    newInstanceTransition!.AdditionalData = decodedVariables[nameof(data.Data.AdditionalData)]?.ToString();
+                    newInstanceTransition!.EntityData = decodedVariables[nameof(data.Data.EntityData)]?.ToString() ?? "";
                 }
                 else
                 {
@@ -494,7 +499,7 @@ public static class StateManagerModule
             // dbContext.Add(newInstanceTransition);
             // TODO : Include a parameter for the cancelation token and convert SaveChanges to SaveChangesAsync with the cancelation token.
             await dbContext.SaveChangesAsync(cancellationToken);
-            return (newInstanceTransition, data, eventInfo);
+            return (newInstanceTransition, data, eventInfo, decodedVariables);
         }
     }
     private static JsonObject? DecodeData(Guid instanceId, JsonObject? decodeObject)

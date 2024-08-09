@@ -88,38 +88,15 @@ public static class AesHelper
         {
             if (data[dataKey]!.GetValueKind() == JsonValueKind.Object)
             {
-                if (data[dataKey] is IDictionary<string, JsonNode> innerDict)
+                if (data[dataKey] is JsonObject innerDict)
                 {
-                    var decResult = DecryptDict(aesKey, innerDict);
+                    var decResult = DecryptJson(aesKey, innerDict);
                     data[dataKey] = decResult as JsonObject;
                 }
             }
             else if (data[dataKey]!.GetValueKind() == JsonValueKind.String)
             {
                 data[dataKey] = DecryptString(aesKey, data[dataKey]!.ToString());
-            }
-        }
-        return data;
-    }
-    public static IDictionary<string, JsonNode> DecryptDict(string aesKey, IDictionary<string, JsonNode> data)
-    {
-        var dataKeys = data.Where(p => p.Value != null).Select(p => p.Key).ToList();
-        foreach (var dataKey in dataKeys)
-        {
-            if (data[dataKey].GetValueKind() == JsonValueKind.Object)
-            {
-                if (data[dataKey] is IDictionary<string, JsonNode> innerDict)
-                {
-                    var decResult = DecryptDict(aesKey, innerDict);
-                    if (decResult is JsonObject decryptResult)
-                    {
-                        data[dataKey] = decryptResult;
-                    }
-                }
-                else if (data[dataKey].GetValueKind() == JsonValueKind.String)
-                {
-                    data[dataKey] = DecryptString(aesKey, data[dataKey].ToString());
-                }
             }
         }
         return data;
