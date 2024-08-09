@@ -248,23 +248,23 @@ public static class InstanceModule
         if (currentState == null)
             return Results.NoContent();
 
-        var initDto = getRecordWorkflowInit(currentState, suffix, type, language, role);
+        var initDto =await getRecordWorkflowInit(currentState, suffix, type, language, role,context,cancellationToken);
 
         if (instance != null)
         {
             initDto.instanceId = instance.Id.ToString();
         }
 
-        if (initDto.transition.Count == 0)
-        {
-            initDto.transition.Add(new InitTransition
-            {
-                type = currentState.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
-                requireData = currentState.requireData,
-                transition = currentState.Name,
-                hasViewVariant = currentState.UiForms != null && currentState.UiForms.Count() > 1 ? true : false
-            });
-        }
+        // if (initDto.transition.Count == 0)
+        // {
+        //     initDto.transition.Add(new InitTransition
+        //     {
+        //         type = currentState.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
+        //         requireData = currentState.requireData,
+        //         transition = currentState.Name,
+        //         hasViewVariant = currentState.UiForms != null && currentState.UiForms.Count() > 1 ? true : false
+        //     });
+        // }
         Response<dynamic> preData = await PreWorkflowData(context, preInstanceId, preWorkflowName, cancellationToken);
         if (preData.Result.Status != amorphie.core.Enums.Status.Error.ToString())
         {
@@ -313,8 +313,13 @@ public static class InstanceModule
         });
         return System.Text.Json.JsonSerializer.Deserialize<dynamic>(jsonData.ToString());
     }
-    private static GetRecordWorkflowInit getRecordWorkflowInit(State currentState, string? suffix, string type, string language, string role)
+    private static async Task<GetRecordWorkflowInit> getRecordWorkflowInit(State currentState, string? suffix, string type, string language, string role,
+    WorkflowDBContext context,CancellationToken cancellationToken)
     {
+        List<Transition> transitionList=new List<Transition>();
+
+        transitionList=await TransitionListCheckRole(role,currentState.Transitions.ToList(),context,cancellationToken);
+            
         string navigationType = amorphie.workflow.core.Helper.EnumHelper.GetDescription<NavigationType>(NavigationType.Push);
         UiForm? uiform = currentState.UiForms.FirstOrDefault(s => s.TypeofUiEnum.ToString().ToLower() == type && s.Role == role);
         if (uiform == null)
@@ -331,7 +336,7 @@ public static class InstanceModule
             viewSource = currentState.IsPublicForm == true ? "state" : "transition",
             initPageName = currentState.InitPageName,
             navigation = navigationType,
-            transition = currentState.Transitions.Select(t => new InitTransition()
+            transition = transitionList.Select(t => new InitTransition()
             {
                 type = currentState.transitionButtonType.GetValueOrDefault(TransitionButtonType.Forward).ToString(),
                 requireData = currentState.requireData,
